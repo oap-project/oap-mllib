@@ -1,11 +1,4 @@
-**/target/**
-*.class
-*.iml
 *.sh
-
-# logs
+*.o
 *.log
-
-# IDEA config files
-.idea/
-*.iml
+.vscode
