@@ -1,4 +1,6 @@
-*.sh
 *.o
 *.log
 .vscode
+target/
+.idea/
+.idea_modules/
