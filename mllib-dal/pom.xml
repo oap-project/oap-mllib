@@ -5,11 +5,10 @@
 
     <groupId>com.intel.oap</groupId>
     <artifactId>oap-mllib</artifactId>
-    <version>0.9.0-with-spark-3.0.0</version>
+    <version>1.1.0</version>
+    <name>OAP Project OAP MLlib</name>
     <packaging>jar</packaging>
-
-    <name>oap-mllib</name>
-    <url>https://github.com/Intel-bigdata/OAP</url>
+    <url>https://github.com/oap-project/oap-mllib.git</url>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
