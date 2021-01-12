@@ -9,10 +9,6 @@ OAP MLlib is an optimized package to accelerate machine learning algorithms in  
 OAP MLlib tried to maintain the same API interfaces and produce same results that are identical with Spark MLlib. However due to the nature of float point operations, there may be some small deviation from the original result, we will try our best to make sure the error is within acceptable range.
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. 
 
-## Online Documentation
-
-You can find the all the OAP MLlib documents on the [project web page](https://oap-project.github.io/oap-mllib/).
-
 ## Getting Started
 
 ### Java/Scala Users Preferred
@@ -23,7 +19,7 @@ Then you can refer to the following [Running](#running) section to try out.
 
 ### Python/PySpark Users Preferred
 
-Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x-with-spark-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
+Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x-with-spark-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
