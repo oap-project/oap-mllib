@@ -6,7 +6,7 @@ edit_uri: ""
 
 
 nav:
-- User Guide: README.mc
+- User Guide: index.md
 - OAP Installation Guide: OAP-Installation-Guide.md
 - OAP Developer Guide: OAP-Developer-Guide.md
 - Version Selector: "../"
