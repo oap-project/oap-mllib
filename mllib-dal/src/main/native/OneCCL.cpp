@@ -1,5 +1,6 @@
 #include <iostream>
 #include <ccl.h>
+#include <chrono>
 #include "org_apache_spark_ml_util_OneCCL__.h"
 
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
@@ -7,7 +8,13 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   
   std::cout << "oneCCL (native): init" << std::endl;
 
+  auto t1 = std::chrono::high_resolution_clock::now();
+
   ccl_init();
+
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+  std::cout << "oneCCL (native): init took " << duration << " secs" << std::endl;
 
   jclass cls = env->GetObjectClass(param);
   jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
