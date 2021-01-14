@@ -1,23 +1,36 @@
 #include <iostream>
-#include <ccl.h>
+#include <oneapi/ccl.hpp>
 #include "org_apache_spark_ml_util_OneCCL__.h"
+
+// todo: fill initial comm_size and rank_id
+size_t comm_size;
+size_t rank_id;
+
+ccl::communicator *getComm() {
+    ccl::shared_ptr_class<ccl::kvs> kvs;
+    static ccl::communicator b = ccl::create_communicator(comm_size, rank_id, kvs);
+    return &b;
+}
 
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   (JNIEnv *env, jobject obj, jobject param) {
   
   std::cout << "oneCCL (native): init" << std::endl;
 
-  ccl_init();
+  ccl::init();
+
+  ccl::shared_ptr_class<ccl::kvs> kvs;
+  ccl::kvs::address_type main_addr;
+  kvs = ccl::create_kvs(main_addr);
+   
+  auto comm = getComm();
+
+  rank_id = comm->rank();
+  comm_size = comm->size();
 
   jclass cls = env->GetObjectClass(param);
   jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
-  jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
-
-  size_t comm_size;
-  size_t rank_id;
-
-  ccl_get_comm_size(NULL, &comm_size);
-  ccl_get_comm_rank(NULL, &rank_id);
+  jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");  
 
   env->SetLongField(param, fid_comm_size, comm_size);
   env->SetLongField(param, fid_rank_id, rank_id);    
@@ -35,7 +48,6 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
 
   std::cout << "oneCCL (native): cleanup" << std::endl;
 
-  ccl_finalize();
 }
 
 /*
@@ -44,12 +56,9 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_isRoot
-  (JNIEnv *env, jobject obj) {
+  (JNIEnv *env, jobject obj) {    
 
-    size_t rank_id;
-    ccl_get_comm_rank(NULL, &rank_id);
-
-    return (rank_id == 0);
+    return getComm()->rank() == 0;
 }
 
 /*
@@ -59,12 +68,7 @@ JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_isRoot
  */
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_rankID
   (JNIEnv *env, jobject obj) {
-
-    size_t rank_id;
-    ccl_get_comm_rank(NULL, &rank_id);
-
-    return rank_id;
-
+    return getComm()->rank();
 }
 
 /*

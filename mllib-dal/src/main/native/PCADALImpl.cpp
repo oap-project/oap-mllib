@@ -1,4 +1,3 @@
-#include <ccl.h>
 #include <daal.h>
 
 #include "service.h"
@@ -7,6 +6,7 @@
 #include <iostream>
 
 #include "org_apache_spark_ml_feature_PCADALImpl.h"
+#include "OneCCL.h"
 
 using namespace std;
 using namespace daal;
@@ -24,8 +24,9 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num, jint executor_cores,
     jobject resultObj) {
-  size_t rankId;
-  ccl_get_comm_rank(NULL, &rankId);
+
+  ccl::communicator *comm = getComm();
+  size_t rankId = comm->rank();
 
   const size_t nBlocks = executor_num;
   const int comm_size = executor_num;
@@ -59,9 +60,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   byte* nodeResults = new byte[perNodeArchLength];
   dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
 
-  ccl_request_t request;  
-
-  size_t* recv_counts = new size_t[comm_size * perNodeArchLength];
+  vector<size_t> recv_counts(comm_size * perNodeArchLength);
   for (int i = 0; i < comm_size; i++) recv_counts[i] = perNodeArchLength;
 
   cout << "PCA (native): ccl_allgatherv receiving " << perNodeArchLength * nBlocks << " bytes" << endl;
@@ -71,16 +70,13 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   /* Transfer partial results to step 2 on the root node */
   // MPI_Gather(nodeResults, perNodeArchLength, MPI_CHAR, serializedData.get(),
   // perNodeArchLength, MPI_CHAR, ccl_root, MPI_COMM_WORLD);
-  ccl_allgatherv(nodeResults, perNodeArchLength, serializedData.get(), recv_counts,
-                 ccl_dtype_char, NULL, NULL, NULL, &request);
-  ccl_wait(request);
+  ccl::allgatherv(nodeResults, perNodeArchLength, serializedData.get(), recv_counts,
+                  ccl::datatype::uint8, *comm).wait();
 
   auto t2 = std::chrono::high_resolution_clock::now();
 
   auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
   std::cout << "PCA (native): ccl_allgatherv took " << duration << " secs" << std::endl;
-
-  delete[] nodeResults;
 
   if (rankId == ccl_root) {
     auto t1 = std::chrono::high_resolution_clock::now();        
