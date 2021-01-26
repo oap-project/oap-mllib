@@ -163,8 +163,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   jint executor_num, jint executor_cores,
   jobject resultObj) {
 
-  ccl::communicator *comm = getComm();
-  size_t rankId = comm->rank();
+  ccl::communicator &comm = getComm();
+  size_t rankId = comm.rank();
 
   NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
   NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
@@ -184,14 +184,14 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   for (it = 0; it < iteration_num && !converged; it++) {
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    newCentroids = kmeans_compute(rankId, *comm, pData, centroids, cluster_num, executor_num, totalCost);
+    newCentroids = kmeans_compute(rankId, comm, pData, centroids, cluster_num, executor_num, totalCost);
 
     if (rankId == ccl_root) {
         converged = areAllCentersConverged(centroids, newCentroids, tolerance);
     }
 
     // Sync converged status
-    ccl::broadcast(&converged, 1, ccl::datatype::uint8, ccl_root, *comm).wait();
+    ccl::broadcast(&converged, 1, ccl::datatype::uint8, ccl_root, comm).wait();
 
     centroids = newCentroids;
 

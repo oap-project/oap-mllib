@@ -2,4 +2,4 @@
 
 #include <oneapi/ccl.hpp>
 
-ccl::communicator *getComm();
+ccl::communicator &getComm();

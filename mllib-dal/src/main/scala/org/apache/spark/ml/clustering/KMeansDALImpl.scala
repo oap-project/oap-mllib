@@ -111,9 +111,9 @@ class KMeansDALImpl (
     
     }.cache()
 
-    val results = coalescedTables.mapPartitions { table =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+      OneCCL.init(executorNum, rank, executorIPAddress)
 
       val initCentroids = OneDAL.makeNumericTable(centers)
       val result = new KMeansResult()

@@ -48,9 +48,9 @@ class PCADALImpl (
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(input.sparkContext)
 
-    val results = coalescedTables.mapPartitions { table =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+      OneCCL.init(executorNum, rank, executorIPAddress)
 
       val result = new PCAResult()
       cPCATrainDAL(

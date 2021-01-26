@@ -55,11 +55,10 @@ public final class LibLoader {
      * Load oneCCL libs in dependency order
      */
     public static synchronized void loadLibCCL() throws IOException {
-        loadFromJar(subDir, "libpmi.so.1");
-        loadFromJar(subDir, "libresizable_pmi.so.1");
         loadFromJar(subDir, "libfabric.so.1");
+        loadFromJar(subDir, "libmpi.so.12");
+        loadFromJar(subDir, "libccl.so");
         loadFromJar(subDir, "libsockets-fi.so");
-        loadFromJar(subDir, "libccl_atl_ofi.so");
     }
 
     /**

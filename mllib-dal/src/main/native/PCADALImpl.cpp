@@ -25,8 +25,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
     JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num, jint executor_cores,
     jobject resultObj) {
 
-  ccl::communicator *comm = getComm();
-  size_t rankId = comm->rank();
+  ccl::communicator &comm = getComm();
+  size_t rankId = comm.rank();
 
   const size_t nBlocks = executor_num;
   const int comm_size = executor_num;
@@ -71,7 +71,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   // MPI_Gather(nodeResults, perNodeArchLength, MPI_CHAR, serializedData.get(),
   // perNodeArchLength, MPI_CHAR, ccl_root, MPI_COMM_WORLD);
   ccl::allgatherv(nodeResults, perNodeArchLength, serializedData.get(), recv_counts,
-                  ccl::datatype::uint8, *comm).wait();
+                  ccl::datatype::uint8, comm).wait();
 
   auto t2 = std::chrono::high_resolution_clock::now();
 
