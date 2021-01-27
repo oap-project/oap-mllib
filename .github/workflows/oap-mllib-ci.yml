@@ -12,12 +12,24 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+      - name: Restore cached dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.m2/repository
+            ~/downloads
+            /opt/intel/inteloneapi
+            /opt/intel/oneapi
+          key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-
       - name: Set up dependencies
         run: |
-          cd ${{runner.temp}} 
-          wget http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-          tar -zxf spark-3.0.0-bin-hadoop2.7.tgz
-          export SPARK_HOME=${{runner.temp}}/spark-3.0.0-bin-hadoop2.7
+          [ -d ~/downloads ] || mkdir ~/downloads
+          cd ~/downloads
+          [ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
+          [ -d spark-3.0.0-bin-hadoop2.7 ] || cd ~ && tar -zxf downloads/spark-3.0.0-bin-hadoop2.7.tgz
+          export SPARK_HOME=~/spark-3.0.0-bin-hadoop2.7
           ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
       - name: Build and Test
         run: |
