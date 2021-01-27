@@ -14,7 +14,7 @@ jobs:
           java-version: 1.8
       - name: Set up dependencies
         run: "[ -d $HOME/downloads ] || mkdir $HOME/downloads"
-        run: cd $HOME/downloads && wget http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz"
+        run: "cd $HOME/downloads && wget http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz"
         run: "cd $HOME && tar -xf $HOME/downloads/spark-3.0.0-bin-hadoop2.7.tgz"
         run: "export SPARK_HOME=$HOME/spark-3.0.0-bin-hadoop2.7"
         run: ${{ github.workspace }}/oap-mllib/dev/install-build-deps-ubuntu.sh
