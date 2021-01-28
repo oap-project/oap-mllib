@@ -20,13 +20,13 @@
 Thanks for opening a pull request!
 
 Could you open an issue for this pull request on Github Issues?
-https://github.com/Intel-bigdata/OAP/issues
+https://github.com/oap-project/oap-mllib/issues
 
 Then could you also rename ***pull request title*** and ***commit log*** in the following format?
 
-    [OAP-${ISSUES_ID}][optional:${MUDULENAME}] ${detailed message}
+    [ML-${ISSUES_ID}] ${detailed message}
 
 See also:
 
-  * [Other pull requests](https://github.com/Intel-bigdata/OAP/pulls/)
+  * [Other pull requests](https://github.com/oap-project/oap-mllib/pulls/)
 
