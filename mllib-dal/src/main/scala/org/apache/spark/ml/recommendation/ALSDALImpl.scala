@@ -206,6 +206,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
     logInfo(s"ALSDAL fit using $executorNum Executors for $nVectors vectors and $nFeatures features")
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
+    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
     val numericTables = if (data.getNumPartitions < executorNum) {
       data.repartition(executorNum).setName("Repartitioned for conversion").cache()
@@ -217,12 +218,12 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
       // Transpose the dataset
       .map { p =>
         Rating(p.item, p.user, p.rating) }
-      .mapPartitions { iter =>
+      .mapPartitionsWithIndex { (rank, iter) =>
         val context = new DaalContext()
         println("ALSDALImpl: Loading libMLlibDAL.so" )
         LibLoader.loadLibraries()
 
-        OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+        OneCCL.init(executorNum, rank, kvsIP)
         val rankId = OneCCL.rankID()
 
         println("rankId", rankId, "nUsers", nVectors, "nItems", nFeatures)

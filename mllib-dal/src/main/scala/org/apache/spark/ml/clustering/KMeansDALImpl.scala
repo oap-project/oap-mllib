@@ -41,6 +41,7 @@ class KMeansDALImpl (
     instr.foreach(_.logInfo(s"Processing partitions with $executorNum executors"))
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
+    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
     // repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
@@ -111,9 +112,9 @@ class KMeansDALImpl (
     
     }.cache()
 
-    val results = coalescedTables.mapPartitions { table =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+      OneCCL.init(executorNum, rank, kvsIP)
 
       val initCentroids = OneDAL.makeNumericTable(centers)
       val result = new KMeansResult()

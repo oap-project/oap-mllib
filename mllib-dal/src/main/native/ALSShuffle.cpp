@@ -1,9 +1,9 @@
-#include <ccl.h>
 #include <cstring>
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <set>
+#include <oneapi/ccl.hpp>
 
 #include "ALSShuffle.h"
 
@@ -44,16 +44,13 @@ int distinct_count(std::vector<Rating> &data) {
   return count;
 }
 
-Rating * shuffle_all2all(std::vector<RatingPartition> &partitions, size_t nBlocks, size_t &newRatingsNum, size_t &newCsrRowNum) {
+Rating * shuffle_all2all(ccl::communicator &comm, std::vector<RatingPartition> &partitions, size_t nBlocks, size_t &newRatingsNum, size_t &newCsrRowNum) {
   size_t sendBufSize = 0;
   size_t recvBufSize = 0;
-  size_t perNodeSendLens[nBlocks];
-  size_t perNodeRecvLens[nBlocks];
+  vector<size_t> perNodeSendLens(nBlocks);
+  vector<size_t> perNodeRecvLens(nBlocks);
 
-  ByteBuffer sendData;
-
-  size_t rankId;
-  ccl_get_comm_rank(NULL, &rankId);
+  ByteBuffer sendData;  
 
   // Calculate send buffer size
   for (size_t i = 0; i < nBlocks; i++) {      
@@ -72,10 +69,8 @@ Rating * shuffle_all2all(std::vector<RatingPartition> &partitions, size_t nBlock
     offset += perNodeSendLens[i];
   }
 
-  // Send lens first
-  ccl_request_t request;
-  ccl_alltoall(perNodeSendLens, perNodeRecvLens, sizeof(size_t), ccl_dtype_char, NULL, NULL, NULL, &request);
-  ccl_wait(request);
+  // Send lens first  
+  ccl::alltoall(perNodeSendLens.data(), perNodeRecvLens.data(), sizeof(size_t), ccl::datatype::uint8, comm).wait();
 
   // Calculate recv buffer size
   for (size_t i = 0; i < nBlocks; i++) {
@@ -87,8 +82,7 @@ Rating * shuffle_all2all(std::vector<RatingPartition> &partitions, size_t nBlock
   recvData.resize(ratingsNum);
 
   // Send data
-  ccl_alltoallv(sendData.data(), perNodeSendLens, recvData.data(), perNodeRecvLens, ccl_dtype_char, NULL, NULL, NULL, &request);    
-  ccl_wait(request);
+  ccl::alltoallv(sendData.data(), perNodeSendLens, recvData.data(), perNodeRecvLens, ccl::datatype::uint8, comm).wait();  
 
   sort(recvData.begin(), recvData.end(), compareRatingByUser);
 
