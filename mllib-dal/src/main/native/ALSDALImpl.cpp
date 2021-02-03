@@ -591,6 +591,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_recommendation_ALSDALImpl_cDALI
   cout << "- NumberOfColumns: " << dataTable->getNumberOfColumns() << endl;
   cout << "- NumberOfRatings: " << dataTable->getDataSize() << endl;
   cout << "- fullNUsers: " << nUsers << endl;
+  cout << "- nFactors: " << nFactors << endl;
 
   // Set number of threads for oneDAL to use for each rank
   services::Environment::getInstance()->setNumberOfThreads(executor_cores);

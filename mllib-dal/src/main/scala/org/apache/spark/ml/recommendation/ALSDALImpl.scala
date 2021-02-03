@@ -31,7 +31,7 @@ class ALSDataPartitioner(blocks: Int, itemsInBlock: Long)
 
 class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
   data: RDD[Rating[ID]],
-  rank: Int,
+  nFactors: Int,
   maxIter: Int,
   regParam: Double,
   alpha: Double,
@@ -237,7 +237,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
         val result = new ALSResult()
         cDALImplictALS(
           table.getCNumericTable, nUsers = nVectors,
-          rank, maxIter, regParam, alpha,
+          nFactors, maxIter, regParam, alpha,
           executorNum,
           executorCores,
           rankId,
@@ -371,7 +371,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
   // Single entry to call Implict ALS DAL backend
   @native private def cDALImplictALS(data: Long, 
                                      nUsers: Long,
-                                     rank: Int,
+                                     nFactors: Int,
                                      maxIter: Int,
                                      regParam: Double,
                                      alpha: Double,
