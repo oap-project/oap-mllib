@@ -531,6 +531,8 @@ JNIEXPORT jobject JNICALL Java_org_apache_spark_ml_recommendation_ALSDALImpl_cSh
   //   cout << "cShuffleData: rank " << rankId << endl;
   cout << "RATING_SIZE: " << RATING_SIZE << endl;
 
+  ccl::communicator &comm = getComm();
+
   jbyte* ratingsBuf = (jbyte*)env->GetDirectBufferAddress(dataBuffer);
 
   jlong ratingsNum = env->GetDirectBufferCapacity(dataBuffer) / RATING_SIZE;
@@ -552,7 +554,7 @@ JNIEXPORT jobject JNICALL Java_org_apache_spark_ml_recommendation_ALSDALImpl_cSh
 
   size_t newRatingsNum = 0;
   size_t newCsrRowNum = 0;
-  Rating* ratings = shuffle_all2all(ratingPartitions, nBlocks, newRatingsNum, newCsrRowNum);
+  Rating* ratings = shuffle_all2all(comm, ratingPartitions, nBlocks, newRatingsNum, newCsrRowNum);
 
   // Get the class of the input object
   jclass clazz = env->GetObjectClass(infoObj);
