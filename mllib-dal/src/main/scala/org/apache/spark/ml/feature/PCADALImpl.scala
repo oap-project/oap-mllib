@@ -40,18 +40,20 @@ class PCADALImpl (
     res.map(_.asML)
   }
 
-  def fitWithDAL(input: RDD[Vector]) : MLlibPCAModel = {
+  def fitWithDAL(data: RDD[Vector]) : MLlibPCAModel = {
 
-    val normalizedData = normalizeData(input)
+    val normalizedData = normalizeData(data)
 
     val coalescedTables = OneDAL.rddVectorToNumericTables(normalizedData, executorNum)
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(input.sparkContext)
-    val kvsIP = input.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
+    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsPort = Utils.checkExecutorAvailPort(data.sparkContext, kvsIP)
+    val kvsIPPort = kvsIP+"_"+kvsPort
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIP)
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val result = new PCAResult()
       cPCATrainDAL(

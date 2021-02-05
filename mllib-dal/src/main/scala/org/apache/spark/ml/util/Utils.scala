@@ -71,6 +71,20 @@ object Utils {
     ip
   }
 
+  def checkExecutorAvailPort(sc: SparkContext, localIP: String) : Int = {
+    val executor_num = Utils.sparkExecutorNum(sc)
+    val data = sc.parallelize(1 to executor_num, executor_num)
+    val result = data.mapPartitionsWithIndex { (index, p) =>
+      LibLoader.loadLibraries()
+      if (index == 0)
+        Iterator(OneCCL.getAvailPort(localIP))
+      else
+        Iterator()
+    }.collect()
+
+    return result(0)
+  }
+
   def checkClusterPlatformCompatibility(sc: SparkContext) : Boolean = {
     LibLoader.loadLibraries()
 

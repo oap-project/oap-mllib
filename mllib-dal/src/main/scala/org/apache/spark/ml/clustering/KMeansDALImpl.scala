@@ -42,6 +42,8 @@ class KMeansDALImpl (
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsPort = Utils.checkExecutorAvailPort(data.sparkContext, kvsIP)
+    val kvsIPPort = kvsIP+"_"+kvsPort
 
     // repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
@@ -114,7 +116,7 @@ class KMeansDALImpl (
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIP)
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val initCentroids = OneDAL.makeNumericTable(centers)
       val result = new KMeansResult()
