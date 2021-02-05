@@ -47,10 +47,11 @@ class PCADALImpl (
     val coalescedTables = OneDAL.rddVectorToNumericTables(normalizedData, executorNum)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(input.sparkContext)
+    val kvsIP = input.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
-    val results = coalescedTables.mapPartitions { table =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+      OneCCL.init(executorNum, rank, kvsIP)
 
       val result = new PCAResult()
       cPCATrainDAL(

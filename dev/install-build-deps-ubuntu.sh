@@ -17,7 +17,7 @@ echo "Building oneCCL ..."
 cd /tmp
 git clone https://github.com/oneapi-src/oneCCL
 cd oneCCL
-git checkout beta08
+git checkout 2021.1
 mkdir build && cd build
 cmake ..
 make -j 2 install
