@@ -125,10 +125,6 @@ CSRNumericTable * createSparseTable(const std::string & datasetFileName)
     return numericTable;
 }
 
-CSRNumericTable * createFloatSparseTable(const std::string & datasetFileName) {
-    return createSparseTable<float>(datasetFileName);
-}
-
 void printAprioriItemsets(NumericTablePtr largeItemsetsTable, NumericTablePtr largeItemsetsSupportTable, size_t nItemsetToPrint = 20)
 {
     size_t largeItemsetCount     = largeItemsetsSupportTable->getNumberOfRows();

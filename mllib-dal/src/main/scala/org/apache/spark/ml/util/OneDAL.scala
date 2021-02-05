@@ -149,7 +149,4 @@ object OneDAL {
   @native def cFreeDataMemory(numTableAddr: Long)
 
   @native def cCheckPlatformCompatibility() : Boolean
-
-  @native def cNewCSRNumericTable(data: Array[Float], colIndices: Array[Long], rowOffsets: Array[Long], nFeatures: Long,
-                                  nVectors: Long) : Long
 }
