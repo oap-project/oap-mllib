@@ -128,7 +128,7 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
   int server_listen_sock;
 
   if ((server_listen_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("init_main_server_by_string: server_listen_sock init");
+    perror("OneCCL (native) getAvailPort error!");
     return -1;
   }
 
@@ -141,6 +141,7 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
          sizeof(main_server_address)) < 0) {
     main_server_address.sin_port++;
   }
+
   close(server_listen_sock);
 
   env->ReleaseStringUTFChars(localIP, local_host_ip);
