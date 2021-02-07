@@ -38,4 +38,5 @@ jobs:
           source /opt/intel/oneapi/dal/latest/env/vars.sh
           source /opt/intel/oneapi/tbb/latest/env/vars.sh
           source /tmp/oneCCL/build/_install/env/setvars.sh
-          ./build.sh
+          # temp disable and will enable for new release of oneCCL
+          #./build.sh

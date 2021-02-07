@@ -48,7 +48,10 @@ class PCADALImpl (
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
-    val kvsPort = Utils.checkExecutorAvailPort(data.sparkContext, kvsIP)
+
+    val kvsPortDetected = Utils.checkExecutorAvailPort(data.sparkContext, kvsIP)
+    val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+
     val kvsIPPort = kvsIP+"_"+kvsPort
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
