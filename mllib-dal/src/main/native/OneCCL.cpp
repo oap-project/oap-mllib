@@ -1,5 +1,13 @@
 #include <iostream>
+#include <chrono>
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include <oneapi/ccl.hpp>
+
 #include "org_apache_spark_ml_util_OneCCL__.h"
 
 // todo: fill initial comm_size and rank_id
@@ -17,10 +25,12 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   
   std::cout << "oneCCL (native): init" << std::endl;
 
+  auto t1 = std::chrono::high_resolution_clock::now();
+
   ccl::init();
 
   const char *str = env->GetStringUTFChars(ip_port, 0);
-  ccl::string ccl_ip_port(str);  
+  ccl::string ccl_ip_port(str);
 
   auto kvs_attr = ccl::create_kvs_attr();
   kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
@@ -29,6 +39,10 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   kvs = ccl::create_main_kvs(kvs_attr);
 
   g_comms.push_back(ccl::create_communicator(size, rank, kvs));
+
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+  std::cout << "oneCCL (native): init took " << duration << " secs" << std::endl;
 
   rank_id = getComm().rank();
   comm_size = getComm().size();
@@ -96,4 +110,41 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
     env->ReleaseStringUTFChars(value, v);
 
     return err;
+}
+
+/*
+ * Class:     org_apache_spark_ml_util_OneCCL__
+ * Method:    getAvailPort
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
+  (JNIEnv *env, jobject obj, jstring localIP) {
+
+  const int port_start_base = 3000;
+
+  char* local_host_ip = (char *) env->GetStringUTFChars(localIP, NULL);
+
+  struct sockaddr_in main_server_address;
+  int server_listen_sock;
+
+  if ((server_listen_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("OneCCL (native) getAvailPort error!");
+    return -1;
+  }
+
+  main_server_address.sin_family = AF_INET;
+  main_server_address.sin_addr.s_addr = inet_addr(local_host_ip);
+  main_server_address.sin_port = port_start_base;
+
+  while (bind(server_listen_sock,
+         (const struct sockaddr *)&main_server_address,
+         sizeof(main_server_address)) < 0) {
+    main_server_address.sin_port++;
+  }
+
+  close(server_listen_sock);
+
+  env->ReleaseStringUTFChars(localIP, local_host_ip);
+
+  return main_server_address.sin_port;
 }

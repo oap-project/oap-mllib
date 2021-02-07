@@ -19,3 +19,4 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     org.apache.spark.ml.util.OneDAL$ \
     org.apache.spark.ml.clustering.KMeansDALImpl \
     org.apache.spark.ml.feature.PCADALImpl
+
