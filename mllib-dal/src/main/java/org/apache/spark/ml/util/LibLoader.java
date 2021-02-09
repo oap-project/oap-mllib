@@ -21,7 +21,8 @@ package org.apache.spark.ml.util;
 import java.io.*;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.intel.daal.utils.LibUtils;
 
@@ -30,8 +31,7 @@ public final class LibLoader {
     // Make sure loading libraries from different temp directory for each process
     private final static String subDir = "MLlibDAL_" + UUID.randomUUID();
 
-    private static final Logger logger = Logger.getLogger(LibLoader.class.getName());
-    private static final Level logLevel = Level.INFO;
+    private static final Logger log = LoggerFactory.getLogger("LibLoader");
 
     /**
      * Get temp dir for exacting lib files
@@ -81,12 +81,12 @@ public final class LibLoader {
      * @param name library name
      */
     private static void loadFromJar(String path, String name) throws IOException {
-        logger.log(logLevel, "Loading " + name + " ...");
+        log.debug("Loading " + name + " ...");
 
         File fileOut = createTempFile(path, name);
         // File exists already
         if (fileOut == null) {
-            logger.log(logLevel, "DONE: Loading library as resource.");
+            log.debug("DONE: Loading library as resource.");
             return;
         }
 
@@ -96,7 +96,7 @@ public final class LibLoader {
         }
 
         try (OutputStream streamOut = new FileOutputStream(fileOut)) {
-            logger.log(logLevel, "Writing resource to temp file.");
+            log.debug("Writing resource to temp file.");
 
             byte[] buffer = new byte[32768];
             while (true) {
@@ -115,7 +115,7 @@ public final class LibLoader {
         }
 
         System.load(fileOut.toString());
-        logger.log(logLevel, "DONE: Loading library as resource.");
+        log.debug("DONE: Loading library as resource.");
     }
 
     /**

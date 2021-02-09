@@ -17,50 +17,24 @@
 
 package org.apache.spark.ml.util
 
-import org.apache.spark.SparkConf
+import org.apache.spark.internal.Logging
 
-object OneCCL {
+object OneCCL extends Logging {
 
   var cclParam = new CCLParam()
 
-//  var kvsIPPort = sys.env.getOrElse("CCL_KVS_IP_PORT", "")
-//  var worldSize = sys.env.getOrElse("CCL_WORLD_SIZE", "1").toInt
-
-//  var kvsPort = 5000
-
-//  private def checkEnv() {
-//    val altTransport = sys.env.getOrElse("CCL_ATL_TRANSPORT", "")
-//    val pmType = sys.env.getOrElse("CCL_PM_TYPE", "")
-//    val ipExchange = sys.env.getOrElse("CCL_KVS_IP_EXCHANGE", "")
-//
-//    assert(altTransport == "ofi")
-//    assert(pmType == "resizable")
-//    assert(ipExchange == "env")
-//    assert(kvsIPPort != "")
-//
-//  }
-
   // Run on Executor
-//  def setExecutorEnv(executor_num: Int, ip: String, port: Int): Unit = {
-//    // Work around ccl by passings in a spark.executorEnv.CCL_KVS_IP_PORT.
-//    val ccl_kvs_ip_port = sys.env.getOrElse("CCL_KVS_IP_PORT", s"${ip}_${port}")
-//
-//    println(s"oneCCL: Initializing with CCL_KVS_IP_PORT: $ccl_kvs_ip_port")
-//
-//    setEnv("CCL_PM_TYPE", "resizable")
-//    setEnv("CCL_ATL_TRANSPORT","ofi")
-//    setEnv("CCL_ATL_TRANSPORT_PATH", LibLoader.getTempSubDir())
-//    setEnv("CCL_KVS_IP_EXCHANGE","env")
-//    setEnv("CCL_KVS_IP_PORT", ccl_kvs_ip_port)
-//    setEnv("CCL_WORLD_SIZE", s"${executor_num}")
-//    // Uncomment this if you whant to debug oneCCL
-//    // setEnv("CCL_LOG_LEVEL", "2")
-//  }
+  def setExecutorEnv(): Unit = {
+    setEnv("CCL_ATL_TRANSPORT","ofi")
+    // Uncomment this if you whant to debug oneCCL
+    // setEnv("CCL_LOG_LEVEL", "2")
+  }
 
   def init(executor_num: Int, rank: Int, ip_port: String) = {
 
-//    setExecutorEnv(executor_num, ip, port)
-    println(s"oneCCL: Initializing with IP_PORT: ${ip_port}")
+    setExecutorEnv()
+
+    logInfo(s"Initializing with IP_PORT: ${ip_port}")
 
     // cclParam is output from native code
     c_init(executor_num, rank, ip_port, cclParam)
@@ -68,11 +42,7 @@ object OneCCL {
     // executor number should equal to oneCCL world size
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
 
-    println(s"oneCCL: Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
-
-    // Use a new port when calling init again
-//    kvsPort = kvsPort + 1
-
+    logInfo(s"Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
   }
 
   // Run on Executor
