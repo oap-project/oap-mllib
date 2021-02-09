@@ -23,7 +23,7 @@ ccl::communicator &getComm() {
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   (JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jobject param) {
   
-  std::cout << "oneCCL (native): init" << std::endl;
+  std::cerr << "oneCCL (native): init" << std::endl;
 
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -42,7 +42,7 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
 
   auto t2 = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
-  std::cout << "oneCCL (native): init took " << duration << " secs" << std::endl;
+  std::cerr << "oneCCL (native): init took " << duration << " secs" << std::endl;
 
   rank_id = getComm().rank();
   comm_size = getComm().size();
@@ -68,7 +68,7 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
 
   g_comms.pop_back();
 
-  std::cout << "oneCCL (native): cleanup" << std::endl;
+  std::cerr << "oneCCL (native): cleanup" << std::endl;
 
 }
 
@@ -112,6 +112,24 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
     return err;
 }
 
+#define GET_IP_CMD            "hostname -I"
+#define MAX_KVS_VAL_LENGTH    130
+#define READ_ONLY             "r"
+
+static bool is_valid_ip(char ip[]) {
+    FILE *fp;
+    // TODO: use getifaddrs instead of popen
+    if ((fp = popen(GET_IP_CMD, READ_ONLY)) == NULL) {
+        printf("Can't get host IP\n");
+        exit(1);
+    }
+    char host_ips[MAX_KVS_VAL_LENGTH];
+    fgets(host_ips, MAX_KVS_VAL_LENGTH, fp);
+    pclose(fp);
+
+    return strstr(host_ips, ip) ? true : false;
+}
+
 /*
  * Class:     org_apache_spark_ml_util_OneCCL__
  * Method:    getAvailPort
@@ -120,12 +138,18 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
   (JNIEnv *env, jobject obj, jstring localIP) {
 
+  // start from beginning of dynamic port
   const int port_start_base = 3000;
 
   char* local_host_ip = (char *) env->GetStringUTFChars(localIP, NULL);
 
+  // check if the input ip is one of host's ips
+  if (!is_valid_ip(local_host_ip))
+    return -1;
+
   struct sockaddr_in main_server_address;
   int server_listen_sock;
+  in_port_t port = port_start_base;
 
   if ((server_listen_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("OneCCL (native) getAvailPort error!");
@@ -134,17 +158,19 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
 
   main_server_address.sin_family = AF_INET;
   main_server_address.sin_addr.s_addr = inet_addr(local_host_ip);
-  main_server_address.sin_port = port_start_base;
+  main_server_address.sin_port = htons(port);
 
+  // search for available port
   while (bind(server_listen_sock,
          (const struct sockaddr *)&main_server_address,
          sizeof(main_server_address)) < 0) {
-    main_server_address.sin_port++;
+    port++;
+    main_server_address.sin_port = htons(port);
   }
 
-  close(server_listen_sock);
+  close(server_listen_sock);  
 
   env->ReleaseStringUTFChars(localIP, local_host_ip);
 
-  return main_server_address.sin_port;
+  return port;
 }

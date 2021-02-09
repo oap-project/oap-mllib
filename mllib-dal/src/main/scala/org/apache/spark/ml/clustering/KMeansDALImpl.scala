@@ -43,7 +43,7 @@ class KMeansDALImpl (
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
-    val kvsPortDetected = Utils.checkExecutorAvailPort(data.sparkContext, kvsIP)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
     val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
 
     val kvsIPPort = kvsIP+"_"+kvsPort
@@ -70,14 +70,14 @@ class KMeansDALImpl (
       val it = entry._3
       val numCols = partitionDims(index)._2
 	  
-      println(s"KMeansDALImpl: Partition index: $index, numCols: $numCols, numRows: $numRows")
+      logDebug(s"KMeansDALImpl: Partition index: $index, numCols: $numCols, numRows: $numRows")
 
       // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
       val context = new DaalContext()
       val matrix = new DALMatrix(context, classOf[java.lang.Double],
         numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
 
-      println("KMeansDALImpl: Loading native libraries" )
+      logDebug("KMeansDALImpl: Loading native libraries" )
       // oneDAL libs should be loaded by now, extract libMLlibDAL.so to temp file and load
       LibLoader.loadLibraries()
 

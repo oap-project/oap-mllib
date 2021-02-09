@@ -18,8 +18,9 @@
 package org.apache.spark.ml.util
 
 import org.apache.spark.SparkConf
+import org.apache.spark.internal.Logging
 
-object OneCCL {
+object OneCCL extends Logging {
 
   var cclParam = new CCLParam()
 
@@ -60,7 +61,7 @@ object OneCCL {
   def init(executor_num: Int, rank: Int, ip_port: String) = {
 
 //    setExecutorEnv(executor_num, ip, port)
-    println(s"oneCCL: Initializing with IP_PORT: ${ip_port}")
+    logInfo(s"oneCCL: Initializing with IP_PORT: ${ip_port}")
 
     // cclParam is output from native code
     c_init(executor_num, rank, ip_port, cclParam)
@@ -68,7 +69,7 @@ object OneCCL {
     // executor number should equal to oneCCL world size
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
 
-    println(s"oneCCL: Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
+    logInfo(s"oneCCL: Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
 
     // Use a new port when calling init again
 //    kvsPort = kvsPort + 1
