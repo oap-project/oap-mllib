@@ -23,7 +23,7 @@ ccl::communicator &getComm() {
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   (JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jobject param) {
   
-  std::cerr << "oneCCL (native): init" << std::endl;
+  std::cerr << "OneCCL (native): init" << std::endl;
 
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -42,7 +42,7 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
 
   auto t2 = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
-  std::cerr << "oneCCL (native): init took " << duration << " secs" << std::endl;
+  std::cerr << "OneCCL (native): init took " << duration << " secs" << std::endl;
 
   rank_id = getComm().rank();
   comm_size = getComm().size();
@@ -68,7 +68,7 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
 
   g_comms.pop_back();
 
-  std::cerr << "oneCCL (native): cleanup" << std::endl;
+  std::cerr << "OneCCL (native): cleanup" << std::endl;
 
 }
 
