@@ -47,6 +47,14 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_rankID
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
   (JNIEnv *, jobject, jstring, jstring, jboolean);
 
+/*
+ * Class:     org_apache_spark_ml_util_OneCCL__
+ * Method:    getAvailPort
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif
