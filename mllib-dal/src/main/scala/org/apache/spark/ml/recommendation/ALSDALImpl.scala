@@ -213,12 +213,15 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
 
     val kvsIPPort = kvsIP+"_"+kvsPort
 
+    val numericTables = data.repartition(executorNum).setName("Repartitioned for conversion").cache()
+
+/*
     val numericTables = if (data.getNumPartitions < executorNum) {
       data.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
       data.coalesce(executorNum).setName("Coalesced for conversion").cache()
     }
-
+*/
     val results = numericTables
       // Transpose the dataset
       .map { p =>
