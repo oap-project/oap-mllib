@@ -38,10 +38,10 @@ LIBS := -L${CCL_ROOT}/lib -lccl \
 #        -L$(JAVA_HOME)/jre/lib/amd64 -ljsig
 
 CPP_SRCS += \
-./OneCCL.cpp ./OneDAL.cpp ./KMeansDALImpl.cpp ./PCADALImpl.cpp ./service.cpp ./error_handling.cpp
+./OneCCL.cpp ./OneDAL.cpp ./KMeansDALImpl.cpp ./PCADALImpl.cpp ./ALSDALImpl.cpp ./ALSShuffle.cpp ./service.cpp ./error_handling.cpp
 
 OBJS += \
-./OneCCL.o ./OneDAL.o ./KMeansDALImpl.o ./PCADALImpl.o ./service.o ./error_handling.o
+./OneCCL.o ./OneDAL.o ./KMeansDALImpl.o ./PCADALImpl.o ./ALSDALImpl.o ./ALSShuffle.o ./service.o ./error_handling.o
 
 # Output Binary
 OUTPUT = ../../../target/libMLlibDAL.so
