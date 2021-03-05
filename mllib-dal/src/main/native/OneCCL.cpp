@@ -188,7 +188,7 @@ static bool is_valid_ip(char ip[]) {
  * Method:    getAvailPort
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort
   (JNIEnv *env, jobject obj, jstring localIP) {
 
   // start from beginning of dynamic port
