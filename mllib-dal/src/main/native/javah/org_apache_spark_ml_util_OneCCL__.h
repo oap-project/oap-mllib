@@ -49,10 +49,10 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
 
 /*
  * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    getAvailPort
+ * Method:    c_getAvailPort
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort
   (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus

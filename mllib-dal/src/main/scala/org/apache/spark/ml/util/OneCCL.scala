@@ -50,6 +50,10 @@ object OneCCL extends Logging {
     c_cleanup()
   }
 
+  def getAvailPort(localIP: String): Int = synchronized {
+    c_getAvailPort(localIP)
+  }
+
   @native private def c_init(size: Int, rank: Int, ip_port: String, param: CCLParam) : Int
   @native private def c_cleanup() : Unit
 
@@ -57,5 +61,5 @@ object OneCCL extends Logging {
   @native def rankID() : Int
 
   @native def setEnv(key: String, value: String, overwrite: Boolean = true): Int
-  @native def getAvailPort(localIP: String): Int
+  @native def c_getAvailPort(localIP: String): Int
 }
