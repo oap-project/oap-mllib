@@ -22,6 +22,7 @@
 #include "service.h"
 #include "org_apache_spark_ml_clustering_KMeansDALImpl.h"
 #include "OneCCL.h"
+#include "GPU.h"
 
 using namespace std;
 using namespace daal;
@@ -161,6 +162,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   jlong pNumTabData, jlong pNumTabCenters,
   jint cluster_num, jdouble tolerance, jint iteration_num,
   jint executor_num, jint executor_cores,
+  jboolean use_gpu,
+  jintArray gpu_idx_array,
   jobject resultObj) {
 
   ccl::communicator &comm = getComm();
@@ -169,11 +172,22 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
   NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
 
-  // Set number of threads for oneDAL to use for each rank
-  services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+  if (use_gpu) {
+      int n_gpu = env->GetArrayLength(gpu_idx_array);
+      cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPUs"<< endl;
 
-  int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
-  cout << "oneDAL (native): Number of threads used: " << nThreadsNew << endl;
+      jint* gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
+
+      setGPUContext(comm, gpu_indices, n_gpu);
+
+      env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
+  } else {
+    // Set number of threads for oneDAL to use for each rank
+    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+
+    int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
+    cout << "oneDAL (native): use CPU kernels with " << nThreadsNew << " threads" << endl;
+  }
 
   algorithmFPType totalCost;
 

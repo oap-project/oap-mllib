@@ -19,6 +19,7 @@ package org.apache.spark.ml.clustering
 
 import com.intel.daal.data_management.data.{NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util._
@@ -39,6 +40,8 @@ class KMeansDALImpl (
   def runWithRDDVector(data: RDD[Vector], instr: Option[Instrumentation]) : MLlibKMeansModel = {
 
     instr.foreach(_.logInfo(s"Processing partitions with $executorNum executors"))
+
+    val useGPU = data.sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", true)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
@@ -118,6 +121,10 @@ class KMeansDALImpl (
     }.cache()
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+
+      val resources = TaskContext.get().resources()
+      val gpuIndices = resources("gpu").addresses.map(_.toInt)
+
       val tableArr = table.next()
       OneCCL.init(executorNum, rank, kvsIPPort)
 
@@ -131,6 +138,8 @@ class KMeansDALImpl (
         maxIterations,
         executorNum,
         executorCores,
+        useGPU,
+        gpuIndices,
         result
       )
 
@@ -184,6 +193,8 @@ class KMeansDALImpl (
                                                        iteration_num: Int,
                                                        executor_num: Int,
                                                        executor_cores: Int,
+                                                       useGPU: Boolean,
+                                                       gpuIndices: Array[Int],
                                                        result: KMeansResult): Long
 
 }
