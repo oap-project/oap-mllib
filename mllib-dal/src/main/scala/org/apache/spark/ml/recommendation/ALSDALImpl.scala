@@ -205,23 +205,16 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
 
     logInfo(s"ALSDAL fit using $executorNum Executors for $nVectors vectors and $nFeatures features")
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
-    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val numericTables = data.repartition(executorNum).setName("Repartitioned for conversion").cache()
 
-    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
-    val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+    val executorIPAddress = Utils.sparkFirstExecutorIP(numericTables.sparkContext)
+    val kvsIP = numericTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+
+    val kvsPortDetected = Utils.checkExecutorAvailPort(numericTables, kvsIP)
+    val kvsPort = numericTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
 
     val kvsIPPort = kvsIP+"_"+kvsPort
 
-    val numericTables = data.repartition(executorNum).setName("Repartitioned for conversion").cache()
-
-/*
-    val numericTables = if (data.getNumPartitions < executorNum) {
-      data.repartition(executorNum).setName("Repartitioned for conversion").cache()
-    } else {
-      data.coalesce(executorNum).setName("Coalesced for conversion").cache()
-    }
-*/
     val results = numericTables
       // Transpose the dataset
       .map { p =>

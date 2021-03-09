@@ -41,22 +41,20 @@ class KMeansDALImpl (
 
     instr.foreach(_.logInfo(s"Processing partitions with $executorNum executors"))
 
-    val useGPU = data.sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", true)
-
-    val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
-    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
-
-    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
-    val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
-
-    val kvsIPPort = kvsIP+"_"+kvsPort
-
     // repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
       data.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
       data
     }
+    
+    val executorIPAddress = Utils.sparkFirstExecutorIP(dataForConversion.sparkContext)
+    val kvsIP = dataForConversion.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(dataForConversion, kvsIP)
+    val kvsPort = dataForConversion.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+    val kvsIPPort = kvsIP+"_"+kvsPort
+    
+    val useGPU = data.sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", true)
 
     val partitionDims = Utils.getPartitionDims(dataForConversion)
 
