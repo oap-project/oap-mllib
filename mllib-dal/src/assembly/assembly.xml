@@ -41,18 +41,18 @@
     <files>
         <!-- Include TBB libraries into JAR  -->
         <file>
-            <source>${env.TBBROOT}/lib/intel64/gcc4.8/libtbb.so.12.1</source>
+            <source>${env.TBBROOT}/lib/intel64/gcc4.8/libtbb.so.12.2</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libtbb.so.2</destName>
         </file>
         <file>
-            <source>${env.TBBROOT}/lib/intel64/gcc4.8/libtbbmalloc.so.2.1</source>
+            <source>${env.TBBROOT}/lib/intel64/gcc4.8/libtbbmalloc.so.2.2</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libtbbmalloc.so.2</destName>
         </file>
         <!-- Include DAL libraries into JAR  -->
         <file>
-            <source>${env.DAALROOT}/lib/intel64/libJavaAPI.so.1.0</source>
+            <source>${env.DAALROOT}/lib/intel64/libJavaAPI.so.1.1</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libJavaAPI.so</destName>
         </file>

@@ -1,5 +1,3 @@
-#include "GPU.h"
-
 #include <list>
 #include <memory>
 #include <unistd.h>
@@ -10,6 +8,7 @@
 #include <daal_sycl.h>
 
 #include "service.h"
+#include "GPU.h"
 
 std::vector<sycl::device> get_gpus()
 {
@@ -50,19 +49,29 @@ int getLocalRank(ccl::communicator & comm, int size, int rank)
     }
     return localRank;
 
-    return 0;
+//    return 0;
 }
 
-bool setGPUContext(ccl::communicator &comm, int gpu_idx[], int n_gpu) {
+void setGPUContext(ccl::communicator &comm, jint *gpu_idx, int n_gpu) {
     int rank = comm.rank();
     int size = comm.size();
-    
+
     /* Create GPU device from local rank and set execution context */
     auto local_rank = getLocalRank(comm, size, rank);
     auto gpus       = get_gpus();
-    auto rank_gpu   = gpus[gpu_idx[local_rank % n_gpu]];
 
-    cl::sycl::queue queue(rank_gpu);
-    daal::services::SyclExecutionContext ctx(queue);
+    std::cout << rank << " " << size << " " << local_rank << " " << n_gpu << std::endl;
+
+    for (int i=0; i < n_gpu; i++) {
+        std::cout << gpu_idx[i] << std::endl;
+    }
+
+    // auto rank_gpu   = gpus[gpu_idx[local_rank % n_gpu]];
+    static auto rank_gpu   = gpus[0];
+
+    static cl::sycl::queue queue(rank_gpu);
+    std::cout << "SyclExecutionContext" << std::endl;
+    static daal::services::SyclExecutionContext ctx(queue);
+    std::cout << "setDefaultExecutionContext" << std::endl;
     daal::services::Environment::getInstance()->setDefaultExecutionContext(ctx);
 }

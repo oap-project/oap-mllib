@@ -236,8 +236,8 @@
                             <!-- For https://github.com/oneapi-src/oneDAL/issues/1254 -->
                             <directory>${env.TBBROOT}/lib/intel64/gcc4.8</directory>
                             <includes>
-                                <include>libtbb.so.12.1</include>
-                                <include>libtbbmalloc.so.2.1</include>
+                                <include>libtbb.so.12.2</include>
+                                <include>libtbbmalloc.so.2.2</include>
                             </includes>
                         </resource>
                         <resource>
@@ -265,11 +265,11 @@
                                 <!-- oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10,
                                 rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->
                                 <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/libtbb.so.12.1</sourceFile>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/libtbb.so.12.2</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2</destinationFile>
                                 </fileSet>
                                 <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2.1</sourceFile>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2.2</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2</destinationFile>
                                 </fileSet>
                                 <fileSet>
