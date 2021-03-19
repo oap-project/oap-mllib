@@ -26,7 +26,7 @@ object OneCCL {
 //  var kvsIPPort = sys.env.getOrElse("CCL_KVS_IP_PORT", "")
 //  var worldSize = sys.env.getOrElse("CCL_WORLD_SIZE", "1").toInt
 
-//  var kvsPort = 5000
+  var kvsPort = 5000
 
 //  private def checkEnv() {
 //    val altTransport = sys.env.getOrElse("CCL_ATL_TRANSPORT", "")
@@ -57,13 +57,13 @@ object OneCCL {
 //    // setEnv("CCL_LOG_LEVEL", "2")
 //  }
 
-  def init(executor_num: Int, rank: Int, ip_port: String) = {
+  def init(executor_num: Int, rank: Int, ip: String) = {
 
 //    setExecutorEnv(executor_num, ip, port)
-    println(s"oneCCL: Initializing with IP_PORT: ${ip_port}")
+    println(s"oneCCL: Initializing with IP_PORT: ${ip}_${kvsPort}")
 
     // cclParam is output from native code
-    c_init(executor_num, rank, ip_port, cclParam)
+    c_init(executor_num, rank, ip+"_"+kvsPort.toString, cclParam)
 
     // executor number should equal to oneCCL world size
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
@@ -71,7 +71,7 @@ object OneCCL {
     println(s"oneCCL: Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
 
     // Use a new port when calling init again
-//    kvsPort = kvsPort + 1
+    kvsPort = kvsPort + 1
 
   }
 
@@ -87,5 +87,4 @@ object OneCCL {
   @native def rankID() : Int
 
   @native def setEnv(key: String, value: String, overwrite: Boolean = true): Int
-  @native def getAvailPort(localIP: String): Int
 }
