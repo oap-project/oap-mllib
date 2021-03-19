@@ -41,8 +41,6 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
   cout << "oneDAL (native): Number of threads used: " << nThreadsNew << endl;
 
-  auto t1 = std::chrono::high_resolution_clock::now();
-
   pca::Distributed<step1Local, algorithmFPType, pca::svdDense> localAlgorithm;
 
   /* Set the input data set to the algorithm */
@@ -50,12 +48,6 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
 
   /* Compute PCA decomposition */
   localAlgorithm.compute();
-
-  auto t2 = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
-  std::cout << "PCA (native): local step took " << duration << " secs" << std::endl;
-
-  t1 = std::chrono::high_resolution_clock::now();
 
   /* Serialize partial results required by step 2 */
   services::SharedPtr<byte> serializedData;
@@ -68,17 +60,12 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   byte* nodeResults = new byte[perNodeArchLength];
   dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
 
-  t2 = std::chrono::high_resolution_clock::now();
-
-  duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
-  std::cout << "PCA (native): serializing partial results took " << duration << " secs" << std::endl;
-
   vector<size_t> recv_counts(comm_size * perNodeArchLength);
   for (int i = 0; i < comm_size; i++) recv_counts[i] = perNodeArchLength;
 
   cout << "PCA (native): ccl_allgatherv receiving " << perNodeArchLength * nBlocks << " bytes" << endl;
 
-  t1 = std::chrono::high_resolution_clock::now();
+  auto t1 = std::chrono::high_resolution_clock::now();
 
   /* Transfer partial results to step 2 on the root node */
   // MPI_Gather(nodeResults, perNodeArchLength, MPI_CHAR, serializedData.get(),
@@ -86,13 +73,13 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   ccl::allgatherv(nodeResults, perNodeArchLength, serializedData.get(), recv_counts,
                   ccl::datatype::uint8, comm).wait();
 
-  t2 = std::chrono::high_resolution_clock::now();
+  auto t2 = std::chrono::high_resolution_clock::now();
 
-  duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
   std::cout << "PCA (native): ccl_allgatherv took " << duration << " secs" << std::endl;
 
   if (rankId == ccl_root) {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = std::chrono::high_resolution_clock::now();        
 
     /* Create an algorithm for principal component analysis using the svdDense method
      * on the master node */
