@@ -17,7 +17,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/Intel-bigdata/OAP/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-mllib/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -87,7 +87,7 @@ Intel® oneAPI Toolkits and its components can be downloaded and install from [h
 
 More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-You can also refer to [this script and comments in it](https://github.com/Intel-bigdata/OAP/blob/branch-1.1-spark-3.x/oap-mllib/dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
+You can also refer to [this script and comments in it](https://github.com/oap-project/oap-mllib/blob/branch-1.1-spark-3.x/dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
 
 Scala and Java dependency descriptions are already included in Maven POM file. 
 
