@@ -65,14 +65,6 @@ To use K-means example for sanity check, you need to upload a data file to your 
     $ ./run.sh
 ```
 
-### Benchmark with HiBench
-Use [Hibench](https://github.com/Intel-bigdata/HiBench) to generate dataset with various profiles, and change related variables in `run-XXX.sh` script when applicable.  Then run the following commands:
-```
-    $ cd oap-mllib/examples/kmeans-hibench
-    $ ./build.sh
-    $ ./run-hibench-oap-mllib.sh
-```
-
 ### PySpark Support
 
 As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. An example can be found in the [Examples](#examples) section.
