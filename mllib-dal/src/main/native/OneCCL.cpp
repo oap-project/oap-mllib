@@ -6,10 +6,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <list>
-#include <ifaddrs.h>
-#include <netdb.h>
-
 #include <oneapi/ccl.hpp>
 
 #include "org_apache_spark_ml_util_OneCCL__.h"
@@ -116,71 +112,22 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
     return err;
 }
 
-static const int CCL_IP_LEN = 128;
-std::list<std::string> local_host_ips;
-
-static int fill_local_host_ip() {
-    struct ifaddrs *ifaddr, *ifa;
-    int family = AF_UNSPEC;
-    char local_ip[CCL_IP_LEN];
-    if (getifaddrs(&ifaddr) < 0) {
-        // LOG_ERROR("fill_local_host_ip: can not get host IP");
-        return -1;
-    }
-
-    const char iface_name[] = "lo";
-    local_host_ips.clear();
-
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr == NULL)
-            continue;
-        if (strstr(ifa->ifa_name, iface_name) == NULL) {
-            family = ifa->ifa_addr->sa_family;
-            if (family == AF_INET) {
-                memset(local_ip, 0, CCL_IP_LEN);
-                int res = getnameinfo(
-                    ifa->ifa_addr,
-                    (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
-                    local_ip,
-                    CCL_IP_LEN,
-                    NULL,
-                    0,
-                    NI_NUMERICHOST);
-                if (res != 0) {
-                    std::string s("fill_local_host_ip: getnameinfo error > ");
-                    s.append(gai_strerror(res));
-                    // LOG_ERROR(s.c_str());
-                    return -1;
-                }
-                local_host_ips.push_back(local_ip);
-            }
-        }
-    }
-    if (local_host_ips.empty()) {
-        // LOG_ERROR("fill_local_host_ip: can't find interface to get host IP");
-        return -1;
-    }
-    // memset(local_host_ip, 0, CCL_IP_LEN);
-    // strncpy(local_host_ip, local_host_ips.front().c_str(), CCL_IP_LEN);
-
-    // for (auto &ip : local_host_ips)
-    //   cout << ip << endl;
-
-    freeifaddrs(ifaddr);
-    return 0;
-}
+#define GET_IP_CMD            "hostname -I"
+#define MAX_KVS_VAL_LENGTH    130
+#define READ_ONLY             "r"
 
 static bool is_valid_ip(char ip[]) {
-  if (fill_local_host_ip() == -1) {
-    std::cerr << "fill_local_host_ip error" << std::endl;
-  };
-  for (std::list<std::string>::iterator it = local_host_ips.begin(); it != local_host_ips.end(); ++it) {
-    if (*it == ip) {
-      return true;
+    FILE *fp;
+    // TODO: use getifaddrs instead of popen
+    if ((fp = popen(GET_IP_CMD, READ_ONLY)) == NULL) {
+        printf("Can't get host IP\n");
+        exit(1);
     }
-  }
+    char host_ips[MAX_KVS_VAL_LENGTH];
+    fgets(host_ips, MAX_KVS_VAL_LENGTH, fp);
+    pclose(fp);
 
-  return false;
+    return strstr(host_ips, ip) ? true : false;
 }
 
 /*
@@ -188,7 +135,7 @@ static bool is_valid_ip(char ip[]) {
  * Method:    getAvailPort
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_getAvailPort
   (JNIEnv *env, jobject obj, jstring localIP) {
 
   // start from beginning of dynamic port

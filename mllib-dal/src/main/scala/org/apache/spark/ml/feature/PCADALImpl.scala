@@ -47,11 +47,11 @@ class PCADALImpl (
 
     val coalescedTables = OneDAL.rddVectorToNumericTables(normalizedData, executorNum)
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
-    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
+    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
-    val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
-    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
+    val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
 
     val kvsIPPort = kvsIP+"_"+kvsPort
 
