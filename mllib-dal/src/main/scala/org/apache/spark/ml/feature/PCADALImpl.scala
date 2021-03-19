@@ -18,20 +18,19 @@
 package org.apache.spark.ml.feature
 
 import java.util.Arrays
+
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
-import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.feature.{StandardScaler => MLlibStandardScaler}
+import org.apache.spark.mllib.feature.{ StandardScaler => MLlibStandardScaler }
 
 class PCADALImpl (
     val k: Int,
     val executorNum: Int,
-    val executorCores: Int)
-  extends Serializable with Logging {
+    val executorCores: Int) extends Serializable {
 
   // Normalize data before apply fitWithDAL
   private def normalizeData(input: RDD[Vector]) : RDD[Vector] = {
@@ -50,7 +49,7 @@ class PCADALImpl (
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
-    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(data.sparkContext, kvsIP)
     val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
 
     val kvsIPPort = kvsIP+"_"+kvsPort
