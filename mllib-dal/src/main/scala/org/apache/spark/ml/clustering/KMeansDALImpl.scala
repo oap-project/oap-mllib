@@ -113,6 +113,7 @@ class KMeansDALImpl (
 
     val results = coalescedTables.mapPartitions { table =>
       val tableArr = table.next()
+
       OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
 
       val initCentroids = OneDAL.makeNumericTable(centers)
