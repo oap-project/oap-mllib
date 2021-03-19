@@ -14,14 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <oneapi/ccl.hpp>
+#include <ccl.h>
 #include <daal.h>
-#include <iostream>
-#include <chrono>
 
 #include "service.h"
 #include "org_apache_spark_ml_clustering_KMeansDALImpl.h"
-#include "OneCCL.h"
+#include <iostream>
+#include <chrono>
 
 using namespace std;
 using namespace daal;
@@ -31,8 +30,7 @@ const int ccl_root = 0;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm, 
-                                      const NumericTablePtr & pData, const NumericTablePtr & initialCentroids,
+static NumericTablePtr kmeans_compute(int rankId, const NumericTablePtr & pData, const NumericTablePtr & initialCentroids,
     size_t nClusters, size_t nBlocks, algorithmFPType &ret_cost)
 {
     const bool isRoot          = (rankId == ccl_root);
@@ -45,13 +43,17 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
         CentroidsArchLength = inputArch.getSizeOfArchive();
     }
 
+    ccl_request_t request;
+
     /* Get partial results from the root node */
-    ccl::broadcast(&CentroidsArchLength, sizeof(size_t), ccl::datatype::uint8, ccl_root, comm).wait();
+    ccl_bcast(&CentroidsArchLength, sizeof(size_t), ccl_dtype_char, ccl_root, NULL, NULL, NULL, &request);
+    ccl_wait(request);
 
     ByteBuffer nodeCentroids(CentroidsArchLength);
     if (isRoot) inputArch.copyArchiveToArray(&nodeCentroids[0], CentroidsArchLength);
 
-    ccl::broadcast(&nodeCentroids[0], CentroidsArchLength, ccl::datatype::uint8, ccl_root, comm).wait();
+    ccl_bcast(&nodeCentroids[0], CentroidsArchLength, ccl_dtype_char, ccl_root, NULL, NULL, NULL, &request);
+    ccl_wait(request);
 
     /* Deserialize centroids data */
     OutputDataArchive outArch(nodeCentroids.size() ? &nodeCentroids[0] : NULL, CentroidsArchLength);
@@ -77,7 +79,7 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
     ByteBuffer serializedData;
 
     /* Serialized data is of equal size on each node if each node called compute() equal number of times */
-    vector<size_t> recvCounts(nBlocks);
+    size_t* recvCounts = new size_t[nBlocks];
     for (size_t i = 0; i < nBlocks; i++)
     {
         recvCounts[i] = perNodeArchLength;
@@ -88,7 +90,10 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
     dataArch.copyArchiveToArray(&nodeResults[0], perNodeArchLength);
 
     /* Transfer partial results to step 2 on the root node */
-    ccl::allgatherv(&nodeResults[0], perNodeArchLength, &serializedData[0], recvCounts, ccl::datatype::uint8, comm).wait();
+    ccl_allgatherv(&nodeResults[0], perNodeArchLength, &serializedData[0], recvCounts, ccl_dtype_char, NULL, NULL, NULL, &request);
+    ccl_wait(request);
+
+    delete [] recvCounts;
 
     if (isRoot)
     {
@@ -163,8 +168,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   jint executor_num, jint executor_cores,
   jobject resultObj) {
 
-  ccl::communicator &comm = getComm();
-  size_t rankId = comm.rank();
+  size_t rankId;
+  ccl_get_comm_rank(NULL, &rankId);
 
   NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
   NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
@@ -184,14 +189,16 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   for (it = 0; it < iteration_num && !converged; it++) {
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    newCentroids = kmeans_compute(rankId, comm, pData, centroids, cluster_num, executor_num, totalCost);
+    newCentroids = kmeans_compute(rankId, pData, centroids, cluster_num, executor_num, totalCost);
 
     if (rankId == ccl_root) {
         converged = areAllCentersConverged(centroids, newCentroids, tolerance);
     }
 
     // Sync converged status
-    ccl::broadcast(&converged, 1, ccl::datatype::uint8, ccl_root, comm).wait();
+    ccl_request_t request;
+    ccl_bcast(&converged, 1, ccl_dtype_char, ccl_root, NULL, NULL, NULL, &request);
+    ccl_wait(request);
 
     centroids = newCentroids;
 

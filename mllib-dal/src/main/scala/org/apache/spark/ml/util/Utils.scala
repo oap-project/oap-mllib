@@ -72,7 +72,7 @@ object Utils {
   }
 
   def checkClusterPlatformCompatibility(sc: SparkContext) : Boolean = {
-    LibLoader.loadLibraries()
+    LibLoader.loadLibMLlibDAL()
 
     // check driver platform compatibility
     if (!OneDAL.cCheckPlatformCompatibility())
@@ -82,7 +82,7 @@ object Utils {
     val executor_num = Utils.sparkExecutorNum(sc)
     val data = sc.parallelize(1 to executor_num, executor_num)
     val result = data.map { p =>
-      LibLoader.loadLibraries()
+      LibLoader.loadLibMLlibDAL()
       OneDAL.cCheckPlatformCompatibility()
     }.collect()
 

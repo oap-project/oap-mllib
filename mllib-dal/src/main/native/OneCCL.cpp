@@ -1,45 +1,26 @@
 #include <iostream>
-#include <oneapi/ccl.hpp>
+#include <ccl.h>
 #include "org_apache_spark_ml_util_OneCCL__.h"
 
-// todo: fill initial comm_size and rank_id
-size_t comm_size;
-size_t rank_id;
-
-std::vector<ccl::communicator> g_comms;
-
-ccl::communicator &getComm() {
-    return g_comms[0];
-}
-
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
-  (JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jobject param) {
+  (JNIEnv *env, jobject obj, jobject param) {
   
   std::cout << "oneCCL (native): init" << std::endl;
 
-  ccl::init();
-
-  const char *str = env->GetStringUTFChars(ip_port, 0);
-  ccl::string ccl_ip_port(str);  
-
-  auto kvs_attr = ccl::create_kvs_attr();
-  kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
-
-  ccl::shared_ptr_class<ccl::kvs> kvs;
-  kvs = ccl::create_main_kvs(kvs_attr);
-
-  g_comms.push_back(ccl::create_communicator(size, rank, kvs));
-
-  rank_id = getComm().rank();
-  comm_size = getComm().size();
+  ccl_init();
 
   jclass cls = env->GetObjectClass(param);
   jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
-  jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");  
+  jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
+
+  size_t comm_size;
+  size_t rank_id;
+
+  ccl_get_comm_size(NULL, &comm_size);
+  ccl_get_comm_rank(NULL, &rank_id);
 
   env->SetLongField(param, fid_comm_size, comm_size);
   env->SetLongField(param, fid_rank_id, rank_id);    
-  env->ReleaseStringUTFChars(ip_port, str);
 
   return 1;
 }
@@ -52,10 +33,9 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
 JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
   (JNIEnv *env, jobject obj) {
 
-  g_comms.pop_back();
-
   std::cout << "oneCCL (native): cleanup" << std::endl;
 
+  ccl_finalize();
 }
 
 /*
@@ -64,9 +44,12 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_isRoot
-  (JNIEnv *env, jobject obj) {    
+  (JNIEnv *env, jobject obj) {
 
-    return getComm().rank() == 0;
+    size_t rank_id;
+    ccl_get_comm_rank(NULL, &rank_id);
+
+    return (rank_id == 0);
 }
 
 /*
@@ -76,7 +59,12 @@ JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_isRoot
  */
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_rankID
   (JNIEnv *env, jobject obj) {
-    return getComm().rank();
+
+    size_t rank_id;
+    ccl_get_comm_rank(NULL, &rank_id);
+
+    return rank_id;
+
 }
 
 /*
