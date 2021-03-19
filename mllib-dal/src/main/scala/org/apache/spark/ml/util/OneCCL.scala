@@ -26,7 +26,7 @@ object OneCCL {
   var kvsIPPort = sys.env.getOrElse("CCL_KVS_IP_PORT", "")
   var worldSize = sys.env.getOrElse("CCL_WORLD_SIZE", "1").toInt
 
-  val KVS_PORT = 51234
+  var KVS_PORT = 51234
 
   private def checkEnv() {
     val altTransport = sys.env.getOrElse("CCL_ATL_TRANSPORT", "")
@@ -68,6 +68,8 @@ object OneCCL {
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
 
     println(s"oneCCL: Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
+    
+    KVS_PORT = KVS_PORT + 1
 
   }
 
