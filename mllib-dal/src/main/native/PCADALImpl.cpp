@@ -125,8 +125,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
     std::cout << "PCA (native): master step took " << duration << " secs" << std::endl;
 
     /* Print the results */
-    printNumericTable(result->get(pca::eigenvalues), "First 10 Eigenvalues:", 10);
-    printNumericTable(result->get(pca::eigenvectors), "First 10 Eigenvectors:", 10);
+    printNumericTable(result->get(pca::eigenvalues), "First 10 eigenvalues with first 20 dimensions:", 10, 20);
+    printNumericTable(result->get(pca::eigenvectors), "First 10 eigenvectors with first 20 dimensions:", 10, 20);
 
     // Return all eigenvalues & eigenvectors
 
