@@ -218,12 +218,10 @@
                         <resource>
                             <directory>${env.CCL_ROOT}/lib</directory>
                             <includes>
-                                <!--<include>libpmi.so.1</include>-->
-                                <!--<include>libresizable_pmi.so.1</include>-->
-                                <include>libmpi.so.12.0.0</include>
+                                <include>libpmi.so.1</include>
+                                <include>libresizable_pmi.so.1</include>
                                 <include>libfabric.so.1</include>
-				<include>libccl.so</include>
-                                <!--<include>libccl_atl_ofi.so.1</include>-->
+                                <include>libccl_atl_ofi.so.1</include>
                             </includes>
                         </resource>
                         <resource>
@@ -273,13 +271,9 @@
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2</destinationFile>
                                 </fileSet>
                                 <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/libmpi.so.12.0.0</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12</destinationFile>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/libccl_atl_ofi.so.1</sourceFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libccl_atl_ofi.so</destinationFile>
                                 </fileSet>
-                                <!--<fileSet>-->
-                                    <!--<sourceFile>${project.build.testOutputDirectory}/lib/libccl_atl_ofi.so.1</sourceFile>-->
-                                    <!--<destinationFile>${project.build.testOutputDirectory}/lib/libccl_atl_ofi.so</destinationFile>-->
-                                <!--</fileSet>-->
                             </fileSets>
                         </configuration>
                     </execution>

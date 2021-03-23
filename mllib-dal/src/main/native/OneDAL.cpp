@@ -19,8 +19,6 @@
 #include <cstring>
 #include "org_apache_spark_ml_util_OneDAL__.h"
 
-#include "service.h"
-
 using namespace daal;
 using namespace daal::data_management;
 
@@ -124,52 +122,4 @@ JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cCheckPlat
   (JNIEnv *, jobject) {
     // Only guarantee compatibility and performance on Intel platforms, use oneDAL lib function
     return daal_check_is_intel_cpu();
-}
-
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cNewCSRNumericTable
- * Signature: ([F[J[JJJ)J
- */
-JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTable
-  (JNIEnv *env, jobject, jfloatArray data, jlongArray colIndices, jlongArray rowOffsets, jlong nFeatures, jlong nVectors) {
-
-    long numData = env->GetArrayLength(data);
-    // long numColIndices = numData;
-    // long numRowOffsets = env->GetArrayLength(rowOffsets);
-
-    size_t * resultRowOffsets      = NULL;
-    size_t * resultColIndices      = NULL;
-    float  * resultData         = NULL;            
-    CSRNumericTable * numericTable = new CSRNumericTable(resultData, resultColIndices, resultRowOffsets, nFeatures, nVectors);    
-    numericTable->allocateDataMemory(numData);
-    numericTable->getArrays<float>(&resultData, &resultColIndices, &resultRowOffsets);
-
-    size_t * pRowOffsets = (size_t *)env->GetLongArrayElements(rowOffsets, 0);
-    size_t * pColIndices = (size_t *)env->GetLongArrayElements(colIndices, 0);
-    float * pData       = env->GetFloatArrayElements(data, 0);
-
-    // std::memcpy(resultRowOffsets, pRowOffsets, numRowOffsets*sizeof(jlong));
-    // std::memcpy(resultColIndices, pColIndices, numColIndices*sizeof(jlong));
-    // std::memcpy(resultData, pData, numData*sizeof(float));
-
-    for (size_t i = 0; i < (size_t)numData; ++i)
-    {
-        resultData[i]       = pData[i];
-        resultColIndices[i] = pColIndices[i];
-    }
-    for (size_t i = 0; i < (size_t)nVectors + 1; ++i)
-    {
-        resultRowOffsets[i] = pRowOffsets[i];
-    }
-
-    env->ReleaseLongArrayElements(rowOffsets, (jlong *)pRowOffsets, 0);
-    env->ReleaseLongArrayElements(colIndices, (jlong *)pColIndices, 0);
-    env->ReleaseFloatArrayElements(data, pData, 0);
-
-    CSRNumericTablePtr *ret = new CSRNumericTablePtr(numericTable);
-
-    //printNumericTable(*ret, "cNewCSRNumericTable", 10);
-
-    return (jlong)ret;
 }

@@ -23,7 +23,7 @@ cd /tmp
 rm -rf oneCCL
 git clone https://github.com/oneapi-src/oneCCL
 cd oneCCL
-git checkout 2021.1
+git checkout beta08
 mkdir -p build && cd build
 cmake ..
 make -j 2 install

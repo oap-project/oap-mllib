@@ -47,14 +47,6 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cFreeDataMemor
 JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cCheckPlatformCompatibility
   (JNIEnv *, jobject);
 
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cNewCSRNumericTable
- * Signature: ([F[J[JJJ)J
- */
-JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTable
-  (JNIEnv *, jobject, jfloatArray, jlongArray, jlongArray, jlong, jlong);
-
 #ifdef __cplusplus
 }
 #endif

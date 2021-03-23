@@ -31,17 +31,17 @@ INCS := -I $(JAVA_HOME)/include \
 
 # Use static link if possible, TBB is only available as dynamic libs
 
-LIBS := -L${CCL_ROOT}/lib -lccl \
+LIBS := -L${CCL_ROOT}/lib -l:libccl.a \
         -L$(DAALROOT)/lib/intel64 -l:libdaal_core.a -l:libdaal_thread.a \
-        -L$(TBBROOT)/lib -ltbb -ltbbmalloc
+        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
 #        TODO: Add signal chaining support, should fix linking, package so and loading
 #        -L$(JAVA_HOME)/jre/lib/amd64 -ljsig
 
 CPP_SRCS += \
-./OneCCL.cpp ./OneDAL.cpp ./KMeansDALImpl.cpp ./PCADALImpl.cpp ./ALSDALImpl.cpp ./ALSShuffle.cpp ./service.cpp ./error_handling.cpp
+./OneCCL.cpp ./OneDAL.cpp ./KMeansDALImpl.cpp ./PCADALImpl.cpp ./service.cpp ./error_handling.cpp
 
 OBJS += \
-./OneCCL.o ./OneDAL.o ./KMeansDALImpl.o ./PCADALImpl.o ./ALSDALImpl.o ./ALSShuffle.o ./service.o ./error_handling.o
+./OneCCL.o ./OneDAL.o ./KMeansDALImpl.o ./PCADALImpl.o ./service.o ./error_handling.o
 
 # Output Binary
 OUTPUT = ../../../target/libMLlibDAL.so
