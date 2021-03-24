@@ -58,7 +58,7 @@ class KMeansDALImpl (
     val kvsPort = sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
     val kvsIPPort = kvsIP+"_"+kvsPort
     
-    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", true)
+    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
 
     // val partitionDims = Utils.getPartitionDims(dataForConversion)
 
@@ -123,9 +123,12 @@ class KMeansDALImpl (
     // }.cache()
 
     val results = numericTables.mapPartitionsWithIndex { (rank, table) =>
-
-      val resources = TaskContext.get().resources()
-      val gpuIndices = resources("gpu").addresses.map(_.toInt)
+      
+      val gpuIndices = if (useGPU) {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt) 
+      } else
+        null
 
       val tableArr = table.next()
       OneCCL.init(executorNum, rank, kvsIPPort)
