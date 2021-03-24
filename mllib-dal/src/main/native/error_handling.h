@@ -20,8 +20,7 @@
 !    Auxiliary error-handling functions used in C++ samples
 !******************************************************************************/
 
-#ifndef _ERROR_HANDLING_H
-#define _ERROR_HANDLING_H
+#pragma once
 
 const int fileError = -1001;
 
@@ -30,5 +29,3 @@ void checkPtr(void * ptr);
 void fileOpenError(const char * filename);
 void fileReadError();
 void sparceFileReadError();
-
-#endif
