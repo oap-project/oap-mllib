@@ -76,6 +76,35 @@ object OneDAL {
     matrix
   }
 
+  def makeNumericTable (arrayVectors: Array[Vector]): NumericTable = {
+
+    val numCols = arrayVectors.head.size
+    val numRows: Int = arrayVectors.size
+
+    val context = new DaalContext()
+    val matrix = new DALMatrix(context, classOf[java.lang.Double],
+      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
+
+    arrayVectors.zipWithIndex.foreach {
+      case (v, rowIndex) =>
+        for (colIndex <- 0 until numCols)
+        // matrix.set(rowIndex, colIndex, row.getString(colIndex).toDouble)
+          setNumericTableValue(matrix.getCNumericTable, rowIndex, colIndex, v(colIndex))
+    }
+
+    matrix
+  }
+
+  def partitionsToNumericTables(partitions: RDD[Vector], executorNum: Int): RDD[NumericTable] = {
+    val dataForConversion = partitions.repartition(executorNum)
+      .setName("Repartitioned for conversion").cache()
+
+    dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+      val table = makeNumericTable(it.toArray)
+      Iterator(table)
+    }    
+  }
+
   def rddVectorToNumericTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
     // repartition to executorNum if not enough partitions
     val dataForConversion = if (vectors.getNumPartitions < executorNum) {
