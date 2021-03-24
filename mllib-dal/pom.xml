@@ -17,6 +17,11 @@
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
         <spark.version>3.0.0</spark.version>
+        <tbb.lib>libtbb.so.12.1</tbb.lib>
+        <tbb.malloc.lib>libtbbmalloc.so.2.1</tbb.malloc.lib>
+        <dal.java.lib>libJavaAPI.so.1.1</dal.java.lib>
+        <ccl.fabric.lib>libfabric.so.1</ccl.fabric.lib>
+        <ccl.mpi.lib>libmpi.so.12.0.0</ccl.mpi.lib>
     </properties>
 
     <dependencies>
@@ -220,24 +225,24 @@
                             <includes>
                                 <!--<include>libpmi.so.1</include>-->
                                 <!--<include>libresizable_pmi.so.1</include>-->
-                                <include>libmpi.so.12.0.0</include>
-                                <include>libfabric.so.1</include>
-				<include>libccl.so</include>
+                                <include>${ccl.fabric.lib}</include>
+                                <include>${ccl.mpi.lib}</include>                                
+				                <include>libccl.so</include>
                                 <!--<include>libccl_atl_ofi.so.1</include>-->
                             </includes>
                         </resource>
                         <resource>
                             <directory>${env.CCL_ROOT}/lib/prov</directory>
                             <includes>
-                                <include>libsockets-fi.so</include>
+                                <include>libtcp-fi.so</include>
                             </includes>
                         </resource>
                         <resource>
                             <!-- For https://github.com/oneapi-src/oneDAL/issues/1254 -->
                             <directory>${env.TBBROOT}/lib/intel64/gcc4.8</directory>
                             <includes>
-                                <include>libtbb.so.12.2</include>
-                                <include>libtbbmalloc.so.2.2</include>
+                                <include>${tbb.lib}</include>
+                                <include>${tbb.malloc.lib}</include>
                             </includes>
                         </resource>
                         <resource>
@@ -265,15 +270,15 @@
                                 <!-- oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10,
                                 rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->
                                 <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/libtbb.so.12.2</sourceFile>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2</destinationFile>
                                 </fileSet>
                                 <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2.2</sourceFile>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.malloc.lib}</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2</destinationFile>
                                 </fileSet>
                                 <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/libmpi.so.12.0.0</sourceFile>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.mpi.lib}</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12</destinationFile>
                                 </fileSet>
                                 <!--<fileSet>-->
