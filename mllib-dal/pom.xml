@@ -234,7 +234,7 @@
                         <resource>
                             <directory>${env.CCL_ROOT}/lib/prov</directory>
                             <includes>
-                                <include>libtcp-fi.so</include>
+                                <include>libsockets-fi.so</include>
                             </includes>
                         </resource>
                         <resource>

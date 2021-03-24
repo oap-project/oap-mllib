@@ -71,7 +71,7 @@
             <outputDirectory>lib</outputDirectory>
         </file>
         <file>
-            <source>${env.CCL_ROOT}/lib/prov/libtcp-fi.so</source>
+            <source>${env.CCL_ROOT}/lib/prov/libsockets-fi.so</source>
             <outputDirectory>lib</outputDirectory>
         </file>
     </files>
