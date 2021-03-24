@@ -20,12 +20,8 @@
 !    Auxiliary error-handling functions used in C++ samples
 !******************************************************************************/
 
+#include <iostream>
 #include "error_handling.h"
-
-#ifndef _ERROR_HANDLING_H
-#define _ERROR_HANDLING_H
-
-const int fileError = -1001;
 
 void checkAllocation(void * ptr)
 {
@@ -62,5 +58,3 @@ void sparceFileReadError()
     std::cout << "Incorrect format of file" << std::endl;
     exit(fileError);
 }
-
-#endif

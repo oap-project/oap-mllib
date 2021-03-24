@@ -15,13 +15,21 @@
 *******************************************************************************/
 
 #include <oneapi/ccl.hpp>
+
+#include <CL/cl.h>
+#include <CL/sycl.hpp>
+#include <daal_sycl.h>
+
 #include <daal.h>
+
 #include <iostream>
 #include <chrono>
 
 #include "service.h"
 #include "org_apache_spark_ml_clustering_KMeansDALImpl.h"
 #include "OneCCL.h"
+
+#include "GPU.h"
 
 using namespace std;
 using namespace daal;
@@ -151,29 +159,13 @@ static bool areAllCentersConverged(const NumericTablePtr & oldCenters, const Num
     return true;
 }
 
-/*
- * Class:     org_apache_spark_ml_clustering_KMeansDALImpl
- * Method:    cKMeansDALComputeWithInitCenters
- * Signature: (JJIDIIILorg/apache/spark/ml/clustering/KMeansResult;)J
- */
-JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCenters
+static jlong doKMeansDALComputeWithInitCenters
   (JNIEnv *env, jobject obj,
-  jlong pNumTabData, jlong pNumTabCenters,
+  int rankId, ccl::communicator &comm,
+  NumericTablePtr &pData, NumericTablePtr &centroids,
   jint cluster_num, jdouble tolerance, jint iteration_num,
-  jint executor_num, jint executor_cores,
+  jint executor_num,
   jobject resultObj) {
-
-  ccl::communicator &comm = getComm();
-  size_t rankId = comm.rank();
-
-  NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-  NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
-
-  // Set number of threads for oneDAL to use for each rank
-  services::Environment::getInstance()->setNumberOfThreads(executor_cores);
-
-  int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
-  cout << "oneDAL (native): Number of threads used: " << nThreadsNew << endl;
 
   algorithmFPType totalCost;
 
@@ -221,4 +213,72 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
     return (jlong)ret;
   } else
     return (jlong)0;
+  }
+
+/*
+ * Class:     org_apache_spark_ml_clustering_KMeansDALImpl
+ * Method:    cKMeansDALComputeWithInitCenters
+ * Signature: (JJIDIIILorg/apache/spark/ml/clustering/KMeansResult;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCenters
+  (JNIEnv *env, jobject obj,
+  jlong pNumTabData, jlong pNumTabCenters,
+  jint cluster_num, jdouble tolerance, jint iteration_num,
+  jint executor_num, jint executor_cores,
+  jboolean use_gpu,
+  jintArray gpu_idx_array,
+  jobject resultObj) {
+
+  ccl::communicator &comm = getComm();
+  int rankId = comm.rank();
+  int size = comm.size();
+
+  NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+  NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);  
+
+  jlong ret = 0L;
+  if (use_gpu) {
+    int n_gpu = env->GetArrayLength(gpu_idx_array);
+    cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"<< endl;
+
+    jint* gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
+
+    auto local_rank = getLocalRank(comm, size, rankId);
+    auto gpus       = get_gpus();    
+
+    std::cout << "rank: " << rankId << " size: " << size << " local_rank: " << local_rank << " n_gpu: " << n_gpu << std::endl;
+
+    auto gpu_selected = gpu_indices[local_rank % n_gpu];
+    std::cout << "GPU selected for current rank: " << gpu_selected << std::endl;
+    auto rank_gpu   = gpus[gpu_selected % gpus.size()];
+
+    // Set SYCL context
+    cl::sycl::queue queue(rank_gpu);    
+    daal::services::SyclExecutionContext ctx(queue);    
+    daal::services::Environment::getInstance()->setDefaultExecutionContext(ctx);
+    
+    ret = doKMeansDALComputeWithInitCenters(env, obj,
+        rankId, comm,
+        pData, centroids,
+        cluster_num, tolerance, iteration_num,
+        executor_num,        
+        resultObj);
+        
+    env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
+  } else {
+    // Set number of threads for oneDAL to use for each rank
+    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+
+    int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
+    cout << "oneDAL (native): use CPU kernels with " << nThreadsNew << " threads" << endl;
+    ret = doKMeansDALComputeWithInitCenters(env, obj,
+        rankId, comm,
+        pData, centroids,
+        cluster_num, tolerance, iteration_num,
+        executor_num,
+        resultObj);
+  }
+
+  return ret;
 }
+

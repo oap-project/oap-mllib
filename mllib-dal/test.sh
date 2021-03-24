@@ -38,6 +38,6 @@ export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 # mvn -Dtest=none -Dmaven.test.skip=false test
 
 # Individual test
-mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+#mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
 mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
