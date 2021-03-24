@@ -176,9 +176,7 @@ static jlong doKMeansDALComputeWithInitCenters
   for (it = 0; it < iteration_num && !converged; it++) {
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    cout << "Start kmeans_compute" << endl;
     newCentroids = kmeans_compute(rankId, comm, pData, centroids, cluster_num, executor_num, totalCost);
-    cout << "End kmeans_compute" << endl;
 
     if (rankId == ccl_root) {
         converged = areAllCentersConverged(centroids, newCentroids, tolerance);
@@ -246,20 +244,19 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
     jint* gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
 
     auto local_rank = getLocalRank(comm, size, rankId);
-    auto gpus       = get_gpus();
+    auto gpus       = get_gpus();    
 
     std::cout << "rank: " << rankId << " size: " << size << " local_rank: " << local_rank << " n_gpu: " << n_gpu << std::endl;
 
     auto gpu_selected = gpu_indices[local_rank % n_gpu];
     std::cout << "GPU selected for current rank: " << gpu_selected << std::endl;
-    auto rank_gpu   = gpus[gpu_selected];    
+    auto rank_gpu   = gpus[gpu_selected % gpus.size()];
 
-    cl::sycl::queue queue(rank_gpu);
-    std::cout << "SyclExecutionContext" << std::endl;
-    daal::services::SyclExecutionContext ctx(queue);
-    std::cout << "setDefaultExecutionContext" << std::endl;
+    // Set SYCL context
+    cl::sycl::queue queue(rank_gpu);    
+    daal::services::SyclExecutionContext ctx(queue);    
     daal::services::Environment::getInstance()->setDefaultExecutionContext(ctx);
-    cout << "setDefaultExecutionContext done " << endl;
+    
     ret = doKMeansDALComputeWithInitCenters(env, obj,
         rankId, comm,
         pData, centroids,
