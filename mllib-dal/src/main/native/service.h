@@ -39,6 +39,7 @@ using namespace daal::data_management;
 
 #include "error_handling.h"
 
+typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
 
 void printNumericTable(const NumericTablePtr & dataTable, const char * message = "", size_t nPrintedRows = 0, size_t nPrintedCols = 0,
@@ -46,5 +47,6 @@ void printNumericTable(const NumericTablePtr & dataTable, const char * message =
 size_t serializeDAALObject(SerializationIface * pData, ByteBuffer & buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte * buff, size_t length);
 CSRNumericTable * createFloatSparseTable(const std::string & datasetFileName);
+NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
 
 #endif
