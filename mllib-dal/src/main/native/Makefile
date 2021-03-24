@@ -34,8 +34,8 @@ INCS := -I $(JAVA_HOME)/include \
 # Use static link if possible, TBB is only available as dynamic libs
 
 LIBS := -L${CCL_ROOT}/lib -lccl \
-        -L$(DAALROOT)/lib/intel64 -l:libdaal_core.a -l:libdaal_thread.a \
-        -L$(TBBROOT)/lib -ltbb -ltbbmalloc
+        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a \
+        -L$(TBBROOT)/lib/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
 #        TODO: Add signal chaining support, should fix linking, package so and loading
 #        -L$(JAVA_HOME)/jre/lib/amd64 -ljsig
 

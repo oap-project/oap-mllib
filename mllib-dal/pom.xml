@@ -59,7 +59,7 @@
             <artifactId>daal</artifactId>
             <version>2021.1</version>
             <scope>system</scope>
-            <systemPath>${env.ONEAPI_ROOT}/dal/latest/lib/onedal.jar</systemPath>
+            <systemPath>${env.DAALROOT}/lib/onedal.jar</systemPath>
         </dependency>
 
         <dependency>

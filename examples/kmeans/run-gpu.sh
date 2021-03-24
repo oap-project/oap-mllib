@@ -25,7 +25,7 @@ DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 # User should check the requested resources are acturally allocated by cluster manager or Intel MLlib will behave incorrectly
 SPARK_MASTER=spark://yarrow19.ftm.alcf.anl.gov:7077
 SPARK_DRIVER_MEMORY=1G
-SPARK_TOTAL_CORES=16
+SPARK_TOTAL_CORES=2
 SPARK_EXECUTOR_CORES=1
 SPARK_EXECUTOR_MEMORY=1G
 
@@ -70,6 +70,9 @@ $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --conf "spark.sql.shuffle.partitions=$SPARK_DEFAULT_PARALLELISM" \
     --conf "spark.driver.extraClassPath=$SPARK_DRIVER_CLASSPATH" \
     --conf "spark.executor.extraClassPath=$SPARK_EXECUTOR_CLASSPATH" \
+    --conf "spark.executorEnv.OverrideDefaultFP64Settings=1" \
+    --conf "spark.executorEnv.IGC_ForceDPEmulation=1" \
+    --conf "spark.executorEnv.IGC_EnableDPEmulation=1" \
     --conf "spark.executor.resource.gpu.amount=1" \
     --conf "spark.task.resource.gpu.amount=1" \
     --conf "spark.shuffle.reduceLocality.enabled=false" \
