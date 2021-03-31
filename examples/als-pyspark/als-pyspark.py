@@ -55,7 +55,7 @@ if __name__ == "__main__":
     print("\nALS training with implicitPrefs={}, rank={}, maxIter={}, regParam={}, alpha={}, seed={}\n".format(
         als.getImplicitPrefs(), als.getRank(), als.getMaxIter(), als.getRegParam(), als.getAlpha(), als.getSeed()
     ))          
-    model = als.fit(ratings)    
+    model = als.fit(ratings)
 
      # Evaluate the model by computing the RMSE on the test data
     # predictions = model.transform(test)
