@@ -12,17 +12,17 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Restore cached dependencies
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.m2/repository
-            ~/downloads
-            /opt/intel/inteloneapi
-            /opt/intel/oneapi
-          key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
-          restore-keys: |
-            ${{ runner.os }}-
+      # - name: Restore cached dependencies
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       ~/.m2/repository
+      #       ~/downloads
+      #       /opt/intel/inteloneapi
+      #       /opt/intel/oneapi
+      #     key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-
       # - name: Set up dependencies
       #   run: |
       #     [ -d ~/downloads ] || mkdir ~/downloads
