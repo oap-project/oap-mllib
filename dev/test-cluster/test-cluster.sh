@@ -3,6 +3,7 @@
 # Setup Python3 and Spark cluster
 cd $GITHUB_WORKSPACE/dev/test-cluster
 ./setup-python3-env.sh
+./config-ssh.sh
 ./setup-cluster.sh
 
 # Build and run all examples
