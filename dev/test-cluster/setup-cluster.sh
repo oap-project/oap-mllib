@@ -8,9 +8,9 @@ echo JAVA_HOME is $JAVA_HOME
 
 mkdir ~/opt
 cd ~/opt
-wget https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
+wget --no-verbose https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
 tar -xzf spark-3.0.0-bin-hadoop2.7.tgz
-wget https://archive.apache.org/dist/hadoop/core/hadoop-2.7.7/hadoop-2.7.7.tar.gz
+wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-2.7.7/hadoop-2.7.7.tar.gz
 tar -xzf hadoop-2.7.7.tar.gz
 
 cd $WORK_DIR
