@@ -40,4 +40,4 @@ jobs:
           source /tmp/oneCCL/build/_install/env/setvars.sh
           # temp disable and will enable for new release of oneCCL
           #./build.sh
-          ${{github.workspace}}/dev/test-cluster.sh
+          ${{github.workspace}}/dev/test-cluster/test-cluster.sh
