@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-mkdir ~/.ssh
 ssh-keygen -q -N "" -t rsa -f ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa
+chmod 600 ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-cat ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
 echo "    StrictHostKeyChecking no                     " | sudo tee -a /etc/ssh/ssh_config
-cat /etc/ssh/ssh_config
 sudo service ssh restart
