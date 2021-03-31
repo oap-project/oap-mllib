@@ -3,7 +3,7 @@
 set -x
 
 mkdir ~/.ssh
-chmod 0700 ~/.ssh
+chmod 700 ~/.ssh
 
 ssh-keygen -q -N "" -t rsa -f ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
@@ -18,4 +18,5 @@ ls -l ~/.ssh
 
 sudo systemctl restart sshd
 
-ssh -vvv localhost
+# ssh -vvv localhost
+ssh -vvv `hostname`
