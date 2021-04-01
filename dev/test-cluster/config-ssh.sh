@@ -13,5 +13,3 @@ ls -ld ~/.ssh
 ls -l ~/.ssh
 
 sudo systemctl restart ssh
-
-ssh localhost
