@@ -34,6 +34,7 @@ jobs:
       - name: Build and Test
         run: |                    
           source /opt/intel/oneapi/setvars.sh
+          export SPARK_LOCAL=localhost
           cd ${{github.workspace}}/mllib-dal
           ./build.sh
           ./test.sh
