@@ -13,16 +13,7 @@ repo_gpgcheck=1
 gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
 EOF
   sudo mv /tmp/oneAPI.repo /etc/yum.repos.d
-  sudo yum install -y intel-oneapi-dal-devel-2021.2.0 intel-oneapi-tbb-devel-2021.2.0 intel-oneapi-ccl-devel-2021.2.0
+  sudo yum install -y intel-basekit-2021.2.0
 else
   echo "oneAPI components already installed!"
 fi  
-
-#
-# Setup building environments manually:
-#
-# export ONEAPI_ROOT=/opt/intel/oneapi
-# source /opt/intel/oneapi/dal/latest/env/vars.sh
-# source /opt/intel/oneapi/tbb/latest/env/vars.sh
-# source /opt/intel/oneapi/ccl/latest/env/vars.sh
-#
