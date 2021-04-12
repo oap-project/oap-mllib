@@ -41,37 +41,37 @@
     <files>
         <!-- Include TBB libraries into JAR  -->
         <file>
-            <source>${env.TBBROOT}/lib/intel64/gcc4.8/libtbb.so.12.1</source>
+            <source>${env.TBBROOT}/lib/intel64/gcc4.8/${tbb.lib}</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libtbb.so.2</destName>
         </file>
         <file>
-            <source>${env.TBBROOT}/lib/intel64/gcc4.8/libtbbmalloc.so.2.1</source>
+            <source>${env.TBBROOT}/lib/intel64/gcc4.8/${tbb.malloc.lib}</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libtbbmalloc.so.2</destName>
         </file>
         <!-- Include DAL libraries into JAR  -->
         <file>
-            <source>${env.DAALROOT}/lib/intel64/libJavaAPI.so.1.0</source>
+            <source>${env.DAALROOT}/lib/intel64/${dal.java.lib}</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libJavaAPI.so</destName>
         </file>
         <!-- Include oneCCL libraries into JAR  -->
         <file>
-            <source>${env.CCL_ROOT}/lib/libfabric.so.1</source>
+            <source>${env.I_MPI_ROOT}/libfabric/lib/${ccl.fabric.lib}</source>
             <outputDirectory>lib</outputDirectory>
         </file>
         <file>
-            <source>${env.CCL_ROOT}/lib/libmpi.so.12.0.0</source>
+            <source>${env.I_MPI_ROOT}/lib/release_mt/${ccl.mpi.lib}</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libmpi.so.12</destName>
         </file>
         <file>
-            <source>${env.CCL_ROOT}/lib/libccl.so</source>
+            <source>${env.CCL_ROOT}/lib/cpu_icc/libccl.so</source>
             <outputDirectory>lib</outputDirectory>
         </file>
         <file>
-            <source>${env.CCL_ROOT}/lib/prov/libsockets-fi.so</source>
+            <source>${env.I_MPI_ROOT}/libfabric/lib/prov/libsockets-fi.so</source>
             <outputDirectory>lib</outputDirectory>
         </file>
     </files>
