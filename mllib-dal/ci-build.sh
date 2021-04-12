@@ -35,4 +35,4 @@ echo MPI_ROOT=$I_MPI_ROOT
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
-mvn -DskipTests clean package
+mvn --no-transfer-progress -DskipTests clean package

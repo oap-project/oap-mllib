@@ -36,6 +36,6 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           export SPARK_LOCAL=localhost
           cd ${{github.workspace}}/mllib-dal
-          ./build.sh
+          ./ci-build.sh
           ./test.sh
           ./test-cluster.sh
