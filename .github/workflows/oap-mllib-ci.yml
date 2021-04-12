@@ -27,7 +27,7 @@ jobs:
         run: |
           [ -d ~/downloads ] || mkdir ~/downloads
           cd ~/downloads
-          [ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
+          [ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget --no-verbose http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
           [ -d spark-3.0.0-bin-hadoop2.7 ] || cd ~ && tar -zxf downloads/spark-3.0.0-bin-hadoop2.7.tgz
           export SPARK_HOME=~/spark-3.0.0-bin-hadoop2.7
           ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
