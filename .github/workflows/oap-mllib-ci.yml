@@ -19,23 +19,22 @@ jobs:
             /var/cache/apt/archives/*.deb
             ~/.m2/repository
             /opt/intel/oneapi
-            ~/downloads
+            ~/opt
           key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
           restore-keys: |
             ${{ runner.os }}-
       - name: Set up dependencies
         run: |
-          [ -d ~/downloads ] || mkdir ~/downloads
-          cd ~/downloads
+          [ -d ~/opt ] || mkdir ~/opt
+          cd ~/opt
           [ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget --no-verbose http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-          [ -d spark-3.0.0-bin-hadoop2.7 ] || cd ~ && tar -zxf downloads/spark-3.0.0-bin-hadoop2.7.tgz
-          export SPARK_HOME=~/spark-3.0.0-bin-hadoop2.7
+          [ -d spark-3.0.0-bin-hadoop2.7 ] || tar -zxf spark-3.0.0-bin-hadoop2.7.tgz
+          export SPARK_HOME=~/opt/spark-3.0.0-bin-hadoop2.7
           ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
       - name: Build and Test
         run: |
           source /opt/intel/oneapi/setvars.sh
           source /tmp/oneCCL/build/_install/env/setvars.sh          
           echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts
-          ${{github.workspace}}/dev/ci-build.sh
-          ${{github.workspace}}/dev/ci-test.sh
-                    
+          # ${{github.workspace}}/dev/ci-build.sh
+          ${{github.workspace}}/dev/ci-test.sh 

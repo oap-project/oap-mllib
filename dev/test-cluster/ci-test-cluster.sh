@@ -2,14 +2,16 @@
 
 set -x
 
-# Setup Python3 and Spark cluster
+# Setup Password-less & Python3
 cd $GITHUB_WORKSPACE/dev/test-cluster
 ./config-ssh.sh
-./setup-cluster.sh
-./setup-python3-env.sh
+./setup-python3.sh
+
+# Setup Hadoop cluster and envs
+source ./setup-cluster.sh
 
 # Build and run all examples
-source $GITHUB_WORKSPACE/dev/test-cluster/env.sh
+cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
 
 cd $GITHUB_WORKSPACE/examples
 
