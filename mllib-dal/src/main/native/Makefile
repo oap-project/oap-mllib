@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CC := clang
-CXX := clang++
+CC := gcc
+CXX := g++
 RM := rm -rf
 
 CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++11
@@ -24,15 +24,14 @@ CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++11
 
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I ${CCL_ROOT}/include \
+        -I ${CCL_ROOT}/include/cpu_icc \
         -I $(DAALROOT)/include \
         -I ./javah \
         -I ./
 
 # Use static link if possible, TBB is only available as dynamic libs
 
-LIBS := -lstdc++ \
-        -L${CCL_ROOT}/lib -lccl \
+LIBS := -L${CCL_ROOT}/lib/cpu_icc -lccl \
         -L$(DAALROOT)/lib/intel64 -l:libdaal_core.a -l:libdaal_thread.a \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
 #        TODO: Add signal chaining support, should fix linking, package so and loading

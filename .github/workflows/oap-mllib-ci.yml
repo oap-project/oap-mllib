@@ -40,6 +40,8 @@ jobs:
           echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts
           cat /etc/hosts
           echo "---"
+          dpkg -l | grep libstdc++
+          echo "---"
           cd ${{github.workspace}}/mllib-dal
-          ./ci-build.sh
-          # ./ci-test.sh
+          # ./ci-build.sh
+          ./ci-test.sh
