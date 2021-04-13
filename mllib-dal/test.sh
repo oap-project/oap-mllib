@@ -31,6 +31,7 @@ echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
+echo CCL_CONFIGURATION=$CCL_CONFIGURATION
 echo MPI_ROOT=$I_MPI_ROOT
 echo Clang Version: $(clang -dumpversion)
 echo =============================
