@@ -31,6 +31,8 @@ echo =============================
 
 cd $GITHUB_WORKSPACE/mllib-dal
 
+$GITHUB_WORKSPACE/dev/ci-build.sh
+
 # Enable signal chaining support for JNI
 # export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 

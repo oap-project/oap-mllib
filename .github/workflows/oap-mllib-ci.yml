@@ -35,6 +35,5 @@ jobs:
         run: |
           source /opt/intel/oneapi/setvars.sh
           source /tmp/oneCCL/build/_install/env/setvars.sh          
-          echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts
-          # ${{github.workspace}}/dev/ci-build.sh
+          echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts          
           ${{github.workspace}}/dev/ci-test.sh 

@@ -15,7 +15,8 @@ cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
 
 cd $GITHUB_WORKSPACE/examples
 
-hadoop fs -copyFromLocal data
+hadoop fs -mkdir data
+hadoop fs -copyFromLocal -f data
 hadoop fs -ls data
 
 ./build-all.sh
