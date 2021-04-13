@@ -29,6 +29,8 @@ echo CCL_ROOT=$CCL_ROOT
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
+cd $GITHUB_WORKSPACE/mllib-dal
+
 # Enable signal chaining support for JNI
 # export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
@@ -41,3 +43,6 @@ echo =============================
 mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
 mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+
+# Yarn cluster test
+$GITHUB_WORKSPACE/dev/test-cluster/ci-test-cluster.sh

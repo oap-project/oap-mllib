@@ -13,7 +13,7 @@ export SPARK_HOME=$SPARK_HOME
 # Set HDFS Root, should be hdfs://xxx or file://xxx
 export HDFS_ROOT=hdfs://localhost:8020
 # Set OAP MLlib source code root directory
-export OAP_MLLIB_ROOT=/home/xiaochang/Works/oap-mllib-xwu99-refactor-examples
+export OAP_MLLIB_ROOT=$GITHUB_WORKSPACE
 
 # ============================================= #
 

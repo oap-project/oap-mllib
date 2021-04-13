@@ -29,4 +29,5 @@ echo CCL_ROOT=$CCL_ROOT
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
+cd $GITHUB_WORKSPACE/mllib-dal
 mvn --no-transfer-progress -DskipTests clean package
