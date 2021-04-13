@@ -34,10 +34,12 @@ jobs:
       - name: Build and Test
         run: |                    
           source /opt/intel/oneapi/setvars.sh
+          echo "---"
           hostname
+          echo "---"
           cat /etc/hosts
-          cat /etc/os-release
-          export SPARK_LOCAL=localhost
+          echo "---"
+          echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts          
           cd ${{github.workspace}}/mllib-dal
-          ./ci-build.sh
+          # ./ci-build.sh
           ./test.sh
