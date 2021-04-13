@@ -21,23 +21,16 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-if [[ -z $I_MPI_ROOT ]]; then
- echo I_MPI_ROOT not defined!
- exit 1
-fi
-
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
-echo CCL_CONFIGURATION=$CCL_CONFIGURATION
-echo MPI_ROOT=$I_MPI_ROOT
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
 # Enable signal chaining support for JNI
-export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
+# export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
 # -Dtest=none to turn off the Java tests
 

@@ -21,7 +21,7 @@
         <tbb.lib>libtbb.so.12.2</tbb.lib>
         <tbb.malloc.lib>libtbbmalloc.so.2.2</tbb.malloc.lib>
         <dal.java.lib>libJavaAPI.so.1.1</dal.java.lib>
-        <ccl.lib>libccl.so.1.0</ccl.lib>
+        <ccl.lib>libccl.so</ccl.lib>
         <ccl.fabric.lib>libfabric.so.1</ccl.fabric.lib>
         <ccl.mpi.lib>libmpi.so.12.0.0</ccl.mpi.lib>
     </properties>
@@ -223,25 +223,15 @@
                     <outputDirectory>${project.build.testOutputDirectory}/lib</outputDirectory>
                     <resources>
                         <resource>
-                            <directory>${env.CCL_ROOT}/lib/cpu_icc</directory>
+                            <directory>${env.CCL_ROOT}/lib</directory>
                             <includes>
 				                <include>${ccl.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.I_MPI_ROOT}/lib/release_mt</directory>
-                            <includes>
                                 <include>${ccl.mpi.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.I_MPI_ROOT}/libfabric/lib</directory>
-                            <includes>
                                 <include>${ccl.fabric.lib}</include>
                             </includes>
-                        </resource>
+                        </resource>                        
                         <resource>
-                            <directory>${env.I_MPI_ROOT}/libfabric/lib/prov</directory>
+                            <directory>${env.CCL_ROOT}/lib/prov</directory>
                             <includes>
                                 <include>libsockets-fi.so</include>
                             </includes>
@@ -277,11 +267,7 @@
                         <configuration>
                             <fileSets>
                                 <!-- oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10,
-                                rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libccl.so</destinationFile>
-                                </fileSet>
+                                rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->                                
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2</destinationFile>

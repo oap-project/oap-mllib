@@ -58,20 +58,20 @@
         </file>
         <!-- Include oneCCL libraries into JAR  -->
         <file>
-            <source>${env.I_MPI_ROOT}/libfabric/lib/${ccl.fabric.lib}</source>
+            <source>${env.CCL_ROOT}/lib/${ccl.fabric.lib}</source>
             <outputDirectory>lib</outputDirectory>
         </file>
         <file>
-            <source>${env.I_MPI_ROOT}/lib/release_mt/${ccl.mpi.lib}</source>
+            <source>${env.CCL_ROOT}/lib/${ccl.mpi.lib}</source>
             <outputDirectory>lib</outputDirectory>
             <destName>libmpi.so.12</destName>
         </file>
         <file>
-            <source>${env.CCL_ROOT}/lib/cpu_icc/libccl.so</source>
+            <source>${env.CCL_ROOT}/lib/libccl.so</source>
             <outputDirectory>lib</outputDirectory>
         </file>
         <file>
-            <source>${env.I_MPI_ROOT}/libfabric/lib/prov/libsockets-fi.so</source>
+            <source>${env.CCL_ROOT}/lib/prov/libsockets-fi.so</source>
             <outputDirectory>lib</outputDirectory>
         </file>
     </files>

@@ -34,14 +34,8 @@ jobs:
       - name: Build and Test
         run: |                    
           source /opt/intel/oneapi/setvars.sh
-          # Configure oneCCL to use cpu_icc libs
-          source /opt/intel/oneapi/ccl/latest/env/vars.sh --ccl-configuration=cpu_icc          
-          echo "---"          
-          echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts
-          cat /etc/hosts
-          echo "---"
-          dpkg -l | grep libstdc++
-          echo "---"
+          source /tmp/oneCCL/build/_install/env/setvars.sh          
+          echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts          
           cd ${{github.workspace}}/mllib-dal
           # ./ci-build.sh
           ./ci-test.sh
