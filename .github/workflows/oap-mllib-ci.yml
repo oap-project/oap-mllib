@@ -16,10 +16,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            /var/cache/apt
+            /var/cache/apt/archives/*.deb
             ~/.m2/repository
             /opt/intel/oneapi
-            ~/downloads            
+            ~/downloads
           key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
           restore-keys: |
             ${{ runner.os }}-
@@ -32,7 +32,7 @@ jobs:
           export SPARK_HOME=~/spark-3.0.0-bin-hadoop2.7
           ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
       - name: Build and Test
-        run: |                    
+        run: |
           source /opt/intel/oneapi/setvars.sh
           source /tmp/oneCCL/build/_install/env/setvars.sh          
           echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts          

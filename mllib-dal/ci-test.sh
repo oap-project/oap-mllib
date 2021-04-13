@@ -31,13 +31,11 @@ echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
-echo CCL_CONFIGURATION=$CCL_CONFIGURATION
-echo MPI_ROOT=$I_MPI_ROOT
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
 # Enable signal chaining support for JNI
-export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
+# export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
 # -Dtest=none to turn off the Java tests
 
@@ -46,5 +44,5 @@ export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
 # Individual test
 mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-# mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
