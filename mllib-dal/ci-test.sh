@@ -21,11 +21,6 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-if [[ -z $I_MPI_ROOT ]]; then
- echo I_MPI_ROOT not defined!
- exit 1
-fi
-
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
