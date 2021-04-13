@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ ! -f /opt/intel/oneapi ]; then
+if [ ! -d /opt/intel/oneapi ]; then
   echo "Installing oneAPI components ..."
   cd /tmp
   wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB

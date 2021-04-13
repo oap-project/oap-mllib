@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CC := clang++
+CC := clang
 CXX := clang++
 RM := rm -rf
 
