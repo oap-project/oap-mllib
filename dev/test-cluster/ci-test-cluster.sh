@@ -20,5 +20,5 @@ hadoop fs -copyFromLocal data
 hadoop fs -ls data
 
 ./build-all.sh
-./run-all-scala.sh
-./run-all-pyspark.sh
+# ./run-all-scala.sh
+# ./run-all-pyspark.sh

@@ -16,7 +16,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            /var/cache/apt/archives/*.deb
+            # /var/cache/apt/archives/*.deb
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
