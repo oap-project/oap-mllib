@@ -65,14 +65,6 @@ To use K-means example for sanity check, you need to upload a data file to your 
     $ ./run.sh
 ```
 
-### Benchmark with HiBench
-Use [Hibench](https://github.com/Intel-bigdata/HiBench) to generate dataset with various profiles, and change related variables in `run-XXX.sh` script when applicable.  Then run the following commands:
-```
-    $ cd oap-mllib/examples/kmeans-hibench
-    $ ./build.sh
-    $ ./run-hibench-oap-mllib.sh
-```
-
 ### PySpark Support
 
 As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. An example can be found in the [Examples](#examples) section.
@@ -95,7 +87,7 @@ Intel® oneAPI Toolkits and its components can be downloaded and install from [h
 
 More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-You can also refer to [this script and comments in it](https://github.com/Intel-bigdata/OAP/blob/branch-1.0-spark-3.x/oap-mllib/dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
+You can also refer to [this script and comments in it](dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
 
 Scala and Java dependency descriptions are already included in Maven POM file. 
 
@@ -107,7 +99,7 @@ To clone and build from open source oneCCL, run the following commands:
 ```
 	$ git clone https://github.com/oneapi-src/oneCCL
         $ cd oneCCL
-        $ git checkout beta08
+        $ git checkout 2021.2
 	$ mkdir build && cd build
 	$ cmake ..
 	$ make -j install
@@ -138,7 +130,7 @@ CCL_ROOT    | Path to oneCCL home directory
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
 
 ```
-	$ source /opt/intel/inteloneapi/setvars.sh
+	$ source /opt/intel/oneapi/setvars.sh
 	$ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 ```
 
@@ -156,12 +148,17 @@ The built JAR package will be placed in `target` directory with the name `oap-ml
 
 ## Examples
 
-Example         |  Description 
+Example         |  Description
 ----------------|---------------------------
 kmeans          |  K-means example for Scala
 kmeans-pyspark  |  K-means example for PySpark
-kmeans-hibench  |  Use HiBench-generated input dataset to benchmark K-means performance
+pca             |  PCA example for Scala
+pca-pyspark     |  PCA example for PySpark
+als             |  ALS example for Scala
+als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
 * K-Means (CPU, Experimental)
+* PCA     (CPU, Experimental)
+* ALS     (CPU, Experimental)
