@@ -27,6 +27,5 @@ jobs:
         run: |          
           source ${{github.workspace}}/dev/setup-all.sh
       - name: Build and Test
-        run: |
-          source ${{github.workspace}}/dev/setup-spark-envs.sh
+        run: |          
           ${{github.workspace}}/dev/ci-test.sh
