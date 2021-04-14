@@ -26,9 +26,9 @@ jobs:
       - name: Set up dependencies
         run: |          
           ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
-          source ${{github.workspace}}/dev/test-cluster/setup-cluster.sh
+          source ${{github.workspace}}/dev/setup-all.sh
       - name: Build and Test
-        run: |          
+        run: |
           source /opt/intel/oneapi/setvars.sh
           source /tmp/oneCCL/build/_install/env/setvars.sh          
           echo "$(hostname -i) $(hostname)" | sudo tee -a /etc/hosts          
