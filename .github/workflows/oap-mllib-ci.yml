@@ -23,12 +23,9 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
           restore-keys: |
             ${{ runner.os }}-
-      - name: Set up dependencies
+      - name: Set up environments
         run: |          
-          ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
           source ${{github.workspace}}/dev/setup-all.sh
       - name: Build and Test
         run: |
-          source /opt/intel/oneapi/setvars.sh
-          source /tmp/oneCCL/build/_install/env/setvars.sh
           ${{github.workspace}}/dev/ci-test.sh

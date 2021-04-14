@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Setup building envs
+source /opt/intel/oneapi/setvars.sh
+source /tmp/oneCCL/build/_install/env/setvars.sh
+
 # Check envs for building
 if [[ -z $JAVA_HOME ]]; then
  echo JAVA_HOME not defined!
