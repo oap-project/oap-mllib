@@ -15,18 +15,14 @@ cd ~/opt
 
 cd $WORK_DIR
 
+sed -i "s/localhost/$(hostname)/g" core-site.xml
+sed -i "s/localhost/$(hostname)/g" yarn-site.xml
+
 cp ./core-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./hdfs-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./yarn-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./spark-defaults.conf ~/opt/spark-3.0.0-bin-hadoop2.7/conf
-
-# create directories
-mkdir -p /tmp/run/hdfs/namenode
-mkdir -p /tmp/run/hdfs/datanode
-
-# hdfs format
-~/opt/hadoop-2.7.7/bin/hdfs namenode -format
 
 export HADOOP_HOME=~/opt/hadoop-2.7.7
 export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
@@ -40,6 +36,13 @@ export PATH=$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
 
 echo $(hostname) > $HADOOP_HOME/etc/hadoop/slaves
 echo $(hostname) > $SPARK_HOME/conf/slaves
+
+# create directories
+mkdir -p /tmp/run/hdfs/namenode
+mkdir -p /tmp/run/hdfs/datanode
+
+# hdfs format
+$HADOOP_HOME/bin/hdfs namenode -format
 
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh

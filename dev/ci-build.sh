@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Setup building envs
 source /opt/intel/oneapi/setvars.sh
 source /tmp/oneCCL/build/_install/env/setvars.sh
 
