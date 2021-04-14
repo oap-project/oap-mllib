@@ -28,4 +28,5 @@ jobs:
           source ${{github.workspace}}/dev/setup-all.sh
       - name: Build and Test
         run: |          
-          ${{github.workspace}}/dev/ci-test.sh
+          # ${{github.workspace}}/dev/ci-test.sh
+          ${{github.workspace}}/dev/test-cluster/ci-test-cluster.sh

@@ -14,12 +14,12 @@ else
   echo "oneAPI components already installed!"
 fi
 
-# echo "Building oneCCL ..."
-# cd /tmp
-# rm -rf oneCCL
-# git clone https://github.com/oneapi-src/oneCCL
-# cd oneCCL
-# git checkout 2021.2
-# mkdir build && cd build
-# cmake ..
-# make -j 2 install
+echo "Building oneCCL ..."
+cd /tmp
+rm -rf oneCCL
+git clone https://github.com/oneapi-src/oneCCL
+cd oneCCL
+git checkout 2021.2
+mkdir build && cd build
+cmake ..
+make -j 2 install
