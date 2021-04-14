@@ -24,13 +24,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-
       - name: Set up dependencies
-        run: |
-          [ -d ~/opt ] || mkdir ~/opt
-          cd ~/opt
-          [ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget --no-verbose http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-          [ -d spark-3.0.0-bin-hadoop2.7 ] || tar -zxf spark-3.0.0-bin-hadoop2.7.tgz
-          export SPARK_HOME=~/opt/spark-3.0.0-bin-hadoop2.7
+        run: |          
           ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
+          source ${{github.workspace}}/dev/test-cluster/setup-cluster.sh
       - name: Build and Test
         run: |          
           source /opt/intel/oneapi/setvars.sh

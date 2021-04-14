@@ -38,6 +38,9 @@ export PYSPARK_PYTHON=python3
 
 export PATH=$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
 
+echo $(hostname) > $HADOOP_HOME/etc/hadoop/slaves
+echo $(hostname) > $SPARK_HOME/conf/slaves
+
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh
 $HADOOP_HOME/sbin/start-yarn.sh
