@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source $GITHUB_WORKSPACE/dev/test-cluster/setup-spark-envs.sh
+
 # Build and run all examples
 cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
 
