@@ -31,6 +31,7 @@ echo =============================
 
 cd $GITHUB_WORKSPACE/mllib-dal
 
+# Build test
 $GITHUB_WORKSPACE/dev/ci-build.sh
 
 # Enable signal chaining support for JNI
