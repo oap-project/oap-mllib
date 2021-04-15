@@ -613,8 +613,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_recommendation_ALSDALImpl_cDALI
 
   std::cout << "\n=== Results for Rank " << rankId << "===\n" << std::endl;
   // std::cout << "Partition ID: " << partitionId << std::endl;
-  printNumericTable(pUser, "User Factors (first 10 rows):", 10);
-  printNumericTable(pItem, "Item Factors (first 10 rows):", 10);
+  printNumericTable(pUser, "User Factors (first 10 rows x 20 columns):", 10, 20);
+  printNumericTable(pItem, "Item Factors (first 10 rows x 20 columns):", 10, 20);
   std::cout << "User Offset: " << getOffsetFromOffsetTable(userOffset) << std::endl;
   std::cout << "Item Offset: " << getOffsetFromOffsetTable(itemOffset) << std::endl;
   std::cout << std::endl;

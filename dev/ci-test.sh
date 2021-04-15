@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Setup building envs
+source /opt/intel/oneapi/setvars.sh
+source /tmp/oneCCL/build/_install/env/setvars.sh
+
 # Check envs for building
 if [[ -z $JAVA_HOME ]]; then
  echo JAVA_HOME not defined!
@@ -35,6 +39,11 @@ echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
+cd $GITHUB_WORKSPACE/mllib-dal
+
+# Build test
+$GITHUB_WORKSPACE/dev/ci-build.sh
+
 # Enable signal chaining support for JNI
 # export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
@@ -44,6 +53,9 @@ echo =============================
 # mvn -Dtest=none -Dmaven.test.skip=false test
 
 # Individual test
-mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+
+# Yarn cluster test
+$GITHUB_WORKSPACE/dev/test-cluster/ci-test-cluster.sh

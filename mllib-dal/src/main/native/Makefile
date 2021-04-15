@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CC := gcc
-CXX := g++
+CC := clang
+CXX := clang++
 RM := rm -rf
 
-CFLAGS := -g -Wall -fPIC -std=c++11
+CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++11
 
 # The following paths setting works for self-built libs from source code
 # https://github.com/oneapi-src/oneCCL. If oneCCL package in oneAPI Toolkit is used,
@@ -33,7 +33,7 @@ INCS := -I $(JAVA_HOME)/include \
 
 LIBS := -L${CCL_ROOT}/lib -lccl \
         -L$(DAALROOT)/lib/intel64 -l:libdaal_core.a -l:libdaal_thread.a \
-        -L$(TBBROOT)/lib -ltbb -ltbbmalloc
+        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
 #        TODO: Add signal chaining support, should fix linking, package so and loading
 #        -L$(JAVA_HOME)/jre/lib/amd64 -ljsig
 

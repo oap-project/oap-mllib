@@ -2,12 +2,12 @@
 
 source ../../conf/env.sh
 
-# Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
+# Data file is converted from oneDAL examples ($DAALROOT/examples/daal/data/batch/implicit_als_csr.csv)
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=data/sample_kmeans_data.txt
+DATA_FILE=data/onedal_als_csr_ratings.txt
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
-APP_CLASS=org.apache.spark.examples.ml.KMeansExample
+APP_CLASS=org.apache.spark.examples.ml.ALSExample
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --num-executors $SPARK_NUM_EXECUTORS \
@@ -25,4 +25,4 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --jars $OAP_MLLIB_JAR \
     --class $APP_CLASS \
     $APP_JAR $DATA_FILE \
-    2>&1 | tee KMeans-$(date +%m%d_%H_%M_%S).log
+    2>&1 | tee ALS-$(date +%m%d_%H_%M_%S).log

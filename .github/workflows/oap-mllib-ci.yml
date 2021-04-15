@@ -11,32 +11,21 @@ jobs:
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 1.8      
       - name: Restore cached dependencies
         uses: actions/cache@v2
         with:
           path: |
+            # /var/cache/apt/archives/*.deb
             ~/.m2/repository
-            ~/downloads
-            /opt/intel/inteloneapi
             /opt/intel/oneapi
+            ~/opt
           key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
           restore-keys: |
             ${{ runner.os }}-
-      - name: Set up dependencies
-        run: |
-          [ -d ~/downloads ] || mkdir ~/downloads
-          cd ~/downloads
-          [ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget http://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-          [ -d spark-3.0.0-bin-hadoop2.7 ] || cd ~ && tar -zxf downloads/spark-3.0.0-bin-hadoop2.7.tgz
-          export SPARK_HOME=~/spark-3.0.0-bin-hadoop2.7
-          ${{github.workspace}}/dev/install-build-deps-ubuntu.sh
+      - name: Set up environments
+        run: |          
+          source ${{github.workspace}}/dev/setup-all.sh
       - name: Build and Test
-        run: |
-          cd ${{github.workspace}}/mllib-dal      
-          export ONEAPI_ROOT=/opt/intel/oneapi
-          source /opt/intel/oneapi/dal/latest/env/vars.sh
-          source /opt/intel/oneapi/tbb/latest/env/vars.sh
-          source /tmp/oneCCL/build/_install/env/setvars.sh
-          # temp disable and will enable for new release of oneCCL
-          #./build.sh
+        run: |          
+          ${{github.workspace}}/dev/ci-test.sh

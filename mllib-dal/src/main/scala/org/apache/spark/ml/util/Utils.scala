@@ -72,6 +72,12 @@ object Utils {
   }
 
   def checkExecutorAvailPort(data: RDD[_], localIP: String) : Int = {
+
+    if (localIP == "127.0.0.1" || localIP == "127.0.1.1") {
+      println(s"\nOneCCL: Error: doesn't support loopback IP ${localIP}, please assign IP address to your host.\n")
+      System.exit(-1)
+    }
+
     val sc = data.sparkContext
     val result = data.mapPartitions { p =>
       LibLoader.loadLibraries()
