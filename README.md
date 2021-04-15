@@ -17,7 +17,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-mllib/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/Intel-bigdata/OAP/releases/download/v1.0.0-spark-3.0.0/oap-1.0.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.0.0-bin-spark-3.0.0/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -65,6 +65,14 @@ To use K-means example for sanity check, you need to upload a data file to your 
     $ ./run.sh
 ```
 
+### Benchmark with HiBench
+Use [Hibench](https://github.com/Intel-bigdata/HiBench) to generate dataset with various profiles, and change related variables in `run-XXX.sh` script when applicable.  Then run the following commands:
+```
+    $ cd oap-mllib/examples/kmeans-hibench
+    $ ./build.sh
+    $ ./run-hibench-oap-mllib.sh
+```
+
 ### PySpark Support
 
 As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. An example can be found in the [Examples](#examples) section.
@@ -87,7 +95,7 @@ Intel® oneAPI Toolkits and its components can be downloaded and install from [h
 
 More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-You can also refer to [this script and comments in it](https://github.com/oap-project/oap-mllib/blob/branch-1.1-spark-3.x/dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
+You can also refer to [this script and comments in it](https://github.com/Intel-bigdata/OAP/blob/branch-1.0-spark-3.x/oap-mllib/dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
 
 Scala and Java dependency descriptions are already included in Maven POM file. 
 
@@ -130,7 +138,7 @@ CCL_ROOT    | Path to oneCCL home directory
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
 
 ```
-	$ source /opt/intel/oneapi/setvars.sh
+	$ source /opt/intel/inteloneapi/setvars.sh
 	$ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 ```
 
@@ -152,11 +160,8 @@ Example         |  Description
 ----------------|---------------------------
 kmeans          |  K-means example for Scala
 kmeans-pyspark  |  K-means example for PySpark
-pca             |  PCA example for Scala
-pca-pyspark     |  PCA example for PySpark
+kmeans-hibench  |  Use HiBench-generated input dataset to benchmark K-means performance
 
 ## List of Accelerated Algorithms
 
 * K-Means (CPU, Experimental)
-* PCA (CPU, Experimental)
-

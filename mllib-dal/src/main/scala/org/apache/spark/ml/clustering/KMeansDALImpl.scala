@@ -40,14 +40,19 @@ class KMeansDALImpl (
 
     instr.foreach(_.logInfo(s"Processing partitions with $executorNum executors"))
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
-
     // repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
       data.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
       data
     }
+
+    val executorIPAddress = Utils.sparkFirstExecutorIP(dataForConversion.sparkContext)
+    val kvsIP = dataForConversion.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(dataForConversion, kvsIP)
+    val kvsPort = dataForConversion.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+
+    val kvsIPPort = kvsIP+"_"+kvsPort
 
     val partitionDims = Utils.getPartitionDims(dataForConversion)
 
@@ -64,14 +69,14 @@ class KMeansDALImpl (
       val it = entry._3
       val numCols = partitionDims(index)._2
 	  
-      println(s"KMeansDALImpl: Partition index: $index, numCols: $numCols, numRows: $numRows")
+      logDebug(s"KMeansDALImpl: Partition index: $index, numCols: $numCols, numRows: $numRows")
 
       // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
       val context = new DaalContext()
       val matrix = new DALMatrix(context, classOf[java.lang.Double],
         numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
 
-      println("KMeansDALImpl: Loading native libraries" )
+      logDebug("KMeansDALImpl: Loading native libraries" )
       // oneDAL libs should be loaded by now, extract libMLlibDAL.so to temp file and load
       LibLoader.loadLibraries()
 
@@ -111,10 +116,9 @@ class KMeansDALImpl (
     
     }.cache()
 
-    val results = coalescedTables.mapPartitions { table =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-
-      OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val initCentroids = OneDAL.makeNumericTable(centers)
       val result = new KMeansResult()
