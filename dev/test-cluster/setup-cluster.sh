@@ -6,14 +6,20 @@ cd $WORK_DIR
 
 echo JAVA_HOME is $JAVA_HOME
 
-mkdir ~/opt
+[ -d ~/opt ] || mkdir ~/opt
 cd ~/opt
-wget https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-tar -xzf spark-3.0.0-bin-hadoop2.7.tgz
-wget https://archive.apache.org/dist/hadoop/core/hadoop-2.7.7/hadoop-2.7.7.tar.gz
-tar -xzf hadoop-2.7.7.tar.gz
+[ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
+[ -d spark-3.0.0-bin-hadoop2.7 ] || tar -xzf spark-3.0.0-bin-hadoop2.7.tgz
+[ -f hadoop-2.7.7.tar.gz ] || wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-2.7.7/hadoop-2.7.7.tar.gz
+[ -d hadoop-2.7.7 ] || tar -xzf hadoop-2.7.7.tar.gz
 
 cd $WORK_DIR
+
+# Use second internal IP, use first IP will be SSH timeout
+HOST_IP=$(hostname -I | cut -f2 -d" ")
+
+sed -i "s/localhost/$HOST_IP/g" core-site.xml
+sed -i "s/localhost/$HOST_IP/g" yarn-site.xml
 
 cp ./core-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./hdfs-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
@@ -21,18 +27,17 @@ cp ./yarn-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./spark-defaults.conf ~/opt/spark-3.0.0-bin-hadoop2.7/conf
 
+source ./setup-spark-envs.sh
+
+echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
+echo $HOST_IP > $SPARK_HOME/conf/slaves
+
 # create directories
 mkdir -p /tmp/run/hdfs/namenode
 mkdir -p /tmp/run/hdfs/datanode
 
 # hdfs format
-~/opt/hadoop-2.7.7/bin/hdfs namenode -format
-
-export HADOOP_HOME=~/opt/hadoop-2.7.7
-export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
-export SPARK_HOME=~/opt/spark-3.0.0-bin-hadoop2.7
-
-export PATH=$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+$HADOOP_HOME/bin/hdfs namenode -format
 
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh

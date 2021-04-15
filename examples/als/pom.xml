@@ -4,14 +4,15 @@
 
   <groupId>com.intel.oap</groupId>
   <artifactId>oap-mllib-examples</artifactId>
-  <version>1.1.0-with-spark-3.0.0</version>
+  <version>${oap.version}-with-spark-${spark.version}</version>
   <packaging>jar</packaging>
 
-  <name>KMeansHiBenchExample</name>
+  <name>ALSExample</name>
   <url>https://github.com/oap-project/oap-mllib.git</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <oap.version>1.1.0</oap.version>
     <scala.version>2.12.10</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
     <spark.version>3.0.0</spark.version>
@@ -29,12 +30,6 @@
       <groupId>com.github.scopt</groupId>
       <artifactId>scopt_2.12</artifactId>
       <version>3.7.0</version>      
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.mahout</groupId>
-      <artifactId>mahout-hdfs</artifactId>
-      <version>14.1</version>
     </dependency>
 
     <dependency>

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Setup building envs
+source /opt/intel/oneapi/setvars.sh
+source /tmp/oneCCL/build/_install/env/setvars.sh
+
 # Check envs for building
 if [[ -z $JAVA_HOME ]]; then
  echo JAVA_HOME not defined!
@@ -35,4 +39,5 @@ echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
-mvn -DskipTests clean package
+cd $GITHUB_WORKSPACE/mllib-dal
+mvn --no-transfer-progress -DskipTests clean package
