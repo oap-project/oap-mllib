@@ -15,8 +15,10 @@ cd ~/opt
 
 cd $WORK_DIR
 
-# sed -i "s/localhost/$(hostname -i)/g" core-site.xml
-# sed -i "s/localhost/$(hostname -i)/g" yarn-site.xml
+HOST_IP=$(hostname -I | cut -f2 -d" ")
+
+sed -i "s/localhost/$HOST_IP/g" core-site.xml
+sed -i "s/localhost/$HOST_IP/g" yarn-site.xml
 
 cp ./core-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
 cp ./hdfs-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
@@ -26,8 +28,8 @@ cp ./spark-defaults.conf ~/opt/spark-3.0.0-bin-hadoop2.7/conf
 
 source ./setup-spark-envs.sh
 
-# echo $(hostname -i) > $HADOOP_HOME/etc/hadoop/slaves
-# echo $(hostname -i) > $SPARK_HOME/conf/slaves
+echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
+echo $HOST_IP > $SPARK_HOME/conf/slaves
 
 # create directories
 mkdir -p /tmp/run/hdfs/namenode

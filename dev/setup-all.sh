@@ -2,7 +2,9 @@
 
 # Setup hosts
 # echo "$(hostname -i) $(hostname)" | sudo tee -a /etc/hosts
-echo 127.0.0.1 $(hostname) | sudo tee -a /etc/hosts
+
+HOST_IP=$(hostname -I | cut -f2 -d" ")
+echo $HOST_IP $(hostname) | sudo tee -a /etc/hosts
 
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
