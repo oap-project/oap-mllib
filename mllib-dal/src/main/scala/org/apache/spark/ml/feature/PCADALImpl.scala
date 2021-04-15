@@ -18,19 +18,20 @@
 package org.apache.spark.ml.feature
 
 import java.util.Arrays
-
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
+import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.feature.{ StandardScaler => MLlibStandardScaler }
+import org.apache.spark.mllib.feature.{StandardScaler => MLlibStandardScaler}
 
 class PCADALImpl (
     val k: Int,
     val executorNum: Int,
-    val executorCores: Int) extends Serializable {
+    val executorCores: Int)
+  extends Serializable with Logging {
 
   // Normalize data before apply fitWithDAL
   private def normalizeData(input: RDD[Vector]) : RDD[Vector] = {
@@ -40,17 +41,23 @@ class PCADALImpl (
     res.map(_.asML)
   }
 
-  def fitWithDAL(input: RDD[Vector]) : MLlibPCAModel = {
+  def fitWithDAL(data: RDD[Vector]) : MLlibPCAModel = {
 
-    val normalizedData = normalizeData(input)
+    val normalizedData = normalizeData(data)
 
     val coalescedTables = OneDAL.rddVectorToNumericTables(normalizedData, executorNum)
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(input.sparkContext)
+    val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
+    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
 
-    val results = coalescedTables.mapPartitions { table =>
+    val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
+    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+
+    val kvsIPPort = kvsIP+"_"+kvsPort
+
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, executorIPAddress, OneCCL.KVS_PORT)
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val result = new PCAResult()
       cPCATrainDAL(

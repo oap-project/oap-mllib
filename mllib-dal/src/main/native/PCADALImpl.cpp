@@ -1,4 +1,3 @@
-#include <ccl.h>
 #include <daal.h>
 
 #include "service.h"
@@ -7,6 +6,7 @@
 #include <iostream>
 
 #include "org_apache_spark_ml_feature_PCADALImpl.h"
+#include "OneCCL.h"
 
 using namespace std;
 using namespace daal;
@@ -24,8 +24,9 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num, jint executor_cores,
     jobject resultObj) {
-  size_t rankId;
-  ccl_get_comm_rank(NULL, &rankId);
+
+  ccl::communicator &comm = getComm();
+  size_t rankId = comm.rank();
 
   const size_t nBlocks = executor_num;
   const int comm_size = executor_num;
@@ -40,6 +41,8 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
   cout << "oneDAL (native): Number of threads used: " << nThreadsNew << endl;
 
+  auto t1 = std::chrono::high_resolution_clock::now();
+
   pca::Distributed<step1Local, algorithmFPType, pca::svdDense> localAlgorithm;
 
   /* Set the input data set to the algorithm */
@@ -47,6 +50,12 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
 
   /* Compute PCA decomposition */
   localAlgorithm.compute();
+
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+  std::cout << "PCA (native): local step took " << duration << " secs" << std::endl;
+
+  t1 = std::chrono::high_resolution_clock::now();
 
   /* Serialize partial results required by step 2 */
   services::SharedPtr<byte> serializedData;
@@ -59,31 +68,31 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
   byte* nodeResults = new byte[perNodeArchLength];
   dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
 
-  ccl_request_t request;  
+  t2 = std::chrono::high_resolution_clock::now();
 
-  size_t* recv_counts = new size_t[comm_size * perNodeArchLength];
+  duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+  std::cout << "PCA (native): serializing partial results took " << duration << " secs" << std::endl;
+
+  vector<size_t> recv_counts(comm_size * perNodeArchLength);
   for (int i = 0; i < comm_size; i++) recv_counts[i] = perNodeArchLength;
 
   cout << "PCA (native): ccl_allgatherv receiving " << perNodeArchLength * nBlocks << " bytes" << endl;
 
-  auto t1 = std::chrono::high_resolution_clock::now();
+  t1 = std::chrono::high_resolution_clock::now();
 
   /* Transfer partial results to step 2 on the root node */
   // MPI_Gather(nodeResults, perNodeArchLength, MPI_CHAR, serializedData.get(),
   // perNodeArchLength, MPI_CHAR, ccl_root, MPI_COMM_WORLD);
-  ccl_allgatherv(nodeResults, perNodeArchLength, serializedData.get(), recv_counts,
-                 ccl_dtype_char, NULL, NULL, NULL, &request);
-  ccl_wait(request);
+  ccl::allgatherv(nodeResults, perNodeArchLength, serializedData.get(), recv_counts,
+                  ccl::datatype::uint8, comm).wait();
 
-  auto t2 = std::chrono::high_resolution_clock::now();
+  t2 = std::chrono::high_resolution_clock::now();
 
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
+  duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
   std::cout << "PCA (native): ccl_allgatherv took " << duration << " secs" << std::endl;
 
-  delete[] nodeResults;
-
   if (rankId == ccl_root) {
-    auto t1 = std::chrono::high_resolution_clock::now();        
+    auto t1 = std::chrono::high_resolution_clock::now();
 
     /* Create an algorithm for principal component analysis using the svdDense method
      * on the master node */

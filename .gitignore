@@ -1,6 +1,7 @@
 *.o
 *.log
 .vscode
+*.iml
 target/
 .idea/
 .idea_modules/

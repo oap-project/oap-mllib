@@ -21,7 +21,8 @@ package org.apache.spark.ml.util;
 import java.io.*;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.intel.daal.utils.LibUtils;
 
@@ -30,8 +31,7 @@ public final class LibLoader {
     // Make sure loading libraries from different temp directory for each process
     private final static String subDir = "MLlibDAL_" + UUID.randomUUID();
 
-    private static final Logger logger = Logger.getLogger(LibLoader.class.getName());
-    private static final Level logLevel = Level.INFO;
+    private static final Logger log = LoggerFactory.getLogger("LibLoader");
 
     /**
      * Get temp dir for exacting lib files
@@ -54,24 +54,23 @@ public final class LibLoader {
     /**
      * Load oneCCL libs in dependency order
      */
-    public static synchronized void loadLibCCL() throws IOException {
-        loadFromJar(subDir, "libpmi.so.1");
-        loadFromJar(subDir, "libresizable_pmi.so.1");
+    private static synchronized void loadLibCCL() throws IOException {
         loadFromJar(subDir, "libfabric.so.1");
+        loadFromJar(subDir, "libmpi.so.12");
+        loadFromJar(subDir, "libccl.so");
         loadFromJar(subDir, "libsockets-fi.so");
-        loadFromJar(subDir, "libccl_atl_ofi.so");
     }
 
     /**
      * Load MLlibDAL lib, it depends TBB libs that are loaded by oneDAL,
      * so this function should be called after oneDAL loadLibrary
      */
-    public static synchronized void loadLibMLlibDAL() throws IOException {
+    private static synchronized void loadLibMLlibDAL() throws IOException {
         // oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10
         // Rename in pom.xml and assembly.xml to workaround.
         // See https://github.com/oneapi-src/oneDAL/issues/1254 -->
         LibUtils.loadLibrary();
-        
+
         loadFromJar(subDir, "libMLlibDAL.so");
     }
 
@@ -82,12 +81,12 @@ public final class LibLoader {
      * @param name library name
      */
     private static void loadFromJar(String path, String name) throws IOException {
-        logger.log(logLevel, "Loading " + name + " ...");
+        log.debug("Loading " + name + " ...");
 
         File fileOut = createTempFile(path, name);
         // File exists already
         if (fileOut == null) {
-            logger.log(logLevel, "DONE: Loading library as resource.");
+            log.debug("DONE: Loading library as resource.");
             return;
         }
 
@@ -97,7 +96,7 @@ public final class LibLoader {
         }
 
         try (OutputStream streamOut = new FileOutputStream(fileOut)) {
-            logger.log(logLevel, "Writing resource to temp file.");
+            log.debug("Writing resource to temp file.");
 
             byte[] buffer = new byte[32768];
             while (true) {
@@ -116,7 +115,7 @@ public final class LibLoader {
         }
 
         System.load(fileOut.toString());
-        logger.log(logLevel, "DONE: Loading library as resource.");
+        log.debug("DONE: Loading library as resource.");
     }
 
     /**

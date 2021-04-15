@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_apache_spark_ml_util_OneCCL__
  * Method:    c_init
- * Signature: (Lorg/apache/spark/ml/util/CCLParam;)I
+ * Signature: (IILjava/lang/String;Lorg/apache/spark/ml/util/CCLParam;)I
  */
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jint, jint, jstring, jobject);
 
 /*
  * Class:     org_apache_spark_ml_util_OneCCL__
@@ -46,6 +46,14 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_rankID
  */
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
   (JNIEnv *, jobject, jstring, jstring, jboolean);
+
+/*
+ * Class:     org_apache_spark_ml_util_OneCCL__
+ * Method:    c_getAvailPort
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }
