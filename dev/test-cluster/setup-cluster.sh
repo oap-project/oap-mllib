@@ -15,6 +15,7 @@ cd ~/opt
 
 cd $WORK_DIR
 
+# Use second internal IP, use first IP will be SSH timeout
 HOST_IP=$(hostname -I | cut -f2 -d" ")
 
 sed -i "s/localhost/$HOST_IP/g" core-site.xml

@@ -11,13 +11,13 @@ For those algorithms that are not accelerated by OAP MLlib, the original Spark M
 
 ## Online Documentation
 
-You can find the all the OAP MLlib documents on the [project web page](https://oap-project.github.io/oap-mllib/).
+You can find the all the OAP MLlib documents on the [project web page](https://oap-project.github.io/oap-mllib).
 
 ## Getting Started
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/Intel-bigdata/OAP/releases/download/v1.0.0-spark-3.0.0/oap-1.0.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.0.0-bin-spark-3.0.0/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/Intel-bigdata/OAP/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -58,16 +58,31 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
 
 ### Sanity Check
 
-To use K-means example for sanity check, you need to upload a data file to your HDFS and change related variables in `run.sh` of kmeans example. Then run the following commands:
+#### Setup `env.sh`
 ```
-    $ cd oap-mllib/examples/kmeans
+    $ cd conf
+    $ cp env.sh.template env.sh
+```
+Edit related variables in "`Minimun Settings`" of `env.sh`
+
+#### Upload example data files to HDFS
+```
+    $ cd examples
+    $ hadoop fs -mkdir -p /user/$USER
+    $ hadoop fs -copyFromLocal data
+    $ hadoop fs -ls data
+```
+#### Run K-means
+
+```
+    $ cd examples/kmeans
     $ ./build.sh
     $ ./run.sh
 ```
 
 ### PySpark Support
 
-As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. An example can be found in the [Examples](#examples) section.
+As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. Examples can be found in the [Examples](#examples) section.
 
 ## Building
 
@@ -78,7 +93,8 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Toolkits 2021.1.1 Components: 
+* Intel® oneAPI Toolkits 2021.2+ Components:
+    - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
 * [Open Source Intel® oneAPI Collective Communications Library (oneCCL)](https://github.com/oneapi-src/oneCCL)
@@ -87,7 +103,7 @@ Intel® oneAPI Toolkits and its components can be downloaded and install from [h
 
 More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-You can also refer to [this script and comments in it](dev/install-build-deps-centos.sh) to install correct oneAPI version and manually setup the environments.
+You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies.
 
 Scala and Java dependency descriptions are already included in Maven POM file. 
 
@@ -136,11 +152,13 @@ We suggest you to source `setvars.sh` script into current shell to setup buildin
 
 __Be noticed we are using our own built oneCCL instead, we should source oneCCL's `setvars.sh` to overwrite oneAPI one.__
 
+You can also refer to [this CI script](dev/ci-build.sh) to setup the building environments.
+
 If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-src/oneDAL), [oneTBB](https://github.com/oneapi-src/oneTBB) versions rather than use the ones included in oneAPI TookKits, you can refer to the related build instructions and manually source `setvars.sh` accordingly.
 
 To build, run the following commands: 
 ```
-    $ cd oap-mllib/mllib-dal
+    $ cd mllib-dal
     $ ./build.sh
 ```
 
@@ -159,6 +177,8 @@ als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
-* K-Means (CPU, Experimental)
-* PCA     (CPU, Experimental)
-* ALS     (CPU, Experimental)
+Algorithm | Category | Maturity
+----------|----------|-------------
+K-Means   | CPU      | Experimental
+PCA       | CPU      | Experimental
+ALS       | CPU      | Experimental

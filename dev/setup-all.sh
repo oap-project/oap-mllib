@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 # Setup hosts
-# echo "$(hostname -i) $(hostname)" | sudo tee -a /etc/hosts
-
+# Use second internal IP, use first IP will be SSH timeout
 HOST_IP=$(hostname -I | cut -f2 -d" ")
 echo $HOST_IP $(hostname) | sudo tee -a /etc/hosts
 
