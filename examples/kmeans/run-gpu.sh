@@ -6,7 +6,7 @@
 #export SPARK_HOME=/path/to/your/spark/home
 #export HADOOP_HOME=/path/to/your/hadoop/home
 # Set user HDFS Root
-export HDFS_ROOT=file:///home/xiaochang/HdfsMaster
+export HDFS_ROOT=/home/xiaochang/HdfsMaster
 # Set user Intel MLlib Root directory
 export OAP_MLLIB_ROOT=/home/xiaochang/Works/oap-mllib-xwu99
 # Set IP and Port for oneCCL KVS, you can select any one of the worker nodes and set CCL_KVS_IP_PORT to its IP and Port
@@ -23,9 +23,9 @@ DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 # == User to customize Spark executor cores and memory == #
 
 # User should check the requested resources are acturally allocated by cluster manager or Intel MLlib will behave incorrectly
-SPARK_MASTER=spark://SkullCanyon:7077
+SPARK_MASTER=spark://$(hostname -i):7077
 SPARK_DRIVER_MEMORY=1G
-SPARK_TOTAL_CORES=2
+SPARK_TOTAL_CORES=4
 SPARK_EXECUTOR_CORES=1
 SPARK_EXECUTOR_MEMORY=1G
 
@@ -70,9 +70,6 @@ $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --conf "spark.sql.shuffle.partitions=$SPARK_DEFAULT_PARALLELISM" \
     --conf "spark.driver.extraClassPath=$SPARK_DRIVER_CLASSPATH" \
     --conf "spark.executor.extraClassPath=$SPARK_EXECUTOR_CLASSPATH" \
-    --conf "spark.executorEnv.OverrideDefaultFP64Settings=1" \
-    --conf "spark.executorEnv.IGC_ForceDPEmulation=1" \
-    --conf "spark.executorEnv.IGC_EnableDPEmulation=1" \
     --conf "spark.oap.mllib.useGPU=true" \
     --conf "spark.executor.resource.gpu.amount=1" \
     --conf "spark.task.resource.gpu.amount=1" \
