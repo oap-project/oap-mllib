@@ -170,6 +170,24 @@
         </profile>
 
         <profile>
+            <id>spark-3.0.1</id>
+            <properties>
+                <spark.version>3.0.1</spark.version>
+                <scalatest.version>3.0.8</scalatest.version>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                </dependencies>
+            </dependencyManagement>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
             <id>spark-3.0.2</id>
             <properties>
                 <spark.version>3.0.2</spark.version>
