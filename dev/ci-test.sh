@@ -30,12 +30,6 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-if [[ -z $SPARK_VER ]]; then
- echo SPARK_VER not defined, using default.
-else
- SPARK_VER=$SPARK_VER
-fi
-
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
@@ -49,9 +43,8 @@ echo =============================
 
 cd $GITHUB_WORKSPACE/mllib-dal
 
-# Build test
+# Build test without profile
 $GITHUB_WORKSPACE/dev/ci-build.sh
-
 # Enable signal chaining support for JNI
 # export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
@@ -61,15 +54,24 @@ $GITHUB_WORKSPACE/dev/ci-build.sh
 # mvn -Dtest=none -Dmaven.test.skip=false test
 
 # Individual test
-if [[ -z $SPARK_VER ]]; then
- mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
- mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
-else
- mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SPARK_VER
- mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SPARK_VER
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
-fi
+
+
+SupportedSparkVersions=("spark-3.0.1" "spark-3.0.2" "spark-3.1.1")
+# Print array values in  lines
+for SPARK_VER in ${SupportedSparkVersions[*]}; do
+    echo ""
+    echo "========================================"
+    echo $SPARK_VER
+    echo "========================================"
+    # Build test with profile
+    SPARK_VER=$SPARK_VER && $GITHUB_WORKSPACE/dev/ci-build.sh
+
+    mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SPARK_VER
+    mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SPARK_VER
+    # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
 
 # Yarn cluster test
 $GITHUB_WORKSPACE/dev/test-cluster/ci-test-cluster.sh
