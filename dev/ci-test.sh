@@ -72,6 +72,7 @@ for SPARK_VER in ${SupportedSparkVersions[*]}; do
     mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SPARK_VER
     mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SPARK_VER
     # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
+done
 
 # Yarn cluster test
 $GITHUB_WORKSPACE/dev/test-cluster/ci-test-cluster.sh
