@@ -37,7 +37,6 @@ echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
-echo SPARK_VER=$SPARK_VER
 echo =============================
 
 # cd $GITHUB_WORKSPACE/mllib-dal
@@ -68,11 +67,11 @@ for SparkVer in ${SupportedSparkVersions[*]}; do
 
     cd $GITHUB_WORKSPACE/mllib-dal
     # Build test with profile
-    SPARK_VER=$SparkVer && $GITHUB_WORKSPACE/dev/ci-build.sh
+    $GITHUB_WORKSPACE/dev/ci-build.sh $SparkVer
 
     mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SparkVer
     mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SparkVer
-    # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
+    # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SparkVer
 done
 
 # Yarn cluster test
