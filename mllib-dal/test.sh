@@ -26,10 +26,10 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-if [[ -z $SPARK_VER ]]; then
- echo SPARK_VER not defined, using default.
+if [[ -z $1 ]]; then
+ echo SPARK_VER not defined, using default (3.0.0).
 else
- SPARK_VER=$SPARK_VER
+ SPARK_VER=$1
 fi
 
 echo === Testing Environments ===
