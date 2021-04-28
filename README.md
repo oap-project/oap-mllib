@@ -161,11 +161,11 @@ To build, run the following commands:
     $ cd mllib-dal
     $ ./build.sh
 ```
-The target can be built against different spark version by specifying profile with -P<spark-x.x.x>. e.g.
+The target can be built against different spark versions by specifying profile with -P<Spark-x.x.x>. E.g.
 ```
-    $ mvn -DskipTests clean package -Pspark-3.1.1
+    $ mvn -DskipTests clean package -PSpark-3.1.1
 ```
-If no profile parameter is given, the spark version 3.0.0 will be activated by default.
+If no profile parameter is given, the Spark version 3.0.0 will be activated by default.
 The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x-with-spark-x.x.x.jar`.
 
 ## Examples

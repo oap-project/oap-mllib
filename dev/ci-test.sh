@@ -38,13 +38,12 @@ echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo SPARK_VER=$SPARK_VER
-echo GCC Version: $(gcc -dumpversion)
 echo =============================
 
-cd $GITHUB_WORKSPACE/mllib-dal
+# cd $GITHUB_WORKSPACE/mllib-dal
 
 # Build test without profile
-$GITHUB_WORKSPACE/dev/ci-build.sh
+# $GITHUB_WORKSPACE/dev/ci-build.sh
 # Enable signal chaining support for JNI
 # export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
 
@@ -54,23 +53,25 @@ $GITHUB_WORKSPACE/dev/ci-build.sh
 # mvn -Dtest=none -Dmaven.test.skip=false test
 
 # Individual test
-mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+# mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+# mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
 
 
-SupportedSparkVersions=("spark-3.0.1" "spark-3.0.2" "spark-3.1.1")
+SupportedSparkVersions=("Spark-3.0.0" "Spark-3.0.1" "Spark-3.0.2" "Spark-3.1.1")
 # Print array values in  lines
-for SPARK_VER in ${SupportedSparkVersions[*]}; do
+for SparkVer in ${SupportedSparkVersions[*]}; do
     echo ""
     echo "========================================"
-    echo $SPARK_VER
+    echo "Profile: $SparkVer"
     echo "========================================"
-    # Build test with profile
-    SPARK_VER=$SPARK_VER && $GITHUB_WORKSPACE/dev/ci-build.sh
 
-    mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SPARK_VER
-    mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SPARK_VER
+    cd $GITHUB_WORKSPACE/mllib-dal
+    # Build test with profile
+    SPARK_VER=$SparkVer && $GITHUB_WORKSPACE/dev/ci-build.sh
+
+    mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SparkVer
+    mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SparkVer
     # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
 done
 
