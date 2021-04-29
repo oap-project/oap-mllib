@@ -37,18 +37,18 @@ else
 fi
 
 echo === Building Environments ===
+echo SPARK_VER=$SPARK_VER
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
-echo SPARK_VER=$SPARK_VER
 echo =============================
 
 cd $GITHUB_WORKSPACE/mllib-dal
 if [[ -z $SPARK_VER ]]; then
     mvn --no-transfer-progress -DskipTests clean package
 else
-    mvn --no-transfer-progress -DskipTests clean package -P$SPARK_VER
+    mvn -P$SPARK_VER --no-transfer-progress -DskipTests clean package
 fi

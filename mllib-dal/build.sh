@@ -33,17 +33,17 @@ else
 fi
 
 echo === Building Environments ===
+echo SPARK_VER=$SPARK_VER
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
-echo SPARK_VER=$SPARK_VER
 echo =============================
 
 if [[ -z $SPARK_VER ]]; then
  mvn -DskipTests clean package
 else
- mvn -DskipTests clean package -P$SPARK_VER
+ mvn -P$SPARK_VER -DskipTests clean package
 fi
