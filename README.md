@@ -1,3 +1,7 @@
+##### \* LEGAL NOTICE: Your use of this software and any required dependent software (the "Software Package") is subject to the terms and conditions of the software license agreements for the Software Package, which may also include notices, disclaimers, or license terms for third party or open source software included in or with the Software Package, and your use indicates your acceptance of all such terms. Please refer to the "TPP.txt" or other similarly-named text file included with the Software Package for additional details.
+
+##### \* Optimized Analytics Package for Spark* Platform is under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+
 # OAP MLlib
 
 ## Overview
@@ -60,7 +64,7 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 
 #### OAP MLlib Specific Configuration
 
-OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executors. For large dataset, depending on algorithms, you may need to tune `spark.executor.memoryOverhead` to allocate enough native memory. Setting this value to larger than __dataset size / executor number__ is a good starting point.
+OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune `spark.executor.memoryOverhead` to allocate enough native memory. Setting this value to larger than __dataset size / executor number__ is a good starting point.
 
 ### Sanity Check
 
