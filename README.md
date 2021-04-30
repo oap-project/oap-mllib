@@ -17,13 +17,13 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/Intel-bigdata/OAP/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
 ### Python/PySpark Users Preferred
 
-Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x-with-spark-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
+Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -49,11 +49,11 @@ Users usually run Spark application on __YARN__ with __client__ mode. In that ca
 
 ```
 # absolute path of the jar for uploading
-spark.files                       /path/to/oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.files                       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for driver class path
-spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path to spark.files, just specify jar name in current dir
-spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 ```
 
 ### Sanity Check
@@ -103,9 +103,9 @@ Intel® oneAPI Toolkits and its components can be downloaded and install from [h
 
 More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies.
-
 Scala and Java dependency descriptions are already included in Maven POM file. 
+
+***Note:*** You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies: DPC++/C++, oneDAL, oneTBB, oneCCL.
 
 ### Build
 
@@ -162,7 +162,7 @@ To build, run the following commands:
     $ ./build.sh
 ```
 
-The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x-with-spark-x.x.x.jar`.
+The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
 
 ## Examples
 
