@@ -54,8 +54,6 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#compatibility">Compatibility</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#online-documentation">Online Documentation</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#javascala-users-preferred">Java/Scala Users Preferred</a>
@@ -71,6 +69,12 @@
     <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#spark-configuration">Spark Configuration</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#general-configuration">General Configuration</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#oap-mllib-specific-configuration">OAP MLlib Specific Configuration</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#sanity-check">Sanity Check</a>
         <ul>
@@ -157,8 +161,6 @@
 <h2 id="compatibility">Compatibility</h2>
 <p>OAP MLlib tried to maintain the same API interfaces and produce same results that are identical with Spark MLlib. However due to the nature of float point operations, there may be some small deviation from the original result, we will try our best to make sure the error is within acceptable range.
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. </p>
-<h2 id="online-documentation">Online Documentation</h2>
-<p>You can find the all the OAP MLlib documents on the <a href="https://oap-project.github.io/oap-mllib">project web page</a>.</p>
 <h2 id="getting-started">Getting Started</h2>
 <h3 id="javascala-users-preferred">Java/Scala Users Preferred</h3>
 <p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-1.1.0-bin-spark-3.0.0/jars</code>.</p>
@@ -178,6 +180,7 @@ For those algorithms that are not accelerated by OAP MLlib, the original Spark M
 <p>Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to <a href="https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html">here</a> for details.</p>
 <p>Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.</p>
 <h3 id="spark-configuration">Spark Configuration</h3>
+<h4 id="general-configuration">General Configuration</h4>
 <p>Users usually run Spark application on <strong>YARN</strong> with <strong>client</strong> mode. In that case, you only need to add the following configurations in <code>spark-defaults.conf</code> or in <code>spark-submit</code> command line before running. </p>
 <pre><code># absolute path of the jar for uploading
 spark.files                       /path/to/oap-mllib-x.x.x.jar
@@ -187,6 +190,8 @@ spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 </code></pre>
 
+<h4 id="oap-mllib-specific-configuration">OAP MLlib Specific Configuration</h4>
+<p>OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune <code>spark.executor.memoryOverhead</code> to allocate enough native memory. Setting this value to larger than <strong>dataset size / executor number</strong> is a good starting point.</p>
 <h3 id="sanity-check">Sanity Check</h3>
 <h4 id="setup-envsh">Setup <code>env.sh</code></h4>
 <pre><code>    $ cd conf
@@ -289,7 +294,12 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
     $ ./build.sh
 </code></pre>
 
-<p>The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x.jar</code>.</p>
+<p>The target can be built against different Spark versions by specifying profile with <spark-x.x.x>. E.g.</p>
+<pre><code>    $ ./build.sh spark-3.1.1
+</code></pre>
+
+<p>If no profile parameter is given, the Spark version 3.0.0 will be activated by default.
+The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x.jar</code>.</p>
 <h2 id="examples">Examples</h2>
 <table>
 <thead>
@@ -405,5 +415,5 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-04-30 01:33:19.457917+00:00
+Build Date UTC : 2021-04-30 06:42:06.100904+00:00
 -->
