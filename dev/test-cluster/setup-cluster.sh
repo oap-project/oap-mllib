@@ -15,8 +15,7 @@ cd ~/opt
 
 cd $WORK_DIR
 
-# Use second internal IP, use first IP will be SSH timeout
-HOST_IP=$(hostname -I | cut -f2 -d" ")
+HOST_IP=$(hostname -f)
 
 sed -i "s/localhost/$HOST_IP/g" core-site.xml
 sed -i "s/localhost/$HOST_IP/g" yarn-site.xml

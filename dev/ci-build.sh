@@ -30,7 +30,14 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
+if [[ -z $1 ]]; then
+ echo SPARK_VER not defined, using default.
+else
+ SPARK_VER=$1
+fi
+
 echo === Building Environments ===
+echo SPARK_VER=$SPARK_VER
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
@@ -40,4 +47,8 @@ echo Clang Version: $(clang -dumpversion)
 echo =============================
 
 cd $GITHUB_WORKSPACE/mllib-dal
-mvn --no-transfer-progress -DskipTests clean package
+if [[ -z $SPARK_VER ]]; then
+    mvn --no-transfer-progress -DskipTests clean package
+else
+    mvn -P$SPARK_VER --no-transfer-progress -DskipTests clean package
+fi

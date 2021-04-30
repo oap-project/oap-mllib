@@ -39,23 +39,23 @@ echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
-cd $GITHUB_WORKSPACE/mllib-dal
 
-# Build test
-$GITHUB_WORKSPACE/dev/ci-build.sh
+SupportedSparkVersions=("spark-3.0.0" "spark-3.0.1" "spark-3.0.2" "spark-3.1.1")
 
-# Enable signal chaining support for JNI
-# export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
+for SparkVer in ${SupportedSparkVersions[*]}; do
+    echo ""
+    echo "========================================"
+    echo "Profile: $SparkVer"
+    echo "========================================"
 
-# -Dtest=none to turn off the Java tests
+    cd $GITHUB_WORKSPACE/mllib-dal
+    # Build test with profile
+    $GITHUB_WORKSPACE/dev/ci-build.sh $SparkVer
 
-# Test all
-# mvn -Dtest=none -Dmaven.test.skip=false test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+    # mvn -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+done
 
-# Individual test
-mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-mvn --no-transfer-progress -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
-
-# Yarn cluster test
+# Yarn cluster test without profile
 $GITHUB_WORKSPACE/dev/test-cluster/ci-test-cluster.sh

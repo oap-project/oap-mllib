@@ -26,7 +26,14 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
+if [[ -z $1 ]]; then
+ echo SPARK_VER not defined, using default.
+else
+ SPARK_VER=$1
+fi
+
 echo === Building Environments ===
+echo SPARK_VER=$SPARK_VER
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
@@ -35,4 +42,8 @@ echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo =============================
 
-mvn -DskipTests clean package
+if [[ -z $SPARK_VER ]]; then
+ mvn -DskipTests clean package
+else
+ mvn -P$SPARK_VER -DskipTests clean package
+fi
