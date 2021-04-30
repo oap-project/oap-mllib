@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>OAP MLlib - OAP MLlib - master</title>
+  <title>User Guide - OAP MLlib - master</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "OAP MLlib";
+    var mkdocs_page_name = "User Guide";
     var mkdocs_page_input_path = "User-Guide.md";
     var mkdocs_page_url = null;
   </script>
@@ -84,7 +84,7 @@
     
       
     
-    <li>OAP MLlib</li>
+    <li>User Guide</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -95,18 +95,22 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="oap-mllib">OAP MLlib</h1>
+                <h5 id="legal-notice-your-use-of-this-software-and-any-required-dependent-software-the-software-package-is-subject-to-the-terms-and-conditions-of-the-software-license-agreements-for-the-software-package-which-may-also-include-notices-disclaimers-or-license-terms-for-third-party-or-open-source-software-included-in-or-with-the-software-package-and-your-use-indicates-your-acceptance-of-all-such-terms-please-refer-to-the-tpptxt-or-other-similarly-named-text-file-included-with-the-software-package-for-additional-details">* LEGAL NOTICE: Your use of this software and any required dependent software (the "Software Package") is subject to the terms and conditions of the software license agreements for the Software Package, which may also include notices, disclaimers, or license terms for third party or open source software included in or with the Software Package, and your use indicates your acceptance of all such terms. Please refer to the "TPP.txt" or other similarly-named text file included with the Software Package for additional details.</h5>
+<h5 id="optimized-analytics-package-for-spark-platform-is-under-apache-20-httpswwwapacheorglicenseslicense-20">* Optimized Analytics Package for Spark* Platform is under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0).</h5>
+<h1 id="oap-mllib">OAP MLlib</h1>
 <h2 id="overview">Overview</h2>
 <p>OAP MLlib is an optimized package to accelerate machine learning algorithms in  <a href="https://spark.apache.org/mllib">Apache Spark MLlib</a>.  It is compatible with Spark MLlib and leverages open source <a href="https://github.com/oneapi-src/oneDAL">Intel® oneAPI Data Analytics Library (oneDAL)</a> to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source <a href="https://github.com/oneapi-src/oneCCL">Intel® oneAPI Collective Communications Library (oneCCL)</a> to provide efficient communication patterns in multi-node multi-GPU clusters.</p>
 <h2 id="compatibility">Compatibility</h2>
 <p>OAP MLlib tried to maintain the same API interfaces and produce same results that are identical with Spark MLlib. However due to the nature of float point operations, there may be some small deviation from the original result, we will try our best to make sure the error is within acceptable range.
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. </p>
+<h2 id="online-documentation">Online Documentation</h2>
+<p>You can find the all the OAP MLlib documents on the <a href="https://oap-project.github.io/oap-mllib">project web page</a>.</p>
 <h2 id="getting-started">Getting Started</h2>
 <h3 id="javascala-users-preferred">Java/Scala Users Preferred</h3>
-<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/Intel-bigdata/OAP/releases/download/v1.0.0-spark-3.0.0/oap-1.0.0-bin-spark-3.0.0.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x-with-spark-x.x.x.jar</code> under <code>oap-1.0.0-bin-spark-3.0.0/jars</code>.</p>
+<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-1.1.0-bin-spark-3.0.0/jars</code>.</p>
 <p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
 <h3 id="pythonpyspark-users-preferred">Python/PySpark Users Preferred</h3>
-<p>Use a pre-built JAR to get started. If you have finished <a href="../OAP-Installation-Guide/">OAP-Installation-Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x-with-spark-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
+<p>Use a pre-built JAR to get started. If you have finished <a href="../OAP-Installation-Guide/">OAP-Installation-Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
 <p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
 <h3 id="building-from-scratch">Building From Scratch</h3>
 <p>You can also build the package from source code, please refer to <a href="#building">Building</a> section.</p>
@@ -122,29 +126,35 @@ For those algorithms that are not accelerated by OAP MLlib, the original Spark M
 <h3 id="spark-configuration">Spark Configuration</h3>
 <p>Users usually run Spark application on <strong>YARN</strong> with <strong>client</strong> mode. In that case, you only need to add the following configurations in <code>spark-defaults.conf</code> or in <code>spark-submit</code> command line before running. </p>
 <pre><code># absolute path of the jar for uploading
-spark.files                       /path/to/oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.files                       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for driver class path
-spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path to spark.files, just specify jar name in current dir
-spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 </code></pre>
 
 <h3 id="sanity-check">Sanity Check</h3>
-<p>To use K-means example for sanity check, you need to upload a data file to your HDFS and change related variables in <code>run.sh</code> of kmeans example. Then run the following commands:</p>
-<pre><code>    $ cd oap-mllib/examples/kmeans
+<h4 id="setup-envsh">Setup <code>env.sh</code></h4>
+<pre><code>    $ cd conf
+    $ cp env.sh.template env.sh
+</code></pre>
+
+<p>Edit related variables in "<code>Minimun Settings</code>" of <code>env.sh</code></p>
+<h4 id="upload-example-data-files-to-hdfs">Upload example data files to HDFS</h4>
+<pre><code>    $ cd examples
+    $ hadoop fs -mkdir -p /user/$USER
+    $ hadoop fs -copyFromLocal data
+    $ hadoop fs -ls data
+</code></pre>
+
+<h4 id="run-k-means">Run K-means</h4>
+<pre><code>    $ cd examples/kmeans
     $ ./build.sh
     $ ./run.sh
 </code></pre>
 
-<h3 id="benchmark-with-hibench">Benchmark with HiBench</h3>
-<p>Use <a href="https://github.com/Intel-bigdata/HiBench">Hibench</a> to generate dataset with various profiles, and change related variables in <code>run-XXX.sh</code> script when applicable.  Then run the following commands:</p>
-<pre><code>    $ cd oap-mllib/examples/kmeans-hibench
-    $ ./build.sh
-    $ ./run-hibench-oap-mllib.sh
-</code></pre>
-
 <h3 id="pyspark-support">PySpark Support</h3>
-<p>As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. An example can be found in the <a href="#examples">Examples</a> section.</p>
+<p>As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. Examples can be found in the <a href="#examples">Examples</a> section.</p>
 <h2 id="building">Building</h2>
 <h3 id="prerequisites_1">Prerequisites</h3>
 <p>We use <a href="https://maven.apache.org/">Apache Maven</a> to manage and build source code.  The following tools and libraries are also needed to build OAP MLlib:</p>
@@ -152,7 +162,8 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
 <li>JDK 8.0+</li>
 <li>Apache Maven 3.6.2+</li>
 <li>GNU GCC 4.8.5+</li>
-<li>Intel® oneAPI Toolkits 2021.1.1 Components: <ul>
+<li>Intel® oneAPI Toolkits 2021.2+ Components:<ul>
+<li>DPC++/C++ Compiler (dpcpp/clang++)</li>
 <li>Data Analytics Library (oneDAL)</li>
 <li>Threading Building Blocks (oneTBB)</li>
 </ul>
@@ -161,14 +172,14 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
 </ul>
 <p>Intel® oneAPI Toolkits and its components can be downloaded and install from <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>. Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. Generally you only need to install oneAPI Base Toolkit for Linux with all or selected components mentioned above. Instead of using oneCCL included in Intel® oneAPI Toolkits, we prefer to build from open source oneCCL to resolve some bugs.</p>
 <p>More details about oneAPI can be found <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>.</p>
-<p>You can also refer to <a href="https://github.com/Intel-bigdata/OAP/blob/branch-1.0-spark-3.x/oap-mllib/dev/install-build-deps-centos.sh">this script and comments in it</a> to install correct oneAPI version and manually setup the environments.</p>
 <p>Scala and Java dependency descriptions are already included in Maven POM file. </p>
+<p><strong><em>Note:</em></strong> You can refer to <a href="../dev/install-build-deps-centos.sh">this script</a> to install correct dependencies: DPC++/C++, oneDAL, oneTBB, oneCCL.</p>
 <h3 id="build">Build</h3>
 <h4 id="building-oneccl">Building oneCCL</h4>
 <p>To clone and build from open source oneCCL, run the following commands:</p>
 <pre><code>    $ git clone https://github.com/oneapi-src/oneCCL
         $ cd oneCCL
-        $ git checkout beta08
+        $ git checkout 2021.2
     $ mkdir build &amp;&amp; cd build
     $ cmake ..
     $ make -j install
@@ -212,18 +223,19 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
 </tbody>
 </table>
 <p>We suggest you to source <code>setvars.sh</code> script into current shell to setup building environments as following:</p>
-<pre><code>    $ source /opt/intel/inteloneapi/setvars.sh
+<pre><code>    $ source /opt/intel/oneapi/setvars.sh
     $ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 </code></pre>
 
 <p><strong>Be noticed we are using our own built oneCCL instead, we should source oneCCL's <code>setvars.sh</code> to overwrite oneAPI one.</strong></p>
+<p>You can also refer to <a href="../dev/ci-build.sh">this CI script</a> to setup the building environments.</p>
 <p>If you prefer to buid your own open source <a href="https://github.com/oneapi-src/oneDAL">oneDAL</a>, <a href="https://github.com/oneapi-src/oneTBB">oneTBB</a> versions rather than use the ones included in oneAPI TookKits, you can refer to the related build instructions and manually source <code>setvars.sh</code> accordingly.</p>
 <p>To build, run the following commands: </p>
-<pre><code>    $ cd oap-mllib/mllib-dal
+<pre><code>    $ cd mllib-dal
     $ ./build.sh
 </code></pre>
 
-<p>The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x-with-spark-x.x.x.jar</code>.</p>
+<p>The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x.jar</code>.</p>
 <h2 id="examples">Examples</h2>
 <table>
 <thead>
@@ -242,15 +254,50 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
 <td>K-means example for PySpark</td>
 </tr>
 <tr>
-<td>kmeans-hibench</td>
-<td>Use HiBench-generated input dataset to benchmark K-means performance</td>
+<td>pca</td>
+<td>PCA example for Scala</td>
+</tr>
+<tr>
+<td>pca-pyspark</td>
+<td>PCA example for PySpark</td>
+</tr>
+<tr>
+<td>als</td>
+<td>ALS example for Scala</td>
+</tr>
+<tr>
+<td>als-pyspark</td>
+<td>ALS example for PySpark</td>
 </tr>
 </tbody>
 </table>
 <h2 id="list-of-accelerated-algorithms">List of Accelerated Algorithms</h2>
-<ul>
-<li>K-Means (CPU, Experimental)</li>
-</ul>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Category</th>
+<th>Maturity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K-Means</td>
+<td>CPU</td>
+<td>Experimental</td>
+</tr>
+<tr>
+<td>PCA</td>
+<td>CPU</td>
+<td>Experimental</td>
+</tr>
+<tr>
+<td>ALS</td>
+<td>CPU</td>
+<td>Experimental</td>
+</tr>
+</tbody>
+</table>
               
             </div>
           </div>

@@ -5,26 +5,26 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="None">
   
   
-  <link rel="shortcut icon" href="img/favicon.ico">
-  <title>OAP MLlib - master</title>
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>User Guide - OAP MLlib - 1.1.0</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="css/theme_extra.css" />
+  <link rel="stylesheet" href="../css/theme.css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
   
   <script>
     // Current page data
     var mkdocs_page_name = "User Guide";
-    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_input_path = "User-Guide.md";
     var mkdocs_page_url = null;
   </script>
   
-  <script src="js/jquery-2.1.1.min.js" defer></script>
-  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../js/modernizr-2.8.3.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script> 
   
@@ -38,85 +38,29 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> OAP MLlib - master</a>
+        <a href=".." class="icon icon-home"> OAP MLlib - 1.1.0</a>
         <div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-                <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href=".">User Guide</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#compatibility">Compatibility</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#online-documentation">Online Documentation</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#javascala-users-preferred">Java/Scala Users Preferred</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#pythonpyspark-users-preferred">Python/PySpark Users Preferred</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#building-from-scratch">Building From Scratch</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#running">Running</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#spark-configuration">Spark Configuration</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#sanity-check">Sanity Check</a>
-        <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#setup-envsh">Setup env.sh</a>
-    </li>
-    <li class="toctree-l4"><a class="reference internal" href="#upload-example-data-files-to-hdfs">Upload example data files to HDFS</a>
-    </li>
-    <li class="toctree-l4"><a class="reference internal" href="#run-k-means">Run K-means</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#pyspark-support">PySpark Support</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#building">Building</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#prerequisites_1">Prerequisites</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#build">Build</a>
-        <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#building-oneccl">Building oneCCL</a>
-    </li>
-    <li class="toctree-l4"><a class="reference internal" href="#building-oap-mllib">Building OAP MLlib</a>
-    </li>
-        </ul>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#list-of-accelerated-algorithms">List of Accelerated Algorithms</a>
-    </li>
-    </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="..">User Guide</a>
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="OAP-Installation-Guide/">OAP Installation Guide</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../OAP-Installation-Guide/">OAP Installation Guide</a>
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="OAP-Developer-Guide/">OAP Developer Guide</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../OAP-Developer-Guide/">OAP Developer Guide</a>
                     </li>
                 </ul>
                 <ul>
-                    <li class="toctree-l1"><a class="" href="../">Version Selector</a>
+                    <li class="toctree-l1"><a class="" href="../../">Version Selector</a>
                     </li>
                 </ul>
       </div>
@@ -128,7 +72,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href=".">OAP MLlib - master</a>
+        <a href="..">OAP MLlib - 1.1.0</a>
       </nav>
 
       
@@ -136,7 +80,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href=".">Docs</a> &raquo;</li>
+    <li><a href="..">Docs</a> &raquo;</li>
     
       
     
@@ -151,7 +95,9 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="oap-mllib">OAP MLlib</h1>
+                <h5 id="legal-notice-your-use-of-this-software-and-any-required-dependent-software-the-software-package-is-subject-to-the-terms-and-conditions-of-the-software-license-agreements-for-the-software-package-which-may-also-include-notices-disclaimers-or-license-terms-for-third-party-or-open-source-software-included-in-or-with-the-software-package-and-your-use-indicates-your-acceptance-of-all-such-terms-please-refer-to-the-tpptxt-or-other-similarly-named-text-file-included-with-the-software-package-for-additional-details">* LEGAL NOTICE: Your use of this software and any required dependent software (the "Software Package") is subject to the terms and conditions of the software license agreements for the Software Package, which may also include notices, disclaimers, or license terms for third party or open source software included in or with the Software Package, and your use indicates your acceptance of all such terms. Please refer to the "TPP.txt" or other similarly-named text file included with the Software Package for additional details.</h5>
+<h5 id="optimized-analytics-package-for-spark-platform-is-under-apache-20-httpswwwapacheorglicenseslicense-20">* Optimized Analytics Package for Spark* Platform is under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0).</h5>
+<h1 id="oap-mllib">OAP MLlib</h1>
 <h2 id="overview">Overview</h2>
 <p>OAP MLlib is an optimized package to accelerate machine learning algorithms in  <a href="https://spark.apache.org/mllib">Apache Spark MLlib</a>.  It is compatible with Spark MLlib and leverages open source <a href="https://github.com/oneapi-src/oneDAL">Intel® oneAPI Data Analytics Library (oneDAL)</a> to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source <a href="https://github.com/oneapi-src/oneCCL">Intel® oneAPI Collective Communications Library (oneCCL)</a> to provide efficient communication patterns in multi-node multi-GPU clusters.</p>
 <h2 id="compatibility">Compatibility</h2>
@@ -164,7 +110,7 @@ For those algorithms that are not accelerated by OAP MLlib, the original Spark M
 <p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-1.1.0-bin-spark-3.0.0/jars</code>.</p>
 <p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
 <h3 id="pythonpyspark-users-preferred">Python/PySpark Users Preferred</h3>
-<p>Use a pre-built JAR to get started. If you have finished <a href="OAP-Installation-Guide/">OAP-Installation-Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
+<p>Use a pre-built JAR to get started. If you have finished <a href="../OAP-Installation-Guide/">OAP-Installation-Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
 <p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
 <h3 id="building-from-scratch">Building From Scratch</h3>
 <p>You can also build the package from source code, please refer to <a href="#building">Building</a> section.</p>
@@ -357,13 +303,6 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
           </div>
           <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="OAP-Installation-Guide/" class="btn btn-neutral float-right" title="OAP Installation Guide">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-    </div>
-  
 
   <hr/>
 
@@ -387,13 +326,11 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
       
       
       
-        <span style="margin-left: 15px"><a href="OAP-Installation-Guide/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
     </span>
 </div>
-    <script>var base_url = '.';</script>
-    <script src="js/theme.js" defer></script>
-      <script src="search/main.js" defer></script>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
     <script defer>
         window.onload = function () {
             SphinxRtdTheme.Navigation.enable(true);
@@ -402,8 +339,3 @@ spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 
 </body>
 </html>
-
-<!--
-MkDocs version : 1.1.2
-Build Date UTC : 2021-04-30 01:33:19.457917+00:00
--->
