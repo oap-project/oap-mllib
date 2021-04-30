@@ -9,9 +9,6 @@ OAP MLlib is an optimized package to accelerate machine learning algorithms in  
 OAP MLlib tried to maintain the same API interfaces and produce same results that are identical with Spark MLlib. However due to the nature of float point operations, there may be some small deviation from the original result, we will try our best to make sure the error is within acceptable range.
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. 
 
-## Online Documentation
-
-You can find the all the OAP MLlib documents on the [project web page](https://oap-project.github.io/oap-mllib).
 
 ## Getting Started
 
@@ -45,6 +42,8 @@ Intel® oneAPI Toolkits components used by the project are already included into
 
 ### Spark Configuration
 
+#### General Configuration
+
 Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running. 
 
 ```
@@ -55,6 +54,10 @@ spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path to spark.files, just specify jar name in current dir
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 ```
+
+#### OAP MLlib Specific Configuration
+
+OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune `spark.executor.memoryOverhead` to allocate enough native memory. Setting this value to larger than __dataset size / executor number__ is a good starting point.
 
 ### Sanity Check
 
