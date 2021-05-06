@@ -179,7 +179,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
     buffer
   }
 
-  def run(): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
+  def train(): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
     val executorNum = Utils.sparkExecutorNum(data.sparkContext)
     val executorCores = Utils.sparkExecutorCores()
 

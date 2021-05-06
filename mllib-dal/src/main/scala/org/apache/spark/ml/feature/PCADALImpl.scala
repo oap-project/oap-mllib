@@ -41,7 +41,7 @@ class PCADALImpl (
     res.map(_.asML)
   }
 
-  def fitWithDAL(data: RDD[Vector]) : MLlibPCAModel = {
+  def train(data: RDD[Vector]) : MLlibPCAModel = {
 
     val normalizedData = normalizeData(data)
 

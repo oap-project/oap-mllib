@@ -434,7 +434,7 @@ class KMeans @Since("1.5.0") (
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
       DistanceMeasure.EUCLIDEAN, centers, executor_num, executor_cores)
 
-    val parentModel = kmeansDAL.runWithRDDVector(inputData, Option(instr))
+    val parentModel = kmeansDAL.train(inputData, Option(instr))
 
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
 

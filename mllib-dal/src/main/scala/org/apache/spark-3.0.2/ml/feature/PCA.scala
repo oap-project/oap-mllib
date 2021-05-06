@@ -103,7 +103,7 @@ class PCA @Since("1.5.0") (
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val pca = new PCADALImpl(k = $(k), executor_num, executor_cores)
-      val pcaModel = pca.fitWithDAL(inputVectors)
+      val pcaModel = pca.train(inputVectors)
       pcaModel
     } else {
       val inputOldVectors = inputVectors.map {

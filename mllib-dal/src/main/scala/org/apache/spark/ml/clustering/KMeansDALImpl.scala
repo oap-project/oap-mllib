@@ -36,7 +36,7 @@ class KMeansDALImpl (
   val executorCores: Int
 ) extends Serializable with Logging {
 
-  def runWithRDDVector(data: RDD[Vector], instr: Option[Instrumentation]) : MLlibKMeansModel = {
+  def train(data: RDD[Vector], instr: Option[Instrumentation]) : MLlibKMeansModel = {
 
     instr.foreach(_.logInfo(s"Processing partitions with $executorNum executors"))
 
