@@ -14,11 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CLANG_FORMAT=$(which clang-format)
-
-$CLANG_FORMAT -style="{ BasedOnStyle: LLVM, \
-    UseTab: Never, \
-    IndentWidth: 4, \
-    TabWidth: 4 \
-    }" \
-    -dump-config > .clang-format
+clang-format -i --style=file *.cpp *.h
