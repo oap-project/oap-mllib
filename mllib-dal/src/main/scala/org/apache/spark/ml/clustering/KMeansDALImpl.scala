@@ -25,6 +25,7 @@ import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
+import org.apache.spark.storage.StorageLevel
 
 class KMeansDALImpl (
   var nClusters : Int,
@@ -38,83 +39,14 @@ class KMeansDALImpl (
 
   def train(data: RDD[Vector], instr: Option[Instrumentation]) : MLlibKMeansModel = {
 
-    instr.foreach(_.logInfo(s"Processing partitions with $executorNum executors"))
+    val coalescedTables = OneDAL.vectorsToMergedNumericTables(data, executorNum)
 
-    // repartition to executorNum if not enough partitions
-    val dataForConversion = if (data.getNumPartitions < executorNum) {
-      data.repartition(executorNum).setName("Repartitioned for conversion").cache()
-    } else {
-      data
-    }
-
-    val executorIPAddress = Utils.sparkFirstExecutorIP(dataForConversion.sparkContext)
-    val kvsIP = dataForConversion.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
-    val kvsPortDetected = Utils.checkExecutorAvailPort(dataForConversion, kvsIP)
-    val kvsPort = dataForConversion.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+    val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
+    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
+    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
 
     val kvsIPPort = kvsIP+"_"+kvsPort
-
-    val partitionDims = Utils.getPartitionDims(dataForConversion)
-
-    // filter the empty partitions
-    val partRows = dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-      Iterator(Tuple3(partitionDims(index)._1, index, it))
-    }
-    val nonEmptyPart = partRows.filter{entry => { entry._1 > 0 }}
-    
-    // convert RDD[Vector] to RDD[HomogenNumericTable]
-    val numericTables = nonEmptyPart.map { entry =>
-      val numRows = entry._1
-      val index = entry._2
-      val it = entry._3
-      val numCols = partitionDims(index)._2
-	  
-      logDebug(s"KMeansDALImpl: Partition index: $index, numCols: $numCols, numRows: $numRows")
-
-      // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
-      val context = new DaalContext()
-      val matrix = new DALMatrix(context, classOf[java.lang.Double],
-        numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
-
-      logDebug("KMeansDALImpl: Loading native libraries" )
-      // oneDAL libs should be loaded by now, extract libMLlibDAL.so to temp file and load
-      LibLoader.loadLibraries()
-
-      import scala.collection.JavaConverters._
-
-      var dalRow = 0
-         
-      it.foreach { curVector =>
-        val rowArr = curVector.toArray
-        OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArr, 1, numCols)
-        dalRow += 1
-      }
-
-      Iterator(matrix.getCNumericTable)
-
-    }.cache()
-    
-	  // workaround to fix the bug of multi executors handling same partition.
-    numericTables.foreachPartition(() => _)
-    numericTables.count()
-
-    val cachedRdds = data.sparkContext.getPersistentRDDs
-    cachedRdds.filter(r => r._2.name=="instancesRDD").foreach (r => r._2.unpersist())
-	
-    val coalescedRdd = numericTables.coalesce(1,
-      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-
-    val coalescedTables = coalescedRdd.mapPartitions { iter =>
-      val context = new DaalContext()
-      val mergedData = new RowMergedNumericTable(context)
-	  
-      iter.foreach{ curIter =>
-        val address = curIter.next()
-        OneDAL.cAddNumericTable(mergedData.getCNumericTable, address )
-      } 
-      Iterator(mergedData.getCNumericTable)
-    
-    }.cache()
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
@@ -146,15 +78,11 @@ class KMeansDALImpl (
       ret
     }.collect()
 
-    // Release the native memory allocated by NumericTable.
-    numericTables.foreach( tables =>
-      tables.foreach { address =>
-        OneDAL.cFreeDataMemory(address)
-      }
-    )
-
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
+
+    // Release native memory for numeric tables
+    OneDAL.releaseNumericTables(data.sparkContext)
 
     val centerVectors = results(0)._1
     val totalCost = results(0)._2

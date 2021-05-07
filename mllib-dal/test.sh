@@ -27,7 +27,7 @@ if [[ -z $CCL_ROOT ]]; then
 fi
 
 if [[ -z $1 ]]; then
- echo SPARK_VER not defined, using default (3.0.0).
+ echo SPARK_VER not defined, using default version spark-3.0.0.
 else
  SPARK_VER=$1
 fi

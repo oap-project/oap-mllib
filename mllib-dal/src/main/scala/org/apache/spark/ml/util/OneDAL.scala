@@ -18,13 +18,15 @@
 package org.apache.spark.ml.util
 
 import java.nio.DoubleBuffer
-
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
+import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
-import java.util.logging.{Logger, Level}
+import org.apache.spark.storage.StorageLevel
+
+import java.util.logging.{Level, Logger}
 
 object OneDAL {
 
@@ -76,26 +78,45 @@ object OneDAL {
     matrix
   }
 
-  def rddVectorToNumericTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
-    // repartition to executorNum if not enough partitions
+  def releaseNumericTables(sparkContext: SparkContext) = {
+    sparkContext.getPersistentRDDs
+    .filter(r => r._2.name=="numericTables")
+    .foreach { rdd  =>
+      val numericTables = rdd._2.asInstanceOf[RDD[Long]]
+      numericTables.foreach { address =>
+        OneDAL.cFreeDataMemory(address)
+      }
+    }
+  }
+
+  def vectorsToMergedNumericTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    // Repartition to executorNum if not enough partitions
     val dataForConversion = if (vectors.getNumPartitions < executorNum) {
       vectors.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
       vectors
     }
 
+    // Get dimensions for each partition
     val partitionDims = Utils.getPartitionDims(dataForConversion)
 
-    // filter out empty partitions
+    // Filter out empty partitions
     val nonEmptyPartitions = dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
       Iterator(Tuple3(partitionDims(index)._1, index, it))
-    }.filter { entry => { entry._1 > 0 }}
+    }.filter { entry => { entry._1 > 0 } }
 
+    // Convert to RDD[HomogenNumericTable]
     val numericTables = nonEmptyPartitions.map { entry =>
       val numRows = entry._1
       val index = entry._2
       val it = entry._3
       val numCols = partitionDims(index)._2
+
+      logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
 
       // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
       val context = new DaalContext()
@@ -103,7 +124,7 @@ object OneDAL {
         numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
 
       // oneDAL libs should be loaded by now, loading other native libs
-      logger.log(logLevel, "IntelMLlib: Loading other native libraries ...")
+      logger.info("Loading native libraries")
       LibLoader.loadLibraries()
 
       var dalRow = 0
@@ -115,16 +136,21 @@ object OneDAL {
       }
 
       matrix.getCNumericTable
-    }.cache()
+    }.setName("numericTables").cache()
 
     // workaroud to fix the bug of multi executors handling same partition.
-    numericTables.foreachPartition(() => _)
+//    numericTables.foreachPartition(() => _)
     numericTables.count()
 
-    val cachedRdds = vectors.sparkContext.getPersistentRDDs
-    cachedRdds.filter(r => r._2.name=="instancesRDD").foreach (r => r._2.unpersist())
+//    val cachedRdds = vectors.sparkContext.getPersistentRDDs
+//    cachedRdds.filter(r => r._2.name=="instancesRDD").foreach (r => r._2.unpersist())
 
-    val coalescedRdd = numericTables.coalesce(1,
+    // Unpersist instances RDD
+    if (vectors.getStorageLevel != StorageLevel.NONE)
+      vectors.unpersist()
+
+    // Coalesce partitions belonging to the same executor
+    val coalescedRdd = numericTables.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
     val coalescedTables = coalescedRdd.mapPartitions { iter =>

@@ -338,8 +338,8 @@ class KMeans @Since("1.5.0") (
     val handleWeight = isDefined(weightCol) && $(weightCol).nonEmpty
     val useKMeansDAL =  isPlatformSupported && $(distanceMeasure) == "euclidean" && !handleWeight
 
-    // will handle persistence only for trainWithML
-    val handlePersistence = (dataset.storageLevel == StorageLevel.NONE && !useKMeansDAL)
+    // Will pass handlePersistence as parameter
+    val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
     val w = if (handleWeight) {
       col($(weightCol)).cast(DoubleType)
     } else {
@@ -351,25 +351,15 @@ class KMeans @Since("1.5.0") (
       case Row(point: Vector, weight: Double) => (point, weight)
     }
 
-    if (handlePersistence) {
-      instances.persist(StorageLevel.MEMORY_AND_DISK)
-    }
-
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, featuresCol, predictionCol, k, initMode, initSteps, distanceMeasure,
       maxIter, seed, tol, weightCol)
 
     val model = if (useKMeansDAL) {
-      val offheapEnabled=instances.sparkContext.getConf.getBoolean("spark.memory.offHeap.enabled", false)
-      if (offheapEnabled) {
-        instances.setName("instancesRDD").persist(StorageLevel.OFF_HEAP)
-      } else {
-        instances.setName("instancesRDD").persist(StorageLevel.MEMORY_AND_DISK)
-      }
-      trainWithDAL(instances)
+      trainWithDAL(instances, handlePersistence)
     } else {
-      trainWithML(instances)
+      trainWithML(instances, handlePersistence)
     }
 
     val summary = new KMeansSummary(
@@ -382,13 +372,11 @@ class KMeans @Since("1.5.0") (
 
     model.setSummary(Some(summary))
     instr.logNamedValue("clusterSizes", summary.clusterSizes)
-    if (handlePersistence) {
-      instances.unpersist()
-    }
+
     model
   }
 
-  private def trainWithDAL(instances: RDD[(Vector, Double)]): KMeansModel = instrumented { instr =>
+  private def trainWithDAL(instances: RDD[(Vector, Double)], handlePersistence: Boolean): KMeansModel = instrumented { instr =>
 
     val sc = instances.sparkContext
 
@@ -414,11 +402,17 @@ class KMeans @Since("1.5.0") (
     val dataWithNorm = instances.map {
       case (point: Vector, weight: Double) => new VectorWithNorm(point)
     }
+
+    // Cache for init
+    dataWithNorm.persist(StorageLevel.MEMORY_AND_DISK)
+
     val centersWithNorm = if ($(initMode) == "random") {
       mllibKMeans.initRandom(dataWithNorm)
     } else {
       mllibKMeans.initKMeansParallel(dataWithNorm, distanceMeasureInstance)
     }
+
+    dataWithNorm.unpersist()
 
     val centers = centersWithNorm.map(_.vector)
 
@@ -426,6 +420,9 @@ class KMeans @Since("1.5.0") (
 
     val strInitMode = $(initMode)
     logInfo(f"Initialization with $strInitMode took $initTimeInSeconds%.3f seconds.")
+
+    if (handlePersistence)
+      instances.persist(StorageLevel.MEMORY_AND_DISK)
 
     val inputData = instances.map {
       case (point: Vector, weight: Double) => point
@@ -438,26 +435,37 @@ class KMeans @Since("1.5.0") (
 
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
 
-    model
+    if (handlePersistence)
+      instances.unpersist()
 
+    model
   }
 
-  private def trainWithML(instances: RDD[(Vector, Double)]): KMeansModel = instrumented { instr =>
-      val oldVectorInstances = instances.map {
-        case (point: Vector, weight: Double) => (OldVectors.fromML(point), weight)
-      }
-      val algo = new MLlibKMeans()
-        .setK($(k))
-        .setInitializationMode($(initMode))
-        .setInitializationSteps($(initSteps))
-        .setMaxIterations($(maxIter))
-        .setSeed($(seed))
-        .setEpsilon($(tol))
-        .setDistanceMeasure($(distanceMeasure))
-      val parentModel = algo.runWithWeight(oldVectorInstances, Option(instr))
-      val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
-      model
+  private def trainWithML(instances: RDD[(Vector, Double)], handlePersistence: Boolean): KMeansModel = instrumented { instr =>
+    if (handlePersistence) {
+      instances.persist(StorageLevel.MEMORY_AND_DISK)
     }
+
+    val oldVectorInstances = instances.map {
+      case (point: Vector, weight: Double) => (OldVectors.fromML(point), weight)
+    }
+    val algo = new MLlibKMeans()
+      .setK($(k))
+      .setInitializationMode($(initMode))
+      .setInitializationSteps($(initSteps))
+      .setMaxIterations($(maxIter))
+      .setSeed($(seed))
+      .setEpsilon($(tol))
+      .setDistanceMeasure($(distanceMeasure))
+    val parentModel = algo.runWithWeight(oldVectorInstances, Option(instr))
+    val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
+
+    if (handlePersistence) {
+      instances.unpersist()
+    }
+
+    model
+  }
 
   @Since("1.5.0")
   override def transformSchema(schema: StructType): StructType = {
