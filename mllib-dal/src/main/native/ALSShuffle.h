@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jni.h>
+#include <oneapi/ccl.hpp>
 
 struct Rating {
   jlong user;
