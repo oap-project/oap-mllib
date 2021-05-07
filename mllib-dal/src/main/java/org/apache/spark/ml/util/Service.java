@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import com.intel.daal.data_management.data.CSRNumericTable;
 import com.intel.daal.data_management.data.HomogenNumericTable;
 import com.intel.daal.data_management.data.NumericTable;
-import com.intel.daal.data_management.data.KeyValueDataCollection;
-import com.intel.daal.data_management.data_source.*;
 import com.intel.daal.services.DaalContext;
 import com.intel.daal.services.ErrorHandling;
 

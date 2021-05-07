@@ -20,7 +20,6 @@ package org.apache.spark.ml.util;
 
 import java.io.*;
 import java.util.UUID;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

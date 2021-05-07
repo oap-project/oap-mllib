@@ -17,7 +17,6 @@
 package org.apache.spark.ml.clustering;
 
 public class KMeansResult {
-    public long cNumericTable;
     public int iterationNum;
     public double totalCost;
 }
