@@ -20,8 +20,8 @@
 #include <chrono>
 
 #include "service.h"
-#include "org_apache_spark_ml_clustering_KMeansDALImpl.h"
 #include "OneCCL.h"
+#include "org_apache_spark_ml_clustering_KMeansDALImpl.h"
 
 using namespace std;
 using namespace daal;
@@ -35,12 +35,12 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
                                       const NumericTablePtr & pData, const NumericTablePtr & initialCentroids,
     size_t nClusters, size_t nBlocks, algorithmFPType &ret_cost)
 {
-    const bool isRoot          = (rankId == ccl_root);
+    const bool isRoot = (rankId == ccl_root);
     size_t CentroidsArchLength = 0;
     InputDataArchive inputArch;
     if (isRoot)
     {
-        /*Retrieve the algorithm results and serialize them */
+        /* Retrieve the algorithm results and serialize them */
         initialCentroids->serialize(inputArch);
         CentroidsArchLength = inputArch.getSizeOfArchive();
     }
@@ -49,7 +49,8 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
     ccl::broadcast(&CentroidsArchLength, sizeof(size_t), ccl::datatype::uint8, ccl_root, comm).wait();
 
     ByteBuffer nodeCentroids(CentroidsArchLength);
-    if (isRoot) inputArch.copyArchiveToArray(&nodeCentroids[0], CentroidsArchLength);
+    if (isRoot)
+        inputArch.copyArchiveToArray(&nodeCentroids[0], CentroidsArchLength);
 
     ccl::broadcast(&nodeCentroids[0], CentroidsArchLength, ccl::datatype::uint8, ccl_root, comm).wait();
 
@@ -173,7 +174,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMean
   services::Environment::getInstance()->setNumberOfThreads(executor_cores);
 
   int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
-  cout << "oneDAL (native): Number of threads used: " << nThreadsNew << endl;
+  cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew << endl;
 
   algorithmFPType totalCost;
 

@@ -1,3 +1,19 @@
+/*******************************************************************************
+ * Copyright 2020 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+
 #include <iostream>
 #include <chrono>
 
@@ -12,18 +28,24 @@
 
 #include <oneapi/ccl.hpp>
 
+#include "OneCCL.h"
 #include "org_apache_spark_ml_util_OneCCL__.h"
 
-// todo: fill initial comm_size and rank_id
-size_t comm_size;
-size_t rank_id;
-
-std::vector<ccl::communicator> g_comms;
+static const int CCL_IP_LEN = 128;
+static std::list<std::string> local_host_ips;
+static size_t comm_size = 0;
+static size_t rank_id = 0;
+static std::vector<ccl::communicator> g_comms;
 
 ccl::communicator &getComm() {
     return g_comms[0];
 }
 
+/*
+ * Class:     org_apache_spark_ml_util_OneCCL__
+ * Method:    c_init
+ * Signature: (IILjava/lang/String;Lorg/apache/spark/ml/util/CCLParam;)I
+ */
 JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
   (JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jobject param) {
   
@@ -116,15 +138,12 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
     return err;
 }
 
-static const int CCL_IP_LEN = 128;
-std::list<std::string> local_host_ips;
-
 static int fill_local_host_ip() {
     struct ifaddrs *ifaddr, *ifa;
     int family = AF_UNSPEC;
     char local_ip[CCL_IP_LEN];
     if (getifaddrs(&ifaddr) < 0) {
-        // LOG_ERROR("fill_local_host_ip: can not get host IP");
+        std::cerr << "OneCCL (native): can not get host IP" << std::endl;
         return -1;
     }
 
@@ -147,9 +166,9 @@ static int fill_local_host_ip() {
                     0,
                     NI_NUMERICHOST);
                 if (res != 0) {
-                    std::string s("fill_local_host_ip: getnameinfo error > ");
+                    std::string s("OneCCL (native): getnameinfo error > ");
                     s.append(gai_strerror(res));
-                    // LOG_ERROR(s.c_str());
+                    std::cerr << s << std::endl;
                     return -1;
                 }
                 local_host_ips.push_back(local_ip);
@@ -157,23 +176,21 @@ static int fill_local_host_ip() {
         }
     }
     if (local_host_ips.empty()) {
-        // LOG_ERROR("fill_local_host_ip: can't find interface to get host IP");
+        std::cerr << "OneCCL (native): can't find interface to get host IP" << std::endl;
         return -1;
     }
-    // memset(local_host_ip, 0, CCL_IP_LEN);
-    // strncpy(local_host_ip, local_host_ips.front().c_str(), CCL_IP_LEN);
-
-    // for (auto &ip : local_host_ips)
-    //   cout << ip << endl;
 
     freeifaddrs(ifaddr);
+
     return 0;
 }
 
 static bool is_valid_ip(char ip[]) {
   if (fill_local_host_ip() == -1) {
-    std::cerr << "fill_local_host_ip error" << std::endl;
+    std::cerr << "OneCCL (native): get local host ip error" << std::endl;
+    return false;
   };
+
   for (std::list<std::string>::iterator it = local_host_ips.begin(); it != local_host_ips.end(); ++it) {
     if (*it == ip) {
       return true;

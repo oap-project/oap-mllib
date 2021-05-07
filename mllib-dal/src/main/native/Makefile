@@ -21,7 +21,6 @@ CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++11
 # The following paths setting works for self-built libs from source code
 # https://github.com/oneapi-src/oneCCL. If oneCCL package in oneAPI Toolkit is used,
 # Should change paths to ${CCL_ROOT}/{include,lib}/cpu_icc instead
-
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I ${CCL_ROOT}/include \
@@ -30,18 +29,21 @@ INCS := -I $(JAVA_HOME)/include \
         -I ./
 
 # Use static link if possible, TBB is only available as dynamic libs
-
 LIBS := -L${CCL_ROOT}/lib -lccl \
         -L$(DAALROOT)/lib/intel64 -l:libdaal_core.a -l:libdaal_thread.a \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
-#        TODO: Add signal chaining support, should fix linking, package so and loading
-#        -L$(JAVA_HOME)/jre/lib/amd64 -ljsig
 
 CPP_SRCS += \
-./OneCCL.cpp ./OneDAL.cpp ./KMeansDALImpl.cpp ./PCADALImpl.cpp ./ALSDALImpl.cpp ./ALSShuffle.cpp ./service.cpp ./error_handling.cpp
+  ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
+  ./KMeansDALImpl.cpp \
+  ./PCADALImpl.cpp \
+  ./ALSDALImpl.cpp ./ALSShuffle.cpp
 
 OBJS += \
-./OneCCL.o ./OneDAL.o ./KMeansDALImpl.o ./PCADALImpl.o ./ALSDALImpl.o ./ALSShuffle.o ./service.o ./error_handling.o
+  ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
+  ./KMeansDALImpl.o \
+  ./PCADALImpl.o \
+  ./ALSDALImpl.o ./ALSShuffle.o
 
 # Output Binary
 OUTPUT = ../../../target/libMLlibDAL.so
