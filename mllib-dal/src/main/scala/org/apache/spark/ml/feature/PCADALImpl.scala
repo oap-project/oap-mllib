@@ -33,7 +33,7 @@ class PCADALImpl (
     val executorCores: Int)
   extends Serializable with Logging {
 
-  // Normalize data before apply fitWithDAL
+  // Normalize data before training
   private def normalizeData(input: RDD[Vector]) : RDD[Vector] = {
     val vectors = input.map(OldVectors.fromML(_))
     val scaler = new MLlibStandardScaler(withMean = true, withStd = false).fit(vectors)
@@ -45,7 +45,7 @@ class PCADALImpl (
 
     val normalizedData = normalizeData(data)
 
-    val coalescedTables = OneDAL.rddVectorToNumericTables(normalizedData, executorNum)
+    val coalescedTables = OneDAL.vectorsToMergedNumericTables(normalizedData, executorNum)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
     val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
@@ -88,6 +88,9 @@ class PCADALImpl (
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
+
+    // Release native memory for numeric tables
+    OneDAL.releaseNumericTables(data.sparkContext)
 
     val pc = results(0)._1
     val explainedVariance = results(0)._2
