@@ -273,7 +273,7 @@
                     <testSourceDirectories>
                         <directory>${basedir}/src/test/java</directory>
                     </testSourceDirectories>
-                        <configLocation>google_checks.xml</configLocation>
+                        <configLocation>${basedir}/../dev/codestyle/checkstyle.xml</configLocation>
                     <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
                 </configuration>
                 <dependencies>
@@ -329,16 +329,8 @@
                 <artifactId>mvn-scalafmt_${scala.binary.version}</artifactId>
                 <version>1.0.3</version>
                 <configuration>
-                    <configLocation>.scalafmt.conf</configLocation>
+                    <configLocation>${basedir}/.scalafmt.conf</configLocation>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
