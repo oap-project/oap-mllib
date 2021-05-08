@@ -14,16 +14,16 @@
  * limitations under the License.
  *******************************************************************************/
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <list>
 #include <ifaddrs.h>
+#include <list>
 #include <netdb.h>
 
 #include <oneapi/ccl.hpp>
@@ -37,51 +37,52 @@ static size_t comm_size = 0;
 static size_t rank_id = 0;
 static std::vector<ccl::communicator> g_comms;
 
-ccl::communicator &getComm() {
-    return g_comms[0];
-}
+ccl::communicator &getComm() { return g_comms[0]; }
 
 /*
  * Class:     org_apache_spark_ml_util_OneCCL__
  * Method:    c_init
  * Signature: (IILjava/lang/String;Lorg/apache/spark/ml/util/CCLParam;)I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
-  (JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jobject param) {
-  
-  std::cerr << "OneCCL (native): init" << std::endl;
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init(
+    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
+    jobject param) {
 
-  auto t1 = std::chrono::high_resolution_clock::now();
+    std::cerr << "OneCCL (native): init" << std::endl;
 
-  ccl::init();
+    auto t1 = std::chrono::high_resolution_clock::now();
 
-  const char *str = env->GetStringUTFChars(ip_port, 0);
-  ccl::string ccl_ip_port(str);
+    ccl::init();
 
-  auto kvs_attr = ccl::create_kvs_attr();
-  kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
+    const char *str = env->GetStringUTFChars(ip_port, 0);
+    ccl::string ccl_ip_port(str);
 
-  ccl::shared_ptr_class<ccl::kvs> kvs;
-  kvs = ccl::create_main_kvs(kvs_attr);
+    auto kvs_attr = ccl::create_kvs_attr();
+    kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
 
-  g_comms.push_back(ccl::create_communicator(size, rank, kvs));
+    ccl::shared_ptr_class<ccl::kvs> kvs;
+    kvs = ccl::create_main_kvs(kvs_attr);
 
-  auto t2 = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::seconds>( t2 - t1 ).count();
-  std::cerr << "OneCCL (native): init took " << duration << " secs" << std::endl;
+    g_comms.push_back(ccl::create_communicator(size, rank, kvs));
 
-  rank_id = getComm().rank();
-  comm_size = getComm().size();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    std::cerr << "OneCCL (native): init took " << duration << " secs"
+              << std::endl;
 
-  jclass cls = env->GetObjectClass(param);
-  jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
-  jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");  
+    rank_id = getComm().rank();
+    comm_size = getComm().size();
 
-  env->SetLongField(param, fid_comm_size, comm_size);
-  env->SetLongField(param, fid_rank_id, rank_id);    
-  env->ReleaseStringUTFChars(ip_port, str);
+    jclass cls = env->GetObjectClass(param);
+    jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
+    jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
 
-  return 1;
+    env->SetLongField(param, fid_comm_size, comm_size);
+    env->SetLongField(param, fid_rank_id, rank_id);
+    env->ReleaseStringUTFChars(ip_port, str);
+
+    return 1;
 }
 
 /*
@@ -89,13 +90,12 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init
  * Method:    c_cleanup
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
-  (JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup(
+    JNIEnv *env, jobject obj) {
 
-  g_comms.pop_back();
+    g_comms.pop_back();
 
-  std::cerr << "OneCCL (native): cleanup" << std::endl;
-
+    std::cerr << "OneCCL (native): cleanup" << std::endl;
 }
 
 /*
@@ -103,8 +103,8 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup
  * Method:    isRoot
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_isRoot
-  (JNIEnv *env, jobject obj) {    
+JNIEXPORT jboolean JNICALL
+Java_org_apache_spark_ml_util_OneCCL_00024_isRoot(JNIEnv *env, jobject obj) {
 
     return getComm().rank() == 0;
 }
@@ -114,8 +114,8 @@ JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_isRoot
  * Method:    rankID
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_rankID
-  (JNIEnv *env, jobject obj) {
+JNIEXPORT jint JNICALL
+Java_org_apache_spark_ml_util_OneCCL_00024_rankID(JNIEnv *env, jobject obj) {
     return getComm().rank();
 }
 
@@ -124,11 +124,11 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_rankID
  * Method:    setEnv
  * Signature: (Ljava/lang/String;Ljava/lang/String;Z)I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv
-  (JNIEnv *env , jobject obj, jstring key, jstring value, jboolean overwrite) {
+JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv(
+    JNIEnv *env, jobject obj, jstring key, jstring value, jboolean overwrite) {
 
-    char* k = (char *) env->GetStringUTFChars(key, NULL);
-    char* v = (char *) env->GetStringUTFChars(value, NULL);
+    char *k = (char *)env->GetStringUTFChars(key, NULL);
+    char *v = (char *)env->GetStringUTFChars(value, NULL);
 
     int err = setenv(k, v, overwrite);
 
@@ -159,12 +159,9 @@ static int fill_local_host_ip() {
                 memset(local_ip, 0, CCL_IP_LEN);
                 int res = getnameinfo(
                     ifa->ifa_addr,
-                    (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
-                    local_ip,
-                    CCL_IP_LEN,
-                    NULL,
-                    0,
-                    NI_NUMERICHOST);
+                    (family == AF_INET) ? sizeof(struct sockaddr_in)
+                                        : sizeof(struct sockaddr_in6),
+                    local_ip, CCL_IP_LEN, NULL, 0, NI_NUMERICHOST);
                 if (res != 0) {
                     std::string s("OneCCL (native): getnameinfo error > ");
                     s.append(gai_strerror(res));
@@ -176,7 +173,8 @@ static int fill_local_host_ip() {
         }
     }
     if (local_host_ips.empty()) {
-        std::cerr << "OneCCL (native): can't find interface to get host IP" << std::endl;
+        std::cerr << "OneCCL (native): can't find interface to get host IP"
+                  << std::endl;
         return -1;
     }
 
@@ -186,18 +184,19 @@ static int fill_local_host_ip() {
 }
 
 static bool is_valid_ip(char ip[]) {
-  if (fill_local_host_ip() == -1) {
-    std::cerr << "OneCCL (native): get local host ip error" << std::endl;
-    return false;
-  };
+    if (fill_local_host_ip() == -1) {
+        std::cerr << "OneCCL (native): get local host ip error" << std::endl;
+        return false;
+    };
 
-  for (std::list<std::string>::iterator it = local_host_ips.begin(); it != local_host_ips.end(); ++it) {
-    if (*it == ip) {
-      return true;
+    for (std::list<std::string>::iterator it = local_host_ips.begin();
+         it != local_host_ips.end(); ++it) {
+        if (*it == ip) {
+            return true;
+        }
     }
-  }
 
-  return false;
+    return false;
 }
 
 /*
@@ -205,42 +204,44 @@ static bool is_valid_ip(char ip[]) {
  * Method:    getAvailPort
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort
-  (JNIEnv *env, jobject obj, jstring localIP) {
+JNIEXPORT jint JNICALL
+Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort(JNIEnv *env,
+                                                           jobject obj,
+                                                           jstring localIP) {
 
-  // start from beginning of dynamic port
-  const int port_start_base = 3000;
+    // start from beginning of dynamic port
+    const int port_start_base = 3000;
 
-  char* local_host_ip = (char *) env->GetStringUTFChars(localIP, NULL);
+    char *local_host_ip = (char *)env->GetStringUTFChars(localIP, NULL);
 
-  // check if the input ip is one of host's ips
-  if (!is_valid_ip(local_host_ip))
-    return -1;
+    // check if the input ip is one of host's ips
+    if (!is_valid_ip(local_host_ip))
+        return -1;
 
-  struct sockaddr_in main_server_address;
-  int server_listen_sock;
-  in_port_t port = port_start_base;
+    struct sockaddr_in main_server_address;
+    int server_listen_sock;
+    in_port_t port = port_start_base;
 
-  if ((server_listen_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("OneCCL (native) getAvailPort error!");
-    return -1;
-  }
+    if ((server_listen_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("OneCCL (native) getAvailPort error!");
+        return -1;
+    }
 
-  main_server_address.sin_family = AF_INET;
-  main_server_address.sin_addr.s_addr = inet_addr(local_host_ip);
-  main_server_address.sin_port = htons(port);
-
-  // search for available port
-  while (bind(server_listen_sock,
-         (const struct sockaddr *)&main_server_address,
-         sizeof(main_server_address)) < 0) {
-    port++;
+    main_server_address.sin_family = AF_INET;
+    main_server_address.sin_addr.s_addr = inet_addr(local_host_ip);
     main_server_address.sin_port = htons(port);
-  }
 
-  close(server_listen_sock);  
+    // search for available port
+    while (bind(server_listen_sock,
+                (const struct sockaddr *)&main_server_address,
+                sizeof(main_server_address)) < 0) {
+        port++;
+        main_server_address.sin_port = htons(port);
+    }
 
-  env->ReleaseStringUTFChars(localIP, local_host_ip);
+    close(server_listen_sock);
 
-  return port;
+    env->ReleaseStringUTFChars(localIP, local_host_ip);
+
+    return port;
 }

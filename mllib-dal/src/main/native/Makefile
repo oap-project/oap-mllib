@@ -70,4 +70,4 @@ clean:
 	-$(RM) $(OBJS) $(OUTPUT)
 	-@echo ' '
 
-.PHONY: all clean
+.PHONY: all checkstyle clean
