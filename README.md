@@ -1,3 +1,7 @@
+##### \* LEGAL NOTICE: Your use of this software and any required dependent software (the "Software Package") is subject to the terms and conditions of the software license agreements for the Software Package, which may also include notices, disclaimers, or license terms for third party or open source software included in or with the Software Package, and your use indicates your acceptance of all such terms. Please refer to the "TPP.txt" or other similarly-named text file included with the Software Package for additional details.
+
+##### \* Optimized Analytics Package for Spark* Platform is under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+
 # OAP MLlib
 
 ## Overview
@@ -17,13 +21,13 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/Intel-bigdata/OAP/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x-with-spark-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
 ### Python/PySpark Users Preferred
 
-Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x-with-spark-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
+Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -45,16 +49,22 @@ Intel® oneAPI Toolkits components used by the project are already included into
 
 ### Spark Configuration
 
+#### General Configuration
+
 Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running. 
 
 ```
 # absolute path of the jar for uploading
-spark.files                       /path/to/oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.files                       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for driver class path
-spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path to spark.files, just specify jar name in current dir
-spark.executor.extraClassPath     ./oap-mllib-x.x.x-with-spark-x.x.x.jar
+spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 ```
+
+#### OAP MLlib Specific Configuration
+
+OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune `spark.executor.memoryOverhead` to allocate enough native memory. Setting this value to larger than __dataset size / executor number__ is a good starting point.
 
 ### Sanity Check
 
@@ -103,9 +113,9 @@ Intel® oneAPI Toolkits and its components can be downloaded and install from [h
 
 More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies.
-
 Scala and Java dependency descriptions are already included in Maven POM file. 
+
+***Note:*** You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies: DPC++/C++, oneDAL, oneTBB, oneCCL.
 
 ### Build
 
@@ -161,12 +171,13 @@ To build, run the following commands:
     $ cd mllib-dal
     $ ./build.sh
 ```
+
 The target can be built against different Spark versions by specifying profile with <spark-x.x.x>. E.g.
 ```
     $ ./build.sh spark-3.1.1
 ```
 If no profile parameter is given, the Spark version 3.0.0 will be activated by default.
-The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x-with-spark-x.x.x.jar`.
+The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
 
 ## Examples
 
