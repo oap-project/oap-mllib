@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<profiles version="13">
+<profile kind="CodeFormatterProfile" name="Eclipse" version="13">
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="4"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"/>
+</profile>
+</profiles>
