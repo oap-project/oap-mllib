@@ -211,16 +211,14 @@ public class Service {
         printTriangularMatrix(results, (int) nDimensions, header);
     }
 
-    public static boolean isUpper(NumericTable.StorageLayout layout)
-    {
-        return layout.ordinal() == NumericTable.StorageLayout.upperPackedSymmetricMatrix.ordinal() ||
-                layout.ordinal() == NumericTable.StorageLayout.upperPackedTriangularMatrix.ordinal();
+    public static boolean isUpper(NumericTable.StorageLayout layout) {
+        return layout.ordinal() == NumericTable.StorageLayout.upperPackedSymmetricMatrix.ordinal()
+                || layout.ordinal() == NumericTable.StorageLayout.upperPackedTriangularMatrix.ordinal();
     }
 
-    public static boolean isLower(NumericTable.StorageLayout layout)
-    {
-        return layout.ordinal() == NumericTable.StorageLayout.lowerPackedSymmetricMatrix.ordinal() ||
-                layout.ordinal() == NumericTable.StorageLayout.lowerPackedTriangularMatrix.ordinal();
+    public static boolean isLower(NumericTable.StorageLayout layout) {
+        return layout.ordinal() == NumericTable.StorageLayout.lowerPackedSymmetricMatrix.ordinal()
+                || layout.ordinal() == NumericTable.StorageLayout.lowerPackedTriangularMatrix.ordinal();
     }
 
     public static void printNumericTable(String header, NumericTable nt, long nPrintedRows, long nPrintedCols) {
@@ -250,8 +248,7 @@ public class Service {
         builder.append(header);
         builder.append("\n");
 
-        if( isLower(layout) )
-        {
+        if (isLower(layout)) {
             for (long i = 0; i < nRows; i++) {
                 for (long j = 0; j <= i; j++) {
                     String tmp = String.format("%-6.3f   ", result.get((int) (i * nNtCols + j)));
@@ -259,13 +256,12 @@ public class Service {
                 }
                 builder.append("\n");
             }
-        }
-        else if( isUpper(layout) )
-        {
+        } else if (isUpper(layout)) {
 
             for (long i = 0; i < nRows; i++) {
-                for(int k=0; k < i; k++)
-                        builder.append("         ");
+                for (int k = 0; k < i; k++) {
+                    builder.append("         ");
+                }
                 for (long j = i; j < nCols; j++) {
                     String tmp = String.format("%-6.3f   ", result.get((int) (i * nNtCols + j)));
                     builder.append(tmp);
@@ -273,9 +269,7 @@ public class Service {
                 builder.append("\n");
             }
 
-        }
-        else if( isLower(layout) != true && isUpper(layout) != true)
-        {
+        } else if (isLower(layout) != true && isUpper(layout) != true) {
             for (long i = 0; i < nRows; i++) {
                 for (long j = 0; j < nCols; j++) {
                     String tmp = String.format("%-6.3f   ", result.get((int) (i * nNtCols + j)));
@@ -344,17 +338,15 @@ public class Service {
         printNumericTable(header, nt, nt.getNumberOfRows());
     }
 
-    public static void printNumericTables(NumericTable dataTable1, NumericTable dataTable2,String title1, String title2 ,
-                                            String message, long nPrintedRows)
-    {
+    public static void printNumericTables(NumericTable dataTable1, NumericTable dataTable2, String title1,
+            String title2, String message, long nPrintedRows) {
         long nRows1 = dataTable1.getNumberOfRows();
         long nRows2 = dataTable2.getNumberOfRows();
         long nCols1 = dataTable1.getNumberOfColumns();
         long nCols2 = dataTable2.getNumberOfColumns();
 
         long nRows = Math.min(nRows1, nRows2);
-        if (nPrintedRows > 0)
-        {
+        if (nPrintedRows > 0) {
             nRows = Math.min(Math.min(nRows1, nRows2), nPrintedRows);
         }
 
@@ -374,13 +366,12 @@ public class Service {
 
         StringBuilder builderHelp = new StringBuilder();
         for (long j = 0; j < nCols1; j++) {
-                String tmp = String.format("%-6.3f   ", result1.get((int) (0 * nCols1 + j)));
-                builderHelp.append(tmp);
-            }
+            String tmp = String.format("%-6.3f   ", result1.get((int) (0 * nCols1 + j)));
+            builderHelp.append(tmp);
+        }
         int interval = builderHelp.length() - title1.length();
 
-        for(int i=0; i < interval; i++)
-        {
+        for (int i = 0; i < interval; i++) {
             builder.append(" ");
         }
         builder.append("     ");
@@ -424,8 +415,8 @@ public class Service {
         IntBuffer bufLargeItemsetsSupportData = IntBuffer
                 .allocate(largeItemsetCount * (int) largeItemsetsSupportTable.getNumberOfColumns());
         try {
-        bufLargeItemsetsSupportData = largeItemsetsSupportTable.getBlockOfRows(0, largeItemsetCount,
-                bufLargeItemsetsSupportData);
+            bufLargeItemsetsSupportData = largeItemsetsSupportTable.getBlockOfRows(0, largeItemsetCount,
+                    bufLargeItemsetsSupportData);
         } catch (IllegalAccessException e) {
             ErrorHandling.printThrowable(e);
             return;
@@ -558,11 +549,11 @@ public class Service {
     }
 
     public static void printALSRatings(NumericTable usersOffsetTable, NumericTable itemsOffsetTable,
-                                       NumericTable ratings) {
+            NumericTable ratings) {
         long nUsers = ratings.getNumberOfRows();
         long nItems = ratings.getNumberOfColumns();
 
-        float[] ratingsData = ((HomogenNumericTable)ratings).getFloatArray();
+        float[] ratingsData = ((HomogenNumericTable) ratings).getFloatArray();
         IntBuffer usersOffsetBuf = IntBuffer.allocate(1);
         IntBuffer itemsOffsetBuf = IntBuffer.allocate(1);
         try {
@@ -576,15 +567,15 @@ public class Service {
         int[] itemsOffsetData = new int[1];
         usersOffsetBuf.get(usersOffsetData);
         itemsOffsetBuf.get(itemsOffsetData);
-        long usersOffset = (long)usersOffsetData[0];
-        long itemsOffset = (long)itemsOffsetData[0];
+        long usersOffset = (long) usersOffsetData[0];
+        long itemsOffset = (long) itemsOffsetData[0];
 
         System.out.println(" User ID, Item ID, rating");
         for (long i = 0; i < nUsers; i++) {
             for (long j = 0; j < nItems; j++) {
                 long userId = i + usersOffset;
                 long itemId = j + itemsOffset;
-                System.out.println(userId + ", " + itemId + ", " + ratingsData[(int)(i * nItems + j)]);
+                System.out.println(userId + ", " + itemId + ", " + ratingsData[(int) (i * nItems + j)]);
             }
         }
     }

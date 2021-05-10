@@ -28,19 +28,19 @@ import com.intel.daal.utils.LibUtils;
 public final class LibLoader {
     private static final String LIBRARY_PATH_IN_JAR = "/lib";
     // Make sure loading libraries from different temp directory for each process
-    private final static String subDir = "MLlibDAL_" + UUID.randomUUID();
+    private static final String subDir = "MLlibDAL_" + UUID.randomUUID();
 
     private static final Logger log = LoggerFactory.getLogger("LibLoader");
 
     /**
      * Get temp dir for exacting lib files
+     *
      * @return path of temp dir
      */
     public static String getTempSubDir() {
         String tempSubDirectory = System.getProperty("java.io.tmpdir") + "/" + subDir + LIBRARY_PATH_IN_JAR;
         return tempSubDirectory;
     }
-
 
     /**
      * Load oneCCL and MLlibDAL libs
@@ -61,8 +61,8 @@ public final class LibLoader {
     }
 
     /**
-     * Load MLlibDAL lib, it depends TBB libs that are loaded by oneDAL,
-     * so this function should be called after oneDAL loadLibrary
+     * Load MLlibDAL lib, it depends TBB libs that are loaded by oneDAL, so this
+     * function should be called after oneDAL loadLibrary
      */
     private static synchronized void loadLibMLlibDAL() throws IOException {
         // oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10
@@ -76,8 +76,10 @@ public final class LibLoader {
     /**
      * Load lib as resource
      *
-     * @param path sub folder (in temporary folder) name
-     * @param name library name
+     * @param path
+     *            sub folder (in temporary folder) name
+     * @param name
+     *            library name
      */
     private static void loadFromJar(String path, String name) throws IOException {
         log.debug("Loading " + name + " ...");
@@ -120,12 +122,15 @@ public final class LibLoader {
     /**
      * Create temporary file
      *
-     * @param name           library name
-     * @param tempSubDirName sub folder (in temporary folder) name
+     * @param name
+     *            library name
+     * @param tempSubDirName
+     *            sub folder (in temporary folder) name
      * @return temporary file handler. null if file exist already.
      */
     private static File createTempFile(String tempSubDirName, String name) throws IOException {
-        File tempSubDirectory = new File(System.getProperty("java.io.tmpdir") + "/" + tempSubDirName + LIBRARY_PATH_IN_JAR);
+        File tempSubDirectory = new File(
+                System.getProperty("java.io.tmpdir") + "/" + tempSubDirName + LIBRARY_PATH_IN_JAR);
 
         if (!tempSubDirectory.exists()) {
             tempSubDirectory.mkdirs();

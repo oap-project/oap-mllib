@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -273,7 +273,7 @@
                     <testSourceDirectories>
                         <directory>${basedir}/src/test/java</directory>
                     </testSourceDirectories>
-                        <configLocation>${basedir}/../dev/codestyle/checkstyle.xml</configLocation>
+                    <configLocation>${basedir}/../dev/codestyle/checkstyle.xml</configLocation>
                     <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
                 </configuration>
                 <dependencies>
@@ -290,7 +290,7 @@
                 <artifactId>formatter-maven-plugin</artifactId>
                 <version>2.15.0</version>
                 <configuration>
-                    <configFile>${basedir}/../dev/codestyle/eclipse-java-google-style.xml</configFile>
+                    <configFile>${basedir}/../dev/codestyle/eclipse-formatter.xml</configFile>
                 </configuration>
             </plugin>
             <!-- Scala Style Check -->
@@ -344,7 +344,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>           
+            </plugin>
 
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -354,8 +354,9 @@
                         <phase>process-classes</phase>
                         <configuration>
                             <target name="build-natives" description="Build native code">
-                                <echo>Building native code</echo>                                
-                                <exec dir="${project.basedir}/src/main/native" executable="./build.sh" failonerror="true">
+                                <echo>Building native code</echo>
+                                <exec dir="${project.basedir}/src/main/native" executable="./build.sh"
+                                      failonerror="true">
                                 </exec>
                             </target>
                         </configuration>
@@ -375,11 +376,11 @@
                         <resource>
                             <directory>${env.CCL_ROOT}/lib</directory>
                             <includes>
-				                <include>${ccl.lib}</include>
+                                <include>${ccl.lib}</include>
                                 <include>${ccl.mpi.lib}</include>
                                 <include>${ccl.fabric.lib}</include>
                             </includes>
-                        </resource>                        
+                        </resource>
                         <resource>
                             <directory>${env.CCL_ROOT}/lib/prov</directory>
                             <includes>
@@ -418,18 +419,21 @@
                         <configuration>
                             <fileSets>
                                 <!-- oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10,
-                                rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->                                
+                                rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2</destinationFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2
+                                    </destinationFile>
                                 </fileSet>
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.malloc.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2</destinationFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2
+                                    </destinationFile>
                                 </fileSet>
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.mpi.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12</destinationFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12
+                                    </destinationFile>
                                 </fileSet>
                             </fileSets>
                         </configuration>
