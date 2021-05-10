@@ -23,7 +23,7 @@ if [ -z $MVN ]; then
     exit 1
 fi
 
-ERRORS=$($MVN scalastyle:check | grep error)
+ERRORS=$($MVN scalastyle:check | grep "error file")
 
 if test ! -z "$ERRORS"; then
     echo -e "Scalastyle checks failed at following occurrences:\n$ERRORS"

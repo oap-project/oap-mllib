@@ -290,7 +290,7 @@
                 <artifactId>formatter-maven-plugin</artifactId>
                 <version>2.15.0</version>
                 <configuration>
-                    <configFile>${basedir}/../dev/codestyle/eclipse-formatter.xml</configFile>
+                    <configFile>${basedir}/../dev/codestyle/eclipse-java-google-style.xml</configFile>
                 </configuration>
             </plugin>
             <!-- Scala Style Check -->
@@ -303,7 +303,7 @@
                     <failOnViolation>true</failOnViolation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <failOnWarning>false</failOnWarning>
-                    <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+                    <sourceDirectory>${basedir}/src/main/scala/org/apache/spark</sourceDirectory>
                     <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
                     <configLocation>scalastyle-config.xml</configLocation>
                     <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
