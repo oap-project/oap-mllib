@@ -54,8 +54,9 @@ for SparkVer in ${SupportedSparkVersions[*]}; do
 
     mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
     mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
-    # mvn -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+    # mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
 done
 
 # Yarn cluster test without profile
+$GITHUB_WORKSPACE/dev/ci-build.sh
 $GITHUB_WORKSPACE/dev/test-cluster/ci-test-cluster.sh

@@ -27,7 +27,7 @@ if [[ -z $CCL_ROOT ]]; then
 fi
 
 if [[ -z $1 ]]; then
- echo SPARK_VER not defined, using default (3.0.0).
+ echo SPARK_VER not defined, using default version spark-3.0.0.
 else
  SPARK_VER=$1
 fi
@@ -42,13 +42,8 @@ echo Clang Version: $(clang -dumpversion)
 echo SPARK_VER=$SPARK_VER
 echo =============================
 
-# Enable signal chaining support for JNI
-# export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
-
-# -Dtest=none to turn off the Java tests
-
-# Test all
-# mvn -Dtest=none -Dmaven.test.skip=false test
+# Clean
+mvn clean
 
 # Individual test
 if [[ -z $SPARK_VER ]]; then
@@ -56,7 +51,7 @@ if [[ -z $SPARK_VER ]]; then
  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
 else
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SPARK_VER
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SPARK_VER
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
+ mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+ mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+# mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
 fi

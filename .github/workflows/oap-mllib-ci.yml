@@ -27,5 +27,5 @@ jobs:
         run: |          
           source ${{github.workspace}}/dev/setup-all.sh
       - name: Build and Test
-        run: |          
+        run: |
           ${{github.workspace}}/dev/ci-test.sh
