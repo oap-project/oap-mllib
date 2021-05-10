@@ -334,12 +334,8 @@ class KMeans @Since("1.5.0") (
   override def fit(dataset: Dataset[_]): KMeansModel = instrumented { instr =>
     transformSchema(dataset.schema, logging = true)
 
-    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(dataset.sparkSession.sparkContext)
-    val handleWeight = isDefined(weightCol) && $(weightCol).nonEmpty
-    val useKMeansDAL =  isPlatformSupported && $(distanceMeasure) == "euclidean" && !handleWeight
-
-    // Will pass handlePersistence as parameter
     val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
+    val handleWeight = isDefined(weightCol) && $(weightCol).nonEmpty
     val w = if (handleWeight) {
       col($(weightCol)).cast(DoubleType)
     } else {
@@ -355,6 +351,10 @@ class KMeans @Since("1.5.0") (
     instr.logDataset(dataset)
     instr.logParams(this, featuresCol, predictionCol, k, initMode, initSteps, distanceMeasure,
       maxIter, seed, tol, weightCol)
+
+    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+      dataset.sparkSession.sparkContext)
+    val useKMeansDAL = isPlatformSupported && $(distanceMeasure) == "euclidean" && !handleWeight
 
     val model = if (useKMeansDAL) {
       trainWithDAL(instances, handlePersistence)
@@ -376,7 +376,8 @@ class KMeans @Since("1.5.0") (
     model
   }
 
-  private def trainWithDAL(instances: RDD[(Vector, Double)], handlePersistence: Boolean): KMeansModel = instrumented { instr =>
+  private def trainWithDAL(instances: RDD[(Vector, Double)],
+                           handlePersistence: Boolean): KMeansModel = instrumented { instr =>
 
     val sc = instances.sparkContext
 
@@ -421,8 +422,9 @@ class KMeans @Since("1.5.0") (
     val strInitMode = $(initMode)
     logInfo(f"Initialization with $strInitMode took $initTimeInSeconds%.3f seconds.")
 
-    if (handlePersistence)
+    if (handlePersistence) {
       instances.persist(StorageLevel.MEMORY_AND_DISK)
+    }
 
     val inputData = instances.map {
       case (point: Vector, weight: Double) => point
@@ -435,13 +437,15 @@ class KMeans @Since("1.5.0") (
 
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
 
-    if (handlePersistence)
+    if (handlePersistence) {
       instances.unpersist()
+    }
 
     model
   }
 
-  private def trainWithML(instances: RDD[(Vector, Double)], handlePersistence: Boolean): KMeansModel = instrumented { instr =>
+  private def trainWithML(instances: RDD[(Vector, Double)],
+                          handlePersistence: Boolean): KMeansModel = instrumented { instr =>
     if (handlePersistence) {
       instances.persist(StorageLevel.MEMORY_AND_DISK)
     }

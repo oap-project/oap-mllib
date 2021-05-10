@@ -1,12 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright 2020 Intel Corporation
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,36 +16,34 @@
 
 package org.apache.spark.ml.clustering
 
-import com.intel.daal.data_management.data.{NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
-import com.intel.daal.services.DaalContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
-import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.rdd.RDD
 
-class KMeansDALImpl (
-  var nClusters : Int,
-  var maxIterations : Int,
-  var tolerance : Double,
-  val distanceMeasure: String,
-  val centers: Array[OldVector],
-  val executorNum: Int,
-  val executorCores: Int
-) extends Serializable with Logging {
+class KMeansDALImpl(var nClusters: Int,
+                    var maxIterations: Int,
+                    var tolerance: Double,
+                    val distanceMeasure: String,
+                    val centers: Array[OldVector],
+                    val executorNum: Int,
+                    val executorCores: Int
+                   ) extends Serializable with Logging {
 
-  def train(data: RDD[Vector], instr: Option[Instrumentation]) : MLlibKMeansModel = {
+  def train(data: RDD[Vector], instr: Option[Instrumentation]): MLlibKMeansModel = {
 
     val coalescedTables = OneDAL.vectorsToMergedNumericTables(data, executorNum)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
-    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
+      executorIPAddress)
     val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
-    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
+      kvsPortDetected)
 
-    val kvsIPPort = kvsIP+"_"+kvsPort
+    val kvsIPPort = kvsIP + "_" + kvsPort
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
