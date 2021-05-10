@@ -1,10 +1,26 @@
+/*
+ * Copyright 2020 Intel Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.spark.ml.util
 
 import java.net.InetAddress
 
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.rdd.RDD
 
 object Utils {
 
@@ -32,21 +48,6 @@ object Utils {
     ret
   }
 
-  def sparkExecutorNum(sc: SparkContext): Int = {
-
-    if (sc.master.contains("local"))
-      return 1
-
-    // Create empty partitions to start executors
-    sc.parallelize(Seq[Int]()).count()
-
-    // Get running executors infos
-    val executorInfos = sc.statusTracker.getExecutorInfos
-
-    // Return executor number (exclude driver)
-    executorInfos.length - 1
-  }
-
   def sparkExecutorCores(): Int = {
     val conf = new SparkConf(true)
 
@@ -63,18 +64,20 @@ object Utils {
     val info = sc.statusTracker.getExecutorInfos
     // get first executor, info(0) is driver
 
-    val host = if (sc.master.startsWith("local"))
+    val host = if (sc.master.startsWith("local")) {
       info(0).host()
-    else
+    } else {
       info(1).host()
+    }
     val ip = InetAddress.getByName(host).getHostAddress
     ip
   }
 
-  def checkExecutorAvailPort(data: RDD[_], localIP: String) : Int = {
+  def checkExecutorAvailPort(data: RDD[_], localIP: String): Int = {
 
     if (localIP == "127.0.0.1" || localIP == "127.0.1.1") {
-      println(s"\nOneCCL: Error: doesn't support loopback IP ${localIP}, please assign IP address to your host.\n")
+      println(s"\nOneCCL: Error: doesn't support loopback IP ${localIP}, " +
+        s"please assign IP address to your host.\n")
       System.exit(-1)
     }
 
@@ -82,21 +85,23 @@ object Utils {
     val result = data.mapPartitions { p =>
       LibLoader.loadLibraries()
       val port = OneCCL.getAvailPort(localIP)
-      if (port != -1)
+      if (port != -1) {
         Iterator(port)
-      else
+      } else {
         Iterator()
+      }
     }.collect()
 
-    return result(0)
+    result(0)
   }
 
-  def checkClusterPlatformCompatibility(sc: SparkContext) : Boolean = {
+  def checkClusterPlatformCompatibility(sc: SparkContext): Boolean = {
     LibLoader.loadLibraries()
 
     // check driver platform compatibility
-    if (!OneDAL.cCheckPlatformCompatibility())
+    if (!OneDAL.cCheckPlatformCompatibility()) {
       return false
+    }
 
     // check workers' platform compatibility
     val executor_num = Utils.sparkExecutorNum(sc)
@@ -106,6 +111,22 @@ object Utils {
       OneDAL.cCheckPlatformCompatibility()
     }.collect()
 
-    return result.forall( _ == true)
+    result.forall(_ == true)
+  }
+
+  def sparkExecutorNum(sc: SparkContext): Int = {
+
+    if (sc.master.contains("local")) {
+      return 1
+    }
+
+    // Create empty partitions to start executors
+    sc.parallelize(Seq[Int]()).count()
+
+    // Get running executors infos
+    val executorInfos = sc.statusTracker.getExecutorInfos
+
+    // Return executor number (exclude driver)
+    executorInfos.length - 1
   }
 }

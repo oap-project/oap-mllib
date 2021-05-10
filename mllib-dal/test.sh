@@ -42,21 +42,13 @@ echo Clang Version: $(clang -dumpversion)
 echo SPARK_VER=$SPARK_VER
 echo =============================
 
-# Enable signal chaining support for JNI
-# export LD_PRELOAD=$JAVA_HOME/jre/lib/amd64/libjsig.so
-
-# -Dtest=none to turn off the Java tests
-
-# Test all
-# mvn -Dtest=none -Dmaven.test.skip=false test
-
 # Individual test
 if [[ -z $SPARK_VER ]]; then
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+ mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite clean test
+ mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite clean test
+# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite clean test
 else
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test -P$SPARK_VER
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test -P$SPARK_VER
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test -P$SPARK_VER
+ mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite clean test
+ mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite clean test
+# mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite clean test
 fi

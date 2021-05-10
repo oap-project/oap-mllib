@@ -1,12 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright 2020 Intel Corporation
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +16,11 @@
 
 package org.apache.spark.rdd
 
-import org.apache.commons.logging.LogFactory
-
-import org.apache.spark.Partition
-import org.apache.spark.SparkException
-import org.apache.spark.scheduler.ExecutorCacheTaskLocation
-import org.apache.spark.scheduler.TaskLocation
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
+import org.apache.spark.{Partition, SparkException}
+import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 
 class ExecutorInProcessCoalescePartitioner
   extends PartitionCoalescer with Serializable {
@@ -51,12 +46,13 @@ class ExecutorInProcessCoalescePartitioner
       list.foreach(part => pg.partitions += part)
       groupArr += pg
     })
-    if (groupArr.length == 0)
-      throw new SparkException("ExecutorInProcessCoalescePartitioner: No partitions or no locations for partitions found.")
+    if (groupArr.length == 0) {
+      throw new SparkException(
+        "ExecutorInProcessCoalescePartitioner: No partitions or no locations for partitions found.")
+    }
 
     val sortedGroupArr = groupArr.sortWith(_.partitions(0).index < _.partitions(0).index)
 
     sortedGroupArr.toArray
   }
 }
-
