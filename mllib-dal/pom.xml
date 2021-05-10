@@ -259,7 +259,65 @@
                     </args>
                 </configuration>
             </plugin>
-
+            <!-- Java Style Check -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <failOnViolation>false</failOnViolation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <sourceDirectories>
+                        <directory>${basedir}/src/main/java</directory>
+                    </sourceDirectories>
+                    <testSourceDirectories>
+                        <directory>${basedir}/src/test/java</directory>
+                    </testSourceDirectories>
+                        <configLocation>${basedir}/../dev/codestyle/checkstyle.xml</configLocation>
+                    <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>8.29</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <!-- Java Formatter -->
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>2.15.0</version>
+                <configuration>
+                    <configFile>${basedir}/../dev/codestyle/eclipse-java-google-style.xml</configFile>
+                </configuration>
+            </plugin>
+            <!-- Scala Style Check -->
+            <plugin>
+                <groupId>org.scalastyle</groupId>
+                <artifactId>scalastyle-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <verbose>false</verbose>
+                    <failOnViolation>true</failOnViolation>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <failOnWarning>false</failOnWarning>
+                    <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+                    <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+                    <configLocation>scalastyle-config.xml</configLocation>
+                    <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
+                </configuration>
+            </plugin>
+            <!-- Scala Formatter -->
+            <plugin>
+                <groupId>org.antipathy</groupId>
+                <artifactId>mvn-scalafmt_${scala.binary.version}</artifactId>
+                <version>1.0.3</version>
+                <configuration>
+                    <configLocation>${basedir}/.scalafmt.conf</configLocation>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
