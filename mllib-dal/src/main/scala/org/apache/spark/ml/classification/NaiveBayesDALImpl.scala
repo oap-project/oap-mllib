@@ -21,13 +21,31 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util.{Instrumentation, OneDAL}
 import org.apache.spark.rdd.RDD
 
-class NaiveBayesImpl(val executorNum: Int,
+class NaiveBayesImpl(val classNum: Int,
+                     val executorNum: Int,
                      val executorCores: Int
                     ) extends Serializable with Logging {
   def train(features: RDD[Vector], labels: RDD[Double],
             instr: Option[Instrumentation]): NaiveBayesModel = {
 
-    OneDAL.vectorsToMergedNumericTables(features, executorNum)
+    val featureTables = OneDAL.vectorsToMergedNumericTables(features, executorNum)
+    val labelTables = OneDAL.doublesToNumericTables(labels, executorNum)
+
+    featureTables.zip(labelTables).mapPartitions {
+      case (tables: Iterator[(Long, Long)]) =>
+      val (featureTabAddr, lableTabAddr) = tables.next()
+
+      val result = new NaiveBayesResult
+      cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
+        classNum, executorNum, executorCores, result)
+    }
+
     null
   }
+
+  @native private def cNaiveBayesDALCompute(features: Long, labels: Long,
+                                            class_num: Int,
+                                            executor_num: Int,
+                                            executor_cores: Int,
+                                            result: NaiveBayesResult): Unit
 }
