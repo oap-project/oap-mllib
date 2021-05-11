@@ -89,6 +89,26 @@ object OneDAL {
       }
   }
 
+  def doublesToNumericTables(doubles: RDD[Double], executorNum: Int): RDD[Long] = {
+    require(executorNum > 0)
+    val doublesTables = doubles.repartition(executorNum).mapPartitions { it: Iterator[Double] =>
+      val data = it.toArray
+      // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
+      val context = new DaalContext()
+      val matrix = new DALMatrix(context, classOf[java.lang.Double],
+        1, data.length, NumericTable.AllocationFlag.DoAllocate)
+      // oneDAL libs should be loaded by now, loading other native libs
+      logger.info("Loading native libraries")
+      LibLoader.loadLibraries()
+
+      data.zipWithIndex.foreach { case (value: Double, index: Int) =>
+        matrix.set(index, 0, value)
+      }
+      Iterator(matrix.getCNumericTable)
+    }
+    doublesTables
+  }
+
   def vectorsToMergedNumericTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
 
