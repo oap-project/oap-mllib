@@ -17,32 +17,53 @@
 package org.apache.spark.ml.classification
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.util.{Instrumentation, OneDAL}
+import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors}
+import org.apache.spark.ml.util.Utils.getOneCCLIPPort
+import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
 import org.apache.spark.rdd.RDD
 
-class NaiveBayesDALImpl(val classNum: Int,
+class NaiveBayesDALImpl(val uid: String,
+                        val classNum: Int,
                         val executorNum: Int,
                         val executorCores: Int
                     ) extends Serializable with Logging {
   def train(features: RDD[Vector], labels: RDD[Double],
             instr: Option[Instrumentation]): NaiveBayesModel = {
 
+    val kvsIPPort = getOneCCLIPPort(features)
+
     val featureTables = OneDAL.vectorsToMergedNumericTables(features, executorNum)
     val labelTables = OneDAL.doublesToNumericTables(labels, executorNum)
 
-    featureTables.zip(labelTables).mapPartitions {
-      case (tables: Iterator[(Long, Long)]) =>
-      val (featureTabAddr, lableTabAddr) = tables.next()
+    val results = featureTables.zip(labelTables).mapPartitionsWithIndex {
+      case (rank: Int, tables: Iterator[(Long, Long)]) =>
+        val (featureTabAddr, lableTabAddr) = tables.next()
 
-      val result = new NaiveBayesResult
-      cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
-        classNum, executorNum, executorCores, result)
+        OneCCL.init(executorNum, rank, kvsIPPort)
 
-      Iterator()
-    }
+        val result = new NaiveBayesResult
+        cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
+          classNum, executorNum, executorCores, result)
 
-    null
+        val ret = if (OneCCL.isRoot()) {
+          Iterator(result)
+        } else {
+          Iterator.empty
+        }
+
+        OneCCL.cleanup()
+        ret
+    }.collect()
+
+    // Make sure there is only one result from rank 0
+    assert(results.length == 1)
+
+    val model = new NaiveBayesModel(uid,
+      Vectors.zeros(classNum),
+      Matrices.zeros(0, 0),
+      Matrices.zeros(0, 0))
+    model
+
   }
 
   @native private def cNaiveBayesDALCompute(features: Long, labels: Long,

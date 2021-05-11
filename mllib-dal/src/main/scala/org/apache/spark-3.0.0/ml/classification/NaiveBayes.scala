@@ -193,7 +193,7 @@ class NaiveBayes @Since("1.5.0") (
       case Row(label: Double) => label
     }
 
-    val model = new NaiveBayesDALImpl(numClasses,
+    val model = new NaiveBayesDALImpl(uid, numClasses,
       executor_num, executor_cores).train(features, labels, Some(instr))
     model
   }
