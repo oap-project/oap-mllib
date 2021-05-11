@@ -21,9 +21,9 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util.{Instrumentation, OneDAL}
 import org.apache.spark.rdd.RDD
 
-class NaiveBayesImpl(val classNum: Int,
-                     val executorNum: Int,
-                     val executorCores: Int
+class NaiveBayesDALImpl(val classNum: Int,
+                        val executorNum: Int,
+                        val executorCores: Int
                     ) extends Serializable with Logging {
   def train(features: RDD[Vector], labels: RDD[Double],
             instr: Option[Instrumentation]): NaiveBayesModel = {
@@ -38,6 +38,8 @@ class NaiveBayesImpl(val classNum: Int,
       val result = new NaiveBayesResult
       cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
         classNum, executorNum, executorCores, result)
+
+      Iterator()
     }
 
     null

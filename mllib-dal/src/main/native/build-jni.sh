@@ -19,12 +19,12 @@ WORK_DIR="$( cd $( dirname "${BASH_SOURCE[0]}" ) && pwd )"
 DAAL_JAR=${ONEAPI_ROOT}/dal/latest/lib/onedal.jar
 
 if [ ! -f "$DAAL_JAR" ]; then
-    echo $DAAL_JAR does not exist!
+    echo \$DAAL_JAR does not exist!
     exit 1
 fi
 
 if [[ ! -e "$SPARK_HOME" ]]; then
-	echo $SPARK_HOME does not exist!
+	echo \$SPARK_HOME does not exist!
     exit 1	
 fi
 
@@ -33,4 +33,5 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     org.apache.spark.ml.util.OneDAL$ \
     org.apache.spark.ml.clustering.KMeansDALImpl \
     org.apache.spark.ml.feature.PCADALImpl \
-    org.apache.spark.ml.recommendation.ALSDALImpl
+    org.apache.spark.ml.recommendation.ALSDALImpl \
+    org.apache.spark.ml.classification.NaiveBayesDALImpl \

@@ -183,6 +183,8 @@ class NaiveBayes @Since("1.5.0") (
 
     logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
 
+    val numClasses = getNumClasses(dataset)
+
     val features: RDD[Vector] = dataset
       .select(DatasetUtils.columnToVector(dataset, getFeaturesCol)).rdd.map {
       case Row(feature: Vector) => feature
@@ -191,7 +193,7 @@ class NaiveBayes @Since("1.5.0") (
       case Row(label: Double) => label
     }
 
-    val model = new NaiveBayesImpl(
+    val model = new NaiveBayesDALImpl(numClasses,
       executor_num, executor_cores).train(features, labels, Some(instr))
     model
   }
