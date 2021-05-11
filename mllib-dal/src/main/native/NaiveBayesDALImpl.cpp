@@ -8,29 +8,11 @@ using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::algorithms::multinomial_naive_bayes;
 
-/*
- * Class:     org_apache_spark_ml_classification_NaiveBayesDALImpl
- * Method:    cNaiveBayesDALCompute
- * Signature: (JJIIILorg/apache/spark/ml/classification/NaiveBayesResult;)V
- */
-JNIEXPORT void JNICALL Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute
-  (JNIEnv *env, jobject obj, jlong featuresTab, jlong labelsTab,
-   jint class_num, jint executor_num, jint executor_cores, jobject result) {
-
-}
-
-void trainModel(int nClasses, const ccl::communicator & comm)
-{
-    /* Initialize FileDataSource<CSVFeatureManager> to retrieve the input data from a .csv file */
-    FileDataSource<CSVFeatureManager> trainDataSource("1", DataSource::doAllocateNumericTable,
-                                                      DataSource::doDictionaryFromContext);
-    FileDataSource<CSVFeatureManager> trainLabelsSource("2", DataSource::doAllocateNumericTable,
-                                                        DataSource::doDictionaryFromContext);
-
-    /* Retrieve the data from input files */
-    trainDataSource.loadDataBlock();
-    trainLabelsSource.loadDataBlock();
-
+static training::ResultPtr trainModel(const ccl::communicator &comm, 
+                const NumericTablePtr &featuresTab,
+                const NumericTablePtr &labelsTab,
+                int nClasses)
+{    
     auto rankId = comm.rank();
     auto nBlocks = comm.size();
 
@@ -38,14 +20,14 @@ void trainModel(int nClasses, const ccl::communicator & comm)
     training::Distributed<step1Local> localAlgorithm(nClasses);
 
     /* Pass a training data set and dependent values to the algorithm */
-    localAlgorithm.input.set(classifier::training::data, trainDataSource.getNumericTable());
-    localAlgorithm.input.set(classifier::training::labels, trainLabelsSource.getNumericTable());
+    localAlgorithm.input.set(classifier::training::data, featuresTab);
+    localAlgorithm.input.set(classifier::training::labels, labelsTab);
 
     /* Train the Naive Bayes model on local nodes */
     localAlgorithm.compute();
 
     /* Serialize partial results required by step 2 */
-    services::SharedPtr<byte> serializedData;
+    services::SharedPtr<daal::byte> serializedData;
     InputDataArchive dataArch;
     localAlgorithm.getPartialResult()->serialize(dataArch);
     size_t perNodeArchLength = dataArch.getSizeOfArchive();
@@ -53,11 +35,11 @@ void trainModel(int nClasses, const ccl::communicator & comm)
     /* Serialized data is of equal size on each node if each node called compute() equal number of times */
     if (rankId == ccl_root)
     {
-        serializedData.reset(new byte[perNodeArchLength * nBlocks]);
+        serializedData.reset(new daal::byte[perNodeArchLength * nBlocks]);
     }
 
     {
-        services::SharedPtr<byte> nodeResults(new byte[perNodeArchLength]);
+        services::SharedPtr<daal::byte> nodeResults(new daal::byte[perNodeArchLength]);
         dataArch.copyArchiveToArray(nodeResults.get(), perNodeArchLength);
 
         /* Transfer partial results to step 2 on the root node */
@@ -88,5 +70,34 @@ void trainModel(int nClasses, const ccl::communicator & comm)
 
         /* Retrieve the algorithm results */
         training::ResultPtr trainingResult = masterAlgorithm.getResult();
+        return trainingResult;
     }
+    return training::ResultPtr();
+}
+
+/*
+ * Class:     org_apache_spark_ml_classification_NaiveBayesDALImpl
+ * Method:    cNaiveBayesDALCompute
+ * Signature: (JJIIILorg/apache/spark/ml/classification/NaiveBayesResult;)V
+ */
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute
+  (JNIEnv *env, jobject obj, jlong pFeaturesTab, jlong pLabelsTab,
+   jint class_num, jint executor_num, jint executor_cores, jobject result) {
+    
+    ccl::communicator &comm = getComm();
+
+    NumericTablePtr featuresTab = *((NumericTablePtr *)pFeaturesTab);
+    NumericTablePtr labelsTab = *((NumericTablePtr *)pLabelsTab);
+
+    // Set number of threads for oneDAL to use for each rank
+    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+
+    int nThreadsNew =
+        services::Environment::getInstance()->getNumberOfThreads();
+    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
+         << endl;
+
+    training::ResultPtr trainingResult = trainModel(comm, featuresTab, labelsTab, class_num);
+    
+
 }
