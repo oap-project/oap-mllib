@@ -185,16 +185,13 @@ class NaiveBayes @Since("1.5.0") (
 
     val numClasses = getNumClasses(dataset)
 
-    val features: RDD[Vector] = dataset
-      .select(DatasetUtils.columnToVector(dataset, getFeaturesCol)).rdd.map {
-      case Row(feature: Vector) => feature
-    }
-    val labels: RDD[Double] = dataset.select(col(getLabelCol)).rdd.map {
-      case Row(label: Double) => label
+    val labeledPoints: RDD[(Vector, Double)] = dataset
+      .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
+      case Row(feature: Vector, label: Double) => (feature, label)
     }
 
     val model = new NaiveBayesDALImpl(uid, numClasses,
-      executor_num, executor_cores).train(features, labels, Some(instr))
+      executor_num, executor_cores).train(labeledPoints, Some(instr))
     model
   }
 

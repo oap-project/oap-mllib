@@ -44,6 +44,20 @@ Java_org_apache_spark_ml_util_OneDAL_00024_setNumericTableValue(
 
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
+ * Method:    cSetDouble
+ * Signature: (JIID)V
+ */
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble
+  (JNIEnv *env, jobject, jlong numTableAddr, jint row, jint column, jdouble value) {
+  HomogenNumericTable<double> *nt =
+          static_cast<HomogenNumericTable<double> *>(
+              ((SerializationIfacePtr *)numTableAddr)->get());
+  (*nt)[row][column] = (double)value;
+
+}
+
+/*
+ * Class:     org_apache_spark_ml_util_OneDAL__
  * Method:    cSetDoubleBatch
  * Signature: (JI[DII)V
  */

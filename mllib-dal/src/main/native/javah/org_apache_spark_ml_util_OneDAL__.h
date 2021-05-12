@@ -25,6 +25,14 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cAddNumericTab
 
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
+ * Method:    cSetDouble
+ * Signature: (JIID)V
+ */
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble
+  (JNIEnv *, jobject, jlong, jint, jint, jdouble);
+
+/*
+ * Class:     org_apache_spark_ml_util_OneDAL__
  * Method:    cSetDoubleBatch
  * Signature: (JI[DII)V
  */

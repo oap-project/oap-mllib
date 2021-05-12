@@ -17,6 +17,7 @@
 package org.apache.spark.ml.classification
 
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors}
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
@@ -27,15 +28,17 @@ class NaiveBayesDALImpl(val uid: String,
                         val executorNum: Int,
                         val executorCores: Int
                     ) extends Serializable with Logging {
-  def train(features: RDD[Vector], labels: RDD[Double],
+  def train(labeledPoints: RDD[(Vector, Double)],
             instr: Option[Instrumentation]): NaiveBayesModel = {
 
-    val kvsIPPort = getOneCCLIPPort(features)
+    val kvsIPPort = getOneCCLIPPort(labeledPoints)
 
-    val featureTables = OneDAL.vectorsToMergedNumericTables(features, executorNum)
-    val labelTables = OneDAL.doublesToNumericTables(labels, executorNum)
+//    val featureTables = OneDAL.vectorsToMergedNumericTables(features, executorNum)
+//    val labelTables = OneDAL.doublesToNumericTables(labels, executorNum)
 
-    val results = featureTables.zip(labelTables).mapPartitionsWithIndex {
+    val labeledPointsTables = OneDAL.labeledPointsToMergedNumericTables(labeledPoints, executorNum)
+
+    val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
         val (featureTabAddr, lableTabAddr) = tables.next()
 
