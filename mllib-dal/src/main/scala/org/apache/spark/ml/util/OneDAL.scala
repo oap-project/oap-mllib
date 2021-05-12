@@ -17,13 +17,10 @@
 package org.apache.spark.ml.util
 
 import java.util.logging.{Level, Logger}
-
-import com.intel.daal.data_management.data.{HomogenNumericTable, Matrix => DALMatrix, NumericTable,
-  RowMergedNumericTable}
+import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
-
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.linalg.{Vector, Vectors}
+import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.storage.StorageLevel
@@ -32,6 +29,27 @@ object OneDAL {
 
   private val logger = Logger.getLogger("util.OneDAL")
   private val logLevel = Level.INFO
+
+  def numericTableToMatrix(table: NumericTable): Matrix = {
+    val numRows = table.getNumberOfRows.toInt
+    val numCols = table.getNumberOfColumns.toInt
+    val matrix = Matrices.zeros(numRows, numCols)
+    for (row <- 0 until numRows) {
+      for (col <- 0 until numCols) {
+        matrix.update(row, col, table.getDoubleValue(col, row))
+      }
+    }
+    matrix
+  }
+
+  def numericTableNx1ToVector(table: NumericTable): Vector = {
+    val numRows = table.getNumberOfRows.toInt
+    val internArray = new Array[Double](numRows.toInt)
+    for (row <- 0 until numRows) {
+      internArray(row) = table.getDoubleValue(0, row)
+    }
+    Vectors.dense(internArray)
+  }
 
   // Convert DAL numeric table to array of vectors
   def numericTableToVectors(table: NumericTable): Array[Vector] = {
