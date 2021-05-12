@@ -57,13 +57,13 @@ class NaiveBayesDALImpl(val uid: String,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
+    val result = results(0)
 
     val model = new NaiveBayesModel(uid,
-      Vectors.zeros(classNum),
-      Matrices.zeros(0, 0),
+      OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable)),
+      OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable)),
       Matrices.zeros(0, 0))
     model
-
   }
 
   @native private def cNaiveBayesDALCompute(features: Long, labels: Long,
