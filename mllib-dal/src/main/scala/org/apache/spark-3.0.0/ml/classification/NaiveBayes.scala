@@ -34,6 +34,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.util.VersionUtils
 
+import scala.sys.exit
+
 /**
  * Params for Naive Bayes Classifiers.
  */
@@ -159,7 +161,8 @@ class NaiveBayes @Since("1.5.0") (
         val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
           dataset.sparkSession.sparkContext)
         val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
-        if (isPlatformSupported && !handleWeight) {
+        val handleSmoothing = ($(smoothing) != 1.0)
+        if (isPlatformSupported && !handleWeight && !handleSmoothing) {
           trainNaiveBayesDAL(dataset, instr)
         } else {
           trainDiscreteImpl(dataset, instr)
@@ -192,6 +195,12 @@ class NaiveBayes @Since("1.5.0") (
 
     val model = new NaiveBayesDALImpl(uid, numClasses,
       executor_num, executor_cores).train(labeledPoints, Some(instr))
+
+    // Set labels to be compatible with old mllib model
+    val labels = (0 until numClasses).map(_.toDouble).toArray
+
+    model.setOldLabels(labels)
+
     model
   }
 
