@@ -100,8 +100,9 @@ JNIEXPORT void JNICALL
 Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     JNIEnv *env, jobject obj, jlong pFeaturesTab, jlong pLabelsTab,
     jint class_num, jint executor_num, jint executor_cores, jobject resultObj) {
-
-    ccl::communicator &comm = getComm();
+    
+    ccl::communicator &comm = getComm();    
+    auto rankId = comm.rank();
 
     NumericTablePtr featuresTab = *((NumericTablePtr *)pFeaturesTab);
     NumericTablePtr labelsTab = *((NumericTablePtr *)pLabelsTab);
@@ -114,7 +115,6 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
          << endl;
 
-
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
@@ -123,25 +123,35 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
         trainingResult = trainModel<training::defaultDense>(comm, featuresTab, labelsTab, class_num);
     }
 
-    multinomial_naive_bayes::ModelPtr model =
-        trainingResult->get(classifier::training::model);
-    auto pi = model->getLogP();
-    auto theta = model->getLogTheta();
+    cout << "oneDAL (native): training model finished" << endl;
 
-    printNumericTable(pi, "log of class priors");
-    printNumericTable(theta, "log of class conditional probabilities");
+    if (rankId == ccl_root) {
+        multinomial_naive_bayes::ModelPtr model =
+            trainingResult->get(classifier::training::model);
+        
+        // auto pi = model->getLogP();
+        // auto theta = model->getLogTheta();
 
-    // Return all log of class priors (LogP) and log of class conditional
-    // probabilities (LogTheta)
+        // printNumericTable(pi, "log of class priors", 10, 20);
+        // printNumericTable(theta, "log of class conditional probabilities", 10, 20);
 
-    // Get the class of the input object
-    jclass clazz = env->GetObjectClass(resultObj);
-    // Get Field references
-    jfieldID piNumericTableField =
-        env->GetFieldID(clazz, "piNumericTable", "J");
-    jfieldID thetaNumericTableField =
-        env->GetFieldID(clazz, "thetaNumericTable", "J");
+        // Return all log of class priors (LogP) and log of class conditional
+        // probabilities (LogTheta)
 
-    env->SetLongField(resultObj, piNumericTableField, (jlong)pi);
-    env->SetLongField(resultObj, thetaNumericTableField, (jlong)theta);
+        // Get the class of the input object
+        jclass clazz = env->GetObjectClass(resultObj);
+        // Get Field references
+        jfieldID piNumericTableField =
+            env->GetFieldID(clazz, "piNumericTable", "J");
+        jfieldID thetaNumericTableField =
+            env->GetFieldID(clazz, "thetaNumericTable", "J");
+
+        NumericTablePtr *pi =
+            new NumericTablePtr(model->getLogP());
+        NumericTablePtr *theta =
+            new NumericTablePtr(model->getLogTheta());
+
+        env->SetLongField(resultObj, piNumericTableField, (jlong)pi);
+        env->SetLongField(resultObj, thetaNumericTableField, (jlong)theta);
+    }
 }

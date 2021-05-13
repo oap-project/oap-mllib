@@ -20,7 +20,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors}
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
-import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
+import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL, Service}
 import org.apache.spark.rdd.RDD
 
 class NaiveBayesDALImpl(val uid: String,
@@ -49,7 +49,9 @@ class NaiveBayesDALImpl(val uid: String,
           classNum, executorNum, executorCores, result)
 
         val ret = if (OneCCL.isRoot()) {
-          Iterator(result)
+          val pi = OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable))
+          val theta = OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable))
+          Iterator((pi, theta))
         } else {
           Iterator.empty
         }
@@ -63,8 +65,8 @@ class NaiveBayesDALImpl(val uid: String,
     val result = results(0)
 
     val model = new NaiveBayesModel(uid,
-      OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable)),
-      OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable)),
+      result._1,
+      result._2,
       Matrices.zeros(0, 0))
     model
   }
