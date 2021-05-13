@@ -16,14 +16,15 @@
 
 package org.apache.spark.ml.util
 
-import java.util.logging.{Level, Logger}
-import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
+import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.storage.StorageLevel
+
+import java.util.logging.{Level, Logger}
 
 object OneDAL {
 
@@ -69,11 +70,11 @@ object OneDAL {
     resArray
   }
 
-//  def vectorsToCSRNumericTable(vectors: Iterator[Vector]): CSRNumericTable = {
-//    vectors.foreach { v =>
-//
-//    }
-//  }
+  //  def vectorsToCSRNumericTable(vectors: Iterator[Vector]): CSRNumericTable = {
+  //    vectors.foreach { v =>
+  //
+  //    }
+  //  }
 
   def makeNumericTable(cData: Long): NumericTable = {
 
@@ -136,31 +137,37 @@ object OneDAL {
   }
 
   def labeledPointsToMergedNumericTables(labeledPoints: RDD[(Vector, Double)],
-                                        executorNum: Int): RDD[(Long, Long)] = {
+                                         executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
 
     val tables = labeledPoints.repartition(executorNum).mapPartitions {
       it: Iterator[(Vector, Double)] =>
-      val points: Array[(Vector, Double)] = it.toArray
-      val numColumns = points(0)._1.size
-      // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
-      val context = new DaalContext()
-      val matrixFeature = new DALMatrix(context, classOf[java.lang.Double],
-        numColumns, points.length, NumericTable.AllocationFlag.DoAllocate)
-      val matrixLabel = new DALMatrix(context, classOf[java.lang.Double],
-        1, points.length, NumericTable.AllocationFlag.DoAllocate)
-      // oneDAL libs should be loaded by now, loading other native libs
-      logger.info("Loading native libraries")
-      LibLoader.loadLibraries()
+        val points: Array[(Vector, Double)] = it.toArray
+        val numColumns = points(0)._1.size
 
-      points.zipWithIndex.foreach { case (point: (Vector, Double), index: Int) =>
-        val rowArray = point._1.toArray
-        cSetDoubleBatch(matrixFeature.getCNumericTable, index, rowArray, 1, numColumns)
-        cSetDouble(matrixLabel.getCNumericTable, index, 0, point._2)
-      }
-      Iterator((matrixFeature.getCNumericTable, matrixLabel.getCNumericTable))
+        // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
+        val context = new DaalContext()
+        val matrixFeature = new DALMatrix(context, classOf[java.lang.Double],
+          numColumns, points.length, NumericTable.AllocationFlag.DoAllocate)
+        val matrixLabel = new DALMatrix(context, classOf[java.lang.Double],
+          1, points.length, NumericTable.AllocationFlag.DoAllocate)
+
+        // oneDAL libs should be loaded by now, loading other native libs
+        logger.info("Loading native libraries")
+        LibLoader.loadLibraries()
+
+        points.zipWithIndex.foreach { case (point: (Vector, Double), index: Int) =>
+          val rowArray = point._1.toArray
+          cSetDoubleBatch(matrixFeature.getCNumericTable, index, rowArray, 1, numColumns)
+          cSetDouble(matrixLabel.getCNumericTable, index, 0, point._2)
+        }
+
+        println(matrixFeature.getNumberOfRows, matrixFeature.getNumberOfColumns)
+        println(matrixLabel.getNumberOfRows, matrixLabel.getNumberOfColumns)
+
+        Iterator((matrixFeature.getCNumericTable, matrixLabel.getCNumericTable))
     }
     tables.count()
 
