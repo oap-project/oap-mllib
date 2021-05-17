@@ -222,7 +222,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
     rowOffsets += index + 1
 
     val contextLocal = new DaalContext()
-    val cTable = OneDAL.cNewCSRNumericTable(values, columnIndices, rowOffsets.toArray,
+    val cTable = OneDAL.cNewCSRNumericTableFloat(values, columnIndices, rowOffsets.toArray,
       nVectors, csrRowNum)
     val table = new CSRNumericTable(contextLocal, cTable)
 

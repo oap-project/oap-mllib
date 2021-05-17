@@ -118,8 +118,10 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
+        cout << "oneDAL (native): training model with fastCSR method" << endl;
         trainingResult = trainModel<training::fastCSR>(comm, featuresTab, labelsTab, class_num);
     } else {
+        cout << "oneDAL (native): training model with defaultDense method" << endl;
         trainingResult = trainModel<training::defaultDense>(comm, featuresTab, labelsTab, class_num);
     }
 

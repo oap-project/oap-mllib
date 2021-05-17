@@ -158,12 +158,18 @@ class NaiveBayes @Since("1.5.0") (
 
     $(modelType) match {
       case Multinomial =>
-        val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
-          dataset.sparkSession.sparkContext)
-        val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
-        val handleSmoothing = ($(smoothing) != 1.0)
-        if (isPlatformSupported && !handleWeight && !handleSmoothing) {
-          trainNaiveBayesDAL(dataset, instr)
+        val sc = dataset.sparkSession.sparkContext
+        val isOAPEnabled = sc.conf.getBoolean("spark.oap.mllib.enabled", false)
+        if (isOAPEnabled) {
+          val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+            dataset.sparkSession.sparkContext)
+          val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
+          val handleSmoothing = ($(smoothing) != 1.0)
+          if (isPlatformSupported && !handleWeight && !handleSmoothing) {
+            trainNaiveBayesDAL(dataset, instr)
+          } else {
+            trainDiscreteImpl(dataset, instr)
+          }
         } else {
           trainDiscreteImpl(dataset, instr)
         }

@@ -36,7 +36,7 @@ class NaiveBayesDALImpl(val uid: String,
 //    val featureTables = OneDAL.vectorsToMergedNumericTables(features, executorNum)
 //    val labelTables = OneDAL.doublesToNumericTables(labels, executorNum)
 
-    val labeledPointsTables = OneDAL.labeledPointsToMergedNumericTables(labeledPoints, executorNum)
+    val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
