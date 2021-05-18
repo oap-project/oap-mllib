@@ -1,4 +1,5 @@
 #include <daal.h>
+#include <unistd.h>
 
 #include "OneCCL.h"
 #include "org_apache_spark_ml_classification_NaiveBayesDALImpl.h"
@@ -148,6 +149,8 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
          << endl;
 
+auto t1 = std::chrono::high_resolution_clock::now();
+
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
@@ -162,6 +165,11 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     }
 
     cout << "oneDAL (native): training model finished" << endl;
+
+auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::cout << "training took " << (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / 1000 << " secs"
+              << std::endl;
 
     if (rankId == ccl_root) {
         multinomial_naive_bayes::ModelPtr model =

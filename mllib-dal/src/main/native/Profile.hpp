@@ -10,16 +10,16 @@ class Profiler {
 
     void startProfile(std::string s = "") {
         action = s;
-        std::cout << subject << " (native): start" << action << std::endl;
+        std::cout << subject << " (native): start " << action << std::endl;
         startTime = std::chrono::high_resolution_clock::now();
     }
 
     void endProfile() {
         auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                             end_time - startTime)
                             .count();
-        std::cout << subject << " (native): " << action << "took " << duration
+        std::cout << subject << " (native): " << action << " took " << (float)duration / 1000
                   << " secs" << std::endl;
     }
 

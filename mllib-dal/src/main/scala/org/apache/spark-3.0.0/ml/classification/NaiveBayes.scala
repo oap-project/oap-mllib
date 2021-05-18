@@ -160,7 +160,7 @@ class NaiveBayes @Since("1.5.0") (
       case Multinomial =>
         val sc = dataset.sparkSession.sparkContext
         val isOAPEnabled = sc.conf.getBoolean("spark.oap.mllib.enabled", false)
-        if (isOAPEnabled) {
+        val model = if (isOAPEnabled) {
           val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
             dataset.sparkSession.sparkContext)
           val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
@@ -173,6 +173,8 @@ class NaiveBayes @Since("1.5.0") (
         } else {
           trainDiscreteImpl(dataset, instr)
         }
+        print(model.pi.toArray.slice(0, 20).mkString(" "))
+        model
       case Bernoulli | Complement =>
         trainDiscreteImpl(dataset, instr)
       case Gaussian =>
@@ -192,6 +194,10 @@ class NaiveBayes @Since("1.5.0") (
 
     logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
 
+    dataset.cache()
+    dataset.count()
+
+    // Todo: optimize getting num of classes
     val numClasses = getNumClasses(dataset)
 
     val labeledPoints: RDD[(Vector, Double)] = dataset

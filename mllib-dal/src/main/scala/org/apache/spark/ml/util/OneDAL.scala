@@ -175,7 +175,8 @@ object OneDAL {
         val labelsTable = doubleArrayToNumericTable(labels)
 
         Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
-    }
+    }.cache()
+
     tables.count()
 
     tables
@@ -264,6 +265,8 @@ object OneDAL {
   }
   private def vectorsToSparseNumericTable(vectors: Array[Vector], nFeatures: Long): CSRNumericTable = {
     require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
+
+    println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
 
     val ratingsNum = vectors.map(_.numActives).sum
     val csrRowNum = vectors.length

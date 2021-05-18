@@ -32,13 +32,13 @@ extern bool daal_check_is_intel_cpu();
  * Method:    cSetDouble
  * Signature: (JIID)V
  */
-JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble
-  (JNIEnv *env, jobject, jlong numTableAddr, jint row, jint column, jdouble value) {
-  HomogenNumericTable<double> *nt =
-          static_cast<HomogenNumericTable<double> *>(
-              ((SerializationIfacePtr *)numTableAddr)->get());
-  (*nt)[row][column] = (double)value;
-
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble(
+    JNIEnv *env, jobject, jlong numTableAddr, jint row, jint column,
+    jdouble value) {
+    HomogenNumericTable<double> *nt =
+        static_cast<HomogenNumericTable<double> *>(
+            ((SerializationIfacePtr *)numTableAddr)->get());
+    (*nt)[row][column] = (double)value;
 }
 
 /*
@@ -163,7 +163,7 @@ Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableDouble(
         resultData, resultColIndices, resultRowOffsets, nFeatures, nVectors);
     numericTable->allocateDataMemory(numData);
     numericTable->getArrays<double>(&resultData, &resultColIndices,
-                                   &resultRowOffsets);
+                                    &resultRowOffsets);
 
     size_t *pRowOffsets = (size_t *)env->GetLongArrayElements(rowOffsets, 0);
     size_t *pColIndices = (size_t *)env->GetLongArrayElements(colIndices, 0);
