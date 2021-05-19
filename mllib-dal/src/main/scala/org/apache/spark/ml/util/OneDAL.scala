@@ -16,17 +16,20 @@
 
 package org.apache.spark.ml.util
 
-import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
+import java.lang
+import java.util.logging.{Level, Logger}
+
+import scala.collection.mutable.ArrayBuffer
+
+import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, Matrix => DALMatrix,
+  NumericTable, RowMergedNumericTable}
 import com.intel.daal.services.DaalContext
+
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseVector, Matrices, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.storage.StorageLevel
-
-import java.lang
-import java.util.logging.{Level, Logger}
-import scala.collection.mutable.ArrayBuffer
 
 object OneDAL {
 
@@ -73,7 +76,6 @@ object OneDAL {
   }
 
 
-
   def makeNumericTable(cData: Long): NumericTable = {
 
     val context = new DaalContext()
@@ -110,23 +112,6 @@ object OneDAL {
           OneDAL.cFreeDataMemory(address)
         }
       }
-  }
-
-  private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
-    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
-    val context = new DaalContext()
-    val matrixLabel = new DALMatrix(context, classOf[lang.Double],
-      1, points.length, NumericTable.AllocationFlag.DoAllocate)
-
-    // oneDAL libs should be loaded by now, loading other native libs
-    logger.info("Loading native libraries")
-    LibLoader.loadLibraries()
-
-    points.zipWithIndex.foreach { case (point: Double, index: Int) =>
-      cSetDouble(matrixLabel.getCNumericTable, index, 0, point)
-    }
-
-    matrixLabel
   }
 
   def rddDoubleToNumericTables(doubles: RDD[Double], executorNum: Int): RDD[Long] = {
@@ -182,7 +167,90 @@ object OneDAL {
     tables
   }
 
+  private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
+    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
+    val context = new DaalContext()
+    val matrixLabel = new DALMatrix(context, classOf[lang.Double],
+      1, points.length, NumericTable.AllocationFlag.DoAllocate)
 
+    // oneDAL libs should be loaded by now, loading other native libs
+    logger.info("Loading native libraries")
+    LibLoader.loadLibraries()
+
+    points.zipWithIndex.foreach { case (point: Double, index: Int) =>
+      cSetDouble(matrixLabel.getCNumericTable, index, 0, point)
+    }
+
+    matrixLabel
+  }
+
+  private def vectorsToDenseNumericTable(it: Iterator[Vector],
+                                         numRows: Int, numCols: Int): NumericTable = {
+    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
+    val context = new DaalContext()
+    val matrix = new DALMatrix(context, classOf[lang.Double],
+      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
+
+    // oneDAL libs should be loaded by now, loading other native libs
+    logger.info("Loading native libraries")
+    LibLoader.loadLibraries()
+
+    var dalRow = 0
+
+    it.foreach { curVector =>
+      val rowArray = curVector.toArray
+      OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArray, 1, numCols)
+      dalRow += 1
+    }
+    matrix
+  }
+
+  private def vectorsToSparseNumericTable(vectors: Array[Vector],
+                                          nFeatures: Long): CSRNumericTable = {
+    require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
+
+    println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
+
+    val ratingsNum = vectors.map(_.numActives).sum
+    val csrRowNum = vectors.length
+    val values = Array.fill(ratingsNum) {
+      0.0
+    }
+    val columnIndices = Array.fill(ratingsNum) {
+      0L
+    }
+    val rowOffsets = ArrayBuffer[Long](1L)
+
+    var indexValues = 0
+    var curRow = 0L
+
+    // Converted to one CSRNumericTable
+    for (row <- 0 until vectors.length) {
+      val rowVector = vectors(row)
+      rowVector.foreachActive { (column, value) =>
+        values(indexValues) = value
+        // one-based indexValues
+        columnIndices(indexValues) = column + 1
+
+        if (row > curRow) {
+          curRow = row
+          // one-based indexValues
+          rowOffsets += indexValues + 1
+        }
+
+        indexValues = indexValues + 1
+      }
+    }
+    // one-based row indexValues
+    rowOffsets += indexValues + 1
+
+    val contextLocal = new DaalContext()
+    val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
+      nFeatures, csrRowNum)
+    val table = new CSRNumericTable(contextLocal, cTable)
+
+    table
+  }
 
   def rddVectorToMergedTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
@@ -244,71 +312,6 @@ object OneDAL {
     coalescedTables
   }
 
-  private def vectorsToDenseNumericTable(it: Iterator[Vector], numRows: Int, numCols: Int): NumericTable = {
-    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
-    val context = new DaalContext()
-    val matrix = new DALMatrix(context, classOf[lang.Double],
-      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
-
-    // oneDAL libs should be loaded by now, loading other native libs
-    logger.info("Loading native libraries")
-    LibLoader.loadLibraries()
-
-    var dalRow = 0
-
-    it.foreach { curVector =>
-      val rowArray = curVector.toArray
-      OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArray, 1, numCols)
-      dalRow += 1
-    }
-    matrix
-  }
-  private def vectorsToSparseNumericTable(vectors: Array[Vector], nFeatures: Long): CSRNumericTable = {
-    require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
-
-    println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
-
-    val ratingsNum = vectors.map(_.numActives).sum
-    val csrRowNum = vectors.length
-    val values = Array.fill(ratingsNum) {
-      0.0
-    }
-    val columnIndices = Array.fill(ratingsNum) {
-      0L
-    }
-    val rowOffsets = ArrayBuffer[Long](1L)
-
-    var indexValues = 0
-    var curRow = 0L
-
-    // Converted to one CSRNumericTable
-    for (row <- 0 until vectors.length) {
-      val rowVector = vectors(row)
-      rowVector.foreachActive { (column, value) =>
-        values(indexValues) = value
-        // one-based indexValues
-        columnIndices(indexValues) = column + 1
-
-        if (row > curRow) {
-          curRow = row
-          // one-based indexValues
-          rowOffsets += indexValues + 1
-        }
-
-        indexValues = indexValues + 1
-      }
-    }
-    // one-based row indexValues
-    rowOffsets += indexValues + 1
-
-    val contextLocal = new DaalContext()
-    val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
-      nFeatures, csrRowNum)
-    val table = new CSRNumericTable(contextLocal, cTable)
-
-    table
-  }
-
   @native def cAddNumericTable(cObject: Long, numericTableAddr: Long)
 
   @native def cSetDouble(numTableAddr: Long, row: Int, column: Int, value: Double)
@@ -323,7 +326,8 @@ object OneDAL {
   @native def cNewCSRNumericTableFloat(data: Array[Float],
                                        colIndices: Array[Long], rowOffsets: Array[Long],
                                        nFeatures: Long, nVectors: Long): Long
+
   @native def cNewCSRNumericTableDouble(data: Array[Double],
-                                       colIndices: Array[Long], rowOffsets: Array[Long],
-                                       nFeatures: Long, nVectors: Long): Long
+                                        colIndices: Array[Long], rowOffsets: Array[Long],
+                                        nFeatures: Long, nVectors: Long): Long
 }
