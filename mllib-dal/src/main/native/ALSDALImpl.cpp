@@ -30,8 +30,6 @@ using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::algorithms::implicit_als;
 
-const int ccl_root = 0;
-
 typedef float algorithmFPType; /* Algorithm floating-point type */
 
 NumericTablePtr userOffset;

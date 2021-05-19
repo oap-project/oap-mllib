@@ -43,6 +43,7 @@ import org.apache.spark.mllib.evaluation.RegressionMetrics
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.mllib.regression.{LinearRegressionModel => OldLinearRegressionModel}
 import org.apache.spark.mllib.util.MLUtils
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataType, DoubleType, StructType}
@@ -318,7 +319,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
   override protected def train(dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
     
-    val useLRDAL = false   // TODO: set it based on proper condition
+    val useLRDAL = true   // TODO: set it based on proper condition
     // Extract the number of features before deciding optimization solver.
     val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
     val instances = extractInstances(dataset)
@@ -335,13 +336,19 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
       if (useLRDAL) {
         val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
         val executor_cores = Utils.sparkExecutorCores()
+        logInfo(s"LinearRegressionDAL fit using $executor_num Executors")
+
+        val labeledPoints: RDD[(Vector, Double)] = dataset
+          .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
+          case Row(feature: Vector, label: Double) => (feature, label)
+        }
+
         val optimizer = new LinearRegressionDALImpl($(fitIntercept), $(regParam),
                   elasticNetParam = $(elasticNetParam), $(standardization), true,
                   maxIter = $(maxIter), tol = $(tol), executor_num, executor_cores)
-        val inputData = instances.map {
-          case Instance(label: Double, weight: Double, features: Vector) => features
-        }
-        val model = optimizer.fitWithDAL(inputData)
+
+        val model = optimizer.fitWithDAL(labeledPoints, Some(instr))
+
         val lrModel = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept))
         val (summaryModel, predictionColName) = lrModel.findSummaryModelAndPredictionCol()
         val trainingSummary = new LinearRegressionTrainingSummary(
@@ -357,20 +364,11 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
       } else {
         // For low dimensional data, WeightedLeastSquares is more efficient since the
         // training algorithm only requires one pass through the data. (SPARK-10668)
-  // private[ml] class WeightedLeastSquares(
-  //     val fitIntercept: Boolean,
-  //     val regParam: Double,
-  //     val elasticNetParam: Double,
-  //     val standardizeFeatures: Boolean,
-  //     val standardizeLabel: Boolean,
-  //     val solverType: WeightedLeastSquares.Solver = WeightedLeastSquares.Auto,
-  //     val maxIter: Int = 100,
-  //     val tol: Double = 1e-6
-  //   ) extends Serializable
         val optimizer = new WeightedLeastSquares($(fitIntercept), $(regParam),
           elasticNetParam = $(elasticNetParam), $(standardization), true,
           solverType = WeightedLeastSquares.Auto, maxIter = $(maxIter), tol = $(tol))
         val model = optimizer.fit(instances, instr = OptionalInstrumentation.create(instr))
+        
         // When it is trained by WeightedLeastSquares, training summary does not
         // attach returned model.
         val lrModel = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept))

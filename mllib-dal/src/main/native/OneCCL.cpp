@@ -31,6 +31,8 @@
 #include "OneCCL.h"
 #include "org_apache_spark_ml_util_OneCCL__.h"
 
+extern const int ccl_root = 0;
+
 static const int CCL_IP_LEN = 128;
 static std::list<std::string> local_host_ips;
 static size_t comm_size = 0;

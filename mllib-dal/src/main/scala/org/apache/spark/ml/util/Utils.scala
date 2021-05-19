@@ -24,6 +24,17 @@ import org.apache.spark.rdd.RDD
 
 object Utils {
 
+  def getOneCCLIPPort(data: RDD[_]): String = {
+    val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
+    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
+      executorIPAddress)
+    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
+    val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
+      kvsPortDetected)
+
+    kvsIP + "_" + kvsPort
+  }
+
   // Return index -> (rows, cols) map
   def getPartitionDims(data: RDD[Vector]): Map[Int, (Int, Int)] = {
     var numCols: Int = 0

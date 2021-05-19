@@ -47,8 +47,9 @@ mvn clean
 
 # Individual test
 if [[ -z $SPARK_VER ]]; then
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+#  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
+#  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
+ mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.IntelLinearRegressionSuite test
 # mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
 else
  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test

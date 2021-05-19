@@ -26,8 +26,6 @@ using namespace std;
 using namespace daal;
 using namespace daal::algorithms;
 
-const int ccl_root = 0;
-
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 /*

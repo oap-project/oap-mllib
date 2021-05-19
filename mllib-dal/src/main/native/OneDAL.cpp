@@ -29,17 +29,16 @@ extern bool daal_check_is_intel_cpu();
 
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    setNumericTableValue
+ * Method:    cSetDouble
  * Signature: (JIID)V
  */
-JNIEXPORT void JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_setNumericTableValue(
-    JNIEnv *, jobject, jlong numTableAddr, jint row, jint column,
-    jdouble value) {
-    HomogenNumericTable<double> *nt =
-        static_cast<HomogenNumericTable<double> *>(
-            ((SerializationIfacePtr *)numTableAddr)->get());
-    (*nt)[row][column] = (double)value;
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble
+  (JNIEnv *env, jobject, jlong numTableAddr, jint row, jint column, jdouble value) {
+  HomogenNumericTable<double> *nt =
+          static_cast<HomogenNumericTable<double> *>(
+              ((SerializationIfacePtr *)numTableAddr)->get());
+  (*nt)[row][column] = (double)value;
+
 }
 
 /*
@@ -103,11 +102,11 @@ Java_org_apache_spark_ml_util_OneDAL_00024_cCheckPlatformCompatibility(
 
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cNewCSRNumericTable
+ * Method:    cNewCSRNumericTableFloat
  * Signature: ([F[J[JJJ)J
  */
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTable(
+Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableFloat(
     JNIEnv *env, jobject, jfloatArray data, jlongArray colIndices,
     jlongArray rowOffsets, jlong nFeatures, jlong nVectors) {
 
@@ -138,6 +137,49 @@ Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTable(
     env->ReleaseLongArrayElements(rowOffsets, (jlong *)pRowOffsets, 0);
     env->ReleaseLongArrayElements(colIndices, (jlong *)pColIndices, 0);
     env->ReleaseFloatArrayElements(data, pData, 0);
+
+    CSRNumericTablePtr *ret = new CSRNumericTablePtr(numericTable);
+
+    return (jlong)ret;
+}
+
+/*
+ * Class:     org_apache_spark_ml_util_OneDAL__
+ * Method:    cNewCSRNumericTableDouble
+ * Signature: ([D[J[JJJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableDouble(
+    JNIEnv *env, jobject, jdoubleArray data, jlongArray colIndices,
+    jlongArray rowOffsets, jlong nFeatures, jlong nVectors) {
+
+    long numData = env->GetArrayLength(data);
+
+    size_t *resultRowOffsets = NULL;
+    size_t *resultColIndices = NULL;
+    double *resultData = NULL;
+
+    CSRNumericTable *numericTable = new CSRNumericTable(
+        resultData, resultColIndices, resultRowOffsets, nFeatures, nVectors);
+    numericTable->allocateDataMemory(numData);
+    numericTable->getArrays<double>(&resultData, &resultColIndices,
+                                   &resultRowOffsets);
+
+    size_t *pRowOffsets = (size_t *)env->GetLongArrayElements(rowOffsets, 0);
+    size_t *pColIndices = (size_t *)env->GetLongArrayElements(colIndices, 0);
+    double *pData = env->GetDoubleArrayElements(data, 0);
+
+    for (size_t i = 0; i < (size_t)numData; ++i) {
+        resultData[i] = pData[i];
+        resultColIndices[i] = pColIndices[i];
+    }
+    for (size_t i = 0; i < (size_t)nVectors + 1; ++i) {
+        resultRowOffsets[i] = pRowOffsets[i];
+    }
+
+    env->ReleaseLongArrayElements(rowOffsets, (jlong *)pRowOffsets, 0);
+    env->ReleaseLongArrayElements(colIndices, (jlong *)pColIndices, 0);
+    env->ReleaseDoubleArrayElements(data, pData, 0);
 
     CSRNumericTablePtr *ret = new CSRNumericTablePtr(numericTable);
 
