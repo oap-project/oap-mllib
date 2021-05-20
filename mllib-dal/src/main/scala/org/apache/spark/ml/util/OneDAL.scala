@@ -136,7 +136,7 @@ object OneDAL {
     doublesTables
   }
 
-  def rddLabeledPointToMergedTables(labeledPoints: RDD[(Vector, Double)],
+  def rddLabeledPointToMergedTables_repartition(labeledPoints: RDD[(Vector, Double)],
                                     executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -157,6 +157,8 @@ object OneDAL {
           vectorsToSparseNumericTable(features, numColumns)
         }
 
+        Service.printNumericTable("featuresTable", featuresTable.asInstanceOf[CSRNumericTable])
+
         val labelsTable = doubleArrayToNumericTable(labels)
 
         Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
@@ -165,6 +167,79 @@ object OneDAL {
     tables.count()
 
     tables
+  }
+
+  def rddLabeledPointToMergedTables(labeledPoints: RDD[(Vector, Double)],
+                                    executorNum: Int): RDD[(Long, Long)] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (labeledPoints.getNumPartitions < executorNum) {
+      labeledPoints.repartition(executorNum).setName("Repartitioned for conversion").cache()
+    } else {
+      labeledPoints
+    }
+
+    val tables = dataForConversion.mapPartitions {
+      it: Iterator[(Vector, Double)] =>
+        val points: Array[(Vector, Double)] = it.toArray
+
+        val features = points.map(_._1)
+        val labels = points.map(_._2)
+
+        val numColumns = features(0).size
+
+        // Not convert empty partitions
+        if (labels.length !=0) {
+//          val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
+//            vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
+//          } else {
+//            vectorsToSparseNumericTable(features, numColumns)
+//          }
+//          Service.printNumericTable("featuresTable", featuresTable.asInstanceOf[CSRNumericTable])
+          val featuresTable = vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
+          Service.printNumericTable("featuresTable", featuresTable)
+
+          val labelsTable = doubleArrayToNumericTable(labels)
+
+          Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
+        } else {
+          Iterator()
+        }
+    }.cache()
+
+    tables.count()
+
+    // Unpersist labeledPoints RDD
+    if (labeledPoints.getStorageLevel != StorageLevel.NONE) {
+      labeledPoints.unpersist()
+    }
+
+    // Coalesce partitions belonging to the same executor
+//    val coalescedTables = tables.coalesce(executorNum,
+//      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+
+    val mergedTables = tables.mapPartitions { iter =>
+      val context = new DaalContext()
+      val mergedFeatures = new RowMergedNumericTable(context)
+      val mergedLabels = new RowMergedNumericTable(context)
+
+      iter.foreach { case (featureAddr, labelAddr) =>
+        OneDAL.cAddNumericTable(mergedFeatures.getCNumericTable, featureAddr)
+        OneDAL.cAddNumericTable(mergedLabels.getCNumericTable, labelAddr)
+      }
+
+      Service.printNumericTable("mergedFeatures", mergedFeatures, 10, 20)
+      Service.printNumericTable("mergedLabels", mergedLabels, 10, 20)
+
+      Iterator((mergedFeatures.getCNumericTable, mergedLabels.getCNumericTable))
+    }.cache()
+
+    mergedTables.count()
+
+    mergedTables
   }
 
   private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
@@ -202,6 +277,7 @@ object OneDAL {
       OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArray, 1, numCols)
       dalRow += 1
     }
+
     matrix
   }
 
@@ -270,10 +346,7 @@ object OneDAL {
     // Filter out empty partitions
     val nonEmptyPartitions = dataForConversion.mapPartitionsWithIndex {
       (index: Int, it: Iterator[Vector]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
-    }.filter { entry => {
-      entry._1 > 0
-    }
-    }
+    }.filter { _._1 > 0 }
 
     // Convert to RDD[HomogenNumericTable]
     val numericTables = nonEmptyPartitions.map { entry =>

@@ -32,6 +32,7 @@ class NaiveBayesDALImpl(val uid: String,
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints)
 
+//    val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables_repartition(labeledPoints, executorNum)
     val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
