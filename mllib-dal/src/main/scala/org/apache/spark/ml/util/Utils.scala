@@ -96,6 +96,7 @@ object Utils {
     val result = data.mapPartitions { p =>
       LibLoader.loadLibraries()
       val port = OneCCL.getAvailPort(localIP)
+      println(s"\nAvailablePort(): ${port}\n");
       if (port != -1) {
         Iterator(port)
       } else {

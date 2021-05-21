@@ -38,13 +38,13 @@ class KMeansDALImpl(var nClusters: Int,
     val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
-    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
-      executorIPAddress)
+    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
     val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
-    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
-      kvsPortDetected)
+    println(s"\nkvsPortDetected: ${kvsPortDetected}")
+    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
 
     val kvsIPPort = kvsIP + "_" + kvsPort
+    println(s"\nkvsIPPort: ${kvsIPPort}")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()

@@ -349,8 +349,11 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
         val model = optimizer.fitWithDAL(labeledPoints, Some(instr))
 
+        logInfo(s"copyValues()")
         val lrModel = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept))
+        logInfo(s"findSummaryModelAndPredictionCol()")
         val (summaryModel, predictionColName) = lrModel.findSummaryModelAndPredictionCol()
+        logInfo(s"new LinearRegressionTrainingSummary()")
         val trainingSummary = new LinearRegressionTrainingSummary(
           summaryModel.transform(dataset),
           predictionColName,
@@ -360,6 +363,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
           model.diagInvAtWA.toArray,
           model.objectiveHistory)
 
+        logInfo(s"return lrModel.setSummary()")
         return lrModel.setSummary(Some(trainingSummary))
       } else {
         // For low dimensional data, WeightedLeastSquares is more efficient since the

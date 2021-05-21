@@ -30,17 +30,40 @@ using namespace daal::algorithms;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
+const string trainDatasetFileNames[] = { "/root/workspace/jiangbo/onedal_oneccl/data/distributed/linear_regression_train_1.csv" };
+
 static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &comm,
                                       const NumericTablePtr &pData,
                                       const NumericTablePtr &pLabel,
                                       size_t nBlocks) {
 
+#if 0
+/*************************************************/
+    /* Initialize FileDataSource<CSVFeatureManager> to retrieve the input data from a .csv file */
+    FileDataSource<CSVFeatureManager> trainDataSource(trainDatasetFileNames[rankId], DataSource::notAllocateNumericTable,
+                                                      DataSource::doDictionaryFromContext);
+
+    /* Create Numeric Tables for training data and labels */
+    NumericTablePtr trainData(new HomogenNumericTable<>(nFeatures, 0, NumericTable::doNotAllocate));
+    NumericTablePtr trainDependentVariables(new HomogenNumericTable<>(nDependentVariables, 0, NumericTable::doNotAllocate));
+    NumericTablePtr mergedData(new MergedNumericTable(trainData, trainDependentVariables));
+
+    /* Retrieve the data from the input file */
+    trainDataSource.loadDataBlock(mergedData.get());
+
+    linear_regression::training::Distributed<step1Local> localAlgorithm;
+
+    /* Pass a training data set and dependent values to the algorithm */
+    localAlgorithm.input.set(linear_regression::training::data, trainData);
+    localAlgorithm.input.set(linear_regression::training::dependentVariables, trainDependentVariables);
+/*************************************************/
+#else
     linear_regression::training::Distributed<step1Local> localAlgorithm;
 
     /* Pass a training data set and dependent values to the algorithm */
     localAlgorithm.input.set(linear_regression::training::data, pData);
     localAlgorithm.input.set(linear_regression::training::dependentVariables, pLabel);
-
+#endif
     /* Train the multiple linear regression model on local nodes */
     localAlgorithm.compute();
 
@@ -49,7 +72,7 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
     InputDataArchive dataArch;
     localAlgorithm.getPartialResult()->serialize(dataArch);
     size_t perNodeArchLength = dataArch.getSizeOfArchive();
-    // std::cout << "perNodeArchLength: " << perNodeArchLength << std::endl;
+    std::cout << "perNodeArchLength: " << perNodeArchLength << std::endl;
 
     serializedData = services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
 
@@ -57,7 +80,7 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
     dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
     std::vector<size_t> aReceiveCount(comm.size(), perNodeArchLength);  // 4 x "14016"
 
-    // std::cout << "gather" << std::endl;
+    std::cout << "gather" << std::endl;
     // std::cout << "comm.size(): " << comm.size() << std::endl;
     /* Transfer partial results to step 2 on the root node */
     // MPI_Gather(nodeResults, perNodeArchLength, MPI_CHAR, serializedData.get(), perNodeArchLength, MPI_CHAR, ccl_root, MPI_COMM_WORLD);
@@ -66,7 +89,7 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
 
     delete[] nodeResults;
 
-    // std::cout << "if (rankId == ccl_root)" << std::endl;
+    std::cout << "if (rankId == ccl_root)" << std::endl;
     NumericTablePtr resultTable;
     if (rankId == ccl_root)
     {
@@ -74,23 +97,30 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
         /* Create an algorithm object to build the final multiple linear regression model on the master node */
         linear_regression::training::Distributed<step2Master> masterAlgorithm;
 
+        std::cout << "nBlocks: " << nBlocks << std::endl;
         for (size_t i = 0; i < nBlocks; i++)
         {
             /* Deserialize partial results from step 1 */
+            std::cout << "OutputDataArchive dataArch()" << std::endl;
             OutputDataArchive dataArch(serializedData.get() + perNodeArchLength * i, perNodeArchLength);
 
             linear_regression::training::PartialResultPtr dataForStep2FromStep1 = linear_regression::training::PartialResultPtr(new linear_regression::training::PartialResult());
+            std::cout << "dataForStep2FromStep1->deserialize()" << std::endl;
             dataForStep2FromStep1->deserialize(dataArch);
 
             /* Set the local multiple linear regression model as input for the master-node algorithm */
+            std::cout << "masterAlgorithm.input.add()" << std::endl;
             masterAlgorithm.input.add(linear_regression::training::partialModels, dataForStep2FromStep1);
         }
 
         /* Merge and finalizeCompute the multiple linear regression model on the master node */
+        std::cout << "masterAlgorithm.compute()" << std::endl;
         masterAlgorithm.compute();
+        std::cout << "masterAlgorithm.finalizeCompute()" << std::endl;
         masterAlgorithm.finalizeCompute();
 
         /* Retrieve the algorithm results */
+        std::cout << "Retrieve the algorithm results" << std::endl;
         linear_regression::training::ResultPtr trainingResult = masterAlgorithm.getResult();
         resultTable = trainingResult->get(linear_regression::training::model)->getBeta();
         printNumericTable(resultTable, "Linear Regression coefficients:");
@@ -186,10 +216,8 @@ Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLRTrainDAL(
     // Set number of threads for oneDAL to use for each rank
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
 
-    int nThreadsNew =
-        services::Environment::getInstance()->getNumberOfThreads();
-    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-         << endl;
+    int nThreadsNew = services::Environment::getInstance()->getNumberOfThreads();
+    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew << endl;
 
     NumericTablePtr resultTable;
     // TODO: get condition from regParam and elasticNetParam
@@ -201,6 +229,7 @@ Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLRTrainDAL(
         resultTable = ridgeregression_compute(rankId, comm, pData, pLabel, executor_num);
     }
 
+    cout << "Fill resultObj" << endl;
     if (rankId == ccl_root)
     {
         // Get the class of the result object

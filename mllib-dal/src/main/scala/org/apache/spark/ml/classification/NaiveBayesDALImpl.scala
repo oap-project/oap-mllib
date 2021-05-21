@@ -17,10 +17,9 @@
 package org.apache.spark.ml.classification
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.feature.LabeledPoint
-import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors}
+import org.apache.spark.ml.linalg.{Matrices, Vector}
+import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
-import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL, Service}
 import org.apache.spark.rdd.RDD
 
 class NaiveBayesDALImpl(val uid: String,
@@ -32,9 +31,6 @@ class NaiveBayesDALImpl(val uid: String,
             instr: Option[Instrumentation]): NaiveBayesModel = {
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints)
-
-//    val featureTables = OneDAL.vectorsToMergedNumericTables(features, executorNum)
-//    val labelTables = OneDAL.doublesToNumericTables(labels, executorNum)
 
     val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
 

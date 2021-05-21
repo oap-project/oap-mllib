@@ -21,6 +21,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.LabeledPoint
 // import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector, Vectors, DenseVector, BLAS}
+import org.apache.spark.ml.util.Utils
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL, Service}
 import org.apache.spark.rdd.RDD
@@ -40,9 +41,9 @@ private[ml] class LRDALModel(
     val diagInvAtWA: DenseVector,
     val objectiveHistory: Array[Double]) extends Serializable {
 
-  def predict(features: Vector): Double = {
-    BLAS.dot(coefficients, features) + intercept
-  }
+  // def predict(features: Vector): Double = {
+  //   BLAS.dot(coefficients, features) + intercept
+  // }
 }
 
 class LinearRegressionDALImpl (
@@ -73,7 +74,22 @@ class LinearRegressionDALImpl (
     // }
 
 /*****************************************************************/
-    val kvsIPPort = getOneCCLIPPort(labeledPoints)
+    // val coalescedTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
+
+    // val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
+    // val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
+    //   executorIPAddress)
+    // val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
+    // println(s"\nkvsPortDetected: ${kvsPortDetected}")
+    // val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
+    //   kvsPortDetected)
+
+    // val kvsIPPort = kvsIP + "_" + kvsPort
+    // println(s"\nkvsIPPort: ${kvsIPPort}")
+
+    // TODO: use getOneCCLIPPort() to replace the above code
+    // val kvsIPPort = getOneCCLIPPort(labeledPoints)
+    val kvsIPPort = "10.1.2.142_3000"
 
     val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
 
@@ -97,6 +113,7 @@ class LinearRegressionDALImpl (
 
         val ret = if (OneCCL.isRoot()) {
           val coefficientArray = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.coeffNumericTable))
+          // println(s"\ncoefficientArray: ${coefficientArray}, size: ${coefficientArray.size}")
           Iterator((coefficientArray, result.intercept))
         } else {
           Iterator.empty
@@ -105,14 +122,18 @@ class LinearRegressionDALImpl (
         OneCCL.cleanup()
         ret
     }.collect()
-
+    println(s"\nresults.length: ${results.length}")
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
     val coefficientArray = results(0)._1  // TODO: get coefficients from results
     val intercept = results(0)._2     // TODO: get intercept from results
 
+    // println(s"\ncoefficientArray: ${coefficientArray}, size: ${coefficientArray(0).toDense.size}")
+    println(s"\nintercept: ${intercept}")
+
     val parentModel = new LRDALModel(coefficientArray(0).toDense, intercept, new DenseVector(Array(0D)), Array(0D))
+    println(s"\nnew LRDALModel() done.\n")
 
     parentModel
   }

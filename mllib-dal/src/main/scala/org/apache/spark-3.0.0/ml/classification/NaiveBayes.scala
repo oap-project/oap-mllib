@@ -160,7 +160,7 @@ class NaiveBayes @Since("1.5.0") (
       case Multinomial =>
         val sc = dataset.sparkSession.sparkContext
         val isOAPEnabled = sc.conf.getBoolean("spark.oap.mllib.enabled", false)
-        if (isOAPEnabled) {
+        val model = if (isOAPEnabled) {
           val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
             dataset.sparkSession.sparkContext)
           val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
@@ -173,6 +173,8 @@ class NaiveBayes @Since("1.5.0") (
         } else {
           trainDiscreteImpl(dataset, instr)
         }
+        // println(model.pi.toArray.slice(0, 20).mkString(" "))
+        model
       case Bernoulli | Complement =>
         trainDiscreteImpl(dataset, instr)
       case Gaussian =>
@@ -185,14 +187,29 @@ class NaiveBayes @Since("1.5.0") (
 
   private def trainNaiveBayesDAL(dataset: Dataset[_],
     instr: Instrumentation): NaiveBayesModel = {
+    val spark = dataset.sparkSession
+    import spark.implicits._
 
-    val sc = dataset.sparkSession.sparkContext
+    val sc = spark.sparkContext
+
     val executor_num = Utils.sparkExecutorNum(sc)
     val executor_cores = Utils.sparkExecutorCores()
 
     logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
 
+    dataset.cache()
+    val numSamples = dataset.count()
+
+    // Todo: optimize getting num of classes, DAL only support [0..numClasses) as labels
+    //       Should map original labels using StringIndexer
     val numClasses = getNumClasses(dataset)
+
+//    println(dataset.select($(labelCol)).distinct().collect().mkString(" "))
+    val numFeatures = dataset.select($(featuresCol)).as[Tuple1[Vector]].take(1)(0)._1.size
+
+    instr.logNumFeatures(numFeatures)
+    instr.logNumExamples(numSamples)
+    instr.logNumClasses(numClasses)
 
     val labeledPoints: RDD[(Vector, Double)] = dataset
       .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
@@ -204,7 +221,6 @@ class NaiveBayes @Since("1.5.0") (
 
     // Set labels to be compatible with old mllib model
     val labels = (0 until numClasses).map(_.toDouble).toArray
-
     model.setOldLabels(labels)
 
     model

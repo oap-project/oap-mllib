@@ -1,8 +1,15 @@
 #include <daal.h>
+#include <unistd.h>
 
 #include "OneCCL.h"
 #include "org_apache_spark_ml_classification_NaiveBayesDALImpl.h"
 #include "service.h"
+
+#define PROFILE 1
+
+#ifdef PROFILE
+#include "Profile.hpp"
+#endif
 
 using namespace std;
 using namespace daal;
@@ -16,6 +23,10 @@ template <training::Method method>
 static training::ResultPtr
 trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
            const NumericTablePtr &labelsTab, int nClasses) {
+#ifdef PROFILE
+    Profiler profiler("NaiveBayes");
+#endif
+
     auto rankId = comm.rank();
     auto nBlocks = comm.size();
 
@@ -28,8 +39,16 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
     localAlgorithm.input.set(classifier::training::data, featuresTab);
     localAlgorithm.input.set(classifier::training::labels, labelsTab);
 
+#ifdef PROFILE
+    profiler.startProfile("local step compute");
+#endif
+
     /* Train the Naive Bayes model on local nodes */
     localAlgorithm.compute();
+
+#ifdef PROFILE
+    profiler.endProfile();
+#endif
 
     /* Serialize partial results required by step 2 */
     services::SharedPtr<daal::byte> serializedData;
@@ -48,13 +67,21 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
             new daal::byte[perNodeArchLength]);
         dataArch.copyArchiveToArray(nodeResults.get(), perNodeArchLength);
 
-        /* Transfer partial results to step 2 on the root node */
-        // MPI_Gather(nodeResults.get(), perNodeArchLength, MPI_CHAR,
-        // serializedData.get(), perNodeArchLength, MPI_CHAR, mpi_root,
-        // MPI_COMM_WORLD);
+/* Transfer partial results to step 2 on the root node */
+// MPI_Gather(nodeResults.get(), perNodeArchLength, MPI_CHAR,
+// serializedData.get(), perNodeArchLength, MPI_CHAR, mpi_root,
+// MPI_COMM_WORLD);
+#ifdef PROFILE
+        profiler.startProfile("ccl::gather");
+#endif
+
         ccl::gather(nodeResults.get(), perNodeArchLength, serializedData.get(),
                     perNodeArchLength, comm)
             .wait();
+
+#ifdef PROFILE
+        profiler.endProfile();
+#endif
     }
 
     if (rankId == ccl_root) {
@@ -79,9 +106,16 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
                                       dataForStep2FromStep1);
         }
 
+#ifdef PROFILE
+        profiler.startProfile("master step compute");
+#endif
         /* Merge and finalizeCompute the Naive Bayes model on the master node */
         masterAlgorithm.compute();
         masterAlgorithm.finalizeCompute();
+
+#ifdef PROFILE
+        profiler.endProfile();
+#endif
 
         /* Retrieve the algorithm results */
         training::ResultPtr trainingResult = masterAlgorithm.getResult();
@@ -100,8 +134,8 @@ JNIEXPORT void JNICALL
 Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     JNIEnv *env, jobject obj, jlong pFeaturesTab, jlong pLabelsTab,
     jint class_num, jint executor_num, jint executor_cores, jobject resultObj) {
-    
-    ccl::communicator &comm = getComm();    
+
+    ccl::communicator &comm = getComm();
     auto rankId = comm.rank();
 
     NumericTablePtr featuresTab = *((NumericTablePtr *)pFeaturesTab);
@@ -115,27 +149,38 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
          << endl;
 
+auto t1 = std::chrono::high_resolution_clock::now();
+
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
         cout << "oneDAL (native): training model with fastCSR method" << endl;
-        trainingResult = trainModel<training::fastCSR>(comm, featuresTab, labelsTab, class_num);
+        trainingResult = trainModel<training::fastCSR>(comm, featuresTab,
+                                                       labelsTab, class_num);
     } else {
-        cout << "oneDAL (native): training model with defaultDense method" << endl;
-        trainingResult = trainModel<training::defaultDense>(comm, featuresTab, labelsTab, class_num);
+        cout << "oneDAL (native): training model with defaultDense method"
+             << endl;
+        trainingResult = trainModel<training::defaultDense>(
+            comm, featuresTab, labelsTab, class_num);
     }
 
     cout << "oneDAL (native): training model finished" << endl;
 
+auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::cout << "training took " << (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / 1000 << " secs"
+              << std::endl;
+
     if (rankId == ccl_root) {
         multinomial_naive_bayes::ModelPtr model =
             trainingResult->get(classifier::training::model);
-        
+
         // auto pi = model->getLogP();
         // auto theta = model->getLogTheta();
 
         // printNumericTable(pi, "log of class priors", 10, 20);
-        // printNumericTable(theta, "log of class conditional probabilities", 10, 20);
+        // printNumericTable(theta, "log of class conditional probabilities",
+        // 10, 20);
 
         // Return all log of class priors (LogP) and log of class conditional
         // probabilities (LogTheta)
@@ -148,10 +193,8 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
         jfieldID thetaNumericTableField =
             env->GetFieldID(clazz, "thetaNumericTable", "J");
 
-        NumericTablePtr *pi =
-            new NumericTablePtr(model->getLogP());
-        NumericTablePtr *theta =
-            new NumericTablePtr(model->getLogTheta());
+        NumericTablePtr *pi = new NumericTablePtr(model->getLogP());
+        NumericTablePtr *theta = new NumericTablePtr(model->getLogTheta());
 
         env->SetLongField(resultObj, piNumericTableField, (jlong)pi);
         env->SetLongField(resultObj, thetaNumericTableField, (jlong)theta);
