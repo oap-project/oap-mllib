@@ -17,6 +17,7 @@
 package org.apache.spark.ml.classification
 
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.linalg.{Matrices, Vector}
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
@@ -27,10 +28,10 @@ class NaiveBayesDALImpl(val uid: String,
                         val executorNum: Int,
                         val executorCores: Int
                     ) extends Serializable with Logging {
-  def train(labeledPoints: RDD[(Vector, Double)],
+  def train(labeledPoints: Dataset[_],
             instr: Option[Instrumentation]): NaiveBayesModel = {
 
-    val kvsIPPort = getOneCCLIPPort(labeledPoints)
+    val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
 //    val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables_repartition(labeledPoints, executorNum)
     val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)

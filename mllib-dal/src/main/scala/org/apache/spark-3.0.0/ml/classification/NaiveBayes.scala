@@ -29,7 +29,7 @@ import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Dataset, Row}
+import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.util.VersionUtils
@@ -197,27 +197,27 @@ class NaiveBayes @Since("1.5.0") (
 
     logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
 
-    dataset.cache()
+//    dataset.cache()
+    val labelDF: DataFrame = dataset.select($(labelCol)).cache
     val numSamples = dataset.count()
 
     // Todo: optimize getting num of classes, DAL only support [0..numClasses) as labels
     //       Should map original labels using StringIndexer
-    val numClasses = getNumClasses(dataset)
+//    val numClasses = getNumClasses(dataset)
+    val numClasses = 5
 
 //    println(dataset.select($(labelCol)).distinct().collect().mkString(" "))
-    val numFeatures = dataset.select($(featuresCol)).as[Tuple1[Vector]].take(1)(0)._1.size
-
-    instr.logNumFeatures(numFeatures)
-    instr.logNumExamples(numSamples)
+//    val numFeatures = dataset.select($(featuresCol)).as[Tuple1[Vector]].take(1)(0)._1.size
+//
+//    instr.logNumFeatures(numFeatures)
+//    instr.logNumExamples(numSamples)
     instr.logNumClasses(numClasses)
 
-    val labeledPoints: RDD[(Vector, Double)] = dataset
-      .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
-      case Row(feature: Vector, label: Double) => (feature, label)
-    }
+    val labeledPointsDS = dataset
+      .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
 
     val model = new NaiveBayesDALImpl(uid, numClasses,
-      executor_num, executor_cores).train(labeledPoints, Some(instr))
+      executor_num, executor_cores).train(labeledPointsDS, Some(instr))
 
     // Set labels to be compatible with old mllib model
     val labels = (0 until numClasses).map(_.toDouble).toArray
