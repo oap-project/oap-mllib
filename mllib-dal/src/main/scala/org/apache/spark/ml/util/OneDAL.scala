@@ -19,13 +19,14 @@ package org.apache.spark.ml.util
 import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.linalg.{DenseVector, Matrices, Matrix, SparseVector, Vector, Vectors}
+import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrices, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
 import java.lang
+import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
 import scala.collection.mutable.ArrayBuffer
 
@@ -37,22 +38,33 @@ object OneDAL {
   def numericTableToMatrix(table: NumericTable): Matrix = {
     val numRows = table.getNumberOfRows.toInt
     val numCols = table.getNumberOfColumns.toInt
-    val matrix = Matrices.zeros(numRows, numCols)
-    for (row <- 0 until numRows) {
-      for (col <- 0 until numCols) {
-        matrix.update(row, col, table.getDoubleValue(col, row))
-      }
-    }
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
+
+    // Transpose as DAL numeric table is row-major and DenseMatrix is column major
+    val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
+
+    table.releaseBlockOfRows(0, numRows, dataDouble)
+
     matrix
   }
 
   def numericTableNx1ToVector(table: NumericTable): Vector = {
     val numRows = table.getNumberOfRows.toInt
-    val internArray = new Array[Double](numRows.toInt)
-    for (row <- 0 until numRows) {
-      internArray(row) = table.getDoubleValue(0, row)
-    }
-    Vectors.dense(internArray)
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfColumnValues(0, 0, numRows, dataDouble)
+    val arrayDouble = new Array[Double](numRows.toInt)
+    dataDouble.get(arrayDouble)
+
+    table.releaseBlockOfColumnValues(0, 0, numRows, dataDouble)
+
+    Vectors.dense(arrayDouble)
   }
 
   // Convert DAL numeric table to array of vectors
