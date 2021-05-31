@@ -42,17 +42,36 @@ class NaiveBayesDALImpl(val uid: String,
 
         OneCCL.init(executorNum, rank, kvsIPPort)
 
+        val computeStartTime = System.nanoTime()
+
         val result = new NaiveBayesResult
         cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
           classNum, executorNum, executorCores, result)
+          
+        val computeEndTime = System.nanoTime()
 
+        val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
+        
+        println(s"NaiveBayesDAL compute took ${durationCompute} secs")
+        
         val ret = if (OneCCL.isRoot()) {
+          val convResultStartTime = System.nanoTime()
+
           val pi = OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable))
           val theta = OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable))
+
+          val convResultEndTime = System.nanoTime()
+
+          val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
+
+          println(s"NaiveBayesDAL result conversion took ${durationCovResult} secs")
+
           Iterator((pi, theta))
+          
         } else {
           Iterator.empty
         }
+
 
         OneCCL.cleanup()
         ret
