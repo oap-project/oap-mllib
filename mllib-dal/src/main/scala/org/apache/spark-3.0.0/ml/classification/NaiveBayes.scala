@@ -204,7 +204,12 @@ class NaiveBayes @Since("1.5.0") (
     // Todo: optimize getting num of classes, DAL only support [0..numClasses) as labels
     //       Should map original labels using StringIndexer
 //    val numClasses = getNumClasses(dataset)
-    val numClasses = 100
+    val confClasses = sc.conf.getInt("spark.oap.mllib.classification.classes", -1)
+
+    val numClasses = confClasses match {
+      case -1 => getNumClasses(dataset)
+      case _ => confClasses
+    }
 
 //    println(dataset.select($(labelCol)).distinct().collect().mkString(" "))
 //    val numFeatures = dataset.select($(featuresCol)).as[Tuple1[Vector]].take(1)(0)._1.size

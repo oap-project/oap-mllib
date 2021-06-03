@@ -270,17 +270,21 @@ object OneDAL {
         case Row(label: Double, features: Vector) => label
       }
 
-      val numColumns = features(0).size
-
-      val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
-        vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
+      if (features.size == 0 ) {
+        Iterator()
       } else {
-        vectorsToSparseNumericTable(features, numColumns)
+        val numColumns = features(0).size
+
+        val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
+          vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
+        } else {
+          vectorsToSparseNumericTable(features, numColumns)
+        }
+
+        val labelsTable = doubleArrayToNumericTable(labels)
+
+        Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
       }
-
-      val labelsTable = doubleArrayToNumericTable(labels)
-
-      Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
     }.cache()
 
     tables.count()
