@@ -14,7 +14,7 @@ For those algorithms that are not accelerated by OAP MLlib, the original Spark M
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.1.0-spark-3.0.0/oap-1.1.0-bin-spark-3.0.0.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.1.0-bin-spark-3.0.0/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.1.1-spark-3.1.1/oap-1.1.1-bin-spark-3.1.1.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.1.1-bin-spark-3.1.1/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
