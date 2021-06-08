@@ -53,6 +53,12 @@ object OneDAL {
     matrix
   }
 
+  def isDenseDataset(ds: Dataset[_]): Boolean = {
+    val row = ds.select("features").head()
+
+    row.get(0).isInstanceOf[DenseVector]
+  }
+
   def numericTableNx1ToVector(table: NumericTable): Vector = {
     val numRows = table.getNumberOfRows.toInt
 
@@ -146,38 +152,38 @@ object OneDAL {
     doublesTables
   }
 
-  def rddLabeledPointToMergedTables_repartition(labeledPoints: RDD[(Vector, Double)],
-                                                executorNum: Int): RDD[(Long, Long)] = {
-    require(executorNum > 0)
-
-    logger.info(s"Processing partitions with $executorNum executors")
-
-    val tables = labeledPoints.repartition(executorNum).mapPartitions {
-      it: Iterator[(Vector, Double)] =>
-        val points: Array[(Vector, Double)] = it.toArray
-
-        val features = points.map(_._1)
-        val labels = points.map(_._2)
-
-        val numColumns = features(0).size
-
-        val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
-          vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
-        } else {
-          vectorsToSparseNumericTable(features, numColumns)
-        }
-
-        Service.printNumericTable("featuresTable", featuresTable.asInstanceOf[CSRNumericTable])
-
-        val labelsTable = doubleArrayToNumericTable(labels)
-
-        Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
-    }.cache()
-
-    tables.count()
-
-    tables
-  }
+//  def rddLabeledPointToMergedTables_repartition(labeledPoints: RDD[(Vector, Double)],
+//                                                executorNum: Int): RDD[(Long, Long)] = {
+//    require(executorNum > 0)
+//
+//    logger.info(s"Processing partitions with $executorNum executors")
+//
+//    val tables = labeledPoints.repartition(executorNum).mapPartitions {
+//      it: Iterator[(Vector, Double)] =>
+//        val points: Array[(Vector, Double)] = it.toArray
+//
+//        val features = points.map(_._1)
+//        val labels = points.map(_._2)
+//
+//        val numColumns = features(0).size
+//
+//        val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
+//          vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
+//        } else {
+//          vectorsToSparseNumericTable(features, numColumns)
+//        }
+//
+//        Service.printNumericTable("featuresTable", featuresTable.asInstanceOf[CSRNumericTable])
+//
+//        val labelsTable = doubleArrayToNumericTable(labels)
+//
+//        Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
+//    }.cache()
+//
+//    tables.count()
+//
+//    tables
+//  }
 
   private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
@@ -241,6 +247,51 @@ object OneDAL {
     val table = new CSRNumericTable(contextLocal, cTable)
 
     table
+  }
+
+  def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
+                                    executorNum: Int): RDD[(Long, Long)] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    val spark = SparkSession.active
+    import spark.implicits._
+
+    labeledPoints.cache().count()
+
+    val labeledPointsRDD = labeledPoints.toDF().map {
+      case Row(label: Double, features: Vector) => (features, label)
+    }.rdd
+
+    val tables = labeledPointsRDD
+      .coalesce(executorNum, partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      .mapPartitions { it: Iterator[(Vector, Double)] =>
+          val points: Array[(Vector, Double)] = it.toArray
+
+          val features = points.map(_._1)
+          val labels = points.map(_._2)
+
+          if (features.size == 0 ) {
+            Iterator()
+          } else {
+            val numColumns = features(0).size
+
+//            val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
+//              vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
+//            } else {
+              val featuresTable = vectorsToSparseNumericTable(features, numColumns)
+//            }
+
+            val labelsTable = doubleArrayToNumericTable(labels)
+
+            Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
+      }
+    }.cache()
+
+    tables.count()
+
+    tables
   }
 
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],

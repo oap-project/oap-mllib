@@ -201,11 +201,13 @@ class NaiveBayes @Since("1.5.0") (
     // val labelDF: DataFrame = dataset.select($(labelCol)).cache
     // val numSamples = dataset.count()
 
-    // Todo: optimize getting num of classes, DAL only support [0..numClasses) as labels
-    //       Should map original labels using StringIndexer
-//    val numClasses = getNumClasses(dataset)
+    // Todo: optimize getting num of classes
+    // DAL only support [0..numClasses) as labels, should map original labels using StringIndexer
+    // A temp spark config to specify numClasses, may be removed in the future
     val confClasses = sc.conf.getInt("spark.oap.mllib.classification.classes", -1)
 
+    // numClasses should be explicitly included in the parquet metadata
+    // This can be done by applying StringIndexer to the label column
     val numClasses = confClasses match {
       case -1 => getNumClasses(dataset)
       case _ => confClasses
@@ -216,7 +218,7 @@ class NaiveBayes @Since("1.5.0") (
 //
 //    instr.logNumFeatures(numFeatures)
 //    instr.logNumExamples(numSamples)
-    // instr.logNumClasses(numClasses)
+     instr.logNumClasses(numClasses)
 
     val labeledPointsDS = dataset
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
