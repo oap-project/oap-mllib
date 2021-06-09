@@ -38,7 +38,6 @@ CPP_SRCS += \
   ./KMeansDALImpl.cpp \
   ./PCADALImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
-  ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp
 
 OBJS += \
@@ -46,7 +45,6 @@ OBJS += \
   ./KMeansDALImpl.o \
   ./PCADALImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
-  ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o
 
 # Output Binary
