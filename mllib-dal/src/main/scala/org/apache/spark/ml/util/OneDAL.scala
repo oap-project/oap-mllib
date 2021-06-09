@@ -152,39 +152,6 @@ object OneDAL {
     doublesTables
   }
 
-//  def rddLabeledPointToMergedTables_repartition(labeledPoints: RDD[(Vector, Double)],
-//                                                executorNum: Int): RDD[(Long, Long)] = {
-//    require(executorNum > 0)
-//
-//    logger.info(s"Processing partitions with $executorNum executors")
-//
-//    val tables = labeledPoints.repartition(executorNum).mapPartitions {
-//      it: Iterator[(Vector, Double)] =>
-//        val points: Array[(Vector, Double)] = it.toArray
-//
-//        val features = points.map(_._1)
-//        val labels = points.map(_._2)
-//
-//        val numColumns = features(0).size
-//
-//        val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
-//          vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
-//        } else {
-//          vectorsToSparseNumericTable(features, numColumns)
-//        }
-//
-//        Service.printNumericTable("featuresTable", featuresTable.asInstanceOf[CSRNumericTable])
-//
-//        val labelsTable = doubleArrayToNumericTable(labels)
-//
-//        Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
-//    }.cache()
-//
-//    tables.count()
-//
-//    tables
-//  }
-
   private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
     val context = new DaalContext()
@@ -276,13 +243,46 @@ object OneDAL {
             Iterator()
           } else {
             val numColumns = features(0).size
+            val featuresTable = vectorsToSparseNumericTable(features, numColumns)
+            val labelsTable = doubleArrayToNumericTable(labels)
 
-//            val featuresTable = if (features(0).isInstanceOf[DenseVector]) {
-//              vectorsToDenseNumericTable(features.toIterator, features.length, numColumns)
-//            } else {
-              val featuresTable = vectorsToSparseNumericTable(features, numColumns)
-//            }
+            Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
+      }
+    }.cache()
 
+    tables.count()
+
+    tables
+  }
+
+  def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
+                                    executorNum: Int): RDD[(Long, Long)] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    val spark = SparkSession.active
+    import spark.implicits._    
+    
+    val labeledPointsRDD = labeledPoints.rdd.map {
+      case Row(label: Double, features: Vector) => (features, label)
+    }
+
+    // Repartition to executorNum
+    val dataForConversion = labeledPointsRDD.repartition(executorNum)
+      .setName("Repartitioned for conversion")
+    
+    val tables = dataForConversion.mapPartitions { it: Iterator[(Vector, Double)] =>
+          val points: Array[(Vector, Double)] = it.toArray
+
+          val features = points.map(_._1)
+          val labels = points.map(_._2)
+
+          if (features.size == 0 ) {
+            Iterator()
+          } else {
+            val numColumns = features(0).size
+            val featuresTable = vectorsToSparseNumericTable(features, numColumns)
             val labelsTable = doubleArrayToNumericTable(labels)
 
             Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
