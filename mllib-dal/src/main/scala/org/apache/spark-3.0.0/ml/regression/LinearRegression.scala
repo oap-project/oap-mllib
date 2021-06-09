@@ -338,16 +338,16 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
         val executor_cores = Utils.sparkExecutorCores()
         logInfo(s"LinearRegressionDAL fit using $executor_num Executors")
 
-        val labeledPoints: RDD[(Vector, Double)] = dataset
-          .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
-          case Row(feature: Vector, label: Double) => (feature, label)
-        }
+//        val labeledPoints: RDD[(Vector, Double)] = dataset
+//          .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
+//          case Row(feature: Vector, label: Double) => (feature, label)
+//        }
 
         val optimizer = new LinearRegressionDALImpl($(fitIntercept), $(regParam),
                   elasticNetParam = $(elasticNetParam), $(standardization), true,
                   maxIter = $(maxIter), tol = $(tol), executor_num, executor_cores)
 
-        val model = optimizer.fitWithDAL(labeledPoints, Some(instr))
+        val model = optimizer.train(dataset, Some(instr))
 
         logInfo(s"copyValues()")
         val lrModel = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept))

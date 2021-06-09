@@ -96,7 +96,7 @@ object Utils {
     val sc = data.sparkContext
     val result = data.mapPartitions { p =>
       LibLoader.loadLibraries()
-      val port = OneCCL.getAvailPort(localIP)      
+      val port = OneCCL.getAvailPort(localIP)
       if (port != -1) {
         Iterator(port)
       } else {
