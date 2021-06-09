@@ -18,4 +18,29 @@
 
 #include <oneapi/ccl.hpp>
 
+#include <vector>
+using namespace std;
+
+namespace ccl {
+template <class BufferType,
+          class = typename std::enable_if<
+              is_native_type_supported<BufferType>(), event>::type>
+event CCL_API gather(const BufferType *sendbuf, int sendcount,
+                     BufferType *recvbuf, int recvcount,
+                     const communicator &comm) {
+    auto comm_size = comm.size();
+    vector<size_t> send_counts(comm_size, 0);
+    vector<size_t> recv_counts(comm_size, 0);
+
+    const size_t root_rank = 0;
+    send_counts[root_rank] = sendcount;
+
+    if (comm.rank() == root_rank)
+        std::fill(recv_counts.begin(), recv_counts.end(), sendcount);
+
+    return ccl::alltoallv(sendbuf, send_counts, recvbuf, recv_counts, comm);
+}
+} // namespace ccl
+
 ccl::communicator &getComm();
+extern const int ccl_root;
