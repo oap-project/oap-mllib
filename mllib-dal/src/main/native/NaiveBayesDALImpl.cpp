@@ -67,14 +67,11 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
             new daal::byte[perNodeArchLength]);
         dataArch.copyArchiveToArray(nodeResults.get(), perNodeArchLength);
 
-/* Transfer partial results to step 2 on the root node */
-// MPI_Gather(nodeResults.get(), perNodeArchLength, MPI_CHAR,
-// serializedData.get(), perNodeArchLength, MPI_CHAR, mpi_root,
-// MPI_COMM_WORLD);
 #ifdef PROFILE
         profiler.startProfile("ccl::gather");
 #endif
 
+        /* Transfer partial results to step 2 on the root node */
         ccl::gather(nodeResults.get(), perNodeArchLength, serializedData.get(),
                     perNodeArchLength, comm)
             .wait();
@@ -149,7 +146,7 @@ Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
          << endl;
 
-auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = std::chrono::high_resolution_clock::now();
 
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
@@ -166,21 +163,18 @@ auto t1 = std::chrono::high_resolution_clock::now();
 
     cout << "oneDAL (native): training model finished" << endl;
 
-auto t2 = std::chrono::high_resolution_clock::now();
+    auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "training took " << (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / 1000 << " secs"
-              << std::endl;
+    std::cout << "training took "
+              << (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                     t2 - t1)
+                         .count() /
+                     1000
+              << " secs" << std::endl;
 
     if (rankId == ccl_root) {
         multinomial_naive_bayes::ModelPtr model =
             trainingResult->get(classifier::training::model);
-
-        // auto pi = model->getLogP();
-        // auto theta = model->getLogTheta();
-
-        // printNumericTable(pi, "log of class priors", 10, 20);
-        // printNumericTable(theta, "log of class conditional probabilities",
-        // 10, 20);
 
         // Return all log of class priors (LogP) and log of class conditional
         // probabilities (LogTheta)

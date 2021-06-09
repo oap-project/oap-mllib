@@ -19,7 +19,7 @@ package org.apache.spark.ml.util
 import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrices, Matrix, SparseVector, Vector, Vectors}
+import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
@@ -152,6 +152,45 @@ object OneDAL {
     doublesTables
   }
 
+  def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
+                                    executorNum: Int): RDD[(Long, Long)] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    val spark = SparkSession.active
+    import spark.implicits._
+
+    labeledPoints.cache().count()
+
+    val labeledPointsRDD = labeledPoints.toDF().map {
+      case Row(label: Double, features: Vector) => (features, label)
+    }.rdd
+
+    val tables = labeledPointsRDD
+      .coalesce(executorNum, partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      .mapPartitions { it: Iterator[(Vector, Double)] =>
+        val points: Array[(Vector, Double)] = it.toArray
+
+        val features = points.map(_._1)
+        val labels = points.map(_._2)
+
+        if (features.size == 0) {
+          Iterator()
+        } else {
+          val numColumns = features(0).size
+          val featuresTable = vectorsToSparseNumericTable(features, numColumns)
+          val labelsTable = doubleArrayToNumericTable(labels)
+
+          Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
+        }
+      }.cache()
+
+    tables.count()
+
+    tables
+  }
+
   private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
     val context = new DaalContext()
@@ -216,54 +255,14 @@ object OneDAL {
     table
   }
 
-  def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
-                                    executorNum: Int): RDD[(Long, Long)] = {
-    require(executorNum > 0)
-
-    logger.info(s"Processing partitions with $executorNum executors")
-
-    val spark = SparkSession.active
-    import spark.implicits._
-
-    labeledPoints.cache().count()
-
-    val labeledPointsRDD = labeledPoints.toDF().map {
-      case Row(label: Double, features: Vector) => (features, label)
-    }.rdd
-
-    val tables = labeledPointsRDD
-      .coalesce(executorNum, partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-      .mapPartitions { it: Iterator[(Vector, Double)] =>
-          val points: Array[(Vector, Double)] = it.toArray
-
-          val features = points.map(_._1)
-          val labels = points.map(_._2)
-
-          if (features.size == 0 ) {
-            Iterator()
-          } else {
-            val numColumns = features(0).size
-            val featuresTable = vectorsToSparseNumericTable(features, numColumns)
-            val labelsTable = doubleArrayToNumericTable(labels)
-
-            Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
-      }
-    }.cache()
-
-    tables.count()
-
-    tables
-  }
-
   def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
-                                    executorNum: Int): RDD[(Long, Long)] = {
+                                            executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
 
     val spark = SparkSession.active
-    import spark.implicits._    
-    
+
     val labeledPointsRDD = labeledPoints.rdd.map {
       case Row(label: Double, features: Vector) => (features, label)
     }
@@ -271,21 +270,21 @@ object OneDAL {
     // Repartition to executorNum
     val dataForConversion = labeledPointsRDD.repartition(executorNum)
       .setName("Repartitioned for conversion")
-    
+
     val tables = dataForConversion.mapPartitions { it: Iterator[(Vector, Double)] =>
-          val points: Array[(Vector, Double)] = it.toArray
+      val points: Array[(Vector, Double)] = it.toArray
 
-          val features = points.map(_._1)
-          val labels = points.map(_._2)
+      val features = points.map(_._1)
+      val labels = points.map(_._2)
 
-          if (features.size == 0 ) {
-            Iterator()
-          } else {
-            val numColumns = features(0).size
-            val featuresTable = vectorsToSparseNumericTable(features, numColumns)
-            val labelsTable = doubleArrayToNumericTable(labels)
+      if (features.size == 0) {
+        Iterator()
+      } else {
+        val numColumns = features(0).size
+        val featuresTable = vectorsToSparseNumericTable(features, numColumns)
+        val labelsTable = doubleArrayToNumericTable(labels)
 
-            Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
+        Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
       }
     }.cache()
 
@@ -321,7 +320,7 @@ object OneDAL {
         case Row(label: Double, features: Vector) => label
       }
 
-      if (features.size == 0 ) {
+      if (features.size == 0) {
         Iterator()
       } else {
         val numColumns = features(0).size
@@ -354,8 +353,8 @@ object OneDAL {
         OneDAL.cAddNumericTable(mergedLabels.getCNumericTable, labelAddr)
       }
 
-//      Service.printNumericTable("mergedFeatures", mergedFeatures, 10, 20)
-//      Service.printNumericTable("mergedLabels", mergedLabels, 10, 20)
+      //      Service.printNumericTable("mergedFeatures", mergedFeatures, 10, 20)
+      //      Service.printNumericTable("mergedLabels", mergedLabels, 10, 20)
 
       Iterator((mergedFeatures.getCNumericTable, mergedLabels.getCNumericTable))
     }.cache()
@@ -363,6 +362,28 @@ object OneDAL {
     mergedTables.count()
 
     mergedTables
+  }
+
+  private def vectorsToDenseNumericTable(it: Iterator[Vector],
+                                         numRows: Int, numCols: Int): NumericTable = {
+    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
+    val context = new DaalContext()
+    val matrix = new DALMatrix(context, classOf[lang.Double],
+      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
+
+    // oneDAL libs should be loaded by now, loading other native libs
+    logger.info("Loading native libraries")
+    LibLoader.loadLibraries()
+
+    var dalRow = 0
+
+    it.foreach { curVector =>
+      val rowArray = curVector.toArray
+      OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArray, 1, numCols)
+      dalRow += 1
+    }
+
+    matrix
   }
 
   def rddVectorToMergedTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
@@ -422,28 +443,6 @@ object OneDAL {
     }.cache()
 
     coalescedTables
-  }
-
-  private def vectorsToDenseNumericTable(it: Iterator[Vector],
-                                         numRows: Int, numCols: Int): NumericTable = {
-    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
-    val context = new DaalContext()
-    val matrix = new DALMatrix(context, classOf[lang.Double],
-      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
-
-    // oneDAL libs should be loaded by now, loading other native libs
-    logger.info("Loading native libraries")
-    LibLoader.loadLibraries()
-
-    var dalRow = 0
-
-    it.foreach { curVector =>
-      val rowArray = curVector.toArray
-      OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArray, 1, numCols)
-      dalRow += 1
-    }
-
-    matrix
   }
 
   @native def cAddNumericTable(cObject: Long, numericTableAddr: Long)

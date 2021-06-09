@@ -17,17 +17,16 @@
 package org.apache.spark.ml.classification
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.Dataset
-import org.apache.spark.ml.linalg.{Matrices, Vector}
+import org.apache.spark.ml.linalg.Matrices
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
-import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.Dataset
 
 class NaiveBayesDALImpl(val uid: String,
                         val classNum: Int,
                         val executorNum: Int,
                         val executorCores: Int
-                    ) extends Serializable with Logging {
+                       ) extends Serializable with Logging {
   def train(labeledPoints: Dataset[_],
             instr: Option[Instrumentation]): NaiveBayesModel = {
 
@@ -50,13 +49,13 @@ class NaiveBayesDALImpl(val uid: String,
         val result = new NaiveBayesResult
         cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
           classNum, executorNum, executorCores, result)
-          
+
         val computeEndTime = System.nanoTime()
 
         val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
-        
+
         println(s"NaiveBayesDAL compute took ${durationCompute} secs")
-        
+
         val ret = if (OneCCL.isRoot()) {
           val convResultStartTime = System.nanoTime()
 
@@ -70,11 +69,10 @@ class NaiveBayesDALImpl(val uid: String,
           println(s"NaiveBayesDAL result conversion took ${durationCovResult} secs")
 
           Iterator((pi, theta))
-          
+
         } else {
           Iterator.empty
         }
-
 
         OneCCL.cleanup()
         ret

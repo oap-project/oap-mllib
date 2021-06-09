@@ -197,12 +197,8 @@ class NaiveBayes @Since("1.5.0") (
 
     logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
 
-//    dataset.cache()
-    // val labelDF: DataFrame = dataset.select($(labelCol)).cache
-    // val numSamples = dataset.count()
-
-    // Todo: optimize getting num of classes
     // DAL only support [0..numClasses) as labels, should map original labels using StringIndexer
+    // Todo: optimize getting num of classes
     // A temp spark config to specify numClasses, may be removed in the future
     val confClasses = sc.conf.getInt("spark.oap.mllib.classification.classes", -1)
 
@@ -213,12 +209,7 @@ class NaiveBayes @Since("1.5.0") (
       case _ => confClasses
     }
 
-//    println(dataset.select($(labelCol)).distinct().collect().mkString(" "))
-//    val numFeatures = dataset.select($(featuresCol)).as[Tuple1[Vector]].take(1)(0)._1.size
-//
-//    instr.logNumFeatures(numFeatures)
-//    instr.logNumExamples(numSamples)
-     instr.logNumClasses(numClasses)
+    instr.logNumClasses(numClasses)
 
     val labeledPointsDS = dataset
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
