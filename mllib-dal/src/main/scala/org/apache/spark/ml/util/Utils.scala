@@ -28,7 +28,8 @@ object Utils {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
       executorIPAddress)
-    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
+    val kvsPortDetected = 5000
+//    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
     val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
       kvsPortDetected)
 
@@ -95,8 +96,7 @@ object Utils {
     val sc = data.sparkContext
     val result = data.mapPartitions { p =>
       LibLoader.loadLibraries()
-      val port = OneCCL.getAvailPort(localIP)
-      println(s"\nAvailablePort(): ${port}\n");
+      val port = OneCCL.getAvailPort(localIP)      
       if (port != -1) {
         Iterator(port)
       } else {

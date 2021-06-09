@@ -34,7 +34,6 @@ class KMeansDALImpl(var nClusters: Int,
 
   def train(data: RDD[Vector], instr: Option[Instrumentation]): MLlibKMeansModel = {
 
-//    val coalescedTables = OneDAL.vectorsToMergedNumericTables(data, executorNum)
     val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)

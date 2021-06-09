@@ -36,7 +36,6 @@ class PCADALImpl(val k: Int,
 
     val normalizedData = normalizeData(data)
 
-//    val coalescedTables = OneDAL.vectorsToMergedNumericTables(normalizedData, executorNum)
     val coalescedTables = OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
 
     val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
