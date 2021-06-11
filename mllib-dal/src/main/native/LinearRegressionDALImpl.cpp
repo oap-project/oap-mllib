@@ -59,7 +59,7 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
 /*************************************************/
 #else
     linear_regression::training::Distributed<step1Local> localAlgorithm;
-
+    
     /* Pass a training data set and dependent values to the algorithm */
     localAlgorithm.input.set(linear_regression::training::data, pData);
     localAlgorithm.input.set(linear_regression::training::dependentVariables, pLabel);
@@ -95,7 +95,7 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
     {
         // std::cout << "build the final multiple linear regression model on the master node" << std::endl;
         /* Create an algorithm object to build the final multiple linear regression model on the master node */
-        linear_regression::training::Distributed<step2Master> masterAlgorithm;
+        linear_regression::training::Distributed<step2Master> masterAlgorithm;        
 
         std::cout << "nBlocks: " << nBlocks << std::endl;
         for (size_t i = 0; i < nBlocks; i++)
@@ -123,7 +123,9 @@ static NumericTablePtr linearregression_compute(int rankId, ccl::communicator &c
         std::cout << "Retrieve the algorithm results" << std::endl;
         linear_regression::training::ResultPtr trainingResult = masterAlgorithm.getResult();
         resultTable = trainingResult->get(linear_regression::training::model)->getBeta();
-        printNumericTable(resultTable, "Linear Regression coefficients:");
+        auto interceptFlag = trainingResult->get(linear_regression::training::model)->getInterceptFlag();
+                
+        printNumericTable(resultTable, "Linear Regression coefficients (w0, w1..wn):");
     }
     return resultTable;
 }
@@ -221,6 +223,10 @@ Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLRTrainDAL(
 
     NumericTablePtr resultTable;
     // TODO: get condition from regParam and elasticNetParam
+
+    printNumericTable(pData, "input data");
+    printNumericTable(pLabel, "input labels");
+
     if (true) {
         // linear regression
         resultTable = linearregression_compute(rankId, comm, pData, pLabel, executor_num);
@@ -236,7 +242,7 @@ Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLRTrainDAL(
         jclass clazz = env->GetObjectClass(resultObj);
 
         // Get Field references
-        jfieldID interceptField = env->GetFieldID(clazz, "intercept", "D");
+//        jfieldID interceptField = env->GetFieldID(clazz, "intercept", "D");
         jfieldID coeffNumericTableField = env->GetFieldID(clazz, "coeffNumericTable", "J");
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);

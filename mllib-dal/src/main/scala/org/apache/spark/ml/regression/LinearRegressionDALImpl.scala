@@ -18,6 +18,7 @@
 package org.apache.spark.ml.regression
 
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 // import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
@@ -83,10 +84,14 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     // println(s"\nkvsIPPort: ${kvsIPPort}")
 
     // TODO: use getOneCCLIPPort() to replace the above code
-    // val kvsIPPort = getOneCCLIPPort(labeledPoints)
-    val kvsIPPort = "10.1.2.142_3000"
+     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+//    val kvsIPPort = "10.1.2.142_3000"
 
-    val labeledPointsTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
+    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints)) {
+      OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
+    } else {
+      OneDAL.rddLabeledPointToSparseTables(labeledPoints, executorNum)
+    }
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -109,7 +114,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val ret = if (OneCCL.isRoot()) {
           val coefficientArray = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.coeffNumericTable))
           // println(s"\ncoefficientArray: ${coefficientArray}, size: ${coefficientArray.size}")
-          Iterator((coefficientArray, result.intercept))
+          Iterator(coefficientArray(0))
         } else {
           Iterator.empty
         }
@@ -121,13 +126,16 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
-    val coefficientArray = results(0)._1 // TODO: get coefficients from results
-    val intercept = results(0)._2 // TODO: get intercept from results
+    val coefficientVector = results(0)
+//      ._1 // TODO: get coefficients from results
+//    val intercept = results(0)._2 // TODO: get intercept from results
 
     // println(s"\ncoefficientArray: ${coefficientArray}, size: ${coefficientArray(0).toDense.size}")
-    println(s"\nintercept: ${intercept}")
+//    println(s"\nintercept: ${intercept}")
 
-    val parentModel = new LRDALModel(coefficientArray(0).toDense, intercept, new DenseVector(Array(0D)), Array(0D))
+    val parentModel = new LRDALModel(
+      new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
+      coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
     println(s"\nnew LRDALModel() done.\n")
 
     parentModel

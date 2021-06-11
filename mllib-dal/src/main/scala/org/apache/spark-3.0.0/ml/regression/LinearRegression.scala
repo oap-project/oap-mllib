@@ -18,12 +18,10 @@
 package org.apache.spark.ml.regression
 
 import scala.collection.mutable
-
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, LBFGS => BreezeLBFGS, LBFGSB => BreezeLBFGSB, OWLQN => BreezeOWLQN}
 import breeze.stats.distributions.StudentsT
 import org.apache.hadoop.fs.Path
-
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -39,6 +37,7 @@ import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.stat._
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
+import org.apache.spark.ml.util.Utils
 import org.apache.spark.mllib.evaluation.RegressionMetrics
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.mllib.regression.{LinearRegressionModel => OldLinearRegressionModel}
@@ -319,7 +318,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
   override protected def train(dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
     
-    val useLRDAL = true   // TODO: set it based on proper condition
+//    val useLRDAL = true   // TODO: set it based on proper condition
     // Extract the number of features before deciding optimization solver.
     val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
     val instances = extractInstances(dataset)
@@ -333,7 +332,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
     if ($(loss) == SquaredError && (($(solver) == Auto &&
       numFeatures <= WeightedLeastSquares.MAX_NUM_FEATURES) || $(solver) == Normal)) {
-      if (useLRDAL) {
+      if (Utils.isOAPEnabled) {
         val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
         val executor_cores = Utils.sparkExecutorCores()
         logInfo(s"LinearRegressionDAL fit using $executor_num Executors")
