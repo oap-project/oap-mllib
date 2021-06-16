@@ -32,7 +32,7 @@ import org.apache.spark.sql.Dataset
  * @param objectiveHistory objective function (scaled loss + regularization) at each iteration.
  */
 // LinearRegressionDALModel is the same with WeightedLeastSquaresModel
-// TODO: diagInvAtWA and objectiveHistory are not supported right now
+// diagInvAtWA and objectiveHistory are not supported right now
 private[ml] class LinearRegressionDALModel(val coefficients: DenseVector,
                                            val intercept: Double,
                                            val diagInvAtWA: DenseVector,
