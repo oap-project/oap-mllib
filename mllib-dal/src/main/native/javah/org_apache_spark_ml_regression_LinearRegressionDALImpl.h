@@ -9,11 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     org_apache_spark_ml_regression_LinearRegressionDALImpl
- * Method:    cLRTrainDAL
- * Signature: (JJZDDIILorg/apache/spark/ml/regression/LiRResult;)J
+ * Method:    cLinearRegressionTrainDAL
+ * Signature: (JJDDIILorg/apache/spark/ml/regression/LiRResult;)J
  */
-JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLRTrainDAL
-  (JNIEnv *, jobject, jlong, jlong, jboolean, jdouble, jdouble, jint, jint, jobject);
+JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL
+  (JNIEnv *, jobject, jlong, jlong, jdouble, jdouble, jint, jint, jobject);
 
 #ifdef __cplusplus
 }

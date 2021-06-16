@@ -18,10 +18,12 @@
 package org.apache.spark.ml.regression
 
 import scala.collection.mutable
+
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{CachedDiffFunction, LBFGS => BreezeLBFGS, LBFGSB => BreezeLBFGSB, OWLQN => BreezeOWLQN}
 import breeze.stats.distributions.StudentsT
 import org.apache.hadoop.fs.Path
+
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -37,12 +39,10 @@ import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.stat._
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
-import org.apache.spark.ml.util.Utils
 import org.apache.spark.mllib.evaluation.RegressionMetrics
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.mllib.regression.{LinearRegressionModel => OldLinearRegressionModel}
 import org.apache.spark.mllib.util.MLUtils
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataType, DoubleType, StructType}
@@ -317,10 +317,9 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
   setDefault(epsilon -> 1.35)
 
   override protected def train(dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
-    
-//    val useLRDAL = true   // TODO: set it based on proper condition
     // Extract the number of features before deciding optimization solver.
     val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
+
     val instances = extractInstances(dataset)
 
     instr.logPipelineStage(this)
@@ -332,27 +331,25 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
     if ($(loss) == SquaredError && (($(solver) == Auto &&
       numFeatures <= WeightedLeastSquares.MAX_NUM_FEATURES) || $(solver) == Normal)) {
-      if (Utils.isOAPEnabled) {
+      // oneDAL only support simple linear regression and ridge regression
+      val paramSupported = ($(regParam) == 0) || ($(regParam) != 0 && $(elasticNetParam) == 0)
+      if (paramSupported && Utils.isOAPEnabled) {
         val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
         val executor_cores = Utils.sparkExecutorCores()
         logInfo(s"LinearRegressionDAL fit using $executor_num Executors")
 
-//        val labeledPoints: RDD[(Vector, Double)] = dataset
-//          .select(DatasetUtils.columnToVector(dataset, getFeaturesCol), col(getLabelCol)).rdd.map {
-//          case Row(feature: Vector, label: Double) => (feature, label)
-//        }
-
         val optimizer = new LinearRegressionDALImpl($(fitIntercept), $(regParam),
-                  elasticNetParam = $(elasticNetParam), $(standardization), true,
-                  maxIter = $(maxIter), tol = $(tol), executor_num, executor_cores)
+          elasticNetParam = $(elasticNetParam), $(standardization), true,
+          executor_num, executor_cores)
 
+        // Return same model as WeightedLeastSquaresModel
         val model = optimizer.train(dataset, Some(instr))
 
-        logInfo(s"copyValues()")
-        val lrModel = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept))
-        logInfo(s"findSummaryModelAndPredictionCol()")
+        val lrModel = copyValues(
+          new LinearRegressionModel(uid, model.coefficients, model.intercept))
+
         val (summaryModel, predictionColName) = lrModel.findSummaryModelAndPredictionCol()
-        logInfo(s"new LinearRegressionTrainingSummary()")
+
         val trainingSummary = new LinearRegressionTrainingSummary(
           summaryModel.transform(dataset),
           predictionColName,
@@ -362,16 +359,16 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
           model.diagInvAtWA.toArray,
           model.objectiveHistory)
 
-        logInfo(s"return lrModel.setSummary()")
         return lrModel.setSummary(Some(trainingSummary))
       } else {
         // For low dimensional data, WeightedLeastSquares is more efficient since the
         // training algorithm only requires one pass through the data. (SPARK-10668)
+
         val optimizer = new WeightedLeastSquares($(fitIntercept), $(regParam),
           elasticNetParam = $(elasticNetParam), $(standardization), true,
           solverType = WeightedLeastSquares.Auto, maxIter = $(maxIter), tol = $(tol))
         val model = optimizer.fit(instances, instr = OptionalInstrumentation.create(instr))
-        
+
         // When it is trained by WeightedLeastSquares, training summary does not
         // attach returned model.
         val lrModel = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept))

@@ -18,9 +18,8 @@
 package org.apache.spark.ml.regression
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.util.Utils.getOneCCLIPPort
-// import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
+import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
 import org.apache.spark.sql.Dataset
 
@@ -32,15 +31,13 @@ import org.apache.spark.sql.Dataset
  * @param diagInvAtWA      diagonal of matrix (A^T * W * A)^-1
  * @param objectiveHistory objective function (scaled loss + regularization) at each iteration.
  */
-// TODO: diagInvAtWA and objectiveHistory are not supported, keep them for compatibility?
-private[ml] class LRDALModel( val coefficients: DenseVector,
-                              val intercept: Double,
-                              val diagInvAtWA: DenseVector,
-                              val objectiveHistory: Array[Double]) extends Serializable {
-
-  // def predict(features: Vector): Double = {
-  //   BLAS.dot(coefficients, features) + intercept
-  // }
+// LinearRegressionDALModel is the same with WeightedLeastSquaresModel
+// TODO: diagInvAtWA and objectiveHistory are not supported right now
+private[ml] class LinearRegressionDALModel(val coefficients: DenseVector,
+                                           val intercept: Double,
+                                           val diagInvAtWA: DenseVector,
+                                           val objectiveHistory: Array[Double])
+  extends Serializable {
 }
 
 class LinearRegressionDALImpl( val fitIntercept: Boolean,
@@ -48,8 +45,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                val elasticNetParam: Double,
                                val standardizeFeatures: Boolean,
                                val standardizeLabel: Boolean,
-                               val maxIter: Int = 100,
-                               val tol: Double = 1e-6,
                                val executorNum: Int,
                                val executorCores: Int)
   extends Serializable with Logging {
@@ -57,35 +52,14 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   require(regParam >= 0.0, s"regParam cannot be negative: $regParam")
   require(elasticNetParam >= 0.0 && elasticNetParam <= 1.0,
     s"elasticNetParam must be in [0, 1]: $elasticNetParam")
-  require(maxIter > 0, s"maxIter must be a positive integer: $maxIter")
-  require(tol >= 0.0, s"tol must be >= 0, but was set to $tol")
 
   /**
-   * Creates a [[LRDALModel]] from an RDD of [[Vector]]s.
+   * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
    */
   def train(labeledPoints: Dataset[_],
-            instr: Option[Instrumentation]): LRDALModel = {
-    // if (regParam == 0.0) {
-    //   instr.logWarning("regParam is zero, which might cause numerical instability and overfitting.")
-    // }
+            instr: Option[Instrumentation]): LinearRegressionDALModel = {
 
-    /** ************************************************************** */
-    // val coalescedTables = OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
-
-    // val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
-    // val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
-    //   executorIPAddress)
-    // val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
-    // println(s"\nkvsPortDetected: ${kvsPortDetected}")
-    // val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
-    //   kvsPortDetected)
-
-    // val kvsIPPort = kvsIP + "_" + kvsPort
-    // println(s"\nkvsIPPort: ${kvsIPPort}")
-
-    // TODO: use getOneCCLIPPort() to replace the above code
-     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
-//    val kvsIPPort = "10.1.2.142_3000"
+    val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
     val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints)) {
       OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
@@ -100,10 +74,9 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         OneCCL.init(executorNum, rank, kvsIPPort)
 
         val result = new LiRResult
-        cLRTrainDAL(
+        cLinearRegressionTrainDAL(
           featureTabAddr,
           lableTabAddr,
-          fitIntercept,
           regParam,
           elasticNetParam,
           executorNum,
@@ -112,8 +85,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         )
 
         val ret = if (OneCCL.isRoot()) {
-          val coefficientArray = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.coeffNumericTable))
-          // println(s"\ncoefficientArray: ${coefficientArray}, size: ${coefficientArray.size}")
+          val coefficientArray = OneDAL.numericTableToVectors(
+            OneDAL.makeNumericTable(result.coeffNumericTable))
           Iterator(coefficientArray(0))
         } else {
           Iterator.empty
@@ -122,29 +95,22 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         OneCCL.cleanup()
         ret
     }.collect()
-    println(s"\nresults.length: ${results.length}")
+
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
     val coefficientVector = results(0)
-//      ._1 // TODO: get coefficients from results
-//    val intercept = results(0)._2 // TODO: get intercept from results
 
-    // println(s"\ncoefficientArray: ${coefficientArray}, size: ${coefficientArray(0).toDense.size}")
-//    println(s"\nintercept: ${intercept}")
-
-    val parentModel = new LRDALModel(
+    val parentModel = new LinearRegressionDALModel(
       new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
       coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
-    println(s"\nnew LRDALModel() done.\n")
 
     parentModel
   }
 
   // Single entry to call Linear Regression DAL backend with parameters
-  @native private def cLRTrainDAL(data: Long,
+  @native private def cLinearRegressionTrainDAL(data: Long,
                                   label: Long,
-                                  fitIntercept: Boolean,
                                   regParam: Double,
                                   elasticNetParam: Double,
                                   executor_num: Int,
