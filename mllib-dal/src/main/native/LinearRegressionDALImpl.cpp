@@ -105,9 +105,9 @@ static NumericTablePtr linear_regression_compute(int rankId,
             trainingResult->get(linear_regression::training::model)->getBeta();
 
         printNumericTable(resultTable,
-                          "Linear Regression top 10 rows x 20 columns of "
+                          "Linear Regression first 20 columns of "
                           "coefficients (w0, w1..wn):",
-                          10, 20);
+                          1, 20);
     }
     return resultTable;
 }
@@ -189,9 +189,9 @@ static NumericTablePtr ridge_regression_compute(
             trainingResult->get(ridge_regression::training::model)->getBeta();
 
         printNumericTable(resultTable,
-                          "Ridge Regression top 10 rows x 20 columns of "
+                          "Ridge Regression first 20 columns of "
                           "coefficients (w0, w1..wn):",
-                          10, 20);
+                          1, 20);
     }
     return resultTable;
 }
