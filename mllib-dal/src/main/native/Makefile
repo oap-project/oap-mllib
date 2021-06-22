@@ -38,14 +38,16 @@ CPP_SRCS += \
   ./KMeansDALImpl.cpp \
   ./PCADALImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
-  ./NaiveBayesDALImpl.cpp
+  ./NaiveBayesDALImpl.cpp \
+  ./LinearRegressionDALImpl.cpp
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
   ./KMeansDALImpl.o \
   ./PCADALImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
-  ./NaiveBayesDALImpl.o
+  ./NaiveBayesDALImpl.o \
+  ./LinearRegressionDALImpl.o
 
 # Output Binary
 OUTPUT = ../../../target/libMLlibDAL.so

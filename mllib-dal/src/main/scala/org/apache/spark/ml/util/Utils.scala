@@ -17,12 +17,17 @@
 package org.apache.spark.ml.util
 
 import java.net.InetAddress
-
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 
 object Utils {
+
+  def isOAPEnabled(): Boolean = {
+    val sc = SparkSession.active.sparkContext
+    return sc.conf.getBoolean("spark.oap.mllib.enabled", true)
+  }
 
   def getOneCCLIPPort(data: RDD[_]): String = {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)

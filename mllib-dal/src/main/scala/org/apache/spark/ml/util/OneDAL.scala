@@ -161,9 +161,16 @@ object OneDAL {
     val spark = SparkSession.active
     import spark.implicits._
 
-    labeledPoints.cache().count()
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (labeledPoints.rdd.getNumPartitions < executorNum) {
+      labeledPoints.repartition(executorNum).cache()
+    } else {
+      labeledPoints
+    }
 
-    val labeledPointsRDD = labeledPoints.toDF().map {
+    dataForConversion.cache().count()
+
+    val labeledPointsRDD = dataForConversion.toDF().map {
       case Row(label: Double, features: Vector) => (features, label)
     }.rdd
 
@@ -248,6 +255,11 @@ object OneDAL {
     rowOffsets += indexValues + 1
 
     val contextLocal = new DaalContext()
+
+    // oneDAL libs should be loaded by now, loading other native libs
+    logger.info("Loading native libraries")
+    LibLoader.loadLibraries()
+
     val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
       nFeatures, csrRowNum)
     val table = new CSRNumericTable(contextLocal, cTable)
