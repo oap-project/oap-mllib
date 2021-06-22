@@ -34,7 +34,7 @@ import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
 private[clustering] case class TestRow(features: Vector)
 
-class OAPMLlibKMeansSuite extends MLTest with DefaultReadWriteTest with PMMLReadWriteTest {
+class MLlibKMeansSuite extends MLTest with DefaultReadWriteTest with PMMLReadWriteTest {
 
   import testImplicits._
 

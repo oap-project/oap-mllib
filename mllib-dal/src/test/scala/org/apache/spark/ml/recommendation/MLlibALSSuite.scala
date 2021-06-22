@@ -46,7 +46,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Utils
 
-class IntelALSSuite extends MLTest with DefaultReadWriteTest with Logging {
+class MLlibALSSuite extends MLTest with DefaultReadWriteTest with Logging {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -343,7 +343,7 @@ class IntelALSSuite extends MLTest with DefaultReadWriteTest with Logging {
       random: Random,
       a: Float = -1.0f,
       b: Float = 1.0f): Seq[(Int, Array[Float])] = {
-    IntelALSSuite.genFactors(size, rank, random, a, b)
+    MLlibALSSuite.genFactors(size, rank, random, a, b)
   }
 
   /**
@@ -1129,7 +1129,7 @@ private class IntermediateRDDStorageListener extends SparkListener {
 
 }
 
-object IntelALSSuite extends Logging {
+object MLlibALSSuite extends Logging {
 
   /**
    * Mapping from all Params to valid settings which differ from the defaults.
