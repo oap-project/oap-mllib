@@ -54,7 +54,9 @@ for SparkVer in ${SupportedSparkVersions[*]}; do
 
     mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
     mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
-    # mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.classification.MLlibNaiveBayesSuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.MLlibLinearRegressionSuite test
 done
 
 # Yarn cluster test without profile
