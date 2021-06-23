@@ -52,9 +52,9 @@ for SparkVer in ${SupportedSparkVersions[*]}; do
     # Build test with profile
     $GITHUB_WORKSPACE/dev/ci-build.sh $SparkVer
 
-    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
-    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.MLlibKMeansSuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.MLlibPCASuite test
+    mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.MLlibALSSuite test
     mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.classification.MLlibNaiveBayesSuite test
     mvn --no-transfer-progress -P$SparkVer -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.MLlibLinearRegressionSuite test
 done
