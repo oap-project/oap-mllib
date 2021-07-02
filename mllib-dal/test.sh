@@ -45,15 +45,17 @@ echo =============================
 # Clean
 mvn clean
 
-# Individual test
+# Run individual tests
 if [[ -z $SPARK_VER ]]; then
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.IntelLinearRegressionSuite test
-# mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.MLlibKMeansSuite test
+  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.MLlibPCASuite test
+  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.MLlibALSSuite test
+  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.classification.MLlibNaiveBayesSuite test
+  mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.MLlibLinearRegressionSuite test
 else
-# mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.IntelKMeansSuite test
-# mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.IntelPCASuite test
- mvn -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.IntelLinearRegressionSuite test
-# mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.IntelALSSuite test
+  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.clustering.MLlibKMeansSuite test
+  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.feature.MLlibPCASuite test
+  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.recommendation.MLlibALSSuite test
+  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.classification.MLlibNaiveBayesSuite test
+  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.regression.MLlibLinearRegressionSuite test
 fi

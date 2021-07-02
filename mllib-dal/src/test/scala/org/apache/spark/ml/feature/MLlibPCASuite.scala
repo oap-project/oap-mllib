@@ -24,7 +24,7 @@ import org.apache.spark.ml.util.{DefaultReadWriteTest, MLTest}
 import org.apache.spark.mllib.linalg.distributed.RowMatrix
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 
-class IntelPCASuite extends MLTest with DefaultReadWriteTest {
+class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
 
   import testImplicits._
 
