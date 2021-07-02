@@ -19,6 +19,7 @@ package org.apache.spark.ml.classification
 
 import org.apache.hadoop.fs.Path
 import org.json4s.DefaultFormats
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.PredictorParams
 import org.apache.spark.ml.linalg._
@@ -28,13 +29,10 @@ import org.apache.spark.ml.stat.Summarizer
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.mllib.util.MLUtils
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, Row}
+import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.util.VersionUtils
-
-import scala.sys.exit
 
 /**
  * Params for Naive Bayes Classifiers.
@@ -65,6 +63,8 @@ private[classification] trait NaiveBayesParams extends PredictorParams with HasW
 
   /** @group getParam */
   final def getModelType: String = $(modelType)
+
+  setDefault(smoothing -> 1.0, modelType -> NaiveBayes.Multinomial)
 }
 
 // scalastyle:off line.size.limit
@@ -108,7 +108,6 @@ class NaiveBayes @Since("1.5.0") (
    */
   @Since("1.5.0")
   def setSmoothing(value: Double): this.type = set(smoothing, value)
-  setDefault(smoothing -> 1.0)
 
   /**
    * Set the model type using a string (case-sensitive).
@@ -118,7 +117,6 @@ class NaiveBayes @Since("1.5.0") (
    */
   @Since("1.5.0")
   def setModelType(value: String): this.type = set(modelType, value)
-  setDefault(modelType -> Multinomial)
 
   /**
    * Sets the value of param [[weightCol]].
