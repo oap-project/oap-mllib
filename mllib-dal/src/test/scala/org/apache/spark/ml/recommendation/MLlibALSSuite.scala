@@ -985,7 +985,7 @@ class ALSCleanerSuite extends SparkFunSuite with BeforeAndAfterEach {
   }
 
 //
-//  cc
+//  Remove test("ALS shuffle cleanup standalone") as error for spark 3.1.1
 //
 //  test("ALS shuffle cleanup standalone") {
 //    val conf = new SparkConf()
