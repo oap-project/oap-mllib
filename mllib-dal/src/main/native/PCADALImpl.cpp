@@ -38,6 +38,8 @@ Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
     jint executor_cores, jobject resultObj) {
 
+    using daal::byte;
+
     ccl::communicator &comm = getComm();
     size_t rankId = comm.rank();
 
