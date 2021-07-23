@@ -44,8 +44,8 @@ if __name__ == "__main__":
     parts = lines.map(lambda row: row.value.split("::"))
     ratingsRDD = parts.map(lambda p: Row(userId=int(p[0]), movieId=int(p[1]),
                                          rating=float(p[2])))
-    ratings = spark.createDataFrame(ratingsRDD)   
-    # (training, test) = ratings.randomSplit([0.8, 0.2])
+    ratings = spark.createDataFrame(ratingsRDD)
+    (training, test) = ratings.randomSplit([0.8, 0.2])
 
     # Build the recommendation model using ALS on the training data
     # Note we set cold start strategy to 'drop' to ensure we don't get NaN evaluation metrics
@@ -55,13 +55,13 @@ if __name__ == "__main__":
     print("\nALS training with implicitPrefs={}, rank={}, maxIter={}, regParam={}, alpha={}, seed={}\n".format(
         als.getImplicitPrefs(), als.getRank(), als.getMaxIter(), als.getRegParam(), als.getAlpha(), als.getSeed()
     ))          
-    model = als.fit(ratings)    
+    model = als.fit(training)
 
-     # Evaluate the model by computing the RMSE on the test data
-    # predictions = model.transform(test)
-    # evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating",
-    #                                 predictionCol="prediction")
-    # rmse = evaluator.evaluate(predictions)
-    # print("Root-mean-square error = " + str(rmse))
+    # Evaluate the model by computing the RMSE on the test data
+    predictions = model.transform(test)
+    evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating",
+                                    predictionCol="prediction")
+    rmse = evaluator.evaluate(predictions)
+    print("Root-mean-square error = " + str(rmse))
     
     spark.stop()

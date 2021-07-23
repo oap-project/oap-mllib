@@ -9,19 +9,19 @@ extern "C" {
 #endif
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    setNumericTableValue
- * Signature: (JIID)V
- */
-JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_setNumericTableValue
-  (JNIEnv *, jobject, jlong, jint, jint, jdouble);
-
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
  * Method:    cAddNumericTable
  * Signature: (JJ)V
  */
 JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cAddNumericTable
   (JNIEnv *, jobject, jlong, jlong);
+
+/*
+ * Class:     org_apache_spark_ml_util_OneDAL__
+ * Method:    cSetDouble
+ * Signature: (JIID)V
+ */
+JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble
+  (JNIEnv *, jobject, jlong, jint, jint, jdouble);
 
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
@@ -49,11 +49,19 @@ JNIEXPORT jboolean JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cCheckPlat
 
 /*
  * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cNewCSRNumericTable
+ * Method:    cNewCSRNumericTableFloat
  * Signature: ([F[J[JJJ)J
  */
-JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTable
+JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableFloat
   (JNIEnv *, jobject, jfloatArray, jlongArray, jlongArray, jlong, jlong);
+
+/*
+ * Class:     org_apache_spark_ml_util_OneDAL__
+ * Method:    cNewCSRNumericTableDouble
+ * Signature: ([D[J[JJJ)J
+ */
+JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableDouble
+  (JNIEnv *, jobject, jdoubleArray, jlongArray, jlongArray, jlong, jlong);
 
 #ifdef __cplusplus
 }

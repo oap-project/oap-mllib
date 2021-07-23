@@ -1,11 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.intel.oap</groupId>
     <artifactId>oap-mllib</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <name>OAP Project OAP MLlib</name>
     <packaging>jar</packaging>
     <url>https://github.com/oap-project/oap-mllib.git</url>
@@ -17,9 +17,11 @@
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
         <spark.version>3.0.0</spark.version>
+        <oneapi.version>2021.2.0</oneapi.version>
         <tbb.lib>libtbb.so.12.2</tbb.lib>
         <tbb.malloc.lib>libtbbmalloc.so.2.2</tbb.malloc.lib>
         <dal.java.lib>libJavaAPI.so.1.1</dal.java.lib>
+        <ccl.lib>libccl.so</ccl.lib>
         <ccl.fabric.lib>libfabric.so.1</ccl.fabric.lib>
         <ccl.mpi.lib>libmpi.so.12.0.0</ccl.mpi.lib>
     </properties>
@@ -60,9 +62,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.intel.daal</groupId>
-            <artifactId>daal</artifactId>
-            <version>2021.1</version>
+            <groupId>com.intel.onedal</groupId>
+            <artifactId>onedal</artifactId>
+            <version>${oneapi.version}</version>
             <scope>system</scope>
             <systemPath>${env.DAALROOT}/lib/onedal.jar</systemPath>
         </dependency>
@@ -76,8 +78,8 @@
 
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.12</artifactId>
-            <version>3.0.8</version>
+            <artifactId>scalatest_${scala.binary.version}</artifactId>
+            <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -144,19 +146,98 @@
 
     </dependencies>
 
+    <profiles>
+
+        <profile>
+            <id>spark-3.0.0</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spark.version>3.0.0</spark.version>
+                <scalatest.version>3.0.8</scalatest.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>spark-3.0.1</id>
+            <properties>
+                <spark.version>3.0.1</spark.version>
+                <scalatest.version>3.0.8</scalatest.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>spark-3.0.2</id>
+            <properties>
+                <spark.version>3.0.2</spark.version>
+                <scalatest.version>3.0.8</scalatest.version>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>spark-3.1.1</id>
+            <properties>
+                <spark.version>3.1.1</spark.version>
+                <scalatest.version>3.2.3</scalatest.version>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
-                <version>2.15.2</version>
-                <executions>
+                <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>build-helper-maven-plugin</artifactId>
+                  <version>3.2.0</version>
+                  <executions>
                     <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
+                      <id>add-source</id>
+                      <phase>generate-sources</phase>
+                      <goals>
+                        <goal>add-source</goal>
+                      </goals>
+                      <configuration>
+                        <sources>
+                          <source>src/spark-${spark.version}/main/java</source>
+                          <source>src/spark-${spark.version}/main/scala</source>
+                        </sources>
+                      </configuration>
                     </execution>
+                    <execution>
+                      <id>add-test-source</id>
+                      <phase>generate-sources</phase>
+                      <goals>
+                        <goal>add-test-source</goal>
+                      </goals>
+                      <configuration>
+                        <sources>
+                          <source>src/spark-${spark.version}/test/scala</source>
+                        </sources>
+                      </configuration>
+                    </execution>
+                  </executions>
+                </plugin>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>4.4.0</version>
+                <executions>
+                  <execution>
+                    <id>scala-compile-first</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                      <goal>add-source</goal>
+                      <goal>compile</goal>
+                    </goals>
+                  </execution>
+                  <execution>
+                    <id>scala-test-compile</id>
+                    <phase>process-test-resources</phase>
+                    <goals>
+                      <goal>testCompile</goal>
+                    </goals>
+                  </execution>
                 </executions>
                 <configuration>
                     <scalaVersion>${scala.version}</scalaVersion>
@@ -165,7 +246,65 @@
                     </args>
                 </configuration>
             </plugin>
-
+            <!-- Java Style Check -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <failOnViolation>false</failOnViolation>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <sourceDirectories>
+                        <directory>${basedir}/src/main/java</directory>
+                    </sourceDirectories>
+                    <testSourceDirectories>
+                        <directory>${basedir}/src/test/java</directory>
+                    </testSourceDirectories>
+                    <configLocation>${basedir}/../dev/codestyle/checkstyle.xml</configLocation>
+                    <outputFile>${basedir}/target/checkstyle-output.xml</outputFile>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>8.29</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <!-- Java Formatter -->
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <version>2.15.0</version>
+                <configuration>
+                    <configFile>${basedir}/../dev/codestyle/eclipse-java-google-style.xml</configFile>
+                </configuration>
+            </plugin>
+            <!-- Scala Style Check -->
+            <plugin>
+                <groupId>org.scalastyle</groupId>
+                <artifactId>scalastyle-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <verbose>false</verbose>
+                    <failOnViolation>true</failOnViolation>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <failOnWarning>false</failOnWarning>
+                    <sourceDirectory>${basedir}/src/main/scala/org/apache/spark</sourceDirectory>
+                    <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+                    <configLocation>scalastyle-config.xml</configLocation>
+                    <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
+                </configuration>
+            </plugin>
+            <!-- Scala Formatter -->
+            <plugin>
+                <groupId>org.antipathy</groupId>
+                <artifactId>mvn-scalafmt_${scala.binary.version}</artifactId>
+                <version>1.0.3</version>
+                <configuration>
+                    <configLocation>${basedir}/.scalafmt.conf</configLocation>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -192,7 +331,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>           
+            </plugin>
 
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -202,8 +341,9 @@
                         <phase>process-classes</phase>
                         <configuration>
                             <target name="build-natives" description="Build native code">
-                                <echo>Building native code</echo>                                
-                                <exec dir="${project.basedir}/src/main/native" executable="./build.sh" failonerror="true">
+                                <echo>Building native code</echo>
+                                <exec dir="${project.basedir}/src/main/native" executable="./build.sh"
+                                      failonerror="true">
                                 </exec>
                             </target>
                         </configuration>
@@ -223,12 +363,9 @@
                         <resource>
                             <directory>${env.CCL_ROOT}/lib</directory>
                             <includes>
-                                <!--<include>libpmi.so.1</include>-->
-                                <!--<include>libresizable_pmi.so.1</include>-->
+                                <include>${ccl.lib}</include>
+                                <include>${ccl.mpi.lib}</include>
                                 <include>${ccl.fabric.lib}</include>
-                                <include>${ccl.mpi.lib}</include>                                
-				                <include>libccl.so</include>
-                                <!--<include>libccl_atl_ofi.so.1</include>-->
                             </includes>
                         </resource>
                         <resource>
@@ -254,6 +391,7 @@
                     </resources>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
                 <artifactId>copy-rename-maven-plugin</artifactId>
@@ -271,20 +409,19 @@
                                 rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2</destinationFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2
+                                    </destinationFile>
                                 </fileSet>
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.malloc.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2</destinationFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2
+                                    </destinationFile>
                                 </fileSet>
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.mpi.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12</destinationFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12
+                                    </destinationFile>
                                 </fileSet>
-                                <!--<fileSet>-->
-                                    <!--<sourceFile>${project.build.testOutputDirectory}/lib/libccl_atl_ofi.so.1</sourceFile>-->
-                                    <!--<destinationFile>${project.build.testOutputDirectory}/lib/libccl_atl_ofi.so</destinationFile>-->
-                                <!--</fileSet>-->
                             </fileSets>
                         </configuration>
                     </execution>

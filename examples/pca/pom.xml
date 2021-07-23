@@ -4,7 +4,7 @@
 
   <groupId>com.intel.oap</groupId>
   <artifactId>oap-mllib-examples</artifactId>
-  <version>1.1.0-with-spark-3.0.0</version>
+  <version>${oap.version}-with-spark-${spark.version}</version>  
   <packaging>jar</packaging>
 
   <name>PCAExample</name>
@@ -12,6 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <oap.version>1.2.0</oap.version>
     <scala.version>2.12.10</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
     <spark.version>3.0.0</spark.version>

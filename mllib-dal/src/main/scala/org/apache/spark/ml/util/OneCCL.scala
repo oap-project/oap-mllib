@@ -1,12 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright 2020 Intel Corporation
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,12 +24,12 @@ object OneCCL extends Logging {
 
   // Run on Executor
   def setExecutorEnv(): Unit = {
-    setEnv("CCL_ATL_TRANSPORT","ofi")
+    setEnv("CCL_ATL_TRANSPORT", "ofi")
     // Uncomment this if you whant to debug oneCCL
     // setEnv("CCL_LOG_LEVEL", "2")
   }
 
-  def init(executor_num: Int, rank: Int, ip_port: String) = {
+  def init(executor_num: Int, rank: Int, ip_port: String): Unit = {
 
     setExecutorEnv()
 
@@ -42,7 +41,8 @@ object OneCCL extends Logging {
     // executor number should equal to oneCCL world size
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
 
-    logInfo(s"Initialized with executorNum: $executor_num, commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
+    logInfo(s"Initialized with executorNum: $executor_num, " +
+      s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
   }
 
   // Run on Executor
