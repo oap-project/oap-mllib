@@ -16,7 +16,7 @@ CC := clang
 CXX := clang++
 RM := rm -rf
 
-CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++11 -fsycl
+CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 -fsycl
 
 # The following paths setting works for self-built libs from source code
 # https://github.com/oneapi-src/oneCCL. If oneCCL package in oneAPI Toolkit is used,
