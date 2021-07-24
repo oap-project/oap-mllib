@@ -20,9 +20,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}-${{ hashFiles('**/pom.xml', '{{github.workspace}}/dev/install-build-deps-ubuntu.sh') }}
-          restore-keys: |
-            ${{ runner.os }}-
+          key: ${{ runner.os }}_spark-3.0.0_hadoop-2.7.7_oneapi-2021.3.0
       - name: Set up environments
         run: |          
           source ${{github.workspace}}/dev/setup-all.sh
