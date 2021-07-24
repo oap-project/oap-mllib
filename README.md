@@ -114,7 +114,7 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Toolkits 2021.3+ Components:
+* Intel® oneAPI Toolkits 2021.2+ Components:
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
