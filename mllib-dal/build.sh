@@ -41,6 +41,18 @@ case $opt in
 esac
 done
 
+versionArray=(
+  spark-3.0.0 \
+  spark-3.0.1 \
+  spark-3.0.2 \
+  spark-3.1.1
+)
+
+if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
+  echo Error: $SPARK_VER version is not supported!
+  exit 1
+fi
+
 echo
 echo Usage: ./build.sh [-p spark-x.x.x]
 echo

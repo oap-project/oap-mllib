@@ -58,12 +58,6 @@ echo ============================
 
 ALGO=$1
 
-# Clean
-echo
-echo Cleaning ...
-echo
-mvn clean
-
 versionArray=(
   spark-3.0.0 \
   spark-3.0.1 \
