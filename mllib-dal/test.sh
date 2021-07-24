@@ -59,6 +59,9 @@ echo ============================
 ALGO=$1
 
 # Clean
+echo
+echo Cleaning ...
+echo
 mvn clean
 
 versionArray=(
@@ -87,9 +90,13 @@ if [[ ! ${algoArray[*]} =~ $ALGO ]]; then
 fi
 
 if [[ -z $ALGO ]]; then
+  echo
   echo Testing ALL suites...
+  echo
   mvn -P$SPARK_VER -Dtest=none test
 else
+  echo
   echo Testing org.apache.spark.ml.$ALGO ...
+  echo
   mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$ALGO test
 fi

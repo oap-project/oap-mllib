@@ -53,5 +53,7 @@ echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo Spark Version: $SPARK_VER
 echo =============================
+echo
 echo Building with $SPARK_VER ...
+echo
 mvn -P$SPARK_VER -DskipTests clean package
