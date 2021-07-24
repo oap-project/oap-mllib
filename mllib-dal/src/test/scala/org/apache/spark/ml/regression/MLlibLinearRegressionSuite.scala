@@ -33,7 +33,7 @@ import org.apache.spark.mllib.util.LinearDataGenerator
 import org.apache.spark.sql.{DataFrame, Row}
 
 
-class MLLibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with PMMLReadWriteTest {
+class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with PMMLReadWriteTest {
 
   import testImplicits._
 
