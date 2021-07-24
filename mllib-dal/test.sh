@@ -87,26 +87,26 @@ echo Clang Version: $(clang -dumpversion)
 echo Spark Version: $SPARK_VER
 echo ============================
 
-ALGO=$1
+SUITE=$1
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!
   exit 1
 fi
 
-if [[ ! ${suiteArray[*]} =~ $ALGO ]]; then
-  echo Error: $ALGO test suite is not supported!
+if [[ ! ${suiteArray[*]} =~ $SUITE ]]; then
+  echo Error: $SUITE test suite is not supported!
   exit 1
 fi
 
-if [[ -z $ALGO ]]; then
+if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
   mvn -P$SPARK_VER -Dtest=none test
 else
   echo
-  echo Testing org.apache.spark.ml.$ALGO ...
+  echo Testing org.apache.spark.ml.$SUITE ...
   echo
-  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$ALGO test
+  mvn -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi
