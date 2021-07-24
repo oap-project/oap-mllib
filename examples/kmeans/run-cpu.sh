@@ -20,9 +20,6 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --conf "spark.sql.shuffle.partitions=$SPARK_DEFAULT_PARALLELISM" \
     --conf "spark.driver.extraClassPath=$SPARK_DRIVER_CLASSPATH" \
     --conf "spark.executor.extraClassPath=$SPARK_EXECUTOR_CLASSPATH" \
-    --conf "spark.oap.mllib.useGPU=true" \
-    --conf "spark.executor.resource.gpu.amount=1" \
-    --conf "spark.task.resource.gpu.amount=1" \
     --conf "spark.shuffle.reduceLocality.enabled=false" \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
