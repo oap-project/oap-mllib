@@ -26,24 +26,32 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-if [[ -z $1 ]]; then
- echo SPARK_VER not defined, using default.
-else
- SPARK_VER=$1
-fi
+# Set default version
+SPARK_VER=spark-3.0.0
 
+while getopts "p:" opt
+do
+case $opt in
+  p) SPARK_VER=$OPTARG ;;
+  *) echo
+     echo Usage: ./build.sh [-p spark-x.x.x]
+     echo
+     exit 1
+     ;;
+esac
+done
+
+echo
+echo Usage: ./build.sh [-p spark-x.x.x]
+echo
 echo === Building Environments ===
-echo SPARK_VER=$SPARK_VER
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
+echo Spark Version: $SPARK_VER
 echo =============================
-
-if [[ -z $SPARK_VER ]]; then
- mvn -DskipTests clean package
-else
- mvn -P$SPARK_VER -DskipTests clean package
-fi
+echo Building with $SPARK_VER ...
+mvn -P$SPARK_VER -DskipTests clean package
