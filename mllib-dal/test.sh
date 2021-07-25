@@ -105,10 +105,10 @@ if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none test
+  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none clean test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
+  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE clean test
 fi
