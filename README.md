@@ -125,7 +125,7 @@ To clone and build from open source oneCCL, run the following commands:
 ```
 	$ git clone https://github.com/oneapi-src/oneCCL
         $ cd oneCCL
-        $ git checkout 2021.2
+        $ git checkout 2021.2.1
 	$ mkdir build && cd build
 	$ cmake ..
 	$ make -j install
@@ -172,28 +172,39 @@ To build, run the following commands:
     $ ./build.sh
 ```
 
-The target can be built against different Spark versions by specifying profile with <spark-x.x.x>. E.g.
+If no parameter is given, the Spark version 3.1.1 will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
 ```
-    $ ./build.sh -p spark-3.1.1
+    $ ./build.sh -p spark-3.0.0
 ```
-If no profile parameter is given, the Spark version 3.0.0 will be activated by default.
+
 The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
 
 ## Examples
 
+### Scala Examples
+
+Example            |  Description
+-------------------|-----------------------------
+kmeans             |  K-means example for Scala
+pca                |  PCA example for Scala
+als                |  ALS example for Scala
+naive-bayes        |  Naive Bayes for Scala
+linear-regression  |  Linear Regression for Scala
+
+### Python Examples
+
 Example         |  Description
 ----------------|---------------------------
-kmeans          |  K-means example for Scala
 kmeans-pyspark  |  K-means example for PySpark
-pca             |  PCA example for Scala
 pca-pyspark     |  PCA example for PySpark
-als             |  ALS example for Scala
 als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
-Algorithm | Category | Maturity
-----------|----------|-------------
-K-Means   | CPU      | Experimental
-PCA       | CPU      | Experimental
-ALS       | CPU      | Experimental
+Algorithm         | Category | Maturity
+------------------|----------|-------------
+K-Means           | CPU, GPU | Experimental
+PCA               | CPU      | Experimental
+ALS               | CPU      | Experimental
+Naive Bayes       | CPU      | Experimental
+Linear Regression | CPU      | Experimental
