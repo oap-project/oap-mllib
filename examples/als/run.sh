@@ -6,7 +6,7 @@ source ../../conf/env.sh
 # The data file should be copied to $HDFS_ROOT before running examples
 DATA_FILE=data/onedal_als_csr_ratings.txt
 
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
+APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.ALSExample
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \

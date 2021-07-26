@@ -4,9 +4,9 @@ source ../../conf/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=data/sample_kmeans_data.txt
+DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
+APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.KMeansExample
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
