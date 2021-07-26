@@ -12,8 +12,8 @@ SPARK_HADOOP_VERSION=hadoop3.2
 
 [ -d ~/opt ] || mkdir ~/opt
 cd ~/opt
-[ -f $SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/$SPARK_VERSION/$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
-[ -d $SPARK_VERSION-bin-$SPARK_HADOOP_VERSION ] || tar -xzf $SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
+[ -f spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
+[ -d spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION ] || tar -xzf spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
 [ -f hadoop-$HADOOP_VERSION.tar.gz ] || wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 [ -d hadoop-$HADOOP_VERSION ] || tar -xzf hadoop-$HADOOP_VERSION.tar.gz
 
@@ -28,7 +28,7 @@ cp ./core-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hdfs-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
-cp ./spark-defaults.conf ~/opt/$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
+cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 
 source ./setup-spark-envs.sh
 
