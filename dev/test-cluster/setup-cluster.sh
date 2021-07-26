@@ -6,12 +6,16 @@ cd $WORK_DIR
 
 echo JAVA_HOME is $JAVA_HOME
 
+HADOOP_VERSION=3.2.0
+SPARK_VERSION=3.1.1
+SPARK_HADOOP_VERSION=hadoop3.2
+
 [ -d ~/opt ] || mkdir ~/opt
 cd ~/opt
-[ -f spark-3.0.0-bin-hadoop2.7.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-[ -d spark-3.0.0-bin-hadoop2.7 ] || tar -xzf spark-3.0.0-bin-hadoop2.7.tgz
-[ -f hadoop-2.7.7.tar.gz ] || wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-2.7.7/hadoop-2.7.7.tar.gz
-[ -d hadoop-2.7.7 ] || tar -xzf hadoop-2.7.7.tar.gz
+[ -f $SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/$SPARK_VERSION/$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
+[ -d $SPARK_VERSION-bin-$SPARK_HADOOP_VERSION ] || tar -xzf $SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
+[ -f hadoop-$HADOOP_VERSION.tar.gz ] || wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
+[ -d hadoop-$HADOOP_VERSION ] || tar -xzf hadoop-$HADOOP_VERSION.tar.gz
 
 cd $WORK_DIR
 
@@ -20,11 +24,11 @@ HOST_IP=$(hostname -f)
 sed -i "s/localhost/$HOST_IP/g" core-site.xml
 sed -i "s/localhost/$HOST_IP/g" yarn-site.xml
 
-cp ./core-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
-cp ./hdfs-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
-cp ./yarn-site.xml ~/opt/hadoop-2.7.7/etc/hadoop/
-cp ./hadoop-env.sh ~/opt/hadoop-2.7.7/etc/hadoop/
-cp ./spark-defaults.conf ~/opt/spark-3.0.0-bin-hadoop2.7/conf
+cp ./core-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
+cp ./hdfs-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
+cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
+cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
+cp ./spark-defaults.conf ~/opt/$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 
 source ./setup-spark-envs.sh
 

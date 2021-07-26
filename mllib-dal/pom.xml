@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
-        <spark.version>3.0.0</spark.version>
+        <spark.version>3.1.1</spark.version>
         <oneapi.version>2021.3.0</oneapi.version>
         <tbb.lib>libtbb.so.12.3</tbb.lib>
         <tbb.malloc.lib>libtbbmalloc.so.2.3</tbb.malloc.lib>

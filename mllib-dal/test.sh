@@ -42,7 +42,7 @@ suiteArray=(
 )
 
 # Set default version
-SPARK_VER=spark-3.0.0
+SPARK_VER=spark-3.1.1
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
