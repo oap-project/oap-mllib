@@ -184,12 +184,12 @@ The built JAR package will be placed in `target` directory with the name `oap-ml
 ### Scala Examples
 
 Example            |  Description
--------------------|-----------------------------
+-------------------|-------------------------------------
 kmeans             |  K-means example for Scala
 pca                |  PCA example for Scala
 als                |  ALS example for Scala
-naive-bayes        |  Naive Bayes for Scala
-linear-regression  |  Linear Regression for Scala
+naive-bayes        |  Naive Bayes example for Scala
+linear-regression  |  Linear Regression example for Scala
 
 ### Python Examples
 
