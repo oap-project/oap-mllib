@@ -51,6 +51,7 @@ Intel® oneAPI Toolkits components used by the project are already included into
 
 #### General Configuration
 
+##### YARN Cluster Manager
 Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running. 
 
 ```
@@ -58,8 +59,18 @@ Users usually run Spark application on __YARN__ with __client__ mode. In that ca
 spark.files                       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for driver class path
 spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
-# relative path to spark.files, just specify jar name in current dir
+# relative path of the jar for executor class path
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
+```
+
+##### Standalone Cluster Manager
+For standalone cluster manager, you need to upload the jar to every node or use shared network folder and then specify absolute paths for extraClassPath.
+
+```
+# absolute path of the jar for driver class path
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
+# absolute path of the jar for executor class path
+spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 ```
 
 #### OAP MLlib Specific Configuration
