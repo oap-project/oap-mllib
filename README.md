@@ -123,12 +123,12 @@ Scala and Java dependency descriptions are already included in Maven POM file.
 
 To clone and build from open source oneCCL, run the following commands:
 ```
-	$ git clone https://github.com/oneapi-src/oneCCL
-        $ cd oneCCL
-        $ git checkout 2021.2.1
-	$ mkdir build && cd build
-	$ cmake ..
-	$ make -j install
+    $ git clone https://github.com/oneapi-src/oneCCL
+    $ cd oneCCL
+    $ git checkout 2021.2.1
+    $ mkdir build && cd build
+    $ cmake ..
+    $ make -j install
 ```
 
 The generated files will be placed in `/your/oneCCL_source_code/build/_install`
@@ -156,8 +156,8 @@ CCL_ROOT    | Path to oneCCL home directory
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
 
 ```
-	$ source /opt/intel/oneapi/setvars.sh
-	$ source /your/oneCCL_source_code/build/_install/env/setvars.sh
+    $ source /opt/intel/oneapi/setvars.sh
+    $ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 ```
 
 __Be noticed we are using our own built oneCCL instead, we should source oneCCL's `setvars.sh` to overwrite oneAPI one.__
