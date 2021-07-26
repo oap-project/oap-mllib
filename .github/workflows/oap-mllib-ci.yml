@@ -20,7 +20,9 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.0.0_hadoop-2.7.7_oneapi-2021.3.0
+          key: ${{ runner.os }}_spark-3.1.1_hadoop-3.2.0_oneapi-2021.3.0
+          restore-keys: |
+            ${{ runner.os }}-
       - name: Set up environments
         run: |          
           source ${{github.workspace}}/dev/setup-all.sh
