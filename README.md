@@ -103,7 +103,7 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Toolkits 2021.2+ Components:
+* Intel® oneAPI Toolkits 2021.3.0 Components:
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
@@ -172,7 +172,7 @@ To build, run the following commands:
     $ ./build.sh
 ```
 
-If no parameter is given, the Spark version 3.1.1 will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
+If no parameter is given, the Spark version __3.1.1__ will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
 ```
     $ ./build.sh -p spark-3.0.0
 ```
