@@ -6,12 +6,13 @@ source ../../conf/env.sh
 # The data file should be copied to $HDFS_ROOT before running examples
 DATA_FILE=data/sample_kmeans_data.txt
 
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
+APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.KMeansExample
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --num-executors $SPARK_NUM_EXECUTORS \
     --driver-memory $SPARK_DRIVER_MEMORY \
+    --total-executor-cores $SPARK_TOTAL_CORES \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --executor-memory $SPARK_EXECUTOR_MEMORY \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
@@ -26,3 +27,4 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --class $APP_CLASS \
     $APP_JAR $DATA_FILE \
     2>&1 | tee KMeans-$(date +%m%d_%H_%M_%S).log
+

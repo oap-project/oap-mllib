@@ -21,11 +21,7 @@
 !******************************************************************************/
 
 #include "error_handling.h"
-
-#ifndef _ERROR_HANDLING_H
-#define _ERROR_HANDLING_H
-
-const int fileError = -1001;
+#include <iostream>
 
 void checkAllocation(void *ptr) {
     if (!ptr) {
@@ -55,5 +51,3 @@ void sparceFileReadError() {
     std::cout << "Incorrect format of file" << std::endl;
     exit(fileError);
 }
-
-#endif

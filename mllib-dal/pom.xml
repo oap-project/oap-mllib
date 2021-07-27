@@ -16,10 +16,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
-        <spark.version>3.0.0</spark.version>
-        <oneapi.version>2021.2.0</oneapi.version>
-        <tbb.lib>libtbb.so.12.2</tbb.lib>
-        <tbb.malloc.lib>libtbbmalloc.so.2.2</tbb.malloc.lib>
+        <spark.version>3.1.1</spark.version>
+        <oneapi.version>2021.3.0</oneapi.version>
+        <tbb.lib>libtbb.so.12.3</tbb.lib>
+        <tbb.malloc.lib>libtbbmalloc.so.2.3</tbb.malloc.lib>
         <dal.java.lib>libJavaAPI.so.1.1</dal.java.lib>
         <ccl.lib>libccl.so</ccl.lib>
         <ccl.fabric.lib>libfabric.so.1</ccl.fabric.lib>
