@@ -2,7 +2,7 @@
 
 source ../../conf/env.sh
 
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
+APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.PCAExample
 
 # Dataset is created in the code, so no need to pass in as parameter
