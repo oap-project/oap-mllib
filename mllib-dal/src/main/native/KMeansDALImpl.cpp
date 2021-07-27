@@ -247,34 +247,24 @@ Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCente
     jobject resultObj) {
 
     ccl::communicator &comm = getComm();
-    int rankId = comm.rank();
     int size = comm.size();
+    int rankId = comm.rank();
 
     NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
     NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
 
     jlong ret = 0L;
     if (use_gpu) {
-        int n_gpu = env->GetArrayLength(gpu_idx_array);
-        cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"
-             << endl;
-
+        int n_gpu = env->GetArrayLength(gpu_idx_array);        
         jint *gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
 
-        auto local_rank = getLocalRank(comm, size, rankId);
-        auto gpus = get_gpus();
-
-        std::cout << "rank: " << rankId << " size: " << size
-                  << " local_rank: " << local_rank << " n_gpu: " << n_gpu
+        std::cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"
                   << std::endl;
-
-        auto gpu_selected = gpu_indices[local_rank % n_gpu];
-        std::cout << "GPU selected for current rank: " << gpu_selected
-                  << std::endl;
-        auto rank_gpu = gpus[gpu_selected % gpus.size()];
+        
+        auto assigned_gpu = getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
 
         // Set SYCL context
-        cl::sycl::queue queue(rank_gpu);
+        cl::sycl::queue queue(assigned_gpu);
         daal::services::SyclExecutionContext ctx(queue);
         daal::services::Environment::getInstance()->setDefaultExecutionContext(
             ctx);

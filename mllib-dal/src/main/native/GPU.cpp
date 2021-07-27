@@ -51,27 +51,45 @@ int getLocalRank(ccl::communicator &comm, int size, int rank) {
     //    return 0;
 }
 
-void setGPUContext(ccl::communicator &comm, jint *gpu_idx, int n_gpu) {
-    int rank = comm.rank();
-    int size = comm.size();
+//void setGPUContext(ccl::communicator &comm, jint *gpu_idx, int n_gpu) {
+//    int rank = comm.rank();
+//    int size = comm.size();
+//
+//    /* Create GPU device from local rank and set execution context */
+//    auto local_rank = getLocalRank(comm, size, rank);
+//    auto gpus = get_gpus();
+//
+//    std::cout << rank << " " << size << " " << local_rank << " " << n_gpu
+//              << std::endl;
+//
+//    for (int i = 0; i < n_gpu; i++) {
+//        std::cout << gpu_idx[i] << std::endl;
+//    }
+//
+//    // auto rank_gpu   = gpus[gpu_idx[local_rank % n_gpu]];
+//    static auto rank_gpu = gpus[0];
+//
+//    static cl::sycl::queue queue(rank_gpu);
+//    std::cout << "SyclExecutionContext" << std::endl;
+//    static daal::services::SyclExecutionContext ctx(queue);
+//    std::cout << "setDefaultExecutionContext" << std::endl;
+//    daal::services::Environment::getInstance()->setDefaultExecutionContext(ctx);
+//}
 
-    /* Create GPU device from local rank and set execution context */
-    auto local_rank = getLocalRank(comm, size, rank);
+sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
+                            jint *gpu_indices, int n_gpu
+                            ) {
+    auto local_rank = getLocalRank(comm, size, rankId);
     auto gpus = get_gpus();
 
-    std::cout << rank << " " << size << " " << local_rank << " " << n_gpu
+    std::cout << "rank: " << rankId << " size: " << size
+              << " local_rank: " << local_rank << " n_gpu: " << n_gpu
               << std::endl;
 
-    for (int i = 0; i < n_gpu; i++) {
-        std::cout << gpu_idx[i] << std::endl;
-    }
+    auto gpu_selected = gpu_indices[local_rank % n_gpu];
+    std::cout << "GPU selected for current rank: " << gpu_selected
+              << std::endl;
+    auto rank_gpu = gpus[gpu_selected % gpus.size()];
 
-    // auto rank_gpu   = gpus[gpu_idx[local_rank % n_gpu]];
-    static auto rank_gpu = gpus[0];
-
-    static cl::sycl::queue queue(rank_gpu);
-    std::cout << "SyclExecutionContext" << std::endl;
-    static daal::services::SyclExecutionContext ctx(queue);
-    std::cout << "setDefaultExecutionContext" << std::endl;
-    daal::services::Environment::getInstance()->setDefaultExecutionContext(ctx);
+    return rank_gpu;
 }

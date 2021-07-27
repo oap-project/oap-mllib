@@ -31,12 +31,13 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 /*
  * Class:     org_apache_spark_ml_feature_PCADALImpl
  * Method:    cPCATrainDAL
- * Signature: (JIIILorg/apache/spark/ml/feature/PCAResult;)J
+ * Signature: (JIIIZ[ILorg/apache/spark/ml/feature/PCAResult;)J
  */
+
 JNIEXPORT jlong JNICALL
 Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
-    jint executor_cores, jobject resultObj) {
+    jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array, jobject resultObj) {
 
     using daal::byte;
 

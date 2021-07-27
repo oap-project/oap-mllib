@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_apache_spark_ml_feature_PCADALImpl
  * Method:    cPCATrainDAL
- * Signature: (JIIILorg/apache/spark/ml/feature/PCAResult;)J
+ * Signature: (JIIIZ[ILorg/apache/spark/ml/feature/PCAResult;)J
  */
 JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL
-  (JNIEnv *, jobject, jlong, jint, jint, jint, jobject);
+  (JNIEnv *, jobject, jlong, jint, jint, jint, jboolean, jintArray, jobject);
 
 #ifdef __cplusplus
 }
