@@ -5,10 +5,13 @@ source ../../conf/env.sh
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
 APP_CLASS=org.apache.spark.examples.ml.PCAExample
 
+# Dataset is created in the code, so no need to pass in as parameter
+
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --num-executors $SPARK_NUM_EXECUTORS \
-    --driver-memory $SPARK_DRIVER_MEMORY \
     --executor-cores $SPARK_EXECUTOR_CORES \
+    --total-executor-cores $SPARK_TOTAL_CORES \
+    --driver-memory $SPARK_DRIVER_MEMORY \
     --executor-memory $SPARK_EXECUTOR_MEMORY \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
     --conf "spark.default.parallelism=$SPARK_DEFAULT_PARALLELISM" \

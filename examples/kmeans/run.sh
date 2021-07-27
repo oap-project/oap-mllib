@@ -11,9 +11,9 @@ APP_CLASS=org.apache.spark.examples.ml.KMeansExample
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --num-executors $SPARK_NUM_EXECUTORS \
-    --driver-memory $SPARK_DRIVER_MEMORY \
-    --total-executor-cores $SPARK_TOTAL_CORES \
     --executor-cores $SPARK_EXECUTOR_CORES \
+    --total-executor-cores $SPARK_TOTAL_CORES \
+    --driver-memory $SPARK_DRIVER_MEMORY \
     --executor-memory $SPARK_EXECUTOR_MEMORY \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
     --conf "spark.default.parallelism=$SPARK_DEFAULT_PARALLELISM" \

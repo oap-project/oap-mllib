@@ -2,16 +2,19 @@
 
 source ../../conf/env.sh
 
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION-with-spark-3.0.0.jar
+# Data file is from Spark Examples (data/mllib/sample_libsvm_data.txt) and put in examples/data
+# The data file should be copied to $HDFS_ROOT before running examples
+DATA_FILE=$HDFS_ROOT/data/sample_libsvm_data.txt
+
+APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.NaiveBayesExample
-DATA_FILE=data/sample_libsvm_data.txt
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --num-executors $SPARK_NUM_EXECUTORS \
-    --driver-memory $SPARK_DRIVER_MEMORY \
     --executor-cores $SPARK_EXECUTOR_CORES \
+    --total-executor-cores $SPARK_TOTAL_CORES \
+    --driver-memory $SPARK_DRIVER_MEMORY \
     --executor-memory $SPARK_EXECUTOR_MEMORY \
-    --conf "spark.oap.mllib.enabled=true" \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
     --conf "spark.default.parallelism=$SPARK_DEFAULT_PARALLELISM" \
     --conf "spark.sql.shuffle.partitions=$SPARK_DEFAULT_PARALLELISM" \
@@ -22,5 +25,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
     --class $APP_CLASS \
-    $APP_JAR $DATA_FILE $K \
+    $APP_JAR $DATA_FILE \
     2>&1 | tee NaiveBayes-$(date +%m%d_%H_%M_%S).log
