@@ -16,6 +16,9 @@
 
 package org.apache.spark.ml.clustering
 
+import com.intel.daal.data_management.data.{NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
+import com.intel.daal.services.DaalContext
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util._
@@ -45,7 +48,18 @@ class KMeansDALImpl(var nClusters: Int,
 
     val kvsIPPort = kvsIP + "_" + kvsPort
 
+    val sparkContext = data.sparkContext
+    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+
+      val gpuIndices = if (useGPU) {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+
       val tableArr = table.next()
       OneCCL.init(executorNum, rank, kvsIPPort)
 
@@ -59,6 +73,8 @@ class KMeansDALImpl(var nClusters: Int,
         maxIterations,
         executorNum,
         executorCores,
+        useGPU,
+        gpuIndices,
         result
       )
 
@@ -108,6 +124,8 @@ class KMeansDALImpl(var nClusters: Int,
                                                        iteration_num: Int,
                                                        executor_num: Int,
                                                        executor_cores: Int,
+                                                       useGPU: Boolean,
+                                                       gpuIndices: Array[Int],
                                                        result: KMeansResult): Long
 
 }

@@ -114,7 +114,7 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Toolkits 2021.2+ Components:
+* Intel® oneAPI Toolkits 2021.3.0 Components:
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
@@ -134,12 +134,12 @@ Scala and Java dependency descriptions are already included in Maven POM file.
 
 To clone and build from open source oneCCL, run the following commands:
 ```
-	$ git clone https://github.com/oneapi-src/oneCCL
-        $ cd oneCCL
-        $ git checkout 2021.2
-	$ mkdir build && cd build
-	$ cmake ..
-	$ make -j install
+    $ git clone https://github.com/oneapi-src/oneCCL
+    $ cd oneCCL
+    $ git checkout 2021.2.1
+    $ mkdir build && cd build
+    $ cmake ..
+    $ make -j install
 ```
 
 The generated files will be placed in `/your/oneCCL_source_code/build/_install`
@@ -167,8 +167,8 @@ CCL_ROOT    | Path to oneCCL home directory
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
 
 ```
-	$ source /opt/intel/oneapi/setvars.sh
-	$ source /your/oneCCL_source_code/build/_install/env/setvars.sh
+    $ source /opt/intel/oneapi/setvars.sh
+    $ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 ```
 
 __Be noticed we are using our own built oneCCL instead, we should source oneCCL's `setvars.sh` to overwrite oneAPI one.__
@@ -183,28 +183,39 @@ To build, run the following commands:
     $ ./build.sh
 ```
 
-The target can be built against different Spark versions by specifying profile with <spark-x.x.x>. E.g.
+If no parameter is given, the Spark version __3.1.1__ will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
 ```
-    $ ./build.sh spark-3.1.1
+    $ ./build.sh -p spark-3.0.0
 ```
-If no profile parameter is given, the Spark version 3.0.0 will be activated by default.
+
 The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
 
 ## Examples
 
+### Scala Examples
+
+Example            |  Description
+-------------------|-------------------------------------
+kmeans             |  K-means example for Scala
+pca                |  PCA example for Scala
+als                |  ALS example for Scala
+naive-bayes        |  Naive Bayes example for Scala
+linear-regression  |  Linear Regression example for Scala
+
+### Python Examples
+
 Example         |  Description
 ----------------|---------------------------
-kmeans          |  K-means example for Scala
 kmeans-pyspark  |  K-means example for PySpark
-pca             |  PCA example for Scala
 pca-pyspark     |  PCA example for PySpark
-als             |  ALS example for Scala
 als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
-Algorithm | Category | Maturity
-----------|----------|-------------
-K-Means   | CPU      | Experimental
-PCA       | CPU      | Experimental
-ALS       | CPU      | Experimental
+Algorithm         | Category | Maturity
+------------------|----------|-------------
+K-Means           | CPU, GPU | Experimental
+PCA               | CPU      | Experimental
+ALS               | CPU      | Experimental
+Naive Bayes       | CPU      | Experimental
+Linear Regression | CPU      | Experimental

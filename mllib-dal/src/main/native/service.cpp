@@ -1,27 +1,11 @@
-/* file: service.cpp */
-/*******************************************************************************
- * Copyright 2017-2020 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+#include <daal_sycl.h>
 
-/*
-!  Content:
-!    Auxiliary functions used in C++ samples
-!******************************************************************************/
-
-#include "service.h"
 #include "error_handling.h"
+#include "service.h"
+
+using namespace daal;
+using namespace daal::data_management;
+using namespace daal::services;
 
 size_t readTextFile(const std::string &datasetFileName, daal::byte **data) {
     std::ifstream file(datasetFileName.c_str(),
@@ -775,4 +759,38 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
 
     /* Deserialize the numeric table from the data archive */
     return dataArch.getAsSharedPtr();
+}
+
+NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
+    int nRows = ntHomogen->getNumberOfRows();
+    int nColumns = ntHomogen->getNumberOfColumns();
+
+    // printNumericTable(ntHomogen, "ntHomogen:", 10, 10);
+
+    NumericTablePtr ntSycl = SyclHomogenNumericTable<algorithmFpType>::create(
+        nColumns, nRows, NumericTable::doAllocate);
+
+    // printNumericTable(ntSycl, "ntSycl:", 10, 10);
+
+    BlockDescriptor<algorithmFpType> sourceRows;
+    ntHomogen->getBlockOfRows(0, ntHomogen->getNumberOfRows(), readOnly,
+                              sourceRows);
+
+    BlockDescriptor<algorithmFpType> targetRows;
+    ntSycl->getBlockOfRows(0, ntSycl->getNumberOfRows(), writeOnly, targetRows);
+
+    // bracets for calling destructor of hostPtr to release lock
+    {
+        Status st;
+        auto hostPtr =
+            targetRows.getBuffer().toHost(data_management::writeOnly, st);
+
+        for (int i = 0; i < nRows * nColumns; i++) {
+            hostPtr.get()[i] = sourceRows.getBlockPtr()[i];
+        }
+    }
+
+    // printNumericTable(ntSycl, "ntSycl Result:", 10, 10);
+
+    return ntSycl;
 }

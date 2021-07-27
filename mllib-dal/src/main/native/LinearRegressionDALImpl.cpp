@@ -69,7 +69,7 @@ static NumericTablePtr linear_regression_compute(int rankId,
     delete[] nodeResults;
 
     NumericTablePtr resultTable;
-    if (rankId == ccl_root) {        
+    if (rankId == ccl_root) {
         /* Create an algorithm object to build the final multiple linear
          * regression model on the master node */
         linear_regression::training::Distributed<step2Master> masterAlgorithm;
@@ -146,8 +146,8 @@ static NumericTablePtr ridge_regression_compute(
     dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
     std::vector<size_t> aReceiveCount(comm.size(),
                                       perNodeArchLength); // 4 x "14016"
-    
-    /* Transfer partial results to step 2 on the root node */    
+
+    /* Transfer partial results to step 2 on the root node */
     ccl::gather((int8_t *)nodeResults, perNodeArchLength,
                 (int8_t *)(serializedData.get()), perNodeArchLength, comm)
         .wait();
@@ -204,8 +204,8 @@ static NumericTablePtr ridge_regression_compute(
 JNIEXPORT jlong JNICALL
 Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabLabel,
-    jdouble regParam, jdouble elasticNetParam,
-    jint executor_num, jint executor_cores, jobject resultObj) {
+    jdouble regParam, jdouble elasticNetParam, jint executor_num,
+    jint executor_cores, jobject resultObj) {
 
     ccl::communicator &comm = getComm();
     size_t rankId = comm.rank();

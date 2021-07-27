@@ -16,7 +16,7 @@ CC := clang
 CXX := clang++
 RM := rm -rf
 
-CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++11
+CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 -fsycl
 
 # The following paths setting works for self-built libs from source code
 # https://github.com/oneapi-src/oneCCL. If oneCCL package in oneAPI Toolkit is used,
@@ -30,11 +30,13 @@ INCS := -I $(JAVA_HOME)/include \
 
 # Use static link if possible, TBB is only available as dynamic libs
 LIBS := -L${CCL_ROOT}/lib -lccl \
-        -L$(DAALROOT)/lib/intel64 -l:libdaal_core.a -l:libdaal_thread.a \
-        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
+        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_sycl.a \
+        -L$(TBBROOT)/lib/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
+        -lpthread -ldl -lOpenCL
 
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
+  ./GPU.cpp \
   ./KMeansDALImpl.cpp \
   ./PCADALImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
@@ -43,6 +45,7 @@ CPP_SRCS += \
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
+  ./GPU.o \
   ./KMeansDALImpl.o \
   ./PCADALImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \

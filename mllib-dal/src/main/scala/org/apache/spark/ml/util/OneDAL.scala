@@ -398,6 +398,34 @@ object OneDAL {
     matrix
   }
 
+  def makeNumericTable (arrayVectors: Array[Vector]): NumericTable = {
+
+    val numCols = arrayVectors.head.size
+    val numRows: Int = arrayVectors.size
+
+    val context = new DaalContext()
+    val matrix = new DALMatrix(context, classOf[java.lang.Double],
+      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
+
+    arrayVectors.zipWithIndex.foreach {
+      case (v, rowIndex) =>
+        for (colIndex <- 0 until numCols)
+          cSetDouble(matrix.getCNumericTable, rowIndex, colIndex, v(colIndex))
+    }
+
+    matrix
+  }
+
+  def partitionsToNumericTables(partitions: RDD[Vector], executorNum: Int): RDD[NumericTable] = {
+    val dataForConversion = partitions.repartition(executorNum)
+      .setName("Repartitioned for conversion").cache()
+
+    dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+      val table = makeNumericTable(it.toArray)
+      Iterator(table)
+    }
+  }
+  
   def rddVectorToMergedTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
 
