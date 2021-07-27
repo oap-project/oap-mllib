@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-for dir in kmeans-pyspark pca-pyspark als-pyspark
+exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark)
+
+for dir in ${exampleDirs[*]}
 do
   cd $dir
   ./run.sh

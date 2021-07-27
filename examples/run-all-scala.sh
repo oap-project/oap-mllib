@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-for dir in kmeans pca als naive-bayes linear-regression
+exampleDirs=(kmeans pca als naive-bayes linear-regression)
+
+for dir in ${exampleDirs[*]}
 do
   cd $dir
   ./run.sh
