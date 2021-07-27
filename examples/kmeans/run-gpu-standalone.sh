@@ -9,11 +9,11 @@ DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.KMeansExample
 
+USE_GPU=true
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
 WORKER_GPU_AMOUNT=4
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
-USE_GPU=true
 
 # Should run in standalone mode
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
