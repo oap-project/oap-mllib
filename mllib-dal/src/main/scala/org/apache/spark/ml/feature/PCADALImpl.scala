@@ -17,9 +17,8 @@
 package org.apache.spark.ml.feature
 
 import java.util.Arrays
-
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
-
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
@@ -48,7 +47,17 @@ class PCADALImpl(val k: Int,
 
     val kvsIPPort = kvsIP + "_" + kvsPort
 
+    val sparkContext = data.sparkContext
+    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+      val gpuIndices = if (useGPU) {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+
       val tableArr = table.next()
       OneCCL.init(executorNum, rank, kvsIPPort)
 
@@ -58,6 +67,8 @@ class PCADALImpl(val k: Int,
         k,
         executorNum,
         executorCores,
+        useGPU,
+        gpuIndices,
         result
       )
 
@@ -139,6 +150,8 @@ class PCADALImpl(val k: Int,
                                    k: Int,
                                    executor_num: Int,
                                    executor_cores: Int,
+                                   useGPU: Boolean,
+                                   gpuIndices: Array[Int],
                                    result: PCAResult): Long
 
 }
