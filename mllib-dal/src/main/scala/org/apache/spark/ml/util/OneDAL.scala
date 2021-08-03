@@ -138,9 +138,6 @@ object OneDAL {
       val context = new DaalContext()
       val matrix = new DALMatrix(context, classOf[java.lang.Double],
         1, data.length, NumericTable.AllocationFlag.DoAllocate)
-      // oneDAL libs should be loaded by now, loading other native libs
-      logger.info("Loading native libraries")
-      LibLoader.loadLibraries()
 
       data.zipWithIndex.foreach { case (value: Double, index: Int) =>
         cSetDouble(matrix.getCNumericTable, index, 0, value)
@@ -204,10 +201,6 @@ object OneDAL {
     val matrixLabel = new DALMatrix(context, classOf[lang.Double],
       1, points.length, NumericTable.AllocationFlag.DoAllocate)
 
-    // oneDAL libs should be loaded by now, loading other native libs
-    logger.info("Loading native libraries")
-    LibLoader.loadLibraries()
-
     points.zipWithIndex.foreach { case (point: Double, index: Int) =>
       cSetDouble(matrixLabel.getCNumericTable, index, 0, point)
     }
@@ -255,10 +248,6 @@ object OneDAL {
     rowOffsets += indexValues + 1
 
     val contextLocal = new DaalContext()
-
-    // oneDAL libs should be loaded by now, loading other native libs
-    logger.info("Loading native libraries")
-    LibLoader.loadLibraries()
 
     val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
       nFeatures, csrRowNum)
@@ -382,10 +371,6 @@ object OneDAL {
     val context = new DaalContext()
     val matrix = new DALMatrix(context, classOf[lang.Double],
       numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
-
-    // oneDAL libs should be loaded by now, loading other native libs
-    logger.info("Loading native libraries")
-    LibLoader.loadLibraries()
 
     var dalRow = 0
 

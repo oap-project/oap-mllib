@@ -100,7 +100,6 @@ object Utils {
 
     val sc = data.sparkContext
     val result = data.mapPartitions { p =>
-      LibLoader.loadLibraries()
       val port = OneCCL.getAvailPort(localIP)
       if (port != -1) {
         Iterator(port)
@@ -112,6 +111,10 @@ object Utils {
     result(0)
   }
 
+  //
+  // This function is first called in driver and executors to load libraries and check compatibility
+  // All other functions using native libraries will depend on this function to be called first
+  //
   def checkClusterPlatformCompatibility(sc: SparkContext): Boolean = {
     LibLoader.loadLibraries()
 

@@ -333,7 +333,9 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
       numFeatures <= WeightedLeastSquares.MAX_NUM_FEATURES) || $(solver) == Normal)) {
       // oneDAL only support simple linear regression and ridge regression
       val paramSupported = ($(regParam) == 0) || ($(regParam) != 0 && $(elasticNetParam) == 0)
-      if (paramSupported && Utils.isOAPEnabled) {
+      val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+        dataset.sparkSession.sparkContext)
+        if (paramSupported && Utils.isOAPEnabled && isPlatformSupported) {
         val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
         val executor_cores = Utils.sparkExecutorCores()
         logInfo(s"LinearRegressionDAL fit using $executor_num Executors")
