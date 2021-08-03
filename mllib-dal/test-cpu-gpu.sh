@@ -79,7 +79,7 @@ shift "$((OPTIND-1))"
 
 print_usage
 
-export PLATFORM_PROFILE=CPU_ONLY_PROFILE
+export PLATFORM_PROFILE=CPU_GPU_PROFILE
 
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
