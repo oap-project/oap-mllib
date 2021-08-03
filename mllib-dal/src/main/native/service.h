@@ -22,7 +22,11 @@
 
 #pragma once
 
-#include "daal.h"
+#ifdef CPU_GPU_PROFILE
+#include <daal_sycl.h>
+#else
+#include <daal.h>
+#endif
 
 using namespace daal::data_management;
 
@@ -47,4 +51,7 @@ void printNumericTable(const NumericTablePtr &dataTable,
 size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
 CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
+
+#ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
+#endif

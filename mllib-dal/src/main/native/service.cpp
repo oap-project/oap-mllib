@@ -1,5 +1,3 @@
-#include <daal_sycl.h>
-
 #include "error_handling.h"
 #include "service.h"
 
@@ -761,6 +759,7 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
     return dataArch.getAsSharedPtr();
 }
 
+#ifdef CPU_GPU_PRFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
     int nRows = ntHomogen->getNumberOfRows();
     int nColumns = ntHomogen->getNumberOfColumns();
@@ -794,3 +793,4 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
 
     return ntSycl;
 }
+#endif

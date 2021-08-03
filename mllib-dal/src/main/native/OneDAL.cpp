@@ -15,7 +15,6 @@
  *******************************************************************************/
 
 #include <cstring>
-#include <daal.h>
 #include <iostream>
 
 #include "org_apache_spark_ml_util_OneDAL__.h"

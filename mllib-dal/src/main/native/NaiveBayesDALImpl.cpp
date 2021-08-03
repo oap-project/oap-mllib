@@ -1,4 +1,3 @@
-#include <daal.h>
 #include <unistd.h>
 
 #include "OneCCL.h"

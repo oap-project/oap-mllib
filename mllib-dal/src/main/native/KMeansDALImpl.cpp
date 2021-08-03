@@ -17,18 +17,13 @@
 #include <chrono>
 #include <iostream>
 
-#include <CL/cl.h>
-#include <CL/sycl.hpp>
-
-#include <daal_sycl.h>
-
-#include <oneapi/ccl.hpp>
+#ifdef CPU_GPU_PROFILE
+#include "GPU.h"
+#endif
 
 #include "OneCCL.h"
 #include "org_apache_spark_ml_clustering_KMeansDALImpl.h"
 #include "service.h"
-
-#include "GPU.h"
 
 using namespace std;
 using namespace daal;
@@ -247,21 +242,24 @@ Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCente
     jobject resultObj) {
 
     ccl::communicator &comm = getComm();
-    int size = comm.size();
     int rankId = comm.rank();
 
     NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
     NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
 
     jlong ret = 0L;
+#ifdef CPU_GPU_PROFILE
+
     if (use_gpu) {
-        int n_gpu = env->GetArrayLength(gpu_idx_array);        
+        int n_gpu = env->GetArrayLength(gpu_idx_array);
+        cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"
+             << endl;
+
         jint *gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
 
-        std::cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"
-                  << std::endl;
-        
-        auto assigned_gpu = getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
+        int size = comm.size();
+        auto assigned_gpu =
+            getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
 
         // Set SYCL context
         cl::sycl::queue queue(assigned_gpu);
@@ -274,7 +272,9 @@ Java_org_apache_spark_ml_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCente
             iteration_num, executor_num, resultObj);
 
         env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
-    } else {
+    } else
+#endif
+    {
         // Set number of threads for oneDAL to use for each rank
         services::Environment::getInstance()->setNumberOfThreads(
             executor_cores);

@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
-#include <oneapi/ccl.hpp>
 #include <set>
 #include <vector>
 

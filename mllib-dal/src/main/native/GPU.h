@@ -1,12 +1,10 @@
 #pragma once
 
+#include <CL/cl.h>
 #include <CL/sycl.hpp>
+#include <daal_sycl.h>
 #include <jni.h>
 #include <oneapi/ccl.hpp>
 
-int getLocalRank(ccl::communicator &comm, int size, int rank);
-std::vector<sycl::device> get_gpus();
-// void setGPUContext(ccl::communicator &comm, jint *gpu_idx, int n_gpu);
-
 sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
-                              jint *gpu_indices, int n_gpu);
+                            jint *gpu_indices, int n_gpu);

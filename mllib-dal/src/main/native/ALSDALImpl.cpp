@@ -16,7 +16,6 @@
 
 #include <assert.h>
 #include <chrono>
-#include <daal.h>
 #include <iostream>
 
 #include "OneCCL.h"
