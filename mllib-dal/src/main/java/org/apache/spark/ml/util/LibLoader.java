@@ -56,10 +56,13 @@ public final class LibLoader {
    * Load oneCCL libs in dependency order
    */
   private static synchronized void loadLibCCL() throws IOException {
-    loadFromJar(subDir, "libfabric.so.1");
+    // Load libfabric from system first, if failed load from jar
+    if (!loadFromSystem("libfabric.so.1")) {
+      loadFromJar(subDir, "libfabric.so.1");
+      loadFromJar(subDir, "libsockets-fi.so");
+    }
     loadFromJar(subDir, "libmpi.so.12");
     loadFromJar(subDir, "libccl.so");
-    loadFromJar(subDir, "libsockets-fi.so");
   }
 
   /**
@@ -91,6 +94,15 @@ public final class LibLoader {
     LibUtils.loadLibrary();
 
     loadFromJar(subDir, "libMLlibDAL.so");
+  }
+
+  private static synchronized boolean loadFromSystem(String name) {
+    try {
+      System.loadLibrary(name);
+    } catch (UnsatisfiedLinkError e) {
+      return false;
+    }
+    return true;
   }
 
   /**
