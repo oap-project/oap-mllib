@@ -922,7 +922,7 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
     val isPlatformSupported = DALImplUtils.checkClusterPlatformCompatibility(ratings.sparkContext)
 
     val (userIdAndFactors, itemIdAndFactors) =
-      if (implicitPrefs && isPlatformSupported) {
+      if (implicitPrefs && DALImplUtils.isOAPEnabled() && isPlatformSupported) {
         new ALSDALImpl(ratings, rank, maxIter, regParam, alpha, seed).train()
       } else {
         trainMLlib(ratings, rank, numUserBlocks, numItemBlocks, maxIter, regParam, implicitPrefs,

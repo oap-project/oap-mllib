@@ -349,7 +349,8 @@ class KMeans @Since("1.5.0") (
 
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
-    val useKMeansDAL = isPlatformSupported && $(distanceMeasure) == "euclidean" && !handleWeight
+    val useKMeansDAL = Utils.isOAPEnabled() && isPlatformSupported &&
+      $(distanceMeasure) == "euclidean" && !handleWeight
 
     val model = if (useKMeansDAL) {
       trainWithDAL(instances, handlePersistence)
