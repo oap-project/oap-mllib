@@ -95,12 +95,11 @@ class PCA @Since("1.5.0") (
     require($(k) <= numFeatures,
       s"source vector size $numFeatures must be no less than k=$k")
 
-    val sc = dataset.sparkSession.sparkContext
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
 
     // Call oneDAL Correlation PCA implementation when numFeatures < 65535 and fall back otherwise
-    val parentModel  = if (numFeatures < 65535 && isPlatformSupported) {
+    val parentModel  = if (numFeatures < 65535 && Utils.isOAPEnabled() && isPlatformSupported) {
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val pca = new PCADALImpl(k = $(k), executor_num, executor_cores)
