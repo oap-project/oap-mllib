@@ -15,8 +15,11 @@
  *******************************************************************************/
 
 #include <chrono>
-#include <daal.h>
 #include <iostream>
+
+#ifdef CPU_GPU_PROFILE
+#include "GPU.h"
+#endif
 
 #include "OneCCL.h"
 #include "org_apache_spark_ml_feature_PCADALImpl.h"
@@ -28,37 +31,9 @@ using namespace daal::algorithms;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-/*
- * Class:     org_apache_spark_ml_feature_PCADALImpl
- * Method:    cPCATrainDAL
- * Signature: (JIIIZ[ILorg/apache/spark/ml/feature/PCAResult;)J
- */
-
-JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
-    jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array, jobject resultObj) {
-
-    using daal::byte;
-
-    ccl::communicator &comm = getComm();
-    size_t rankId = comm.rank();
-
-    const size_t nBlocks = executor_num;
-    const int comm_size = executor_num;
-
-    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-    // Source data already normalized
-    pData->setNormalizationFlag(NumericTableIface::standardScoreNormalized);
-
-    // Set number of threads for oneDAL to use for each rank
-    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
-
-    int nThreadsNew =
-        services::Environment::getInstance()->getNumberOfThreads();
-    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-         << endl;
-
+static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
+                            ccl::communicator &comm, NumericTablePtr &pData,
+                            int nBlocks, jobject resultObj) {
     auto t1 = std::chrono::high_resolution_clock::now();
 
     pca::Distributed<step1Local, algorithmFPType, pca::svdDense> localAlgorithm;
@@ -78,15 +53,15 @@ Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
     t1 = std::chrono::high_resolution_clock::now();
 
     /* Serialize partial results required by step 2 */
-    services::SharedPtr<byte> serializedData;
+    services::SharedPtr<daal::byte> serializedData;
     InputDataArchive dataArch;
     localAlgorithm.getPartialResult()->serialize(dataArch);
     size_t perNodeArchLength = dataArch.getSizeOfArchive();
 
-    serializedData =
-        services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
+    serializedData = services::SharedPtr<daal::byte>(
+        new daal::byte[perNodeArchLength * nBlocks]);
 
-    byte *nodeResults = new byte[perNodeArchLength];
+    daal::byte *nodeResults = new daal::byte[perNodeArchLength];
     dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
 
     t2 = std::chrono::high_resolution_clock::now();
@@ -96,8 +71,8 @@ Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
     std::cout << "PCA (native): serializing partial results took " << duration
               << " secs" << std::endl;
 
-    vector<size_t> recv_counts(comm_size * perNodeArchLength);
-    for (int i = 0; i < comm_size; i++)
+    vector<size_t> recv_counts(nBlocks * perNodeArchLength);
+    for (int i = 0; i < nBlocks; i++)
         recv_counts[i] = perNodeArchLength;
 
     cout << "PCA (native): ccl_allgatherv receiving "
@@ -166,7 +141,6 @@ Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
         printNumericTable(result->get(pca::eigenvectors),
                           "First 10 eigenvectors with first 20 dimensions:", 10,
                           20);
-
         // Return all eigenvalues & eigenvectors
 
         // Get the class of the input object
@@ -185,6 +159,64 @@ Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
         env->SetLongField(resultObj, pcNumericTableField, (jlong)eigenvectors);
         env->SetLongField(resultObj, explainedVarianceNumericTableField,
                           (jlong)eigenvalues);
+    }
+}
+
+/*
+ * Class:     org_apache_spark_ml_feature_PCADALImpl
+ * Method:    cPCATrainDAL
+ * Signature: (JIIIZ[ILorg/apache/spark/ml/feature/PCAResult;)J
+ */
+
+JNIEXPORT jlong JNICALL
+Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
+    jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array,
+    jobject resultObj) {
+
+    ccl::communicator &comm = getComm();
+    size_t rankId = comm.rank();
+
+    const size_t nBlocks = executor_num;
+
+    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+    // Source data already normalized
+    pData->setNormalizationFlag(NumericTableIface::standardScoreNormalized);
+
+#ifdef CPU_GPU_PROFILE
+    if (use_gpu) {
+        int n_gpu = env->GetArrayLength(gpu_idx_array);
+        jint *gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
+
+        std::cout << "oneDAL (native): use GPU kernels with " << n_gpu
+                  << " GPU(s)" << std::endl;
+
+        int size = comm.size();
+        auto assigned_gpu =
+            getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
+
+        // Set SYCL context
+        cl::sycl::queue queue(assigned_gpu);
+        daal::services::SyclExecutionContext ctx(queue);
+        daal::services::Environment::getInstance()->setDefaultExecutionContext(
+            ctx);
+
+        doPCADALCompute(env, obj, rankId, comm, pData, nBlocks, resultObj);
+
+        env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
+    } else
+#endif
+    {
+        // Set number of threads for oneDAL to use for each rank
+        services::Environment::getInstance()->setNumberOfThreads(
+            executor_cores);
+
+        int nThreadsNew =
+            services::Environment::getInstance()->getNumberOfThreads();
+        cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
+             << endl;
+
+        doPCADALCompute(env, obj, rankId, comm, pData, nBlocks, resultObj);
     }
 
     return 0;

@@ -15,9 +15,7 @@
  *******************************************************************************/
 
 #include <chrono>
-#include <daal.h>
 #include <iostream>
-#include <oneapi/ccl.hpp>
 #include <vector>
 
 #include "OneCCL.h"

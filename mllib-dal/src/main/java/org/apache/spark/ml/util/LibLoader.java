@@ -42,9 +42,12 @@ public final class LibLoader {
   }
 
   /**
-   * Load oneCCL and MLlibDAL libs
+   * Load all native libs
    */
   public static synchronized void loadLibraries() throws IOException {
+    if (!loadLibSYCL()) {
+      log.debug("SYCL libraries are not available, will load CPU libraries only.");
+    }
     loadLibCCL();
     loadLibMLlibDAL();
   }
@@ -57,6 +60,24 @@ public final class LibLoader {
     loadFromJar(subDir, "libmpi.so.12");
     loadFromJar(subDir, "libccl.so");
     loadFromJar(subDir, "libsockets-fi.so");
+  }
+
+  /**
+   * Load SYCL libs in dependency order
+   */
+  private static synchronized Boolean loadLibSYCL() throws IOException {
+    // Check if SYCL libraries are available
+    InputStream streamIn = LibLoader.class.getResourceAsStream(LIBRARY_PATH_IN_JAR + "/libsycl.so.5");
+    if (streamIn == null) {
+      return false;
+    }
+    loadFromJar(subDir, "libintlc.so.5");
+    loadFromJar(subDir, "libimf.so");
+    loadFromJar(subDir, "libirng.so");
+    loadFromJar(subDir, "libsvml.so");
+    loadFromJar(subDir, "libOpenCL.so.1");
+    loadFromJar(subDir, "libsycl.so.5");
+    return true;
   }
 
   /**

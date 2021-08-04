@@ -94,8 +94,6 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
       }
       .mapPartitionsWithIndex { (rank, iter) =>
         val context = new DaalContext()
-        println("ALSDALImpl: Loading libMLlibDAL.so")
-        LibLoader.loadLibraries()
 
         OneCCL.init(executorNum, rank, kvsIPPort)
         val rankId = OneCCL.rankID()

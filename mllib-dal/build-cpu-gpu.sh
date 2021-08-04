@@ -65,9 +65,9 @@ if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   exit 1
 fi
 
-print_usage
+export PLATFORM_PROFILE=CPU_GPU_PROFILE
 
-export PLATFORM_PROFILE=CPU_ONLY_PROFILE
+print_usage
 
 echo === Building Environments ===
 echo JAVA_HOME=$JAVA_HOME

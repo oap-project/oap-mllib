@@ -24,6 +24,9 @@
         <ccl.lib>libccl.so</ccl.lib>
         <ccl.fabric.lib>libfabric.so.1</ccl.fabric.lib>
         <ccl.mpi.lib>libmpi.so.12.0.0</ccl.mpi.lib>
+        <opencl.lib>libOpenCL.so.1</opencl.lib>
+        <sycl.lib>libsycl.so.5</sycl.lib>
+        <assembly.description>src/assembly/assembly.xml</assembly.description>
     </properties>
 
     <dependencies>
@@ -149,10 +152,20 @@
     <profiles>
 
         <profile>
-            <id>spark-3.0.0</id>
+            <id>cpu-gpu</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>env.PLATFORM_PROFILE</name>
+                    <value>CPU_GPU_PROFILE</value>
+                </property>
             </activation>
+            <properties>
+                <assembly.description>src/assembly/assembly-cpu-gpu.xml</assembly.description>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>spark-3.0.0</id>
             <properties>
                 <spark.version>3.0.0</spark.version>
                 <scalatest.version>3.0.8</scalatest.version>
@@ -177,6 +190,9 @@
 
         <profile>
             <id>spark-3.1.1</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <spark.version>3.1.1</spark.version>
                 <scalatest.version>3.2.3</scalatest.version>
@@ -435,7 +451,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <descriptors>
                         <!-- use customized assembly -->
-                        <descriptor>src/assembly/assembly.xml</descriptor>
+                        <descriptor>${assembly.description}</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

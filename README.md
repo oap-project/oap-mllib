@@ -10,7 +10,10 @@ OAP MLlib is an optimized package to accelerate machine learning algorithms in  
 
 ## Compatibility
 
-OAP MLlib tried to maintain the same API interfaces and produce same results that are identical with Spark MLlib. However due to the nature of float point operations, there may be some small deviation from the original result, we will try our best to make sure the error is within acceptable range.
+OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration. 
+
+Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib. 
+
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. 
 
 ## Online Documentation
@@ -216,8 +219,10 @@ als-pyspark     |  ALS example for PySpark
 
 Algorithm         | Category | Maturity
 ------------------|----------|-------------
-K-Means           | CPU, GPU | Experimental
-PCA               | CPU      | Experimental
-ALS               | CPU      | Experimental
+K-Means           | CPU      | Stable
+K-Means           | GPU      | Experimental
+PCA               | CPU      | Stable
+PCA               | GPU      | Experimental
+ALS               | CPU      | Stable
 Naive Bayes       | CPU      | Experimental
 Linear Regression | CPU      | Experimental
