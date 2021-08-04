@@ -216,8 +216,10 @@ als-pyspark     |  ALS example for PySpark
 
 Algorithm         | Category | Maturity
 ------------------|----------|-------------
-K-Means           | CPU, GPU | Experimental
-PCA               | CPU      | Experimental
-ALS               | CPU      | Experimental
+K-Means           | CPU      | Stable
+K-Means           | GPU      | Experimental
+PCA               | CPU      | Stable
+PCA               | GPU      | Experimental
+ALS               | CPU      | Stable
 Naive Bayes       | CPU      | Experimental
 Linear Regression | CPU      | Experimental

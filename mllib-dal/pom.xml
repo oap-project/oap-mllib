@@ -166,9 +166,6 @@
 
         <profile>
             <id>spark-3.0.0</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <properties>
                 <spark.version>3.0.0</spark.version>
                 <scalatest.version>3.0.8</scalatest.version>
@@ -193,6 +190,9 @@
 
         <profile>
             <id>spark-3.1.1</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <spark.version>3.1.1</spark.version>
                 <scalatest.version>3.2.3</scalatest.version>
