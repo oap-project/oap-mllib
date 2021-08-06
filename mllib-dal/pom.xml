@@ -391,11 +391,16 @@
                             </includes>
                         </resource>
                         <resource>
-                            <!-- For https://github.com/oneapi-src/oneDAL/issues/1254 -->
                             <directory>${env.TBBROOT}/lib/intel64/gcc4.8</directory>
                             <includes>
                                 <include>${tbb.lib}</include>
                                 <include>${tbb.malloc.lib}</include>
+                            </includes>
+                        </resource>
+                        <resource>
+                            <directory>${env.DAALROOT}/lib/intel64</directory>
+                            <includes>
+                                <include>${dal.java.lib}</include>
                             </includes>
                         </resource>
                         <resource>
@@ -421,11 +426,9 @@
                         </goals>
                         <configuration>
                             <fileSets>
-                                <!-- oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10,
-                                rename to workaround. See https://github.com/oneapi-src/oneDAL/issues/1254 -->
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.2
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.12
                                     </destinationFile>
                                 </fileSet>
                                 <fileSet>
@@ -436,6 +439,11 @@
                                 <fileSet>
                                     <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.mpi.lib}</sourceFile>
                                     <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12
+                                    </destinationFile>
+                                </fileSet>
+                                <fileSet>
+                                    <sourceFile>${project.build.testOutputDirectory}/lib/${dal.java.lib}</sourceFile>
+                                    <destinationFile>${project.build.testOutputDirectory}/lib/libJavaAPI.so
                                     </destinationFile>
                                 </fileSet>
                             </fileSets>
