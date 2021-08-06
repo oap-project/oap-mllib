@@ -84,14 +84,17 @@ public final class LibLoader {
   }
 
   /**
-   * Load MLlibDAL lib, it depends TBB libs that are loaded by oneDAL, so this
-   * function should be called after oneDAL loadLibrary
+   * Load MLlibDAL lib
    */
   private static synchronized void loadLibMLlibDAL() throws IOException {
-    // oneDAL Java API doesn't load correct libtbb version for oneAPI Beta 10
-    // Rename in pom.xml and assembly.xml to workaround.
-    // See https://github.com/oneapi-src/oneDAL/issues/1254 -->
-    LibUtils.loadLibrary();
+    // oneDAL Java API doesn't load correct libtbb version
+    // See https://github.com/oneapi-src/oneDAL/issues/1254
+    // Workaround: Load packaged libtbb & libtbbmalloc & libJavaAPI.so manually
+
+    // Load TBB & oneDAL JavaAPI libs
+    loadFromJar(subDir, "libtbb.so.12");
+    loadFromJar(subDir, "libtbbmalloc.so.2");
+    loadFromJar(subDir, "libJavaAPI.so");
 
     loadFromJar(subDir, "libMLlibDAL.so");
   }
