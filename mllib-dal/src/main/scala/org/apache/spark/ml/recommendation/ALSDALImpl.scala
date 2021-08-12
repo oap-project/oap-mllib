@@ -17,16 +17,15 @@
 package org.apache.spark.ml.recommendation
 
 import java.nio.{ByteBuffer, ByteOrder, FloatBuffer}
-
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
-
 import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
-
 import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
+import org.apache.spark.ml.util.LibLoader.loadLibraries
+import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util._
 import org.apache.spark.rdd.RDD
 
@@ -77,15 +76,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
     val numericTables = data.repartition(executorNum)
       .setName("Repartitioned for conversion").cache()
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(numericTables.sparkContext)
-    val kvsIP = numericTables.sparkContext.conf.get(
-      "spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
-
-    val kvsPortDetected = Utils.checkExecutorAvailPort(numericTables, kvsIP)
-    val kvsPort = numericTables.sparkContext.conf.getInt(
-      "spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
-
-    val kvsIPPort = kvsIP + "_" + kvsPort
+    val kvsIPPort = getOneCCLIPPort(numericTables)
 
     val results = numericTables
       // Transpose the dataset
@@ -93,7 +84,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
         Rating(p.item, p.user, p.rating)
       }
       .mapPartitionsWithIndex { (rank, iter) =>
-        val context = new DaalContext()
+        // TODO: Use one-time init to load libraries
+        loadLibraries()
 
         OneCCL.init(executorNum, rank, kvsIPPort)
         val rankId = OneCCL.rankID()
