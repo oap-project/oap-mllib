@@ -21,6 +21,7 @@ import com.intel.daal.services.DaalContext
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
@@ -39,14 +40,7 @@ class KMeansDALImpl(var nClusters: Int,
 
     val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
-    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
-      executorIPAddress)
-    val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
-    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
-      kvsPortDetected)
-
-    val kvsIPPort = kvsIP + "_" + kvsPort
+    val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val sparkContext = data.sparkContext
     val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)

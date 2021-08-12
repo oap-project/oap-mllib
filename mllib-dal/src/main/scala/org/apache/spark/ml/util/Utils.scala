@@ -33,8 +33,9 @@ object Utils {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
       executorIPAddress)
-    val kvsPortDetected = 5000
-//    val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
+    //  TODO: right now we use a configured port, will optimize auto port detection
+    //  val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
+    val kvsPortDetected = 3000
     val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
       kvsPortDetected)
 
@@ -126,9 +127,9 @@ object Utils {
     // check workers' platform compatibility
     val executor_num = Utils.sparkExecutorNum(sc)
     val data = sc.parallelize(1 to executor_num, executor_num)
-    val result = data.map { p =>
+    val result = data.mapPartitions { p =>
       LibLoader.loadLibraries()
-      OneDAL.cCheckPlatformCompatibility()
+      Iterator(OneDAL.cCheckPlatformCompatibility())
     }.collect()
 
     result.forall(_ == true)

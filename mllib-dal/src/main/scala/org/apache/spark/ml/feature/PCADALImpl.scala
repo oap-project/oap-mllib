@@ -21,6 +21,7 @@ import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
+import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
@@ -37,15 +38,7 @@ class PCADALImpl(val k: Int,
 
     val coalescedTables = OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
 
-    val executorIPAddress = Utils.sparkFirstExecutorIP(coalescedTables.sparkContext)
-    val kvsIP = coalescedTables.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
-      executorIPAddress)
-
-    val kvsPortDetected = Utils.checkExecutorAvailPort(coalescedTables, kvsIP)
-    val kvsPort = coalescedTables.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
-      kvsPortDetected)
-
-    val kvsIPPort = kvsIP + "_" + kvsPort
+    val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val sparkContext = data.sparkContext
     val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
