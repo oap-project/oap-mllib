@@ -20,6 +20,8 @@ import org.apache.spark.internal.Logging
 
 object OneCCL extends Logging {
 
+  LibLoader.loadLibraries()
+
   var cclParam = new CCLParam()
 
   // Run on Executor

@@ -24,7 +24,6 @@ import com.intel.daal.services.DaalContext
 import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
-import org.apache.spark.ml.util.LibLoader.loadLibraries
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util._
 import org.apache.spark.rdd.RDD
@@ -84,9 +83,6 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
         Rating(p.item, p.user, p.rating)
       }
       .mapPartitionsWithIndex { (rank, iter) =>
-        // TODO: Use one-time init to load libraries
-        loadLibraries()
-
         OneCCL.init(executorNum, rank, kvsIPPort)
         val rankId = OneCCL.rankID()
 

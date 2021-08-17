@@ -88,9 +88,6 @@ class KMeansDALImpl(var nClusters: Int,
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
-    // Release native memory for numeric tables
-    OneDAL.releaseNumericTables(data.sparkContext)
-
     val centerVectors = results(0)._1
     val totalCost = results(0)._2
     val iterationNum = results(0)._3

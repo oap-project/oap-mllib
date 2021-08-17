@@ -87,9 +87,6 @@ class PCADALImpl(val k: Int,
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
-    // Release native memory for numeric tables
-    OneDAL.releaseNumericTables(data.sparkContext)
-
     val pc = results(0)._1
     val explainedVariance = results(0)._2
 
