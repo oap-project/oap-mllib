@@ -32,6 +32,8 @@ import scala.collection.mutable.ArrayBuffer
 
 object OneDAL {
 
+  LibLoader.loadLibraries()
+
   private val logger = Logger.getLogger("util.OneDAL")
   private val logLevel = Level.INFO
 
@@ -119,19 +121,9 @@ object OneDAL {
     matrix
   }
 
-  def releaseNumericTables(sparkContext: SparkContext): Unit = {
-    sparkContext.getPersistentRDDs
-      .filter(r => r._2.name == "numericTables")
-      .foreach { rdd =>
-        val numericTables = rdd._2.asInstanceOf[RDD[Long]]
-        numericTables.foreach { address =>
-          OneDAL.cFreeDataMemory(address)
-        }
-      }
-  }
-
   def rddDoubleToNumericTables(doubles: RDD[Double], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
+
     val doublesTables = doubles.repartition(executorNum).mapPartitions { it: Iterator[Double] =>
       val data = it.toArray
       // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc

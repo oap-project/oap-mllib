@@ -30,6 +30,8 @@ public final class LibLoader {
 
   private static final Logger log = LoggerFactory.getLogger("LibLoader");
 
+  private static boolean isLoaded = false;
+
   /**
    * Get temp dir for exacting lib files
    *
@@ -45,11 +47,16 @@ public final class LibLoader {
    * Load all native libs
    */
   public static synchronized void loadLibraries() throws IOException {
+    if (isLoaded)
+      return;
+
     if (!loadLibSYCL()) {
       log.debug("SYCL libraries are not available, will load CPU libraries only.");
     }
     loadLibCCL();
     loadLibMLlibDAL();
+
+    isLoaded = true;
   }
 
   /**
@@ -74,12 +81,15 @@ public final class LibLoader {
     if (streamIn == null) {
       return false;
     }
+    streamIn.close();
+
     loadFromJar(subDir, "libintlc.so.5");
     loadFromJar(subDir, "libimf.so");
     loadFromJar(subDir, "libirng.so");
     loadFromJar(subDir, "libsvml.so");
     loadFromJar(subDir, "libOpenCL.so.1");
     loadFromJar(subDir, "libsycl.so.5");
+
     return true;
   }
 

@@ -117,8 +117,6 @@ object Utils {
   // All other functions using native libraries will depend on this function to be called first
   //
   def checkClusterPlatformCompatibility(sc: SparkContext): Boolean = {
-    LibLoader.loadLibraries()
-
     // check driver platform compatibility
     if (!OneDAL.cCheckPlatformCompatibility()) {
       return false
@@ -128,7 +126,6 @@ object Utils {
     val executor_num = Utils.sparkExecutorNum(sc)
     val data = sc.parallelize(1 to executor_num, executor_num)
     val result = data.mapPartitions { p =>
-      LibLoader.loadLibraries()
       Iterator(OneDAL.cCheckPlatformCompatibility())
     }.collect()
 
