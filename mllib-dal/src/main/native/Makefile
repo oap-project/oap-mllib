@@ -51,7 +51,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib -lccl \
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := "$(LIBS_COMMON) -l:libonedal_sycl.a"
+  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a
 endif
 
 CPP_SRCS += \
