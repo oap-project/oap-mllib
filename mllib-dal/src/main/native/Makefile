@@ -60,7 +60,8 @@ CPP_SRCS += \
   ./PCADALImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
-  ./LinearRegressionDALImpl.cpp
+  ./LinearRegressionDALImpl.cpp \
+  ./CorrelationDALImpl.cpp
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
@@ -68,7 +69,8 @@ OBJS += \
   ./PCADALImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
-  ./LinearRegressionDALImpl.o
+  ./LinearRegressionDALImpl.o \
+  ./CorrelationDALImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 
