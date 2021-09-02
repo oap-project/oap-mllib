@@ -64,7 +64,7 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
        
     const bool isRoot = (rankId == ccl_root);
 
-   covariance::Distributed<step1Local> localAlgorithm;
+    covariance::Distributed<step1Local> localAlgorithm;
 
    /* Set the input data set to the algorithm */
     localAlgorithm.input.set(covariance::data, pData);
@@ -143,33 +143,25 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
                     << std::endl;
 
             /* Print the results */
-            printNumericTable(result->get(covariance::covariance),
-                            "Covariance matrix:");
-            printNumericTable(result->get(covariance::mean),
-                            "Mean vector:");
+            printNumericTable(result->get(covariance::correlation),
+                            "Correlation first 20 columns of "
+                            "correlation matrix:",
+                            1, 20);
 
             // Return all covariance & mean
 
             // Get the class of the input object
             jclass clazz = env->GetObjectClass(resultObj);
             // Get Field references
-            jfieldID covarianceNumericTableField =
-                env->GetFieldID(clazz, "covarianceNumericTable", "J");
             jfieldID correlationNumericTableField =
                 env->GetFieldID(clazz, "correlationNumericTable", "J");
-            jfieldID meanNumericTableField =
-                env->GetFieldID(clazz, "meanNumericTable", "J");
 
-            NumericTablePtr *covariance =
-                new NumericTablePtr(result->get(covariance::covariance));
+
             NumericTablePtr *correlation =
                 new NumericTablePtr(result->get(covariance::correlation));
-            NumericTablePtr *mean =
-                new NumericTablePtr(result->get(covariance::mean));
 
-            env->SetLongField(resultObj, covarianceNumericTableField, (jlong)covariance);
+
             env->SetLongField(resultObj, correlationNumericTableField, (jlong)correlation);
-            env->SetLongField(resultObj, meanNumericTableField,(jlong)mean);
         }
 
         return 0;

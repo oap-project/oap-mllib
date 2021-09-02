@@ -20,7 +20,7 @@ import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable
 import com.intel.daal.services.DaalContext
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
-import org.apache.spark.mllib.linalg.{Vector => OldVector}
+import org.apache.spark.mllib.linalg.{Vector => OldVector, Matrix => OldMatrix, DenseMatrix => OldDenseMatrix}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
@@ -53,6 +53,24 @@ object OneDAL {
     table.releaseBlockOfRows(0, numRows, dataDouble)
 
     matrix
+  }
+   
+  def numericTableToOldMatrix(table: NumericTable): OldMatrix = {
+    val numRows = table.getNumberOfRows.toInt
+    val numCols = table.getNumberOfColumns.toInt
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
+
+    // Transpose as DAL numeric table is row-major and DenseMatrix is column major
+    val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
+
+    table.releaseBlockOfRows(0, numRows, dataDouble)
+
+    OldMatrix
   }
 
   def isDenseDataset(ds: Dataset[_]): Boolean = {
@@ -121,6 +139,7 @@ object OneDAL {
     matrix
   }
 
+
   def rddDoubleToNumericTables(doubles: RDD[Double], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
 
@@ -141,6 +160,7 @@ object OneDAL {
     doublesTables
   }
 
+ 
   def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
                                     executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)

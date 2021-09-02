@@ -66,17 +66,14 @@ class CorrelationDALImpl(
         val ret = if (OneCCL.isRoot()) {
 
           val convResultStartTime = System.nanoTime()
-          val covarianceNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.covarianceNumericTable))
           val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
-          val meanNumericTable = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.meanNumericTable))
-
           val convResultEndTime = System.nanoTime()
 
           val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
 
           println(s"CorrelationDAL result conversion took ${durationCovResult} secs")
 
-          Iterator((covarianceNumericTable, correlationNumericTable, meanNumericTable))
+          Iterator(correlationNumericTable)
         } else {
           Iterator.empty
         }
@@ -89,12 +86,7 @@ class CorrelationDALImpl(
       // Make sure there is only one result from rank 0
       assert(results.length == 1)
 
-      // Release native memory for numeric tables
-      OneDAL.releaseNumericTables(data.sparkContext)
-
-      val covarianceMatrix = results(0)._1
-      val correlationMatrix = results(0)._2
-      val meanVectors = results(0)._3
+      val correlationMatrix = results(0)
 
       correlationMatrix
       }

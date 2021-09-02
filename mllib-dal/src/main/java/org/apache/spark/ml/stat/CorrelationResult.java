@@ -17,7 +17,5 @@
 package org.apache.spark.ml.stat;
 
 public class CorrelationResult {
-    public long covarianceNumericTable;
     public long correlationNumericTable;
-    public long meanNumericTable;
 }

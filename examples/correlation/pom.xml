@@ -7,7 +7,7 @@
   <version>1.2.0</version>  
   <packaging>jar</packaging>
 
-  <name>LinearRegressionExample</name>
+  <name>CorrelationExample</name>
   <url>https://github.com/oap-project/oap-mllib.git</url>
 
   <properties>
