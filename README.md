@@ -24,13 +24,13 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.1.1-spark-3.1.1/oap-1.1.1-bin-spark-3.1.1.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.1.1-bin-spark-3.1.1/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin-spark-3.1.1.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.2.0-bin-spark-3.1.1/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
 ### Python/PySpark Users Preferred
 
-Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
+Use a pre-built JAR to get started. If you have finished [OAP Installation Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -178,7 +178,7 @@ We suggest you to source `setvars.sh` script into current shell to setup buildin
 
 __Be noticed we are using our own built oneCCL instead, we should source oneCCL's `setvars.sh` to overwrite oneAPI one.__
 
-You can also refer to [this CI script](dev/ci-build.sh) to setup the building environments.
+You can also refer to [this CI script](dev/ci-test.sh) to setup the building environments.
 
 If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-src/oneDAL), [oneTBB](https://github.com/oneapi-src/oneTBB) versions rather than use the ones included in oneAPI TookKits, you can refer to the related build instructions and manually source `setvars.sh` accordingly.
 

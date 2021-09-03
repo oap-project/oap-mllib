@@ -6,7 +6,10 @@ OAP MLlib is an optimized package to accelerate machine learning algorithms in  
 
 ## Compatibility
 
-OAP MLlib tried to maintain the same API interfaces and produce same results that are identical with Spark MLlib. However due to the nature of float point operations, there may be some small deviation from the original result, we will try our best to make sure the error is within acceptable range.
+OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration. 
+
+Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib. 
+
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. 
 
 
@@ -14,13 +17,13 @@ For those algorithms that are not accelerated by OAP MLlib, the original Spark M
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.1.1-spark-3.1.1/oap-1.1.1-bin-spark-3.1.1.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.1.1-bin-spark-3.1.1/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin-spark-3.1.1.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.2.0-bin-spark-3.1.1/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
 ### Python/PySpark Users Preferred
 
-Use a pre-built JAR to get started. If you have finished [OAP-Installation-Guide](./OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
+Use a pre-built JAR to get started. If you have finished [OAP Installation Guide](./OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -44,6 +47,7 @@ Intel® oneAPI Toolkits components used by the project are already included into
 
 #### General Configuration
 
+##### YARN Cluster Manager
 Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running. 
 
 ```
@@ -51,13 +55,25 @@ Users usually run Spark application on __YARN__ with __client__ mode. In that ca
 spark.files                       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for driver class path
 spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
-# relative path to spark.files, just specify jar name in current dir
+# relative path of the jar for executor class path
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
+```
+
+##### Standalone Cluster Manager
+For standalone cluster manager, you need to upload the jar to every node or use shared network folder and then specify absolute paths for extraClassPath.
+
+```
+# absolute path of the jar for driver class path
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
+# absolute path of the jar for executor class path
+spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 ```
 
 #### OAP MLlib Specific Configuration
 
 OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune `spark.executor.memoryOverhead` to allocate enough native memory. Setting this value to larger than __dataset size / executor number__ is a good starting point.
+
+OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As `spark.shuffle.reduceLocality.enabled` option is `true` by default, when the dataset is not evenly distributed accross executors, this option may result in assigning more than 1 rank to single executor and task failing. The error could be fixed by setting `spark.shuffle.reduceLocality.enabled` to `false`.
 
 ### Sanity Check
 
@@ -96,7 +112,7 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Toolkits 2021.2+ Components:
+* Intel® oneAPI Toolkits 2021.3.0 Components:
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
@@ -116,12 +132,12 @@ Scala and Java dependency descriptions are already included in Maven POM file.
 
 To clone and build from open source oneCCL, run the following commands:
 ```
-	$ git clone https://github.com/oneapi-src/oneCCL
-        $ cd oneCCL
-        $ git checkout 2021.2
-	$ mkdir build && cd build
-	$ cmake ..
-	$ make -j install
+    $ git clone https://github.com/oneapi-src/oneCCL
+    $ cd oneCCL
+    $ git checkout 2021.2.1
+    $ mkdir build && cd build
+    $ cmake ..
+    $ make -j install
 ```
 
 The generated files will be placed in `/your/oneCCL_source_code/build/_install`
@@ -149,13 +165,13 @@ CCL_ROOT    | Path to oneCCL home directory
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
 
 ```
-	$ source /opt/intel/oneapi/setvars.sh
-	$ source /your/oneCCL_source_code/build/_install/env/setvars.sh
+    $ source /opt/intel/oneapi/setvars.sh
+    $ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 ```
 
 __Be noticed we are using our own built oneCCL instead, we should source oneCCL's `setvars.sh` to overwrite oneAPI one.__
 
-You can also refer to [this CI script](../dev/ci-build.sh) to setup the building environments.
+You can also refer to [this CI script](../dev/ci-test.sh) to setup the building environments.
 
 If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-src/oneDAL), [oneTBB](https://github.com/oneapi-src/oneTBB) versions rather than use the ones included in oneAPI TookKits, you can refer to the related build instructions and manually source `setvars.sh` accordingly.
 
@@ -165,29 +181,41 @@ To build, run the following commands:
     $ ./build.sh
 ```
 
-The target can be built against different Spark versions by specifying profile with <spark-x.x.x>. E.g.
+If no parameter is given, the Spark version __3.1.1__ will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
 ```
-    $ ./build.sh spark-3.1.1
+    $ ./build.sh -p spark-3.0.0
 ```
-If no profile parameter is given, the Spark version 3.0.0 will be activated by default.
-The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
 
+The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
 
 ## Examples
 
+### Scala Examples
+
+Example            |  Description
+-------------------|-------------------------------------
+kmeans             |  K-means example for Scala
+pca                |  PCA example for Scala
+als                |  ALS example for Scala
+naive-bayes        |  Naive Bayes example for Scala
+linear-regression  |  Linear Regression example for Scala
+
+### Python Examples
+
 Example         |  Description
 ----------------|---------------------------
-kmeans          |  K-means example for Scala
 kmeans-pyspark  |  K-means example for PySpark
-pca             |  PCA example for Scala
 pca-pyspark     |  PCA example for PySpark
-als             |  ALS example for Scala
 als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
-Algorithm | Category | Maturity
-----------|----------|-------------
-K-Means   | CPU      | Experimental
-PCA       | CPU      | Experimental
-ALS       | CPU      | Experimental
+Algorithm         | Category | Maturity
+------------------|----------|-------------
+K-Means           | CPU      | Stable
+K-Means           | GPU      | Experimental
+PCA               | CPU      | Stable
+PCA               | GPU      | Experimental
+ALS               | CPU      | Stable
+Naive Bayes       | CPU      | Experimental
+Linear Regression | CPU      | Experimental
