@@ -16,7 +16,6 @@
 
 #include <chrono>
 #include <iostream>
-#include <vector>
 
 #include "OneCCL.h"
 #include "org_apache_spark_ml_stat_CorrelationDALImpl.h"
@@ -49,8 +48,6 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     const size_t nBlocks = executor_num;
 
     NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-    // Source data already normalized
-    pData->setNormalizationFlag(NumericTableIface::standardScoreNormalized);
 
     // Set number of threads for oneDAL to use for each rank
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
@@ -83,7 +80,8 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     /* Serialize partial results required by step 2 */
     InputDataArchive dataArch;
     localAlgorithm.getPartialResult()->serialize(dataArch);
-    size_t perNodeArchLength = dataArch.getSizeOfArchive();
+    const uint64_t perNodeArchLength = (size_t)dataArch.getSizeOfArchive();
+
 
     std::vector<uint64_t> aPerNodeArchLength(comm.size());
     std::vector<size_t> aReceiveCount(comm.size(), 1);
@@ -107,8 +105,9 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     dataArch.copyArchiveToArray(&nodeResults[0], perNodeArchLength);
 
     /* Transfer partial results to step 2 on the root node */
-    ccl::allgatherv(&nodeResults[0], perNodeArchLength, &serializedData[0], aPerNodeArchLength, comm).wait();
+    ccl::allgatherv((int8_t *)&nodeResults[0], perNodeArchLength, (int8_t *)&serializedData[0], aPerNodeArchLength, comm).wait();
     t2 = std::chrono::high_resolution_clock::now();
+
 
     duration =
         std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
@@ -118,18 +117,23 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
             auto t1 = std::chrono::high_resolution_clock::now();
             /* Create an algorithm to compute covariance on the master node */
             covariance::Distributed<step2Master> masterAlgorithm;
-            std::cout << "nBlocks :" << nBlocks
-                  << std::endl;
+
             for (size_t i = 0, shift = 0; i < nBlocks; shift += aPerNodeArchLength[i], ++i) {
                 /* Deserialize partial results from step 1 */
                 OutputDataArchive dataArch(&serializedData[shift], aPerNodeArchLength[i]);
+
                 covariance::PartialResultPtr dataForStep2FromStep1(new covariance::PartialResult());
                 dataForStep2FromStep1->deserialize(dataArch);
+
                 /* Set local partial results as input for the master-node algorithm
                 */
                 masterAlgorithm.input.add(covariance::partialResults,
                                         dataForStep2FromStep1);
             }
+
+            /* Set the parameter to choose the type of the output matrix */
+            masterAlgorithm.parameter.outputMatrixType = covariance::correlationMatrix;
+
             /* Merge and finalizeCompute covariance decomposition on the master node */
             masterAlgorithm.compute();
             masterAlgorithm.finalizeCompute();
@@ -147,21 +151,28 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
                             "Correlation first 20 columns of "
                             "correlation matrix:",
                             1, 20);
+            printNumericTable(result->get(covariance::mean),
+                            "Correlation first 20 columns of "
+                            "mean matrix:",
+                            1, 20);
 
-            // Return all covariance & mean
-
-            // Get the class of the input object
+            // Return all correlation & mean
             jclass clazz = env->GetObjectClass(resultObj);
+
             // Get Field references
             jfieldID correlationNumericTableField =
                 env->GetFieldID(clazz, "correlationNumericTable", "J");
-
+            jfieldID meanNumericTableField =
+                env->GetFieldID(clazz, "meanNumericTable", "J");
 
             NumericTablePtr *correlation =
                 new NumericTablePtr(result->get(covariance::correlation));
-
+            NumericTablePtr *mean =
+                new NumericTablePtr(result->get(covariance::mean));
 
             env->SetLongField(resultObj, correlationNumericTableField, (jlong)correlation);
+            env->SetLongField(resultObj, meanNumericTableField,(jlong)mean);
+
         }
 
         return 0;

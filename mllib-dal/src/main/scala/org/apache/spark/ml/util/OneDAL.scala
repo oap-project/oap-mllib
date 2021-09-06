@@ -66,7 +66,7 @@ object OneDAL {
     dataDouble.get(arrayDouble)
 
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
-    val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
+    val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = false)
 
     table.releaseBlockOfRows(0, numRows, dataDouble)
 
