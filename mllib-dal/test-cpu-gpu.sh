@@ -38,7 +38,9 @@ suiteArray=(
   "feature.MLlibPCASuite" \
   "recommendation.MLlibALSSuite" \
   "classification.MLlibNaiveBayesSuite" \
-  "regression.MLlibLinearRegressionSuite"
+  "regression.MLlibLinearRegressionSuite" \
+  "stat.MLlibCorrelationSuite"
+
 )
 
 # Set default version
