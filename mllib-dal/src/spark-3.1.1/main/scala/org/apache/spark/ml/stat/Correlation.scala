@@ -19,12 +19,14 @@ package org.apache.spark.ml.stat
 
 import scala.collection.JavaConverters._
 
-import org.apache.spark.annotation.Since
+import org.apache.spark.annotation.{Experimental, Since}
 import org.apache.spark.ml.linalg.{SQLDataTypes, Vector}
+import org.apache.spark.ml.util.Utils
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.mllib.stat.{Statistics => OldStatistics}
-import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Dataset, Row}
+import org.apache.spark.storage.StorageLevel
 
 /**
  * API for correlation functions in MLlib, compatible with DataFrames and Datasets.
@@ -68,11 +70,12 @@ object Correlation {
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
+      println("OAP MLlib running")
+      
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => v
       }
       rdd.persist(StorageLevel.MEMORY_AND_DISK)
-
       // Cache for init
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
@@ -84,10 +87,14 @@ object Correlation {
       dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
 
     } else {
+      println("Vanilla/MKL running")
+
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => OldVectors.fromML(v)
       }
+      rdd.persist(StorageLevel.MEMORY_AND_DISK)
       val oldM = OldStatistics.corr(rdd, method)
+      rdd.unpersist()
       val name = s"$method($column)"
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
       dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
