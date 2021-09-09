@@ -75,13 +75,10 @@ object Correlation {
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => v
       }
-      rdd.persist(StorageLevel.MEMORY_AND_DISK)
-      // Cache for init
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val oldM = new CorrelationDALImpl(executor_num, executor_cores)
         .computeCorrelationMatrix(rdd)
-      rdd.unpersist()
       val name = s"$method($column)"
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
       dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
@@ -92,9 +89,7 @@ object Correlation {
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => OldVectors.fromML(v)
       }
-      rdd.persist(StorageLevel.MEMORY_AND_DISK)
       val oldM = OldStatistics.corr(rdd, method)
-      rdd.unpersist()
       val name = s"$method($column)"
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
       dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
