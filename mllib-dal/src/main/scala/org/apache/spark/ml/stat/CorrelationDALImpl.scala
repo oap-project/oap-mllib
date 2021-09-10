@@ -28,77 +28,74 @@ import org.apache.spark.mllib.linalg.{Matrix}
 
 
 class CorrelationDALImpl(
-                 val executorNum: Int,
-                 val executorCores: Int)
+                          val executorNum: Int,
+                          val executorCores: Int)
   extends Serializable with Logging {
 
-    def computeCorrelationMatrix(data: RDD[Vector] ): Matrix = {
+  def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
 
-      val kvsIPPort = getOneCCLIPPort(data)
-      println(s"OneCCL ip port : ${kvsIPPort} ")
+    val kvsIPPort = getOneCCLIPPort(data)
 
-      val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
-      println(s"executorNum : ${executorNum} ")
-      println(s"executorCores : ${executorCores} ")
+    val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
-      val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-        val tableArr = table.next()
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+      val tableArr = table.next()
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
-        val computeStartTime = System.nanoTime()
+      val computeStartTime = System.nanoTime()
 
-        val result = new CorrelationResult()
-        cCorrelationTrainDAL(
-          tableArr,
-          executorNum,
-          executorCores,
-          result
-        )
+      val result = new CorrelationResult()
+      cCorrelationTrainDAL(
+        tableArr,
+        executorNum,
+        executorCores,
+        result
+      )
 
-        val computeEndTime = System.nanoTime()
+      val computeEndTime = System.nanoTime()
 
-        val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
+      val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
 
-        println(s"CorrelationDAL compute took ${durationCompute} secs")
+      println(s"CorrelationDAL compute took ${durationCompute} secs")
 
-        val ret = if (OneCCL.isRoot()) {
+      val ret = if (OneCCL.isRoot()) {
 
-          val convResultStartTime = System.nanoTime()
-          val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
-          val meanNumericTable = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.meanNumericTable))
+        val convResultStartTime = System.nanoTime()
+        val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
+        val meanNumericTable = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.meanNumericTable))
 
-          val convResultEndTime = System.nanoTime()
+        val convResultEndTime = System.nanoTime()
 
-          val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
+        val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
 
-          println(s"CorrelationDAL result conversion took ${durationCovResult} secs")
+        println(s"CorrelationDAL result conversion took ${durationCovResult} secs")
 
-          Iterator((correlationNumericTable, meanNumericTable))
-        } else {
-          Iterator.empty
-        }
-
-        OneCCL.cleanup()
-
-        ret
-      }.collect()
-
-      // Make sure there is only one result from rank 0
-      assert(results.length == 1)
-
-      val correlationMatrix = results(0)._1
-      val meanVectors = results(0)._2
-
-      println(s"correlationMatrix : ${correlationMatrix.toString} ")
-
-      correlationMatrix
+        Iterator((correlationNumericTable, meanNumericTable))
+      } else {
+        Iterator.empty
       }
+
+      OneCCL.cleanup()
+
+      ret
+    }.collect()
+
+    // Make sure there is only one result from rank 0
+    assert(results.length == 1)
+
+    val correlationMatrix = results(0)._1
+    val meanVectors = results(0)._2
+
+    println(s"correlationMatrix : ${correlationMatrix.toString} ")
+
+    correlationMatrix
+  }
 
 
   @native private def cCorrelationTrainDAL(data: Long,
-                                   executor_num: Int,
-                                   executor_cores: Int,
-                                   result: CorrelationResult): Long
+                                           executor_num: Int,
+                                           executor_cores: Int,
+                                           result: CorrelationResult): Long
 
-  }
+}
