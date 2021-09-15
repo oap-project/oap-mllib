@@ -63,7 +63,6 @@ class CorrelationDALImpl(
 
         val convResultStartTime = System.nanoTime()
         val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
-        val meanNumericTable = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.meanNumericTable))
 
         val convResultEndTime = System.nanoTime()
 
@@ -71,7 +70,7 @@ class CorrelationDALImpl(
 
         println(s"CorrelationDAL result conversion took ${durationCovResult} secs")
 
-        Iterator((correlationNumericTable, meanNumericTable))
+        Iterator(correlationNumericTable)
       } else {
         Iterator.empty
       }
@@ -84,10 +83,7 @@ class CorrelationDALImpl(
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
-    val correlationMatrix = results(0)._1
-    val meanVectors = results(0)._2
-
-    println(s"correlationMatrix : ${correlationMatrix.toString} ")
+    val correlationMatrix = results(0)
 
     correlationMatrix
   }

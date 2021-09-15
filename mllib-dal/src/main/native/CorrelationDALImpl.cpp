@@ -153,10 +153,6 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
                           "Correlation first 20 columns of "
                           "correlation matrix:",
                           1, 20);
-        printNumericTable(result->get(covariance::mean),
-                          "Correlation first 20 columns of "
-                          "mean matrix:",
-                          1, 20);
 
         // Return all correlation & mean
         jclass clazz = env->GetObjectClass(resultObj);
@@ -164,17 +160,12 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
         // Get Field references
         jfieldID correlationNumericTableField =
             env->GetFieldID(clazz, "correlationNumericTable", "J");
-        jfieldID meanNumericTableField =
-            env->GetFieldID(clazz, "meanNumericTable", "J");
 
         NumericTablePtr *correlation =
             new NumericTablePtr(result->get(covariance::correlation));
-        NumericTablePtr *mean =
-            new NumericTablePtr(result->get(covariance::mean));
 
         env->SetLongField(resultObj, correlationNumericTableField,
                           (jlong)correlation);
-        env->SetLongField(resultObj, meanNumericTableField, (jlong)mean);
     }
 
     return 0;
