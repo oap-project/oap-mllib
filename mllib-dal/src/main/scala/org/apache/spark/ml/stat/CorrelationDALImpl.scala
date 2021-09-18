@@ -17,7 +17,6 @@
 package org.apache.spark.ml.stat
 
 import java.util.Arrays
-
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
@@ -25,7 +24,6 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg.{Matrix}
-
 
 class CorrelationDALImpl(
                  val executorNum: Int,
@@ -37,11 +35,23 @@ class CorrelationDALImpl(
       val kvsIPPort = getOneCCLIPPort(data)
       println(s"OneCCL ip port : ${kvsIPPort} ")
 
+      val sparkContext = data.sparkContext
+      val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
+
       val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
       println(s"executorNum : ${executorNum} ")
       println(s"executorCores : ${executorCores} ")
 
       val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+
+        val gpuIndices = if (useGPU) {
+          val resources = TaskContext.get().resources()
+          resources("gpu").addresses.map(_.toInt)
+        } else {
+          null
+        }
+
+
         val tableArr = table.next()
 
         OneCCL.init(executorNum, rank, kvsIPPort)
@@ -53,6 +63,8 @@ class CorrelationDALImpl(
           tableArr,
           executorNum,
           executorCores,
+          useGPU,
+          gpuIndices,
           result
         )
 
@@ -99,6 +111,8 @@ class CorrelationDALImpl(
   @native private def cCorrelationTrainDAL(data: Long,
                                    executor_num: Int,
                                    executor_cores: Int,
+                                   useGPU: Boolean,
+                                   gpuIndices: Array[Int],
                                    result: CorrelationResult): Long
 
   }
