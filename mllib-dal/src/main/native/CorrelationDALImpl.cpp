@@ -25,11 +25,9 @@
 #include "org_apache_spark_ml_stat_CorrelationDALImpl.h"
 #include "service.h"
 
-
 using namespace std;
 using namespace daal;
 using namespace daal::algorithms;
-
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
@@ -92,7 +90,6 @@ static NumericTablePtr correlation_compute(JNIEnv *env,
    ccl::allgatherv((int8_t *)&nodeResults[0], perNodeArchLength, (int8_t *)&serializedData[0], aPerNodeArchLength, comm).wait();
    t2 = std::chrono::high_resolution_clock::now();
 
-
    duration =
        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
    std::cout << "Correleation (native): ccl_allgatherv took " << duration << " secs"
@@ -135,29 +132,17 @@ static NumericTablePtr correlation_compute(JNIEnv *env,
                            "Correlation first 20 columns of "
                            "correlation matrix:",
                            1, 20);
-           printNumericTable(result->get(covariance::mean),
-                           "Correlation first 20 columns of "
-                           "mean matrix:",
-                           1, 20);
-
-            printNumericTable(result->get(covariance::correlation), "correlation matrix:");
-            printNumericTable(result->get(covariance::mean), "Mean vector:");
             // Return all covariance & mean
             jclass clazz = env->GetObjectClass(resultObj);
 
            // Get Field references
            jfieldID correlationNumericTableField =
                env->GetFieldID(clazz, "correlationNumericTable", "J");
-           jfieldID meanNumericTableField =
-               env->GetFieldID(clazz, "meanNumericTable", "J");
 
            NumericTablePtr *correlation =
                new NumericTablePtr(result->get(covariance::correlation));
-           NumericTablePtr *mean =
-               new NumericTablePtr(result->get(covariance::mean));
 
            env->SetLongField(resultObj, correlationNumericTableField, (jlong)correlation);
-           env->SetLongField(resultObj, meanNumericTableField,(jlong)mean);
 
        }
    return NumericTablePtr();

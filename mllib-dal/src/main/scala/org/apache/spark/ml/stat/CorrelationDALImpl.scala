@@ -26,14 +26,13 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg.{Matrix}
 
 class CorrelationDALImpl(
-                 val executorNum: Int,
-                 val executorCores: Int)
+                          val executorNum: Int,
+                          val executorCores: Int)
   extends Serializable with Logging {
 
-    def computeCorrelationMatrix(data: RDD[Vector] ): Matrix = {
+  def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
 
-      val kvsIPPort = getOneCCLIPPort(data)
-      println(s"OneCCL ip port : ${kvsIPPort} ")
+    val kvsIPPort = getOneCCLIPPort(data)
 
       val sparkContext = data.sparkContext
       val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
@@ -51,12 +50,10 @@ class CorrelationDALImpl(
           null
         }
 
+      val tableArr = table.next()
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
-        val tableArr = table.next()
-
-        OneCCL.init(executorNum, rank, kvsIPPort)
-
-        val computeStartTime = System.nanoTime()
+      val computeStartTime = System.nanoTime()
 
         val result = new CorrelationResult()
         cCorrelationTrainDAL(
@@ -68,44 +65,40 @@ class CorrelationDALImpl(
           result
         )
 
-        val computeEndTime = System.nanoTime()
+      val computeEndTime = System.nanoTime()
 
-        val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
+      val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
 
-        println(s"CorrelationDAL compute took ${durationCompute} secs")
+      println(s"CorrelationDAL compute took ${durationCompute} secs")
 
-        val ret = if (OneCCL.isRoot()) {
+      val ret = if (OneCCL.isRoot()) {
 
-          val convResultStartTime = System.nanoTime()
-          val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
-          val meanNumericTable = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.meanNumericTable))
+        val convResultStartTime = System.nanoTime()
+        val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
 
-          val convResultEndTime = System.nanoTime()
+        val convResultEndTime = System.nanoTime()
 
-          val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
+        val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
 
-          println(s"CorrelationDAL result conversion took ${durationCovResult} secs")
+        println(s"CorrelationDAL result conversion took ${durationCovResult} secs")
 
-          Iterator((correlationNumericTable, meanNumericTable))
-        } else {
-          Iterator.empty
-        }
-
-        OneCCL.cleanup()
-
-        ret
-      }.collect()
-
-      // Make sure there is only one result from rank 0
-      assert(results.length == 1)
-
-      val correlationMatrix = results(0)._1
-      val meanVectors = results(0)._2
-
-      println(s"correlationMatrix : ${correlationMatrix.toString} ")
-
-      correlationMatrix
+        Iterator(correlationNumericTable)
+      } else {
+        Iterator.empty
       }
+
+      OneCCL.cleanup()
+
+      ret
+    }.collect()
+
+    // Make sure there is only one result from rank 0
+    assert(results.length == 1)
+
+    val correlationMatrix = results(0)
+
+    correlationMatrix
+  }
 
 
   @native private def cCorrelationTrainDAL(data: Long,
@@ -114,5 +107,4 @@ class CorrelationDALImpl(
                                    useGPU: Boolean,
                                    gpuIndices: Array[Int],
                                    result: CorrelationResult): Long
-
-  }
+}

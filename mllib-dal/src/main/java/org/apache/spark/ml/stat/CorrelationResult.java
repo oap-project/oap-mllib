@@ -18,5 +18,4 @@ package org.apache.spark.ml.stat;
 
 public class CorrelationResult {
     public long correlationNumericTable;
-    public long meanNumericTable;
 }
