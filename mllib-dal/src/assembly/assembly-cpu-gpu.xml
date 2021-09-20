@@ -43,7 +43,7 @@
         <file>
             <source>${env.TBBROOT}/lib/intel64/gcc4.8/${tbb.lib}</source>
             <outputDirectory>lib</outputDirectory>
-            <destName>libtbb.so.2</destName>
+            <destName>libtbb.so.12</destName>
         </file>
         <file>
             <source>${env.TBBROOT}/lib/intel64/gcc4.8/${tbb.malloc.lib}</source>
