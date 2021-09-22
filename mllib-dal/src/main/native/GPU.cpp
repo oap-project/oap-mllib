@@ -57,6 +57,8 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
 
     auto gpu_selected = gpu_indices[local_rank % n_gpu];
     std::cout << "GPU selected for current rank: " << gpu_selected << std::endl;
+
+    // In case gpu_selected index is larger than number of GPU SYCL devices
     auto rank_gpu = gpus[gpu_selected % gpus.size()];
 
     return rank_gpu;
