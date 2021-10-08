@@ -31,7 +31,7 @@ using namespace daal::algorithms;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static NumericTablePtr correlation_compute(JNIEnv *env,
+static void correlation_compute(JNIEnv *env,
                                            jobject obj,
                                            int rankId,
                                            ccl::communicator &comm,
@@ -43,7 +43,7 @@ static NumericTablePtr correlation_compute(JNIEnv *env,
 
    const bool isRoot = (rankId == ccl_root);
 
-   covariance::Distributed<step1Local> localAlgorithm;
+   covariance::Distributed<step1Local, algorithmFPType> localAlgorithm;
 
   /* Set the input data set to the algorithm */
    localAlgorithm.input.set(covariance::data, pData);
@@ -68,7 +68,7 @@ static NumericTablePtr correlation_compute(JNIEnv *env,
    std::vector<uint64_t> aPerNodeArchLength(comm.size());
    std::vector<size_t> aReceiveCount(comm.size(), 1);
    /* Transfer archive length to the step 2 on the root node */
-   ccl::allgatherv(&perNodeArchLength, 1, aPerNodeArchLength.data(), aReceiveCount, comm).wait();
+   ccl::gatherv(&perNodeArchLength, 1, aPerNodeArchLength.data(), aReceiveCount, comm).wait();
 
    ByteBuffer serializedData;
    /* Calculate total archive length */
@@ -87,7 +87,7 @@ static NumericTablePtr correlation_compute(JNIEnv *env,
    dataArch.copyArchiveToArray(&nodeResults[0], perNodeArchLength);
 
    /* Transfer partial results to step 2 on the root node */
-   ccl::allgatherv((int8_t *)&nodeResults[0], perNodeArchLength, (int8_t *)&serializedData[0], aPerNodeArchLength, comm).wait();
+   ccl::gatherv((int8_t *)&nodeResults[0], perNodeArchLength, (int8_t *)&serializedData[0], aPerNodeArchLength, comm).wait();
    t2 = std::chrono::high_resolution_clock::now();
 
    duration =
@@ -97,7 +97,7 @@ static NumericTablePtr correlation_compute(JNIEnv *env,
    if (isRoot) {
            auto t1 = std::chrono::high_resolution_clock::now();
            /* Create an algorithm to compute covariance on the master node */
-           covariance::Distributed<step2Master> masterAlgorithm;
+           covariance::Distributed<step2Master, algorithmFPType> masterAlgorithm;
 
            for (size_t i = 0, shift = 0; i < nBlocks; shift += aPerNodeArchLength[i], ++i) {
                /* Deserialize partial results from step 1 */

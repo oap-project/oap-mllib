@@ -8,12 +8,12 @@
 extern "C" {
 #endif
 /*
- *  * Class:     org_apache_spark_ml_stat_CorrelationDALImpl
- *   * Method:    cCorrelationTrainDAL
- *    * Signature: (JIILorg/apache/spark/ml/stat/CorrelationResult;)J
- *     */
+ * Class:     org_apache_spark_ml_stat_CorrelationDALImpl
+ * Method:    cCorrelationTrainDAL
+ * Signature: (JIIZ[ILorg/apache/spark/ml/stat/CorrelationResult;)J
+ */
 JNIEXPORT jlong JNICALL Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL
-  (JNIEnv *, jobject, jlong, jint, jint, jobject);
+  (JNIEnv *, jobject, jlong, jint, jint, jboolean, jintArray, jobject);
 
 #ifdef __cplusplus
 }

@@ -56,9 +56,8 @@ object CorrelationExample {
     )
 
     val df = data.map(Tuple1.apply).toDF("features").cache()
-    Correlation.corr(df, "features").collect().foreach((coeff1) => {
-      println(s"Pearson correlation matrix:\n $coeff1.")
-    })
+    val Row(coeff1: Matrix) = Correlation.corr(df, "features").head
+    println(s"Pearson correlation matrix:\n $coeff1")
 
     spark.stop()
   }
