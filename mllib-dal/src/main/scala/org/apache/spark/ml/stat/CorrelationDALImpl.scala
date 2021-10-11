@@ -20,10 +20,9 @@ import java.util.Arrays
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
-import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.linalg.{Vector, Matrix}
 import org.apache.spark.ml.util.Utils.getOneCCLIPPort
 import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.linalg.{Matrix}
 
 class CorrelationDALImpl(
                           val executorNum: Int,
@@ -32,7 +31,7 @@ class CorrelationDALImpl(
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
 
-    val kvsIPPort = getOneCCLIPPort(data)
+      val kvsIPPort = getOneCCLIPPort(data)
 
       val sparkContext = data.sparkContext
       val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
@@ -74,7 +73,7 @@ class CorrelationDALImpl(
       val ret = if (OneCCL.isRoot()) {
 
         val convResultStartTime = System.nanoTime()
-        val correlationNumericTable = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
+        val correlationNumericTable = OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
 
         val convResultEndTime = System.nanoTime()
 

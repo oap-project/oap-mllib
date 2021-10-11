@@ -75,11 +75,11 @@ object Correlation {
       }
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
-      val oldM = new CorrelationDALImpl(executor_num, executor_cores)
+      val matrix = new CorrelationDALImpl(executor_num, executor_cores)
         .computeCorrelationMatrix(rdd)
       val name = s"$method($column)"
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
-      dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
+      dataset.sparkSession.createDataFrame(Seq(Row(matrix)).asJava, schema)
 
     } else {
       val rdd = dataset.select(column).rdd.map {
