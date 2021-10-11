@@ -38,7 +38,7 @@ static void correlation_compute(JNIEnv *env,
                                            const NumericTablePtr &pData,
                                            size_t nBlocks,
                                            jobject resultObj) {
-
+   using daal::byte;
    auto t1 = std::chrono::high_resolution_clock::now();
 
    const bool isRoot = (rankId == ccl_root);
@@ -60,34 +60,24 @@ static void correlation_compute(JNIEnv *env,
    t1 = std::chrono::high_resolution_clock::now();
 
    /* Serialize partial results required by step 2 */
+   services::SharedPtr<byte> serializedData;
    InputDataArchive dataArch;
    localAlgorithm.getPartialResult()->serialize(dataArch);
-   const uint64_t perNodeArchLength = (size_t)dataArch.getSizeOfArchive();
+   size_t perNodeArchLength = dataArch.getSizeOfArchive();
 
+   serializedData =
+       services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
 
-   std::vector<uint64_t> aPerNodeArchLength(comm.size());
-   std::vector<size_t> aReceiveCount(comm.size(), 1);
-   /* Transfer archive length to the step 2 on the root node */
-   ccl::gatherv(&perNodeArchLength, 1, aPerNodeArchLength.data(), aReceiveCount, comm).wait();
-
-   ByteBuffer serializedData;
-   /* Calculate total archive length */
-   int totalArchLength = 0;
-
-   for (size_t i = 0; i < nBlocks; ++i)
-   {
-       totalArchLength += aPerNodeArchLength[i];
-   }
-   aReceiveCount[ccl_root] = totalArchLength;
-
-   serializedData.resize(totalArchLength);
-
-
-   ByteBuffer nodeResults(perNodeArchLength);
-   dataArch.copyArchiveToArray(&nodeResults[0], perNodeArchLength);
+   byte *nodeResults = new byte[perNodeArchLength];
+   dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
+   std::vector<size_t> aReceiveCount(comm.size(),
+                                     perNodeArchLength); // 4 x "14016"
 
    /* Transfer partial results to step 2 on the root node */
-   ccl::gatherv((int8_t *)&nodeResults[0], perNodeArchLength, (int8_t *)&serializedData[0], aPerNodeArchLength, comm).wait();
+   ccl::gather((int8_t *)nodeResults, perNodeArchLength,
+               (int8_t *)(serializedData.get()), perNodeArchLength, comm)
+       .wait();
+
    t2 = std::chrono::high_resolution_clock::now();
 
    duration =
@@ -95,58 +85,58 @@ static void correlation_compute(JNIEnv *env,
    std::cout << "Correleation (native): ccl_allgatherv took " << duration << " secs"
              << std::endl;
    if (isRoot) {
-           auto t1 = std::chrono::high_resolution_clock::now();
-           /* Create an algorithm to compute covariance on the master node */
-           covariance::Distributed<step2Master, algorithmFPType> masterAlgorithm;
+       auto t1 = std::chrono::high_resolution_clock::now();
+       /* Create an algorithm to compute covariance on the master node */
+       covariance::Distributed<step2Master, algorithmFPType> masterAlgorithm;
 
-           for (size_t i = 0, shift = 0; i < nBlocks; shift += aPerNodeArchLength[i], ++i) {
-               /* Deserialize partial results from step 1 */
-               OutputDataArchive dataArch(&serializedData[shift], aPerNodeArchLength[i]);
+       for (size_t i = 0; i < nBlocks; i++) {
+           /* Deserialize partial results from step 1 */
+           OutputDataArchive dataArch(serializedData.get() +
+                                          perNodeArchLength * i,
+                                      perNodeArchLength);
 
-               covariance::PartialResultPtr dataForStep2FromStep1(new covariance::PartialResult());
-               dataForStep2FromStep1->deserialize(dataArch);
+           covariance::PartialResultPtr dataForStep2FromStep1(new covariance::PartialResult());
+           dataForStep2FromStep1->deserialize(dataArch);
 
-               /* Set local partial results as input for the master-node algorithm
-               */
-               masterAlgorithm.input.add(covariance::partialResults,
-                                       dataForStep2FromStep1);
-           }
-
-           /* Set the parameter to choose the type of the output matrix */
-           masterAlgorithm.parameter.outputMatrixType = covariance::correlationMatrix;
-
-           /* Merge and finalizeCompute covariance decomposition on the master node */
-           masterAlgorithm.compute();
-           masterAlgorithm.finalizeCompute();
-
-           /* Retrieve the algorithm results */
-           covariance::ResultPtr result = masterAlgorithm.getResult();
-           auto t2 = std::chrono::high_resolution_clock::now();
-           auto duration =
-               std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-           std::cout << "Correlation (native): master step took " << duration << " secs"
-                   << std::endl;
-
-           /* Print the results */
-           printNumericTable(result->get(covariance::correlation),
-                           "Correlation first 20 columns of "
-                           "correlation matrix:",
-                           1, 20);
-            // Return all covariance & mean
-            jclass clazz = env->GetObjectClass(resultObj);
-
-           // Get Field references
-           jfieldID correlationNumericTableField =
-               env->GetFieldID(clazz, "correlationNumericTable", "J");
-
-           NumericTablePtr *correlation =
-               new NumericTablePtr(result->get(covariance::correlation));
-
-           env->SetLongField(resultObj, correlationNumericTableField, (jlong)correlation);
-
+           /* Set local partial results as input for the master-node algorithm
+           */
+           masterAlgorithm.input.add(covariance::partialResults,
+                                  dataForStep2FromStep1);
        }
-   return NumericTablePtr();
 
+       /* Set the parameter to choose the type of the output matrix */
+       masterAlgorithm.parameter.outputMatrixType = covariance::correlationMatrix;
+
+       /* Merge and finalizeCompute covariance decomposition on the master node */
+       masterAlgorithm.compute();
+       masterAlgorithm.finalizeCompute();
+
+       /* Retrieve the algorithm results */
+       covariance::ResultPtr result = masterAlgorithm.getResult();
+       auto t2 = std::chrono::high_resolution_clock::now();
+       auto duration =
+           std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+       std::cout << "Correlation (native): master step took " << duration << " secs"
+               << std::endl;
+
+       /* Print the results */
+       printNumericTable(result->get(covariance::correlation),
+                       "Correlation first 20 columns of "
+                       "correlation matrix:",
+                       1, 20);
+        // Return all covariance & mean
+        jclass clazz = env->GetObjectClass(resultObj);
+
+       // Get Field references
+       jfieldID correlationNumericTableField =
+           env->GetFieldID(clazz, "correlationNumericTable", "J");
+
+       NumericTablePtr *correlation =
+           new NumericTablePtr(result->get(covariance::correlation));
+
+       env->SetLongField(resultObj, correlationNumericTableField, (jlong)correlation);
+
+   }
 }
 
 /*
