@@ -20,7 +20,6 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
     --conf "spark.shuffle.reduceLocality.enabled=false" \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
-    --conf "spark.oap.mllib.enabled=true" \
     --conf "spark.eventLog.enabled=true" \
     --conf "spark.eventLog.dir=hdfs://beaver:9000/spark-history-server" \
     --conf "spark.history.fs.logDirectory=hdfs://beaver:9000/spark-history-server" \

@@ -77,7 +77,6 @@ static void correlation_compute(JNIEnv *env,
    ccl::gather((int8_t *)nodeResults, perNodeArchLength,
                (int8_t *)(serializedData.get()), perNodeArchLength, comm)
        .wait();
-
    t2 = std::chrono::high_resolution_clock::now();
 
    duration =
@@ -144,7 +143,6 @@ static void correlation_compute(JNIEnv *env,
  * Method:    cCorrelationTrainDAL
  * Signature: (JJDDIILorg/apache/spark/ml/stat/CorrelationResult;)J
  */
-
 JNIEXPORT jlong JNICALL
 Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData,
