@@ -55,9 +55,9 @@ object CorrelationExample {
       Vectors.dense(-9.948613,-8.941953,-8.106389,4.863542,5.852806,-1.659259,6.342504,-8.190106,-3.110330,-7.484658),
     )
 
-    val df = data.map(Tuple1.apply).toDF("features").cache()
+    val df = data.map(Tuple1.apply).toDF("features")
     val Row(coeff1: Matrix) = Correlation.corr(df, "features").head
-    println(s"Pearson correleation matrix:\n $coeff1")
+    println(s"Pearson correlation matrix:\n $coeff1")
 
     spark.stop()
   }
