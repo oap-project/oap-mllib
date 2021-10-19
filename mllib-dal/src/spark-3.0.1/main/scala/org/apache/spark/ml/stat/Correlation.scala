@@ -72,6 +72,10 @@ object Correlation {
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
+      val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
+      if (handlePersistence) {
+        dataset.persist(StorageLevel.MEMORY_AND_DISK)
+      }
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => v
       }
@@ -81,8 +85,11 @@ object Correlation {
         .computeCorrelationMatrix(rdd)
       val name = s"$method($column)"
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
-      dataset.sparkSession.createDataFrame(Seq(Row(matrix)).asJava, schema)
-
+      val dataframe = dataset.sparkSession.createDataFrame(Seq(Row(matrix)).asJava, schema)
+      if (handlePersistence) {
+        dataset.unpersist()
+      }
+      dataframe
     } else {
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => OldVectors.fromML(v)
