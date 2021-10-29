@@ -33,20 +33,18 @@ else
   exit 1
 endif
 
-# The following paths setting works for self-built libs from source code
-# https://github.com/oneapi-src/oneCCL. If oneCCL package in oneAPI Toolkit is used,
-# Should change paths to $(CCL_ROOT)/{include,lib}/cpu_icc instead
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I $(CCL_ROOT)/include \
+        -I $(CCL_ROOT)/include/cpu_icc \
         -I $(DAALROOT)/include \
         -I ./javah \
         -I ./
 
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib -lccl \
+LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_icc -lccl \
+        -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
         -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a  \
-        -L$(TBBROOT)/lib/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
+        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON)
@@ -78,7 +76,7 @@ ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
 endif
 
 # Output Binary
-OUTPUT = ../../../target/libMLlibDAL.so
+OUTPUT = ../../../src/main/resources/lib/libMLlibDAL.so
 
 all: $(OUTPUT)
 

@@ -354,7 +354,7 @@
                 <version>1.8</version>
                 <executions>
                     <execution>
-                        <phase>process-classes</phase>
+                        <phase>process-resources</phase>
                         <configuration>
                             <target name="build-natives" description="Build native code">
                                 <echo>Building native code</echo>
@@ -373,83 +373,6 @@
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.0.2</version>
-                <configuration>
-                    <outputDirectory>${project.build.testOutputDirectory}/lib</outputDirectory>
-                    <resources>
-                        <resource>
-                            <directory>${env.CCL_ROOT}/lib</directory>
-                            <includes>
-                                <include>${ccl.lib}</include>
-                                <include>${ccl.mpi.lib}</include>
-                                <include>${ccl.fabric.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.CCL_ROOT}/lib/prov</directory>
-                            <includes>
-                                <include>libsockets-fi.so</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.TBBROOT}/lib/intel64/gcc4.8</directory>
-                            <includes>
-                                <include>${tbb.lib}</include>
-                                <include>${tbb.malloc.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.DAALROOT}/lib/intel64</directory>
-                            <includes>
-                                <include>${dal.java.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${project.build.directory}</directory>
-                            <includes>
-                                <include>libMLlibDAL.so</include>
-                            </includes>
-                        </resource>
-                    </resources>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <id>rename-file</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>rename</goal>
-                        </goals>
-                        <configuration>
-                            <fileSets>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.12
-                                    </destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.malloc.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2
-                                    </destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.mpi.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12
-                                    </destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${dal.java.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libJavaAPI.so
-                                    </destinationFile>
-                                </fileSet>
-                            </fileSets>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
