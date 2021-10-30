@@ -52,3 +52,6 @@ cp $DAALROOT/lib/intel64/libJavaAPI.so.1.1 $TARGET_DIR/libJavaAPI.so
 
 cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12.4 $TARGET_DIR/libtbb.so.12
 cp $TBBROOT/lib/intel64/gcc4.8/libtbbmalloc.so.2.4 $TARGET_DIR/libtbbmalloc.so.2
+
+echo oneAPI Toolkit version: $(basename $CCL_ROOT) > $TARGET_DIR/VERSION
+
