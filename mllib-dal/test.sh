@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 
-if ! [[ -f target/oap-mllib-1.2.0.jar ]]; then
+if [[ -n $DAALROOT ]]; then
+  echo
+  echo ====================================================================================
+  echo WARNING: DAALROOT detected. It is recommended to test without oneAPI environment!
+  echo ====================================================================================
+  echo  
+fi
+
+if [[ ! -f target/oap-mllib-1.2.0.jar ]]; then
   echo Please run ./build.sh first to do a complete build before testing!
+  exit 1
 fi
 
 # Check envs for building
@@ -12,11 +21,6 @@ fi
 
 if [[ -z $(which mvn) ]]; then
  echo Maven not found!
- exit 1
-fi
-
-if [[ -z $DAALROOT ]]; then
- echo DAALROOT not defined!
  exit 1
 fi
 

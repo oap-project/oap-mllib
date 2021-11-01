@@ -12,12 +12,17 @@
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>true</unpack>
             <scope>runtime</scope>
-        </dependencySet>
-        <!-- Include local oneDAL jar-->
-        <dependencySet>
+        </dependencySet>        
+    </dependencySets>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}</directory>
             <outputDirectory>/</outputDirectory>
-            <unpack>true</unpack>
-            <scope>system</scope>
-        </dependencySet>
-    </dependencySets>    
+            <includes>
+                <include>README*</include>
+                <include>LICENSE*</include>
+                <include>NOTICE*</include>
+            </includes>
+        </fileSet>        
+    </fileSets>    
 </assembly>

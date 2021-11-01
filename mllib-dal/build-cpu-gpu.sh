@@ -26,6 +26,19 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
+# Check lib dependencies for building
+RESOURCE_PATH=src/main/resources/lib
+LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
+  libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12 libintlc.so.5 libsvml.so libirng.so libimf.so \
+  libOpenCL.so.1 libsycl.so.5)
+for lib in ${LIBS[@]}
+do  
+  if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then    
+    echo $RESOURCE_PATH/$lib does not exsit, please run ../dev/prepare-builds-deps-gpu.sh!
+    exit 1
+fi
+done
+
 versionArray=(
   spark-3.0.0 \
   spark-3.0.1 \

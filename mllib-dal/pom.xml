@@ -62,15 +62,13 @@
             <artifactId>spark-mllib_2.12</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
-        </dependency>
+        </dependency>        
 
         <dependency>
-            <groupId>com.intel.onedal</groupId>
-            <artifactId>onedal</artifactId>
-            <version>${oneapi.version}</version>
-            <scope>system</scope>
-            <systemPath>${env.DAALROOT}/lib/onedal.jar</systemPath>
-        </dependency>
+            <groupId>com.intel.dal</groupId>
+            <artifactId>dal</artifactId>
+            <version>2021.4.0.83</version>
+        </dependency>    
 
         <dependency>
             <groupId>junit</groupId>
@@ -158,10 +156,7 @@
                     <name>env.PLATFORM_PROFILE</name>
                     <value>CPU_GPU_PROFILE</value>
                 </property>
-            </activation>
-            <properties>
-                <assembly.description>src/assembly/assembly-cpu-gpu.xml</assembly.description>
-            </properties>
+            </activation>            
         </profile>
 
         <profile>
