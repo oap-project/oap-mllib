@@ -8,6 +8,14 @@ if [[ -n $DAALROOT ]]; then
   echo  
 fi
 
+# Unset FI_PROVIDER_PATH if present otherwise may hang
+if [[ -n $FI_PROVIDER_PATH ]]; then
+  echo ====================================================================================
+  echo WARNING: FI_PROVIDER_PATH detected. Will unset FI_PROVIDER_PATH before proceeding!
+  unset FI_PROVIDER_PATH
+  echo ====================================================================================
+fi
+
 if [[ ! -f target/oap-mllib-1.2.0.jar ]]; then
   echo Please run ./build.sh first to do a complete build before testing!
   exit 1
@@ -38,7 +46,8 @@ suiteArray=(
   "feature.MLlibPCASuite" \
   "recommendation.MLlibALSSuite" \
   "classification.MLlibNaiveBayesSuite" \
-  "regression.MLlibLinearRegressionSuite"
+  "regression.MLlibLinearRegressionSuite" \
+  "stat.MLlibCorrelationSuite"
 )
 
 # Set default version

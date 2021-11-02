@@ -49,7 +49,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_icc -lccl \
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := "$(LIBS_COMMON) -l:libonedal_sycl.a"
+  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a
 endif
 
 CPP_SRCS += \
@@ -58,7 +58,8 @@ CPP_SRCS += \
   ./PCADALImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
-  ./LinearRegressionDALImpl.cpp
+  ./LinearRegressionDALImpl.cpp \
+  ./CorrelationDALImpl.cpp
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
@@ -66,7 +67,8 @@ OBJS += \
   ./PCADALImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
-  ./LinearRegressionDALImpl.o
+  ./LinearRegressionDALImpl.o \
+  ./CorrelationDALImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 

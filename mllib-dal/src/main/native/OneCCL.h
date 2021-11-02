@@ -36,7 +36,7 @@ event CCL_API gather(const BufferType *sendbuf, int sendcount,
     send_counts[root_rank] = sendcount;
 
     if (comm.rank() == root_rank)
-        std::fill(recv_counts.begin(), recv_counts.end(), sendcount);
+        std::fill(recv_counts.begin(), recv_counts.end(), recvcount);
 
     return ccl::alltoallv(sendbuf, send_counts, recvbuf, recv_counts, comm);
 }
