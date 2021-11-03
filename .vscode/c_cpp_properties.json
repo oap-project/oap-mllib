@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/mllib-dal/src/main/native/**",
+                "${CCL_ROOT}/include/**",
+                "${DAALROOT}/include/**",
+                "${JAVA_HOME}/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "${CMPLR_ROOT}/linux/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

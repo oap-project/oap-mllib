@@ -2,8 +2,10 @@
 
 # ============== Minimum Settings ============= #
 
+# Import RELEASE envs
+source $GITHUB_WORKSPACE/RELEASE
 # Set OAP MLlib version (e.g. 1.1.0)
-OAP_MLLIB_VERSION=1.1.0
+OAP_MLLIB_VERSION=${OAP_MLLB_VERSION}
 # Set Spark master
 SPARK_MASTER=yarn
 # Set Hadoop home path
@@ -23,7 +25,7 @@ export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 # Set JAR name & path
 OAP_MLLIB_JAR_NAME=oap-mllib-$OAP_MLLIB_VERSION.jar
 OAP_MLLIB_JAR=$OAP_MLLIB_ROOT/mllib-dal/target/$OAP_MLLIB_JAR_NAME
-# Set Spark driver & executor classpaths, 
+# Set Spark driver & executor classpaths,
 # absolute path for driver, relative path for executor
 SPARK_DRIVER_CLASSPATH=$OAP_MLLIB_JAR
 SPARK_EXECUTOR_CLASSPATH=./$OAP_MLLIB_JAR_NAME
@@ -37,7 +39,7 @@ SPARK_DEFAULT_PARALLELISM=$(expr $SPARK_NUM_EXECUTORS '*' $SPARK_EXECUTOR_CORES 
 
 # Checks
 
-for dir in $SPARK_HOME $HADOOP_HOME $OAP_MLLIB_JAR 
+for dir in $SPARK_HOME $HADOOP_HOME $OAP_MLLIB_JAR
 do
     if [[ ! -e $dir ]]; then
         echo $dir does not exist!

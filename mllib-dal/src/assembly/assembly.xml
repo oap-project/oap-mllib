@@ -12,7 +12,7 @@
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>true</unpack>
             <scope>runtime</scope>
-        </dependencySet>        
+        </dependencySet>
     </dependencySets>
     <fileSets>
         <fileSet>
@@ -22,7 +22,8 @@
                 <include>README*</include>
                 <include>LICENSE*</include>
                 <include>NOTICE*</include>
+                <include>RELEASE*</include>
             </includes>
-        </fileSet>        
-    </fileSets>    
+        </fileSet>
+    </fileSets>
 </assembly>
