@@ -2,11 +2,10 @@
 
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
-source /tmp/oneCCL/build/_install/env/setvars.sh
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
-../dev/prepare-builds-deps.sh
+../dev/prepare-build-deps.sh
 
 # Test for all versions
 SupportedSparkVersions=("spark-3.0.0" "spark-3.0.1" "spark-3.0.2" "spark-3.1.1")
