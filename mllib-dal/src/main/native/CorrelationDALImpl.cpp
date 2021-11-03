@@ -150,8 +150,6 @@ Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
 
     ccl::communicator &comm = getComm();
     size_t rankId = comm.rank();
-    std::cout << " rankId : " << rankId << " ! "
-                  << std::endl;
 
     const size_t nBlocks = executor_num;
 

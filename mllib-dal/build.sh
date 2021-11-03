@@ -33,13 +33,13 @@ LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
 for lib in ${LIBS[@]}
 do
   if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
-    echo $RESOURCE_PATH/$lib does not exsit, please run ../dev/prepare-builds-deps.sh!
+    echo $RESOURCE_PATH/$lib does not exsit, please run ../dev/prepare-build-deps.sh!
     exit 1
 fi
 done
 
 if [[ -f ./$RESOURCE_PATH/libsycl.so.5 ]]; then
- echo GPU libs found! Please re-run ../dev/prepare-builds-deps.sh!
+ echo GPU libs found! Please re-run ../dev/prepare-build-deps.sh!
  exit 1
 fi
 
