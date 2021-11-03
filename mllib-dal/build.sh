@@ -31,8 +31,8 @@ RESOURCE_PATH=src/main/resources/lib
 LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
   libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12)
 for lib in ${LIBS[@]}
-do  
-  if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then    
+do
+  if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
     echo $RESOURCE_PATH/$lib does not exsit, please run ../dev/prepare-builds-deps.sh!
     exit 1
 fi
@@ -62,7 +62,7 @@ print_usage() {
   do
     echo "    $version"
   done
-  echo  
+  echo
 }
 
 while getopts "hqp:" opt

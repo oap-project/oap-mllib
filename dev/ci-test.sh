@@ -4,8 +4,12 @@
 source /opt/intel/oneapi/setvars.sh
 source /tmp/oneCCL/build/_install/env/setvars.sh
 
-SupportedSparkVersions=("spark-3.0.0" "spark-3.0.1" "spark-3.0.2" "spark-3.1.1")
+# Prepare lib resources
+cd $GITHUB_WORKSPACE/mllib-dal
+../dev/prepare-builds-deps.sh
 
+# Test for all versions
+SupportedSparkVersions=("spark-3.0.0" "spark-3.0.1" "spark-3.0.2" "spark-3.1.1")
 for SparkVer in ${SupportedSparkVersions[*]}; do
     echo
     echo "========================================"
@@ -13,6 +17,7 @@ for SparkVer in ${SupportedSparkVersions[*]}; do
     echo "========================================"
     echo
     cd $GITHUB_WORKSPACE/mllib-dal
+    ./build.sh -q
     ./test.sh -q -p $SparkVer
 done
 
