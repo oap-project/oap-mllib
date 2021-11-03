@@ -36,4 +36,5 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     org.apache.spark.ml.recommendation.ALSDALImpl \
     org.apache.spark.ml.classification.NaiveBayesDALImpl \
     org.apache.spark.ml.regression.LinearRegressionDALImpl \
-    org.apache.spark.ml.stat.CorrelationDALImpl
+    org.apache.spark.ml.stat.CorrelationDALImpl \
+    org.apache.spark.mllib.stat.SummarizerDALImpl
