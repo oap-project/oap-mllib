@@ -5,7 +5,7 @@
 # Import RELEASE envs
 source $GITHUB_WORKSPACE/RELEASE
 # Set OAP MLlib version (e.g. 1.1.0)
-OAP_MLLIB_VERSION=${OAP_MLLB_VERSION}
+OAP_MLLIB_VERSION=${OAP_MLLIB_VERSION}
 # Set Spark master
 SPARK_MASTER=yarn
 # Set Hadoop home path
