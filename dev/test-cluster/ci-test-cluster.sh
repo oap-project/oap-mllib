@@ -24,6 +24,6 @@ hadoop fs -copyFromLocal data /
 hadoop fs -find /
 
 # Build and run all examples
-./build-all.sh
+./build-all-scala.sh
 ./run-all-scala.sh
 ./run-all-pyspark.sh

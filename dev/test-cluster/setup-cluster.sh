@@ -10,14 +10,12 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 WORK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-cd $WORK_DIR
-
 echo JAVA_HOME is $JAVA_HOME
 
-HADOOP_VERSION=3.2.0
-SPARK_VERSION=3.1.1
-SPARK_HADOOP_VERSION=hadoop3.2
+# setup envs
+source ./setup-spark-envs.sh
 
+# download spark & hadoop bins
 [ -d ~/opt ] || mkdir ~/opt
 cd ~/opt
 [ -f spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
@@ -39,10 +37,10 @@ cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 
-source ./setup-spark-envs.sh
-
 echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
 echo $HOST_IP > $SPARK_HOME/conf/slaves
+
+ls -l $SPARK_HOME/conf
 
 # create directories
 mkdir -p /tmp/run/hdfs/namenode
