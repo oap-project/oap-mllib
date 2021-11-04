@@ -10,11 +10,11 @@ OAP MLlib is an optimized package to accelerate machine learning algorithms in  
 
 ## Compatibility
 
-OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration. 
+OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration.
 
-Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib. 
+Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib.
 
-For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. 
+For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used.
 
 ## Online Documentation
 
@@ -55,7 +55,7 @@ Intel® oneAPI Toolkits components used by the project are already included into
 #### General Configuration
 
 ##### YARN Cluster Manager
-Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running. 
+Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running.
 
 ```
 # absolute path of the jar for uploading
@@ -85,14 +85,14 @@ OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As `spark.shuffl
 ### Sanity Check
 
 #### Setup `env.sh`
-```
+```bash
     $ cd conf
     $ cp env.sh.template env.sh
 ```
 Edit related variables in "`Minimun Settings`" of `env.sh`
 
 #### Upload example data files to HDFS
-```
+```bash
     $ cd examples
     $ hadoop fs -mkdir -p /user/$USER
     $ hadoop fs -copyFromLocal data
@@ -100,7 +100,7 @@ Edit related variables in "`Minimun Settings`" of `env.sh`
 ```
 #### Run K-means
 
-```
+```bash
     $ cd examples/kmeans
     $ ./build.sh
     $ ./run.sh
@@ -119,45 +119,27 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Toolkits 2021.3.0 Components:
+* Intel® oneAPI Base Toolkit (>=2021.4.0) Components :
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
-* [Open Source Intel® oneAPI Collective Communications Library (oneCCL)](https://github.com/oneapi-src/oneCCL)
+    - Collective Communications Library (oneCCL)]
 
-Intel® oneAPI Toolkits and its components can be downloaded and install from [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html). Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. Generally you only need to install oneAPI Base Toolkit for Linux with all or selected components mentioned above. Instead of using oneCCL included in Intel® oneAPI Toolkits, we prefer to build from open source oneCCL to resolve some bugs.
+Generally you only need to install __Intel® oneAPI Base Toolkit for Linux__ with all or selected components mentioned above. Intel® oneAPI Base Toolkit can be downloaded and installed from [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html). Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
-More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
-
-Scala and Java dependency descriptions are already included in Maven POM file. 
+Scala and Java dependency descriptions are already included in Maven POM file.
 
 ***Note:*** You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies: DPC++/C++, oneDAL, oneTBB, oneCCL.
 
 ### Build
 
-####  Building oneCCL
-
-To clone and build from open source oneCCL, run the following commands:
-```
-    $ git clone https://github.com/oneapi-src/oneCCL
-    $ cd oneCCL
-    $ git checkout 2021.2.1
-    $ mkdir build && cd build
-    $ cmake ..
-    $ make -j install
-```
-
-The generated files will be placed in `/your/oneCCL_source_code/build/_install`
-
-#### Building OAP MLlib
-
 To clone and checkout source code, run the following commands:
-```
-    $ git clone https://github.com/oap-project/oap-mllib.git   
+```bash
+    $ git clone https://github.com/oap-project/oap-mllib.git
 ```
 __Optional__ to checkout specific release branch:
-```
-    $ cd oap-mllib && git checkout ${version} 
+```bash
+    $ cd oap-mllib && git checkout ${version}
 ```
 
 We rely on environment variables to find required toolchains and libraries. Please make sure the following environment variables are set for building:
@@ -171,25 +153,22 @@ CCL_ROOT    | Path to oneCCL home directory
 
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
 
-```
+```bash
     $ source /opt/intel/oneapi/setvars.sh
-    $ source /your/oneCCL_source_code/build/_install/env/setvars.sh
 ```
-
-__Be noticed we are using our own built oneCCL instead, we should source oneCCL's `setvars.sh` to overwrite oneAPI one.__
 
 You can also refer to [this CI script](dev/ci-test.sh) to setup the building environments.
 
-If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-src/oneDAL), [oneTBB](https://github.com/oneapi-src/oneTBB) versions rather than use the ones included in oneAPI TookKits, you can refer to the related build instructions and manually source `setvars.sh` accordingly.
+If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-src/oneDAL), [oneTBB](https://github.com/oneapi-src/oneTBB), [oneCCL](https://github.com/oneapi-src/oneCCL) versions rather than use the ones included in oneAPI Base Toolkit, you can refer to the related build instructions and manually source `setvars.sh` accordingly.
 
-To build, run the following commands: 
-```
+To build, run the following commands:
+```bash
     $ cd mllib-dal
     $ ./build.sh
 ```
 
 If no parameter is given, the Spark version __3.1.1__ will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
-```
+```bash
     $ ./build.sh -p spark-3.0.0
 ```
 
@@ -206,6 +185,7 @@ pca                |  PCA example for Scala
 als                |  ALS example for Scala
 naive-bayes        |  Naive Bayes example for Scala
 linear-regression  |  Linear Regression example for Scala
+correlation        |  Correlation example for Scala
 
 ### Python Examples
 
@@ -217,12 +197,11 @@ als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
-Algorithm         | Category | Maturity
-------------------|----------|-------------
-K-Means           | CPU      | Stable
-K-Means           | GPU      | Experimental
-PCA               | CPU      | Stable
-PCA               | GPU      | Experimental
-ALS               | CPU      | Stable
-Naive Bayes       | CPU      | Experimental
-Linear Regression | CPU      | Experimental
+Algorithm         | CPU | GPU | Maturity
+------------------|-----|-----|---------
+K-Means           | X   | X   | Stable
+PCA               | X   | X   | Stable
+ALS               | X   |     | Experimental
+Naive Bayes       | X   |     | Stable
+Linear Regression | X   |     | Stable
+Correlation       | X   | X   | Experimental

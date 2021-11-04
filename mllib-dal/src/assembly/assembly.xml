@@ -13,12 +13,6 @@
             <unpack>true</unpack>
             <scope>runtime</scope>
         </dependencySet>
-        <!-- Include local oneDAL jar-->
-        <dependencySet>
-            <outputDirectory>/</outputDirectory>
-            <unpack>true</unpack>
-            <scope>system</scope>
-        </dependencySet>
     </dependencySets>
     <fileSets>
         <fileSet>
@@ -28,51 +22,8 @@
                 <include>README*</include>
                 <include>LICENSE*</include>
                 <include>NOTICE*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>lib</outputDirectory>
-            <includes>
-                <include>*.so</include>
+                <include>RELEASE*</include>
             </includes>
         </fileSet>
     </fileSets>
-    <files>
-        <!-- Include TBB libraries into JAR  -->
-        <file>
-            <source>${env.TBBROOT}/lib/intel64/gcc4.8/${tbb.lib}</source>
-            <outputDirectory>lib</outputDirectory>
-            <destName>libtbb.so.12</destName>
-        </file>
-        <file>
-            <source>${env.TBBROOT}/lib/intel64/gcc4.8/${tbb.malloc.lib}</source>
-            <outputDirectory>lib</outputDirectory>
-            <destName>libtbbmalloc.so.2</destName>
-        </file>
-        <!-- Include DAL libraries into JAR  -->
-        <file>
-            <source>${env.DAALROOT}/lib/intel64/${dal.java.lib}</source>
-            <outputDirectory>lib</outputDirectory>
-            <destName>libJavaAPI.so</destName>
-        </file>
-        <!-- Include oneCCL libraries into JAR  -->
-        <file>
-            <source>${env.CCL_ROOT}/lib/${ccl.fabric.lib}</source>
-            <outputDirectory>lib</outputDirectory>
-        </file>
-        <file>
-            <source>${env.CCL_ROOT}/lib/${ccl.mpi.lib}</source>
-            <outputDirectory>lib</outputDirectory>
-            <destName>libmpi.so.12</destName>
-        </file>
-        <file>
-            <source>${env.CCL_ROOT}/lib/libccl.so</source>
-            <outputDirectory>lib</outputDirectory>
-        </file>
-        <file>
-            <source>${env.CCL_ROOT}/lib/prov/libsockets-fi.so</source>
-            <outputDirectory>lib</outputDirectory>
-        </file>
-    </files>
 </assembly>

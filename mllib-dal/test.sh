@@ -1,5 +1,26 @@
 #!/usr/bin/env bash
 
+if [[ -n $DAALROOT ]]; then
+  echo
+  echo ====================================================================================
+  echo WARNING: DAALROOT detected. It is recommended to test without oneAPI environment!
+  echo ====================================================================================
+  echo  
+fi
+
+# Unset FI_PROVIDER_PATH if present otherwise may hang
+if [[ -n $FI_PROVIDER_PATH ]]; then
+  echo ====================================================================================
+  echo WARNING: FI_PROVIDER_PATH detected. Will unset FI_PROVIDER_PATH before proceeding!
+  unset FI_PROVIDER_PATH
+  echo ====================================================================================
+fi
+
+if [[ ! -f target/oap-mllib-1.2.0.jar ]]; then
+  echo Please run ./build.sh first to do a complete build before testing!
+  exit 1
+fi
+
 # Check envs for building
 if [[ -z $JAVA_HOME ]]; then
  echo JAVA_HOME not defined!
@@ -11,20 +32,7 @@ if [[ -z $(which mvn) ]]; then
  exit 1
 fi
 
-if [[ -z $DAALROOT ]]; then
- echo DAALROOT not defined!
- exit 1
-fi
-
-if [[ -z $TBBROOT ]]; then
- echo TBBROOT not defined!
- exit 1
-fi
-
-if [[ -z $CCL_ROOT ]]; then
- echo CCL_ROOT not defined!
- exit 1
-fi
+export OAP_MLLIB_TESTING=true
 
 versionArray=(
   spark-3.0.0 \
@@ -84,11 +92,7 @@ export PLATFORM_PROFILE=CPU_ONLY_PROFILE
 
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
-echo DAALROOT=$DAALROOT
-echo TBBROOT=$TBBROOT
-echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-echo Clang Version: $(clang -dumpversion)
 echo Spark Version: $SPARK_VER
 echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
@@ -109,10 +113,10 @@ if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none clean test
+  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE clean test
+  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi

@@ -28,7 +28,7 @@ public final class LibLoader {
   // Make sure loading libraries from different temp directory for each process
   private static final String subDir = "MLlibDAL_" + UUID.randomUUID();
 
-  private static final Logger log = LoggerFactory.getLogger("LibLoader");
+  private static final Logger log = LoggerFactory.getLogger(LibLoader.class);
 
   private static boolean isLoaded = false;
 
@@ -65,11 +65,15 @@ public final class LibLoader {
   private static synchronized void loadLibCCL() throws IOException {
     // Load libfabric from system first, if failed load from jar
     if (!loadFromSystem("libfabric.so.1")) {
+      // Fix dlopen(libfabric.so) error:
+      // $ cp libfabric.so.1 libfabric.so
+      // $ patchelf --set-soname libfabric.so libfabric.so
+      loadFromJar(subDir, "libfabric.so");
       loadFromJar(subDir, "libfabric.so.1");
       loadFromJar(subDir, "libsockets-fi.so");
     }
     loadFromJar(subDir, "libmpi.so.12");
-    loadFromJar(subDir, "libccl.so");
+    loadFromJar(subDir, "libccl.so.1");
   }
 
   /**
@@ -140,8 +144,7 @@ public final class LibLoader {
     }
 
     try (OutputStream streamOut = new FileOutputStream(fileOut)) {
-      log.debug("Writing resource to temp file.");
-
+      // Writing resource to temp file
       byte[] buffer = new byte[32768];
       while (true) {
         int read = streamIn.read(buffer);
@@ -158,8 +161,8 @@ public final class LibLoader {
       streamIn.close();
     }
 
-    System.load(fileOut.toString());
-    log.debug("DONE: Loading library as resource.");
+    System.load(fileOut.toString());    
+    log.debug("DONE: Loading library " + fileOut.toString() +" as resource.");
   }
 
   /**

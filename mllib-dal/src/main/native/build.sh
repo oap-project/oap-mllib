@@ -14,5 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [[ $OAP_MLLIB_TESTING == "true" ]]; then
+  exit 0
+fi
+
 make clean
 make -j

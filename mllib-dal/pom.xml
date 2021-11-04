@@ -1,6 +1,5 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.intel.oap</groupId>
@@ -29,63 +28,84 @@
         <assembly.description>src/assembly/assembly.xml</assembly.description>
     </properties>
 
-    <dependencies>
+    <repositories>
+        <repository>
+            <id>gcs-maven-central-mirror</id>
+            <!--
+            Google Mirror of Maven Central, placed first so that it's used instead of flaky Maven Central.
+            See https://storage-download.googleapis.com/maven-central/index.html
+          -->
+            <name>GCS Maven Central mirror</name>
+            <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <!--
+            This is used as a fallback when the first try fails.
+          -->
+            <id>central</id>
+            <name>Maven Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
+    <dependencies>
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>2.12.10</version>
         </dependency>
-
         <dependency>
             <groupId>com.github.scopt</groupId>
             <artifactId>scopt_2.12</artifactId>
             <version>3.7.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.12</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib_2.12</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
-            <groupId>com.intel.onedal</groupId>
-            <artifactId>onedal</artifactId>
-            <version>${oneapi.version}</version>
-            <scope>system</scope>
-            <systemPath>${env.DAALROOT}/lib/onedal.jar</systemPath>
+            <groupId>com.intel.dal</groupId>
+            <artifactId>dal</artifactId>
+            <version>2021.4.0.83</version>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.binary.version}</artifactId>
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib_2.12</artifactId>
@@ -93,7 +113,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib-local_${scala.binary.version}</artifactId>
@@ -101,7 +120,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.jpmml</groupId>
             <artifactId>pmml-model</artifactId>
@@ -114,7 +132,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.12</artifactId>
@@ -122,7 +139,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.12</artifactId>
@@ -130,7 +146,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-catalyst_2.12</artifactId>
@@ -138,7 +153,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-tags_2.12</artifactId>
@@ -146,11 +160,9 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <profiles>
-
         <profile>
             <id>cpu-gpu</id>
             <activation>
@@ -159,11 +171,7 @@
                     <value>CPU_GPU_PROFILE</value>
                 </property>
             </activation>
-            <properties>
-                <assembly.description>src/assembly/assembly-cpu-gpu.xml</assembly.description>
-            </properties>
         </profile>
-
         <profile>
             <id>spark-3.0.0</id>
             <properties>
@@ -171,7 +179,6 @@
                 <scalatest.version>3.0.8</scalatest.version>
             </properties>
         </profile>
-
         <profile>
             <id>spark-3.0.1</id>
             <properties>
@@ -179,7 +186,6 @@
                 <scalatest.version>3.0.8</scalatest.version>
             </properties>
         </profile>
-
         <profile>
             <id>spark-3.0.2</id>
             <properties>
@@ -187,7 +193,6 @@
                 <scalatest.version>3.0.8</scalatest.version>
             </properties>
         </profile>
-
         <profile>
             <id>spark-3.1.1</id>
             <activation>
@@ -202,58 +207,58 @@
 
     <build>
         <plugins>
-                <plugin>
-                  <groupId>org.codehaus.mojo</groupId>
-                  <artifactId>build-helper-maven-plugin</artifactId>
-                  <version>3.2.0</version>
-                  <executions>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
                     <execution>
-                      <id>add-source</id>
-                      <phase>generate-sources</phase>
-                      <goals>
-                        <goal>add-source</goal>
-                      </goals>
-                      <configuration>
-                        <sources>
-                          <source>src/spark-${spark.version}/main/java</source>
-                          <source>src/spark-${spark.version}/main/scala</source>
-                        </sources>
-                      </configuration>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/spark-${spark.version}/main/java</source>
+                                <source>src/spark-${spark.version}/main/scala</source>
+                            </sources>
+                        </configuration>
                     </execution>
                     <execution>
-                      <id>add-test-source</id>
-                      <phase>generate-sources</phase>
-                      <goals>
-                        <goal>add-test-source</goal>
-                      </goals>
-                      <configuration>
-                        <sources>
-                          <source>src/spark-${spark.version}/test/scala</source>
-                        </sources>
-                      </configuration>
+                        <id>add-test-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/spark-${spark.version}/test/scala</source>
+                            </sources>
+                        </configuration>
                     </execution>
-                  </executions>
-                </plugin>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
                 <version>4.4.0</version>
                 <executions>
-                  <execution>
-                    <id>scala-compile-first</id>
-                    <phase>process-resources</phase>
-                    <goals>
-                      <goal>add-source</goal>
-                      <goal>compile</goal>
-                    </goals>
-                  </execution>
-                  <execution>
-                    <id>scala-test-compile</id>
-                    <phase>process-test-resources</phase>
-                    <goals>
-                      <goal>testCompile</goal>
-                    </goals>
-                  </execution>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <configuration>
                     <scalaVersion>${scala.version}</scalaVersion>
@@ -329,7 +334,6 @@
                     <skipTests>true</skipTests>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
@@ -348,18 +352,16 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.8</version>
                 <executions>
                     <execution>
-                        <phase>process-classes</phase>
+                        <phase>process-resources</phase>
                         <configuration>
                             <target name="build-natives" description="Build native code">
                                 <echo>Building native code</echo>
-                                <exec dir="${project.basedir}/src/main/native" executable="./build.sh"
-                                      failonerror="true">
+                                <exec dir="${project.basedir}/src/main/native" executable="./build.sh" failonerror="true">
                                 </exec>
                             </target>
                         </configuration>
@@ -369,89 +371,10 @@
                     </execution>
                 </executions>
             </plugin>
-
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.0.2</version>
-                <configuration>
-                    <outputDirectory>${project.build.testOutputDirectory}/lib</outputDirectory>
-                    <resources>
-                        <resource>
-                            <directory>${env.CCL_ROOT}/lib</directory>
-                            <includes>
-                                <include>${ccl.lib}</include>
-                                <include>${ccl.mpi.lib}</include>
-                                <include>${ccl.fabric.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.CCL_ROOT}/lib/prov</directory>
-                            <includes>
-                                <include>libsockets-fi.so</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.TBBROOT}/lib/intel64/gcc4.8</directory>
-                            <includes>
-                                <include>${tbb.lib}</include>
-                                <include>${tbb.malloc.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${env.DAALROOT}/lib/intel64</directory>
-                            <includes>
-                                <include>${dal.java.lib}</include>
-                            </includes>
-                        </resource>
-                        <resource>
-                            <directory>${project.build.directory}</directory>
-                            <includes>
-                                <include>libMLlibDAL.so</include>
-                            </includes>
-                        </resource>
-                    </resources>
-                </configuration>
             </plugin>
-
-            <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <id>rename-file</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>rename</goal>
-                        </goals>
-                        <configuration>
-                            <fileSets>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbb.so.12
-                                    </destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${tbb.malloc.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libtbbmalloc.so.2
-                                    </destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${ccl.mpi.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libmpi.so.12
-                                    </destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>${project.build.testOutputDirectory}/lib/${dal.java.lib}</sourceFile>
-                                    <destinationFile>${project.build.testOutputDirectory}/lib/libJavaAPI.so
-                                    </destinationFile>
-                                </fileSet>
-                            </fileSets>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
@@ -472,8 +395,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
-
 </project>

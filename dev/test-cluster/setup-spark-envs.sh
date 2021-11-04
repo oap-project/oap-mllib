@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 HADOOP_VERSION=3.2.0
 SPARK_VERSION=3.1.1
 SPARK_HADOOP_VERSION=hadoop3.2
@@ -13,3 +15,5 @@ export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
 export PYSPARK_PYTHON=python3
 
 export PATH=$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+
+set +x

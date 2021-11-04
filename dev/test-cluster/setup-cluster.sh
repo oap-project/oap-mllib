@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
 
-WORK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# exit when any command fails
+set -e
 
-cd $WORK_DIR
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 echo JAVA_HOME is $JAVA_HOME
 
-HADOOP_VERSION=3.2.0
-SPARK_VERSION=3.1.1
-SPARK_HADOOP_VERSION=hadoop3.2
+# setup envs
+source $SCRIPT_DIR/setup-spark-envs.sh
 
+# download spark & hadoop bins
 [ -d ~/opt ] || mkdir ~/opt
 cd ~/opt
 [ -f spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz ] || wget --no-verbose https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION.tgz
@@ -17,7 +23,7 @@ cd ~/opt
 [ -f hadoop-$HADOOP_VERSION.tar.gz ] || wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 [ -d hadoop-$HADOOP_VERSION ] || tar -xzf hadoop-$HADOOP_VERSION.tar.gz
 
-cd $WORK_DIR
+cd $SCRIPT_DIR
 
 HOST_IP=$(hostname -f)
 
@@ -28,12 +34,13 @@ cp ./core-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hdfs-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
+cp ./log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
-
-source ./setup-spark-envs.sh
 
 echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
 echo $HOST_IP > $SPARK_HOME/conf/slaves
+
+ls -l $SPARK_HOME/conf
 
 # create directories
 mkdir -p /tmp/run/hdfs/namenode
