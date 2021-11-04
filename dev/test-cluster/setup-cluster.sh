@@ -8,12 +8,12 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
 trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
-WORK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 echo JAVA_HOME is $JAVA_HOME
 
 # setup envs
-source ./setup-spark-envs.sh
+source $SCRIPT_DIR/setup-spark-envs.sh
 
 # download spark & hadoop bins
 [ -d ~/opt ] || mkdir ~/opt
@@ -23,7 +23,7 @@ cd ~/opt
 [ -f hadoop-$HADOOP_VERSION.tar.gz ] || wget --no-verbose https://archive.apache.org/dist/hadoop/core/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 [ -d hadoop-$HADOOP_VERSION ] || tar -xzf hadoop-$HADOOP_VERSION.tar.gz
 
-cd $WORK_DIR
+cd $SCRIPT_DIR
 
 HOST_IP=$(hostname -f)
 
