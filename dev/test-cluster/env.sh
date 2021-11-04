@@ -9,7 +9,9 @@ export HADOOP_HOME=$HADOOP_HOME
 # Set Spark home path
 export SPARK_HOME=$SPARK_HOME
 # Set HDFS Root, should be hdfs://xxx or file://xxx
-export HDFS_ROOT=hdfs://localhost:8020
+
+HOST_NAME=$(hostname -f)
+export HDFS_ROOT=hdfs://$HOST_NAME:8020
 # Set OAP MLlib source code root directory
 export OAP_MLLIB_ROOT=$GITHUB_WORKSPACE
 
