@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
+OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
+source $OAP_MLLIB_ROOT/RELEASE
+
 if [[ -n $DAALROOT ]]; then
   echo
   echo ====================================================================================
   echo WARNING: DAALROOT detected. It is recommended to test without oneAPI environment!
   echo ====================================================================================
-  echo  
+  echo
 fi
 
 # Unset FI_PROVIDER_PATH if present otherwise may hang
@@ -16,7 +20,7 @@ if [[ -n $FI_PROVIDER_PATH ]]; then
   echo ====================================================================================
 fi
 
-if [[ ! -f target/oap-mllib-1.2.0.jar ]]; then
+if [[ ! -f target/oap-mllib-$OAP_MLLIB_VERSION.jar ]]; then
   echo Please run ./build.sh first to do a complete build before testing!
   exit 1
 fi
@@ -35,10 +39,9 @@ fi
 export OAP_MLLIB_TESTING=true
 
 versionArray=(
-  spark-3.0.0 \
-  spark-3.0.1 \
-  spark-3.0.2 \
-  spark-3.1.1
+  spark-3.1.1 \
+  spark-3.1.2 \
+  spark-3.2.0
 )
 
 suiteArray=(
@@ -51,7 +54,7 @@ suiteArray=(
 )
 
 # Set default version
-SPARK_VER=spark-3.1.1
+SPARK_VER=$SPARK_VERSION
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
@@ -97,7 +100,9 @@ echo Spark Version: $SPARK_VER
 echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 
-SUITE=$1
+#SUITE=$1
+
+SUITE=classification.MLlibNaiveBayesSuite
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!
@@ -113,10 +118,10 @@ if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dtest=none test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi

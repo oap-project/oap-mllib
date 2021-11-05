@@ -18,9 +18,10 @@ package org.apache.spark.ml.util
 
 import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
+import com.intel.oap.mllib.util.Utils
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
-import org.apache.spark.mllib.linalg.{Vector => OldVector, Matrix => OldMatrix, DenseMatrix => OldDenseMatrix}
+import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel

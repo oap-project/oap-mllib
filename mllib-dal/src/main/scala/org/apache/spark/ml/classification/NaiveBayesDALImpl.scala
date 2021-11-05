@@ -19,7 +19,7 @@ package org.apache.spark.ml.classification
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Matrices
 import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
-import org.apache.spark.ml.util.Utils.getOneCCLIPPort
+import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
 import org.apache.spark.sql.Dataset
 
 class NaiveBayesDALImpl(val uid: String,

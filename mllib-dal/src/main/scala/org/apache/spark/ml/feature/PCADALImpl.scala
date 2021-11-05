@@ -21,8 +21,8 @@ import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
-import org.apache.spark.ml.util.Utils.getOneCCLIPPort
-import org.apache.spark.ml.util.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
+import org.apache.spark.ml.util.{OneCCL, OneDAL}
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD

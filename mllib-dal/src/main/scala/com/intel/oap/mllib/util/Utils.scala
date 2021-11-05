@@ -14,29 +14,31 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.util
+package com.intel.oap.mllib.util
 
-import java.net.InetAddress
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.util.{OneCCL, OneDAL}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.{SparkConf, SparkContext}
+
+import java.net.InetAddress
 
 object Utils {
 
   def isOAPEnabled(): Boolean = {
     val sc = SparkSession.active.sparkContext
-    return sc.conf.getBoolean("spark.oap.mllib.enabled", true)
+    return sc.getConf.getBoolean("spark.oap.mllib.enabled", true)
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
-    val kvsIP = data.sparkContext.conf.get("spark.oap.mllib.oneccl.kvs.ip",
+    val kvsIP = data.sparkContext.getConf.get("spark.oap.mllib.oneccl.kvs.ip",
       executorIPAddress)
     //  TODO: right now we use a configured port, will optimize auto port detection
     //  val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
     val kvsPortDetected = 3000
-    val kvsPort = data.sparkContext.conf.getInt("spark.oap.mllib.oneccl.kvs.port",
+    val kvsPort = data.sparkContext.getConf.getInt("spark.oap.mllib.oneccl.kvs.port",
       kvsPortDetected)
 
     kvsIP + "_" + kvsPort

@@ -21,10 +21,11 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
+import com.intel.oap.mllib.util.Utils
 import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
-import org.apache.spark.ml.util.Utils.getOneCCLIPPort
+import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util._
 import org.apache.spark.rdd.RDD
 

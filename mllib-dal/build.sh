@@ -44,18 +44,17 @@ if [[ -f ./$RESOURCE_PATH/libsycl.so.5 ]]; then
 fi
 
 versionArray=(
-  spark-3.0.0 \
-  spark-3.0.1 \
-  spark-3.0.2 \
-  spark-3.1.1
+  spark-3.1.1 \
+  spark-3.1.2 \
+  spark-3.2.0
 )
 
-SPARK_VER=spark-3.1.1
+SPARK_VER=spark-3.2.0
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo Usage: ./build.sh [-p spark-x.x.x] [-q] [-h]
+  echo Usage: ./build.sh [-q] [-h]
   echo
   echo Supported Spark versions:
   for version in ${versionArray[*]}
@@ -67,8 +66,7 @@ print_usage() {
 
 while getopts "hqp:" opt
 do
-case $opt in
-  p) SPARK_VER=$OPTARG ;;
+case $opt in  
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
   h | *)
     print_usage
@@ -99,4 +97,5 @@ echo =============================
 echo
 echo Building with $SPARK_VER ...
 echo
-mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -DskipTests clean package
+
+mvn $MVN_NO_TRANSFER_PROGRESS -DskipTests clean package

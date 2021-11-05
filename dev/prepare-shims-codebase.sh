@@ -9,11 +9,7 @@ if [[ ! $# -eq 1 ]]; then
     exit 0
 fi
 
-VERSIONS=(
-    3.0.0
-    3.0.1
-    3.0.2
-    3.0.3
+SPARK_VERSIONS=(
     3.1.1
     3.1.2
     3.2.0
@@ -35,15 +31,15 @@ SOURCE_DIR=$SPARK_SOURCE_DIR/mllib/src/main/scala
 TARGET_DIR=$SCRIPT_DIR/shims-sources
 
 copy_sources() {
-    version=$1
+    VERSION=$1
     echo ==========================
-    echo Checking out v$version ...
-    git checkout v$version
+    echo Checking out v$VERSION ...
+    git checkout v$VERSION
     git status
     echo
-    echo Copying sources for v$version ...
+    echo Copying sources for v$VERSION ...
     for file in ${FILES[*]}; do
-        rsync -av --relative $SOURCE_DIR/./$file $TARGET_DIR/$version
+        rsync -av --relative $SOURCE_DIR/./$file $TARGET_DIR/$VERSION
     done
     echo
 }
@@ -52,9 +48,9 @@ copy_sources() {
 
 cd $SPARK_SOURCE_DIR
 
-for version in ${VERSIONS[*]}; do
-    mkdir -p $TARGET_DIR/$version
-    copy_sources $version
+for VERSION in ${SPARK_VERSIONS[*]}; do
+    mkdir -p $TARGET_DIR/$VERSION
+    copy_sources $VERSION
 done
 
 [[ -n $(which tree) ]] && tree $TARGET_DIR

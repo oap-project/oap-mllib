@@ -21,7 +21,7 @@ import com.intel.daal.services.DaalContext
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.util.Utils.getOneCCLIPPort
+import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}

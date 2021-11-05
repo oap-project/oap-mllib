@@ -18,30 +18,18 @@ package org.apache.spark.ml.classification
 
 import org.apache.spark.SPARK_VERSION
 import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
-import org.apache.spark.ml.classification.spark300.{NaiveBayes => NaiveBayesSpark300}
-import org.apache.spark.ml.classification.spark301.{NaiveBayes => NaiveBayesSpark301}
-import org.apache.spark.ml.classification.spark302.{NaiveBayes => NaiveBayesSpark302}
-import org.apache.spark.ml.classification.spark303.{NaiveBayes => NaiveBayesSpark303}
-import org.apache.spark.ml.classification.spark311.{NaiveBayes => NaiveBayesSpark311}
-import org.apache.spark.ml.classification.spark312.{NaiveBayes => NaiveBayesSpark312}
 import org.apache.spark.ml.classification.spark320.{NaiveBayes => NaiveBayesSpark320}
 import org.apache.spark.SparkException
 import org.apache.spark.internal.Logging
 
 object NaiveBayesShim extends Logging {
 
-  def createNaiveBayes(uid: String) : SparkNaiveBayes = {
+  def create(uid: String) : SparkNaiveBayes = {
 
     logInfo(s"Loading NaiveBayes for Spark $SPARK_VERSION")
 
     val naiveBayes = SPARK_VERSION match {
-      case "3.0.0" => new NaiveBayesSpark300(uid)
-      case "3.0.1" => new NaiveBayesSpark301(uid)
-      case "3.0.2" => new NaiveBayesSpark302(uid)
-      case "3.0.3" => new NaiveBayesSpark303(uid)
-      case "3.1.1" => new NaiveBayesSpark311(uid)
-      case "3.1.2" => new NaiveBayesSpark312(uid)
-      case "3.2.0" => new NaiveBayesSpark320(uid)
+      case "3.1.1" | "3.1.2" | "3.2.0" => new NaiveBayesSpark320(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     naiveBayes
