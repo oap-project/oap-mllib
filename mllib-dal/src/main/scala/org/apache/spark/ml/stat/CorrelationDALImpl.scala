@@ -16,12 +16,13 @@
 
 package org.apache.spark.ml.stat
 
+import com.intel.oap.mllib.{OneCCL, OneDAL}
+
 import java.util.Arrays
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.util.{OneCCL, OneDAL}
-import org.apache.spark.ml.linalg.{Vector, Matrix}
-import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
+import org.apache.spark.ml.linalg.{Matrix, Vector}
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import org.apache.spark.rdd.RDD
 
 class CorrelationDALImpl(

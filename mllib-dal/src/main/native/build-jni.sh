@@ -29,9 +29,9 @@ if [[ ! -e "$SPARK_HOME" ]]; then
 fi
 
 javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR:$SPARK_HOME/jars/*" -force \
-    org.apache.spark.ml.util.OneCCL$ \
-    org.apache.spark.ml.util.OneDAL$ \
-    org.apache.spark.ml.clustering.KMeansDALImpl \
+    com.intel.oap.mllib.OneCCL$ \
+    com.intel.oap.mllib.OneDAL$ \
+    com.intel.oap.mllib.clustering.KMeansDALImpl \
     org.apache.spark.ml.feature.PCADALImpl \
     org.apache.spark.ml.recommendation.ALSDALImpl \
     org.apache.spark.ml.classification.NaiveBayesDALImpl \

@@ -18,11 +18,11 @@ package org.apache.spark.ml.feature
 
 import java.util.Arrays
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
+import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
-import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
-import org.apache.spark.ml.util.{OneCCL, OneDAL}
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD

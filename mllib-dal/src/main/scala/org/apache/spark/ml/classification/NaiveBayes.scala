@@ -17,7 +17,7 @@
 
 package org.apache.spark.ml.classification
 
-import com.intel.oap.mllib.util.Utils
+import com.intel.oap.mllib.Utils
 import org.apache.hadoop.fs.Path
 import org.json4s.DefaultFormats
 import org.apache.spark.annotation.Since

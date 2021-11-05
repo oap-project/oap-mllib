@@ -17,7 +17,7 @@
 
 package org.apache.spark.ml.classification.spark320
 
-import com.intel.oap.mllib.util.{Utils => OMUtils}
+import com.intel.oap.mllib.Utils
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg._
@@ -94,8 +94,8 @@ class NaiveBayes @Since("1.5.0") (
     $(modelType) match {
       case Multinomial =>
         val sc = dataset.sparkSession.sparkContext
-        val model = if (OMUtils.isOAPEnabled()) {
-          val isPlatformSupported = OMUtils.checkClusterPlatformCompatibility(
+        val model = if (Utils.isOAPEnabled()) {
+          val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
             dataset.sparkSession.sparkContext)
           val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
           val handleSmoothing = ($(smoothing) != 1.0)
@@ -125,8 +125,8 @@ class NaiveBayes @Since("1.5.0") (
 
     val sc = spark.sparkContext
 
-    val executor_num = OMUtils.sparkExecutorNum(sc)
-    val executor_cores = OMUtils.sparkExecutorCores()
+    val executor_num = Utils.sparkExecutorNum(sc)
+    val executor_cores = Utils.sparkExecutorCores()
 
     logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
 

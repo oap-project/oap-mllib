@@ -17,10 +17,11 @@
 
 package org.apache.spark.ml.regression
 
+import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
-import com.intel.oap.mllib.util.Utils.getOneCCLIPPort
-import org.apache.spark.ml.util.{Instrumentation, OneCCL, OneDAL}
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import org.apache.spark.ml.util.Instrumentation
 import org.apache.spark.sql.Dataset
 
 /**

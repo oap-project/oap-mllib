@@ -6,3 +6,4 @@ target/
 .idea/
 .idea_modules/
 *.versionsBackup
+shims-sources/
