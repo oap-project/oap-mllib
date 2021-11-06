@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# exit when any command fails
+set -e
+
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
 SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
@@ -44,13 +52,19 @@ versionArray=(
   spark-3.2.0
 )
 
+# suiteArray=(
+#   "clustering.MLlibKMeansSuite" \
+#   "feature.MLlibPCASuite" \
+#   "recommendation.MLlibALSSuite" \
+#   "classification.MLlibNaiveBayesSuite" \
+#   "regression.MLlibLinearRegressionSuite" \
+#   "stat.MLlibCorrelationSuite"
+# )
+
 suiteArray=(
   "clustering.MLlibKMeansSuite" \
   "feature.MLlibPCASuite" \
-  "recommendation.MLlibALSSuite" \
-  "classification.MLlibNaiveBayesSuite" \
-  "regression.MLlibLinearRegressionSuite" \
-  "stat.MLlibCorrelationSuite"
+  "classification.MLlibNaiveBayesSuite"
 )
 
 # Set default version
@@ -100,9 +114,9 @@ echo Spark Version: $SPARK_VER
 echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 
-# SUITE=$1
+SUITE=$1
 
-SUITE=clustering.MLlibKMeansSuite
+# SUITE=clustering.MLlibKMeansSuite
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!

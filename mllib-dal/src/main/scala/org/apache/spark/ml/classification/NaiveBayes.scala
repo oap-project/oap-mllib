@@ -17,24 +17,12 @@
 
 package org.apache.spark.ml.classification
 
-import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.NaiveBayesShim
-import org.apache.hadoop.fs.Path
-import org.json4s.DefaultFormats
 import org.apache.spark.annotation.Since
-import org.apache.spark.ml.PredictorParams
-import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg._
-import org.apache.spark.ml.param.{DoubleParam, Param, ParamMap, ParamValidators}
-import org.apache.spark.ml.param.shared.HasWeightCol
-import org.apache.spark.ml.stat.Summarizer
+import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util._
-import org.apache.spark.ml.util.Instrumentation.instrumented
-import org.apache.spark.mllib.util.MLUtils
-import org.apache.spark.sql.{Dataset, Row}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
-import org.apache.spark.util.VersionUtils
+import org.apache.spark.sql.Dataset
 
 // scalastyle:off line.size.limit
 /**
