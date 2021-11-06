@@ -7,3 +7,4 @@ target/
 .idea_modules/
 *.versionsBackup
 shims-sources/
+env.sh

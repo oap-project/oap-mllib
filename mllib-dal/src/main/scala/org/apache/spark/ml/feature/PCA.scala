@@ -32,7 +32,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.util.VersionUtils.majorVersion
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.feature.PCADALImpl
+import com.intel.oap.mllib.feature.{PCADALImpl, PCAShim}
 
 /**
  * Params for [[PCA]] and [[PCAModel]].
@@ -87,36 +87,11 @@ class PCA @Since("1.5.0") (
    */
   @Since("2.0.0")
   override def fit(dataset: Dataset[_]): PCAModel = {
-    transformSchema(dataset.schema, logging = true)
-    val input = dataset.select($(inputCol)).rdd
-    val inputVectors = input.map {
-      case Row(v: Vector) => v
-    }
-
-    val numFeatures = inputVectors.first().size
-    require($(k) <= numFeatures,
-      s"source vector size $numFeatures must be no less than k=$k")
-
-    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
-      dataset.sparkSession.sparkContext)
-
-    // Call oneDAL Correlation PCA implementation when numFeatures < 65535 and fall back otherwise
-    val parentModel = if (numFeatures < 65535 && Utils.isOAPEnabled() && isPlatformSupported) {
-      val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
-      val executor_cores = Utils.sparkExecutorCores()
-      val pca = new PCADALImpl(k = $(k), executor_num, executor_cores)
-      val pcaDALModel = pca.train(inputVectors)
-      new OldPCAModel(pcaDALModel.k, pcaDALModel.pc, pcaDALModel.explainedVariance)
-    } else {
-      val inputOldVectors = inputVectors.map {
-        case v: Vector => OldVectors.fromML(v)
-      }
-      val pca = new feature.PCA(k = $(k))
-      val pcaModel = pca.fit(inputOldVectors)
-      pcaModel
-    }
-    copyValues(new PCAModel(uid, parentModel.pc.asML, parentModel.explainedVariance.asML)
-      .setParent(this))
+    val pca = PCAShim.create(uid)
+      .setK($(k))
+      .setInputCol($(inputCol))
+      .setOutputCol($(outputCol))
+    pca.fit(dataset)
   }
 
   @Since("1.5.0")

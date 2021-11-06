@@ -272,11 +272,11 @@ class KMeans @Since("1.5.0") (
     @Since("1.5.0") override val uid: String)
   extends SparkKMeans {
 
-  @Since("1.5.0")
-  override def copy(extra: ParamMap): KMeans = defaultCopy(extra)
-
-  @Since("1.5.0")
-  def this() = this(Identifiable.randomUID("kmeans"))
+//  @Since("1.5.0")
+//  override def copy(extra: ParamMap): KMeans = defaultCopy(extra)
+//
+//  @Since("1.5.0")
+//  def this() = this(Identifiable.randomUID("kmeans"))
 
 //  /** @group setParam */
 //  @Since("1.5.0")
@@ -454,19 +454,14 @@ class KMeans @Since("1.5.0") (
       val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
       model
     }
-
-  @Since("1.5.0")
-  override def transformSchema(schema: StructType): StructType = {
-    validateAndTransformSchema(schema)
-  }
 }
 
-@Since("1.6.0")
-object KMeans extends DefaultParamsReadable[KMeans] {
-
-  @Since("1.6.0")
-  override def load(path: String): KMeans = super.load(path)
-}
+//@Since("1.6.0")
+//object KMeans extends DefaultParamsReadable[KMeans] {
+//
+//  @Since("1.6.0")
+//  override def load(path: String): KMeans = super.load(path)
+//}
 
 /**
  * Summary of KMeans.
