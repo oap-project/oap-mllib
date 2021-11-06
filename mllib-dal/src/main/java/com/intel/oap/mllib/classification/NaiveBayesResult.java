@@ -1,4 +1,4 @@
-package org.apache.spark.ml.classification;
+package com.intel.oap.mllib.classification;
 
 public class NaiveBayesResult {
     public long piNumericTable;

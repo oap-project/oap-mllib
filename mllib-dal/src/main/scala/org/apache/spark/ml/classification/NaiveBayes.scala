@@ -18,6 +18,7 @@
 package org.apache.spark.ml.classification
 
 import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.classification.NaiveBayesShim
 import org.apache.hadoop.fs.Path
 import org.json4s.DefaultFormats
 import org.apache.spark.annotation.Since

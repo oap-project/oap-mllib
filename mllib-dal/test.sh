@@ -100,9 +100,9 @@ echo Spark Version: $SPARK_VER
 echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 
-#SUITE=$1
+# SUITE=$1
 
-SUITE=clustering.MLlibKMeansSuite
+SUITE=feature.MLlibPCASuite
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!

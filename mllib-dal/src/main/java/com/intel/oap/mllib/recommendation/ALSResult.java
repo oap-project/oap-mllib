@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.feature;
+package com.intel.oap.mllib.recommendation;
 
-public class PCAResult {
-  public long pcNumericTable;
-  public long explainedVarianceNumericTable;
+public class ALSResult {
+  public long rankId = -1;
+  public long cUsersFactorsNumTab;
+  public long cItemsFactorsNumTab;
+  public long cUserOffset;
+  public long cItemOffset;
 }

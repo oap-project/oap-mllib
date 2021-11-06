@@ -18,7 +18,6 @@
 package org.apache.spark.ml.feature
 
 import org.apache.hadoop.fs.Path
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml._
 import org.apache.spark.ml.linalg._
@@ -26,13 +25,14 @@ import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.feature
+import org.apache.spark.mllib.feature.{PCAModel => OldPCAModel}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.util.VersionUtils.majorVersion
-
 import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.feature.PCADALImpl
 
 /**
  * Params for [[PCA]] and [[PCAModel]].
@@ -101,12 +101,12 @@ class PCA @Since("1.5.0") (
       dataset.sparkSession.sparkContext)
 
     // Call oneDAL Correlation PCA implementation when numFeatures < 65535 and fall back otherwise
-    val parentModel  = if (numFeatures < 65535 && Utils.isOAPEnabled() && isPlatformSupported) {
+    val parentModel = if (numFeatures < 65535 && Utils.isOAPEnabled() && isPlatformSupported) {
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val pca = new PCADALImpl(k = $(k), executor_num, executor_cores)
-      val pcaModel = pca.train(inputVectors)
-      pcaModel
+      val pcaDALModel = pca.train(inputVectors)
+      new OldPCAModel(pcaDALModel.k, pcaDALModel.pc, pcaDALModel.explainedVariance)
     } else {
       val inputOldVectors = inputVectors.map {
         case v: Vector => OldVectors.fromML(v)

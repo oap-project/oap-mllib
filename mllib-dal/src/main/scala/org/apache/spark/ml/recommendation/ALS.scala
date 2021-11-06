@@ -20,17 +20,15 @@ package org.apache.spark.ml.recommendation
 import java.{util => ju}
 import java.io.IOException
 import java.util.Locale
-
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.{Sorting, Try}
 import scala.util.hashing.byteswap64
-
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.intel.oap.mllib.recommendation.ALSDALImpl
 import org.apache.hadoop.fs.Path
 import org.json4s.DefaultFormats
 import org.json4s.JsonDSL._
-
 import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -50,7 +48,6 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.{BoundedPriorityQueue, Utils}
 import org.apache.spark.util.collection.{OpenHashMap, OpenHashSet, SortDataFormat, Sorter}
 import org.apache.spark.util.random.XORShiftRandom
-
 import com.intel.oap.mllib.{Utils => DALUtils}
 
 /**

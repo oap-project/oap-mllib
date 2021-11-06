@@ -22,7 +22,7 @@
 #endif
 
 #include "OneCCL.h"
-#include "org_apache_spark_ml_feature_PCADALImpl.h"
+#include "com_intel_oap_mllib_feature_PCADALImpl.h"
 #include "service.h"
 
 using namespace std;
@@ -162,14 +162,8 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
     }
 }
 
-/*
- * Class:     org_apache_spark_ml_feature_PCADALImpl
- * Method:    cPCATrainDAL
- * Signature: (JIIIZ[ILorg/apache/spark/ml/feature/PCAResult;)J
- */
-
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_feature_PCADALImpl_cPCATrainDAL(
+Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
     jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array,
     jobject resultObj) {

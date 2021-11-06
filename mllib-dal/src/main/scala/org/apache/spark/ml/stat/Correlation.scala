@@ -18,7 +18,6 @@
 package org.apache.spark.ml.stat
 
 import scala.collection.JavaConverters._
-
 import org.apache.spark.annotation.{Experimental, Since}
 import org.apache.spark.ml.linalg.{SQLDataTypes, Vector}
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
@@ -26,8 +25,8 @@ import org.apache.spark.mllib.stat.{Statistics => OldStatistics}
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.storage.StorageLevel
-
 import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.stat.CorrelationDALImpl
 
 /**
  * API for correlation functions in MLlib, compatible with DataFrames and Datasets.

@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.classification
+package com.intel.oap.mllib.classification
 
-import com.intel.oap.mllib.{OneCCL, OneDAL}
-import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.Matrices
-import org.apache.spark.ml.util.Instrumentation
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import com.intel.oap.mllib.{OneCCL, OneDAL}
+import org.apache.spark.annotation.Since
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.classification.NaiveBayesModel
+import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector}
+import org.apache.spark.ml.util.Instrumentation
 import org.apache.spark.sql.Dataset
+
+class NaiveBayesDALModel private[mllib] (
+    val uid: String,
+    val pi: Vector,
+    val theta: Matrix,
+    val sigma: Matrix
+)
 
 class NaiveBayesDALImpl(val uid: String,
                         val classNum: Int,
                         val executorNum: Int,
                         val executorCores: Int
                        ) extends Serializable with Logging {
-  def train(labeledPoints: Dataset[_],
-            instr: Option[Instrumentation]): NaiveBayesModel = {
+  def train(labeledPoints: Dataset[_]): NaiveBayesDALModel = {
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
@@ -83,7 +91,7 @@ class NaiveBayesDALImpl(val uid: String,
     assert(results.length == 1)
     val result = results(0)
 
-    val model = new NaiveBayesModel(uid,
+    val model = new NaiveBayesDALModel(uid,
       result._1,
       result._2,
       Matrices.zeros(0, 0))

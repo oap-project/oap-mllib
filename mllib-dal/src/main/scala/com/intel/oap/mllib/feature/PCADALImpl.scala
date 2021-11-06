@@ -14,25 +14,32 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.feature
+package com.intel.oap.mllib.feature
 
-import java.util.Arrays
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.TaskContext
+import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
-import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
-import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
+import org.apache.spark.mllib.linalg.{DenseVector => OldDenseVector, DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
+
+import java.util.Arrays
+
+class PCADALModel private[mllib] (
+  val k: Int,
+  val pc: OldDenseMatrix,
+  val explainedVariance: OldDenseVector)
 
 class PCADALImpl(val k: Int,
                  val executorNum: Int,
                  val executorCores: Int)
   extends Serializable with Logging {
 
-  def train(data: RDD[Vector]): MLlibPCAModel = {
+  def train(data: RDD[Vector]): PCADALModel = {
 
     val normalizedData = normalizeData(data)
 
@@ -41,7 +48,7 @@ class PCADALImpl(val k: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val sparkContext = data.sparkContext
-    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
+    val useGPU = sparkContext.getConf.getBoolean("spark.oap.mllib.useGPU", false)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val gpuIndices = if (useGPU) {
@@ -90,7 +97,7 @@ class PCADALImpl(val k: Int,
     val pc = results(0)._1
     val explainedVariance = results(0)._2
 
-    val parentModel = new MLlibPCAModel(k,
+    val parentModel = new PCADALModel(k,
       OldDenseMatrix.fromML(pc),
       OldVectors.fromML(explainedVariance).toDense
     )
@@ -115,15 +122,18 @@ class PCADALImpl(val k: Int,
 
     val numCols = table.getNumberOfColumns.toInt
 
-    val result = DenseMatrix.zeros(numCols, k)
+    // Column-major, transpose of top K rows of NumericTable
+    new DenseMatrix(numCols, k, data.slice(0, numCols * k), false)
 
-    for (row <- 0 until k) {
-      for (col <- 0 until numCols) {
-        result(col, row) = data(row * numCols + col)
-      }
-    }
-
-    result
+//    val result = DenseMatrix.zeros(numCols, k)
+//
+//    for (row <- 0 until k) {
+//      for (col <- 0 until numCols) {
+//        result(col, row) = data(row * numCols + col)
+//      }
+//    }
+//
+//    result
   }
 
   private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {

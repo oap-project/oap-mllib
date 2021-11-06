@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.recommendation
+package com.intel.oap.mllib.recommendation
 
-import java.nio.{ByteBuffer, ByteOrder, FloatBuffer}
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
 import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
-import Utils.getOneCCLIPPort
-import org.apache.spark.ml.util._
 import org.apache.spark.rdd.RDD
+
+import java.nio.{ByteBuffer, ByteOrder, FloatBuffer}
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 class ALSDataPartitioner(blocks: Int, itemsInBlock: Long)
   extends Partitioner {

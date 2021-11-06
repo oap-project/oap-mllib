@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.recommendation;
+package com.intel.oap.mllib.clustering;
 
-public class ALSPartitionInfo {
-  public int ratingsNum;
-  public int csrRowNum;
+public class KMeansResult {
+  public int iterationNum;
+  public double totalCost;
 }

@@ -20,7 +20,6 @@ import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.clustering.KMeansResult
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}

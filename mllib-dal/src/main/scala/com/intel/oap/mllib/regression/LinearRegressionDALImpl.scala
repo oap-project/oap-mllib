@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.regression
+package com.intel.oap.mllib.regression
 
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
-import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import org.apache.spark.ml.util.Instrumentation
 import org.apache.spark.sql.Dataset
 
@@ -34,10 +34,10 @@ import org.apache.spark.sql.Dataset
  */
 // LinearRegressionDALModel is the same with WeightedLeastSquaresModel
 // diagInvAtWA and objectiveHistory are not supported right now
-private[ml] class LinearRegressionDALModel(val coefficients: DenseVector,
-                                           val intercept: Double,
-                                           val diagInvAtWA: DenseVector,
-                                           val objectiveHistory: Array[Double])
+private[mllib] class LinearRegressionDALModel(val coefficients: DenseVector,
+                                              val intercept: Double,
+                                              val diagInvAtWA: DenseVector,
+                                              val objectiveHistory: Array[Double])
   extends Serializable {
 }
 
@@ -57,8 +57,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   /**
    * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
    */
-  def train(labeledPoints: Dataset[_],
-            instr: Option[Instrumentation]): LinearRegressionDALModel = {
+  def train(labeledPoints: Dataset[_]): LinearRegressionDALModel = {
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 

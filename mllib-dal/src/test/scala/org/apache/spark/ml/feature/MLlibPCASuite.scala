@@ -66,7 +66,7 @@ class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
 
     val pcaModel = pca.fit(df)
 
-    println("Intel MLlib: ")
+    println("OAP MLlib: ")
     println(s"Principle Components: \n${pcaModel.pc}")
     println(s"Explained Variance: \n${pcaModel.explainedVariance}")
 

@@ -47,8 +47,8 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataType, DoubleType, StructType}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.VersionUtils.majorMinorVersion
-
 import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.regression.LinearRegressionDALImpl
 
 /**
  * Params for linear regression.
@@ -455,7 +455,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
         executor_num, executor_cores)
 
       // Return same model as WeightedLeastSquaresModel
-      val model = optimizer.train(dataset, Some(instr))
+      val model = optimizer.train(dataset)
 
       val lrModel = copyValues(
         new LinearRegressionModel(uid, model.coefficients, model.intercept))

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.classification
+package com.intel.oap.mllib.classification
 
-import org.apache.spark.SPARK_VERSION
+import org.apache.spark.internal.Logging
+import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
 import org.apache.spark.ml.classification.spark320.{NaiveBayes => NaiveBayesSpark320}
-import org.apache.spark.SparkException
-import org.apache.spark.internal.Logging
+
 
 object NaiveBayesShim extends Logging {
 
-  def create(uid: String) : SparkNaiveBayes = {
+  def create(uid: String): SparkNaiveBayes = {
 
     logInfo(s"Loading NaiveBayes for Spark $SPARK_VERSION")
 
@@ -36,4 +36,3 @@ object NaiveBayesShim extends Logging {
   }
 
 }
-

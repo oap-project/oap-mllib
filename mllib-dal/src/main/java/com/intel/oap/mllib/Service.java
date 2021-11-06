@@ -21,16 +21,11 @@ package com.intel.oap.mllib;
 import com.intel.daal.data_management.data.CSRNumericTable;
 import com.intel.daal.data_management.data.HomogenNumericTable;
 import com.intel.daal.data_management.data.NumericTable;
-import com.intel.daal.services.DaalContext;
 import com.intel.daal.services.ErrorHandling;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 
 public class Service {
 

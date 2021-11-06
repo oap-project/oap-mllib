@@ -18,6 +18,7 @@
 package org.apache.spark.ml.classification.spark320
 
 import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.classification.NaiveBayesDALImpl
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg._
@@ -147,8 +148,11 @@ class NaiveBayes @Since("1.5.0") (
     val labeledPointsDS = dataset
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
 
-    val model = new NaiveBayesDALImpl(uid, numClasses,
-      executor_num, executor_cores).train(labeledPointsDS, Some(instr))
+    val dalModel = new NaiveBayesDALImpl(uid, numClasses,
+      executor_num, executor_cores).train(labeledPointsDS)
+
+    val model = copyValues(new NaiveBayesModel(
+      dalModel.uid, dalModel.pi, dalModel.theta, dalModel.sigma))
 
     // Set labels to be compatible with old mllib model
     val labels = (0 until numClasses).map(_.toDouble).toArray

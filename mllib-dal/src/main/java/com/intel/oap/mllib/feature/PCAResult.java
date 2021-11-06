@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2020 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *******************************************************************************/
+ */
 
-package org.apache.spark.ml.regression;
+package com.intel.oap.mllib.feature;
 
-public class LiRResult {
-    public long coeffNumericTable;    // first element of coeff is actually intercept
+public class PCAResult {
+  public long pcNumericTable;
+  public long explainedVarianceNumericTable;
 }

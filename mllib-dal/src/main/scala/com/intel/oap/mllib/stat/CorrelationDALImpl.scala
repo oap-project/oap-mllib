@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.stat
+package com.intel.oap.mllib.stat
 
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
-
-import java.util.Arrays
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrix, Vector}
-import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import org.apache.spark.rdd.RDD
 
 class CorrelationDALImpl(
@@ -35,7 +33,7 @@ class CorrelationDALImpl(
     val kvsIPPort = getOneCCLIPPort(data)
 
     val sparkContext = data.sparkContext
-    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
+    val useGPU = sparkContext.getConf.getBoolean("spark.oap.mllib.useGPU", false)
 
     val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
