@@ -116,7 +116,7 @@ echo ============================
 
 #SUITE=$1
 
-SUITE=recommendation.MLlibALSSuite
+SUITE=classification.MLlibNaiveBayesSuite
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!

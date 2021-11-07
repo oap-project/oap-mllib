@@ -30,6 +30,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
 import org.apache.spark.ml.classification._
+import org.apache.spark.ml.param.ParamMap
 
 // scalastyle:off line.size.limit
 
@@ -66,7 +67,12 @@ class NaiveBayes @Since("1.5.0") (
   @Since("1.5.0")
   def this() = this(Identifiable.randomUID("nb"))
 
-  override protected def train(dataset: Dataset[_]): NaiveBayesModel = {
+  override def initShim(params: ParamMap): Unit = {
+    println("initShim 3.2.0")
+    setDefault(params.toSeq : _*)
+  }
+  override def train(dataset: Dataset[_]): NaiveBayesModel = {
+    println("train 3.2.0")
     trainWithLabelCheck(dataset, positiveLabel = true)
   }
 

@@ -51,7 +51,7 @@ import org.apache.spark.sql.Dataset
 class NaiveBayes @Since("1.5.0") (
     @Since("1.5.0") override val uid: String)
   extends ProbabilisticClassifier[Vector, NaiveBayes, NaiveBayesModel]
-  with NaiveBayesParams with DefaultParamsWritable {
+  with NaiveBayesParams with DefaultParamsWritable with NaiveBayesShim {
 
   import NaiveBayes._
 
@@ -87,14 +87,22 @@ class NaiveBayes @Since("1.5.0") (
   @Since("2.1.0")
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
-  override protected def train(dataset: Dataset[_]): NaiveBayesModel = {
-    val naiveBayes = NaiveBayesShim.create(uid)
-      .setModelType($(modelType))
-      .setSmoothing($(smoothing))
-    if (isDefined(weightCol) && $(weightCol).nonEmpty) {
-      naiveBayes.setWeightCol($(weightCol))
-    }
-    naiveBayes.train(dataset)
+  var shim : NaiveBayesShim = _
+
+  override def initShim(params: ParamMap): Unit = {
+    shim = NaiveBayesShim.create(uid)
+    shim.initShim(params)
+  }
+
+  override def train(dataset: Dataset[_]): NaiveBayesModel = {
+    initShim(extractParamMap())
+    shim.train(dataset)
+//      .setModelType($(modelType))
+//      .setSmoothing($(smoothing))
+//    if (isDefined(weightCol) && $(weightCol).nonEmpty) {
+//      naiveBayes.setWeightCol($(weightCol))
+//    }
+//    naiveBayes.train(dataset)
   }
 
   @Since("1.5.0")
