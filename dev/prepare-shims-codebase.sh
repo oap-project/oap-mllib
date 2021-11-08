@@ -22,6 +22,9 @@ FILES=(
     org/apache/spark/ml/recommendation/ALS.scala
     org/apache/spark/ml/regression/LinearRegression.scala
     org/apache/spark/ml/stat/Correlation.scala
+    org/apache/spark/ml/optim/aggregator/HuberAggregator.scala
+    org/apache/spark/ml/optim/aggregator/LeastSquaresAggregator.scala
+    org/apache/spark/mllib/clustering/KMeans.scala
 )
 
 SCRIPT_DIR="$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)"
