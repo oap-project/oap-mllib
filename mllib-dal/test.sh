@@ -52,20 +52,14 @@ versionArray=(
   spark-3.2.0
 )
 
- suiteArray=(
-   "clustering.MLlibKMeansSuite" \
-   "feature.MLlibPCASuite" \
-   "recommendation.MLlibALSSuite" \
-   "classification.MLlibNaiveBayesSuite" \
-   "regression.MLlibLinearRegressionSuite" \
-   "stat.MLlibCorrelationSuite"
- )
-
-#suiteArray=(
-#  "clustering.MLlibKMeansSuite" \
-#  "feature.MLlibPCASuite" \
-#  "classification.MLlibNaiveBayesSuite"
-#)
+suiteArray=(
+  "clustering.MLlibKMeansSuite" \
+  "feature.MLlibPCASuite" \
+  "recommendation.MLlibALSSuite" \
+  "classification.MLlibNaiveBayesSuite" \
+  "regression.MLlibLinearRegressionSuite" \
+  "stat.MLlibCorrelationSuite"
+)
 
 # Set default version
 SPARK_VER=$SPARK_VERSION
@@ -114,9 +108,7 @@ echo Spark Version: $SPARK_VER
 echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 
-#SUITE=$1
-
-SUITE=regression.MLlibLinearRegressionSuite
+SUITE=$1
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!
