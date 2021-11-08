@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-package com.intel.oap.mllib.feature
+package com.intel.oap.mllib.stat
 
-import org.apache.spark.internal.Logging
-import org.apache.spark.ml.feature.PCAModel
-import org.apache.spark.ml.feature.spark320.{PCA => PCASpark320}
-import org.apache.spark.ml.param.ParamMap
-import org.apache.spark.sql.Dataset
 import org.apache.spark.{SPARK_VERSION, SparkException}
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.recommendation.ALS.Rating
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.storage.StorageLevel
 
-trait PCAShim extends Logging {
-  def initShim(params: ParamMap): Unit
-  def fit(dataset: Dataset[_]): PCAModel
+import scala.reflect.ClassTag
+
+import org.apache.spark.ml.stat.spark320.{Correlation => CorrelationSpark320 }
+
+trait CorrelationShim extends Serializable with Logging {
+  def corr(dataset: Dataset[_], column: String, method: String): DataFrame
 }
 
-object PCAShim extends Logging {
-  def create(uid: String): PCAShim = {
-    logInfo(s"Loading PCA for Spark $SPARK_VERSION")
-    val pca = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" | "3.2.0" => new PCASpark320(uid)
+object CorrelationShim extends Logging {
+  def create(): CorrelationShim = {
+    logInfo(s"Loading Correlation for Spark $SPARK_VERSION")
+    val als = SPARK_VERSION match {
+      case "3.1.1" | "3.1.2" | "3.2.0" => new CorrelationSpark320()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
-    pca
+    als
   }
 }

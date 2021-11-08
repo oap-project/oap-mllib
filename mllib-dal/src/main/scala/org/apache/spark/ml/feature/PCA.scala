@@ -17,22 +17,13 @@
 
 package org.apache.spark.ml.feature
 
-import org.apache.hadoop.fs.Path
+import com.intel.oap.mllib.feature.PCAShim
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml._
-import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util._
-import org.apache.spark.mllib.feature
-import org.apache.spark.mllib.feature.{PCAModel => OldPCAModel}
-import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
 import org.apache.spark.sql._
-import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.util.VersionUtils.majorVersion
-import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.feature.{PCADALImpl, PCAShim}
 
 /**
  * PCA trains a model to project vectors to a lower dimensional space of the top `PCA!.k`
@@ -63,11 +54,9 @@ class PCA @Since("1.5.0") (
    */
   @Since("2.0.0")
   override def fit(dataset: Dataset[_]): PCAModel = {
-    val pca = PCAShim.create(uid)
-      .setInputCol($(inputCol))
-      .setOutputCol($(outputCol))
-      .setK($(k))
-    pca.fit(dataset)
+    val shim = PCAShim.create(uid)
+    shim.initShim(extractParamMap())
+    shim.fit(dataset)
   }
 
   @Since("1.5.0")

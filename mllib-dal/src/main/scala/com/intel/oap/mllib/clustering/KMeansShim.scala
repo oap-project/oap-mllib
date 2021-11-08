@@ -17,21 +17,24 @@
 package com.intel.oap.mllib.clustering
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.{SPARK_VERSION, SparkException}
-import org.apache.spark.ml.clustering.{KMeans => SparkKMeans}
+import org.apache.spark.ml.clustering.{KMeans, KMeansModel}
 import org.apache.spark.ml.clustering.spark320.{KMeans => KMeansSpark320}
+import org.apache.spark.ml.param.ParamMap
+import org.apache.spark.sql.Dataset
+import org.apache.spark.{SPARK_VERSION, SparkException}
+
+trait KMeansShim extends Logging {
+  def initShim(params: ParamMap): Unit
+  def fit(dataset: Dataset[_]): KMeansModel
+}
 
 object KMeansShim extends Logging {
-
-  def create(uid: String): SparkKMeans = {
-
-    logInfo(s"Loading NaiveBayes for Spark $SPARK_VERSION")
-
+  def create(uid: String): KMeansShim = {
+    logInfo(s"Loading KMeans for Spark $SPARK_VERSION")
     val kmeans = SPARK_VERSION match {
       case "3.1.1" | "3.1.2" | "3.2.0" => new KMeansSpark320(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     kmeans
   }
-
 }

@@ -15,210 +15,35 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.recommendation
+package org.apache.spark.ml.recommendation.spark312
 
+import java.{util => ju}
+import java.io.IOException
+import java.util.Locale
+import scala.collection.mutable
+import scala.reflect.ClassTag
+import scala.util.{Sorting, Try}
+import scala.util.hashing.byteswap64
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.intel.oap.mllib.recommendation.ALSShim
+import com.intel.oap.mllib.recommendation.{ALSDALImpl, ALSShim}
+import com.intel.oap.mllib.{Utils => DALUtils}
+import org.apache.hadoop.fs.Path
+import org.apache.spark.{Partitioner, SparkException}
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.Estimator
-import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation.instrumented
-import org.apache.spark.ml.util._
+import org.apache.spark.ml.recommendation.ALS.Rating
+import org.apache.spark.ml.recommendation._
+import org.apache.spark.ml.util.DefaultParamsReadable
 import org.apache.spark.mllib.linalg.CholeskyDecomposition
 import org.apache.spark.mllib.optimization.NNLS
 import org.apache.spark.rdd.{DeterministicLevel, RDD}
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.util.Utils
+import org.apache.spark.util.{BoundedPriorityQueue, Utils}
 import org.apache.spark.util.collection.{OpenHashMap, OpenHashSet, SortDataFormat, Sorter}
 import org.apache.spark.util.random.XORShiftRandom
-import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
-
-import java.{util => ju}
-import scala.collection.mutable
-import scala.reflect.ClassTag
-import scala.util.Sorting
-import scala.util.hashing.byteswap64
-
-/**
- * Alternating Least Squares (ALS) matrix factorization.
- *
- * ALS attempts to estimate the ratings matrix `R` as the product of two lower-rank matrices,
- * `X` and `Y`, i.e. `X * Yt = R`. Typically these approximations are called 'factor' matrices.
- * The general approach is iterative. During each iteration, one of the factor matrices is held
- * constant, while the other is solved for using least squares. The newly-solved factor matrix is
- * then held constant while solving for the other factor matrix.
- *
- * This is a blocked implementation of the ALS factorization algorithm that groups the two sets
- * of factors (referred to as "users" and "products") into blocks and reduces communication by only
- * sending one copy of each user vector to each product block on each iteration, and only for the
- * product blocks that need that user's feature vector. This is achieved by pre-computing some
- * information about the ratings matrix to determine the "out-links" of each user (which blocks of
- * products it will contribute to) and "in-link" information for each product (which of the feature
- * vectors it receives from each user block it will depend on). This allows us to send only an
- * array of feature vectors between each user block and product block, and have the product block
- * find the users' ratings and update the products based on these messages.
- *
- * For implicit preference data, the algorithm used is based on
- * "Collaborative Filtering for Implicit Feedback Datasets", available at
- * https://doi.org/10.1109/ICDM.2008.22, adapted for the blocked approach used here.
- *
- * Essentially instead of finding the low-rank approximations to the rating matrix `R`,
- * this finds the approximations for a preference matrix `P` where the elements of `P` are 1 if
- * r is greater than 0 and 0 if r is less than or equal to 0. The ratings then act as 'confidence'
- * values related to strength of indicated user
- * preferences rather than explicit ratings given to items.
- *
- * Note: the input rating dataset to the ALS implementation should be deterministic.
- * Nondeterministic data can cause failure during fitting ALS model.
- * For example, an order-sensitive operation like sampling after a repartition makes dataset
- * output nondeterministic, like `dataset.repartition(2).sample(false, 0.5, 1618)`.
- * Checkpointing sampled dataset or adding a sort before sampling can help make the dataset
- * deterministic.
- */
-@Since("1.3.0")
-class ALS(@Since("1.4.0") override val uid: String) extends Estimator[ALSModel] with ALSParams
-  with DefaultParamsWritable {
-
-  import org.apache.spark.ml.recommendation.ALS.Rating
-
-  @Since("1.4.0")
-  def this() = this(Identifiable.randomUID("als"))
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setRank(value: Int): this.type = set(rank, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setNumUserBlocks(value: Int): this.type = set(numUserBlocks, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setNumItemBlocks(value: Int): this.type = set(numItemBlocks, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setImplicitPrefs(value: Boolean): this.type = set(implicitPrefs, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setAlpha(value: Double): this.type = set(alpha, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setUserCol(value: String): this.type = set(userCol, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setItemCol(value: String): this.type = set(itemCol, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setRatingCol(value: String): this.type = set(ratingCol, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setPredictionCol(value: String): this.type = set(predictionCol, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setMaxIter(value: Int): this.type = set(maxIter, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setRegParam(value: Double): this.type = set(regParam, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setNonnegative(value: Boolean): this.type = set(nonnegative, value)
-
-  /** @group setParam */
-  @Since("1.4.0")
-  def setCheckpointInterval(value: Int): this.type = set(checkpointInterval, value)
-
-  /** @group setParam */
-  @Since("1.3.0")
-  def setSeed(value: Long): this.type = set(seed, value)
-
-  /** @group expertSetParam */
-  @Since("2.0.0")
-  def setIntermediateStorageLevel(value: String): this.type = set(intermediateStorageLevel, value)
-
-  /** @group expertSetParam */
-  @Since("2.0.0")
-  def setFinalStorageLevel(value: String): this.type = set(finalStorageLevel, value)
-
-  /** @group expertSetParam */
-  @Since("2.2.0")
-  def setColdStartStrategy(value: String): this.type = set(coldStartStrategy, value)
-
-  /**
-   * Set block size for stacking input data in matrices.
-   * Default is 4096.
-   *
-   * @group expertSetParam
-   */
-  @Since("3.0.0")
-  def setBlockSize(value: Int): this.type = set(blockSize, value)
-
-  /**
-   * Sets both numUserBlocks and numItemBlocks to the specific value.
-   *
-   * @group setParam
-   */
-  @Since("1.3.0")
-  def setNumBlocks(value: Int): this.type = {
-    setNumUserBlocks(value)
-    setNumItemBlocks(value)
-    this
-  }
-
-  @Since("2.0.0")
-  override def fit(dataset: Dataset[_]): ALSModel = instrumented { instr =>
-    transformSchema(dataset.schema)
-    import dataset.sparkSession.implicits._
-
-    val r = if ($(ratingCol) != "") col($(ratingCol)).cast(FloatType) else lit(1.0f)
-    val ratings = dataset
-      .select(checkedCast(col($(userCol))), checkedCast(col($(itemCol))), r)
-      .rdd
-      .map { row =>
-        Rating(row.getInt(0), row.getInt(1), row.getFloat(2))
-      }
-
-    instr.logPipelineStage(this)
-    instr.logDataset(dataset)
-    instr.logParams(this, rank, numUserBlocks, numItemBlocks, implicitPrefs, alpha, userCol,
-      itemCol, ratingCol, predictionCol, maxIter, regParam, nonnegative, checkpointInterval,
-      seed, intermediateStorageLevel, finalStorageLevel, blockSize)
-
-    val (userFactors, itemFactors) = ALS.train(ratings, rank = $(rank),
-      numUserBlocks = $(numUserBlocks), numItemBlocks = $(numItemBlocks),
-      maxIter = $(maxIter), regParam = $(regParam), implicitPrefs = $(implicitPrefs),
-      alpha = $(alpha), nonnegative = $(nonnegative),
-      intermediateRDDStorageLevel = StorageLevel.fromString($(intermediateStorageLevel)),
-      finalRDDStorageLevel = StorageLevel.fromString($(finalStorageLevel)),
-      checkpointInterval = $(checkpointInterval), seed = $(seed))
-    val userDF = userFactors.toDF("id", "features")
-    val itemDF = itemFactors.toDF("id", "features")
-    val model = new ALSModel(uid, $(rank), userDF, itemDF).setBlockSize($(blockSize))
-      .setParent(this)
-    copyValues(model)
-  }
-
-  @Since("1.3.0")
-  override def transformSchema(schema: StructType): StructType = {
-    validateAndTransformSchema(schema)
-  }
-
-  @Since("1.5.0")
-  override def copy(extra: ParamMap): ALS = defaultCopy(extra)
-}
-
 
 /**
  * An implementation of ALS that supports generic ID types, specialized for Int and Long. This is
@@ -227,12 +52,12 @@ class ALS(@Since("1.4.0") override val uid: String) extends Estimator[ALSModel] 
  * users and items must have the same type. The number of distinct users/items should be smaller
  * than 2 billion.
  */
-object ALS extends DefaultParamsReadable[ALS] with Logging {
+class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
 
   /**
    * Rating class for better code readability.
    */
-  case class Rating[@specialized(Int, Long) ID](user: ID, item: ID, rating: Float)
+//  case class Rating[@specialized(Int, Long) ID](user: ID, item: ID, rating: Float)
 
   @Since("1.6.0")
   override def load(path: String): ALS = super.load(path)
@@ -408,22 +233,187 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
     checkpointInterval: Int = 10,
     seed: Long = 0L)(
     implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
-    val shim = ALSShim.create()
-    shim.train(
-        ratings,
-        rank,
-        numUserBlocks,
-        numItemBlocks,
-        maxIter,
-        regParam,
-        implicitPrefs,
-        alpha,
-        nonnegative,
-        intermediateRDDStorageLevel,
-        finalRDDStorageLevel,
-        checkpointInterval,
-        seed
-      )
+
+    val isPlatformSupported = DALUtils.checkClusterPlatformCompatibility(ratings.sparkContext)
+
+    val (userIdAndFactors, itemIdAndFactors) =
+      if (implicitPrefs && DALUtils.isOAPEnabled() && isPlatformSupported) {
+        new ALSDALImpl(ratings, rank, maxIter, regParam, alpha, seed).train()
+      } else {
+        trainMLlib(ratings, rank, numUserBlocks, numItemBlocks, maxIter, regParam, implicitPrefs,
+          alpha, nonnegative, intermediateRDDStorageLevel, finalRDDStorageLevel,
+          checkpointInterval, seed)
+      }
+
+    (userIdAndFactors, itemIdAndFactors)
+  }
+
+  /**
+   * Implementation of the ALS algorithm.
+   *
+   * This implementation of the ALS factorization algorithm partitions the two sets of factors among
+   * Spark workers so as to reduce network communication by only sending one copy of each factor
+   * vector to each Spark worker on each iteration, and only if needed.  This is achieved by
+   * precomputing some information about the ratings matrix to determine which users require which
+   * item factors and vice versa.  See the Scaladoc for `InBlock` for a detailed explanation of how
+   * the precomputation is done.
+   *
+   * In addition, since each iteration of calculating the factor matrices depends on the known
+   * ratings, which are spread across Spark partitions, a naive implementation would incur
+   * significant network communication overhead between Spark workers, as the ratings RDD would be
+   * repeatedly shuffled during each iteration.  This implementation reduces that overhead by
+   * performing the shuffling operation up front, precomputing each partition's ratings dependencies
+   * and duplicating those values to the appropriate workers before starting iterations to solve for
+   * the factor matrices.  See the Scaladoc for `OutBlock` for a detailed explanation of how the
+   * precomputation is done.
+   *
+   * Note that the term "rating block" is a bit of a misnomer, as the ratings are not partitioned by
+   * contiguous blocks from the ratings matrix but by a hash function on the rating's location in
+   * the matrix.  If it helps you to visualize the partitions, it is easier to think of the term
+   * "block" as referring to a subset of an RDD containing the ratings rather than a contiguous
+   * submatrix of the ratings matrix.
+   */
+  def trainMLlib[ID: ClassTag]( // scalastyle:ignore
+      ratings: RDD[Rating[ID]],
+      rank: Int = 10,
+      numUserBlocks: Int = 10,
+      numItemBlocks: Int = 10,
+      maxIter: Int = 10,
+      regParam: Double = 0.1,
+      implicitPrefs: Boolean = false,
+      alpha: Double = 1.0,
+      nonnegative: Boolean = false,
+      intermediateRDDStorageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK,
+      finalRDDStorageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK,
+      checkpointInterval: Int = 10,
+      seed: Long = 0L)(
+      implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
+
+    require(!ratings.isEmpty(), s"No ratings available from $ratings")
+    require(intermediateRDDStorageLevel != StorageLevel.NONE,
+      "ALS is not designed to run without persisting intermediate RDDs.")
+
+    val sc = ratings.sparkContext
+
+    // Precompute the rating dependencies of each partition
+    val userPart = new ALSPartitioner(numUserBlocks)
+    val itemPart = new ALSPartitioner(numItemBlocks)
+    val blockRatings = partitionRatings(ratings, userPart, itemPart)
+      .persist(intermediateRDDStorageLevel)
+    val (userInBlocks, userOutBlocks) =
+      makeBlocks("user", blockRatings, userPart, itemPart, intermediateRDDStorageLevel)
+    userOutBlocks.count()    // materialize blockRatings and user blocks
+    val swappedBlockRatings = blockRatings.map {
+      case ((userBlockId, itemBlockId), RatingBlock(userIds, itemIds, localRatings)) =>
+        ((itemBlockId, userBlockId), RatingBlock(itemIds, userIds, localRatings))
+    }
+    val (itemInBlocks, itemOutBlocks) =
+      makeBlocks("item", swappedBlockRatings, itemPart, userPart, intermediateRDDStorageLevel)
+    itemOutBlocks.count()    // materialize item blocks
+
+    // Encoders for storing each user/item's partition ID and index within its partition using a
+    // single integer; used as an optimization
+    val userLocalIndexEncoder = new LocalIndexEncoder(userPart.numPartitions)
+    val itemLocalIndexEncoder = new LocalIndexEncoder(itemPart.numPartitions)
+
+    // These are the user and item factor matrices that, once trained, are multiplied together to
+    // estimate the rating matrix.  The two matrices are stored in RDDs, partitioned by column such
+    // that each factor column resides on the same Spark worker as its corresponding user or item.
+    val seedGen = new XORShiftRandom(seed)
+    var userFactors = initialize(userInBlocks, rank, seedGen.nextLong())
+    var itemFactors = initialize(itemInBlocks, rank, seedGen.nextLong())
+
+    val solver = if (nonnegative) new NNLSSolver else new CholeskySolver
+
+    var previousCheckpointFile: Option[String] = None
+    val shouldCheckpoint: Int => Boolean = (iter) =>
+      sc.checkpointDir.isDefined && checkpointInterval != -1 && (iter % checkpointInterval == 0)
+    val deletePreviousCheckpointFile: () => Unit = () =>
+      previousCheckpointFile.foreach { file =>
+        try {
+          val checkpointFile = new Path(file)
+          checkpointFile.getFileSystem(sc.hadoopConfiguration).delete(checkpointFile, true)
+        } catch {
+          case e: IOException =>
+            logWarning(s"Cannot delete checkpoint file $file:", e)
+        }
+      }
+
+    if (implicitPrefs) {
+      for (iter <- 1 to maxIter) {
+        userFactors.setName(s"userFactors-$iter").persist(intermediateRDDStorageLevel)
+        val previousItemFactors = itemFactors
+        itemFactors = computeFactors(userFactors, userOutBlocks, itemInBlocks, rank, regParam,
+          userLocalIndexEncoder, implicitPrefs, alpha, solver)
+        previousItemFactors.unpersist()
+        itemFactors.setName(s"itemFactors-$iter").persist(intermediateRDDStorageLevel)
+        // TODO: Generalize PeriodicGraphCheckpointer and use it here.
+        if (shouldCheckpoint(iter)) {
+          itemFactors.checkpoint() // itemFactors gets materialized in computeFactors
+        }
+        val previousUserFactors = userFactors
+        userFactors = computeFactors(itemFactors, itemOutBlocks, userInBlocks, rank, regParam,
+          itemLocalIndexEncoder, implicitPrefs, alpha, solver)
+        if (shouldCheckpoint(iter)) {
+          itemFactors.cleanShuffleDependencies()
+          deletePreviousCheckpointFile()
+          previousCheckpointFile = itemFactors.getCheckpointFile
+        }
+        previousUserFactors.unpersist()
+      }
+    } else {
+      var previousCachedItemFactors: Option[RDD[(Int, FactorBlock)]] = None
+      for (iter <- 0 until maxIter) {
+        itemFactors = computeFactors(userFactors, userOutBlocks, itemInBlocks, rank, regParam,
+          userLocalIndexEncoder, solver = solver)
+        if (shouldCheckpoint(iter)) {
+          itemFactors.setName(s"itemFactors-$iter").persist(intermediateRDDStorageLevel)
+          itemFactors.checkpoint()
+          itemFactors.count() // checkpoint item factors and cut lineage
+          itemFactors.cleanShuffleDependencies()
+          deletePreviousCheckpointFile()
+
+          previousCachedItemFactors.foreach(_.unpersist())
+          previousCheckpointFile = itemFactors.getCheckpointFile
+          previousCachedItemFactors = Option(itemFactors)
+        }
+        userFactors = computeFactors(itemFactors, itemOutBlocks, userInBlocks, rank, regParam,
+          itemLocalIndexEncoder, solver = solver)
+      }
+    }
+    val userIdAndFactors = userInBlocks
+      .mapValues(_.srcIds)
+      .join(userFactors)
+      .mapPartitions({ items =>
+        items.flatMap { case (_, (ids, factors)) =>
+          ids.iterator.zip(factors.iterator)
+        }
+      // Preserve the partitioning because IDs are consistent with the partitioners in userInBlocks
+      // and userFactors.
+      }, preservesPartitioning = true)
+      .setName("userFactors")
+      .persist(finalRDDStorageLevel)
+    val itemIdAndFactors = itemInBlocks
+      .mapValues(_.srcIds)
+      .join(itemFactors)
+      .mapPartitions({ items =>
+        items.flatMap { case (_, (ids, factors)) =>
+          ids.iterator.zip(factors.iterator)
+        }
+      }, preservesPartitioning = true)
+      .setName("itemFactors")
+      .persist(finalRDDStorageLevel)
+    if (finalRDDStorageLevel != StorageLevel.NONE) {
+      userIdAndFactors.count()
+      userInBlocks.unpersist()
+      userOutBlocks.unpersist()
+      itemOutBlocks.unpersist()
+      blockRatings.unpersist()
+      itemIdAndFactors.count()
+      itemFactors.unpersist()
+      itemInBlocks.unpersist()
+    }
+    (userIdAndFactors, itemIdAndFactors)
   }
 
   /**
@@ -723,7 +713,7 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
           Iterator.empty
         }
       } ++ {
-        builders.view.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
+        builders.iterator.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
           val srcBlockId = idx % srcPart.numPartitions
           val dstBlockId = idx / srcPart.numPartitions
           ((srcBlockId, dstBlockId), block.build())
@@ -1042,7 +1032,7 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
     val YtY = if (implicitPrefs) Some(computeYtY(srcFactorBlocks, rank)) else None
     val srcOut = srcOutBlocks.join(srcFactorBlocks).flatMap {
       case (srcBlockId, (srcOutBlock, srcFactors)) =>
-        srcOutBlock.view.zipWithIndex.map { case (activeIndices, dstBlockId) =>
+        srcOutBlock.iterator.zipWithIndex.map { case (activeIndices, dstBlockId) =>
           (dstBlockId, (srcBlockId, activeIndices.map(idx => srcFactors(idx))))
         }
     }
@@ -1168,31 +1158,4 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
    * satisfies this requirement, we simply use a type alias here.
    */
   private[recommendation] type ALSPartitioner = org.apache.spark.HashPartitioner
-
-  /**
-   * Private function to clean up all of the shuffles files from the dependencies and their parents.
-   */
-  private[spark] def cleanShuffleDependencies[T](
-      sc: SparkContext,
-      deps: Seq[Dependency[_]],
-      blocking: Boolean = false): Unit = {
-    // If there is no reference tracking we skip clean up.
-    sc.cleaner.foreach { cleaner =>
-      /**
-       * Clean the shuffles & all of its parents.
-       */
-      def cleanEagerly(dep: Dependency[_]): Unit = {
-        if (dep.isInstanceOf[ShuffleDependency[_, _, _]]) {
-          val shuffleId = dep.asInstanceOf[ShuffleDependency[_, _, _]].shuffleId
-          cleaner.doCleanupShuffle(shuffleId, blocking)
-        }
-        val rdd = dep.rdd
-        val rddDeps = rdd.dependencies
-        if (rdd.getStorageLevel == StorageLevel.NONE && rddDeps != null) {
-          rddDeps.foreach(cleanEagerly)
-        }
-      }
-      deps.foreach(cleanEagerly)
-    }
-  }
 }

@@ -17,25 +17,16 @@
 
 package org.apache.spark.ml.feature.spark320
 
-import org.apache.hadoop.fs.Path
+import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.feature.{PCADALImpl, PCAShim}
 import org.apache.spark.annotation.Since
-import org.apache.spark.ml._
+import org.apache.spark.ml.feature.{PCA => SparkPCA, _}
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.param.shared._
-import org.apache.spark.ml.util._
 import org.apache.spark.mllib.feature
 import org.apache.spark.mllib.feature.{PCAModel => OldPCAModel}
-import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
+import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.sql._
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.util.VersionUtils.majorVersion
-import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.feature.PCADALImpl
-
-import org.apache.spark.ml.feature.{PCA => SparkPCA}
-import org.apache.spark.ml.feature._
 
 /**
  * PCA trains a model to project vectors to a lower dimensional space of the top `PCA!.k`
@@ -44,22 +35,11 @@ import org.apache.spark.ml.feature._
 @Since("1.5.0")
 class PCA @Since("1.5.0") (
     @Since("1.5.0") override val uid: String)
-  extends SparkPCA {
+  extends SparkPCA with PCAShim {
 
-//  @Since("1.5.0")
-//  def this() = this(Identifiable.randomUID("pca"))
-
-//  /** @group setParam */
-//  @Since("1.5.0")
-//  def setInputCol(value: String): this.type = set(inputCol, value)
-//
-//  /** @group setParam */
-//  @Since("1.5.0")
-//  def setOutputCol(value: String): this.type = set(outputCol, value)
-//
-//  /** @group setParam */
-//  @Since("1.5.0")
-//  def setK(value: Int): this.type = set(k, value)
+  override def initShim(params: ParamMap): Unit = {
+    params.toSeq.foreach { paramMap.put(_) }
+  }
 
   /**
    * Computes a [[PCAModel]] that contains the principal components of the input vectors.
@@ -97,140 +77,4 @@ class PCA @Since("1.5.0") (
     copyValues(new PCAModel(uid, parentModel.pc.asML, parentModel.explainedVariance.asML)
       .setParent(this))
   }
-
-//  @Since("1.5.0")
-//  override def transformSchema(schema: StructType): StructType = {
-//    validateAndTransformSchema(schema)
-//  }
-//
-//  @Since("1.5.0")
-//  override def copy(extra: ParamMap): PCA = defaultCopy(extra)
 }
-
-//@Since("1.6.0")
-//object PCA extends DefaultParamsReadable[PCA] {
-//
-//  @Since("1.6.0")
-//  override def load(path: String): PCA = super.load(path)
-//}
-//
-///**
-// * Model fitted by [[PCA]]. Transforms vectors to a lower dimensional space.
-// *
-// * @param pc A principal components Matrix. Each column is one principal component.
-// * @param explainedVariance A vector of proportions of variance explained by
-// *                          each principal component.
-// */
-//@Since("1.5.0")
-//class PCAModel private[ml] (
-//    @Since("1.5.0") override val uid: String,
-//    @Since("2.0.0") val pc: DenseMatrix,
-//    @Since("2.0.0") val explainedVariance: DenseVector)
-//  extends Model[PCAModel] with PCAParams with MLWritable {
-//
-//  import PCAModel._
-//
-//  /** @group setParam */
-//  @Since("1.5.0")
-//  def setInputCol(value: String): this.type = set(inputCol, value)
-//
-//  /** @group setParam */
-//  @Since("1.5.0")
-//  def setOutputCol(value: String): this.type = set(outputCol, value)
-//
-//  /**
-//   * Transform a vector by computed Principal Components.
-//   *
-//   * @note Vectors to be transformed must be the same length as the source vectors given
-//   * to `PCA.fit()`.
-//   */
-//  @Since("2.0.0")
-//  override def transform(dataset: Dataset[_]): DataFrame = {
-//    val outputSchema = transformSchema(dataset.schema, logging = true)
-//
-//    val transposed = pc.transpose
-//    val transformer = udf { vector: Vector => transposed.multiply(vector) }
-//    dataset.withColumn($(outputCol), transformer(col($(inputCol))),
-//      outputSchema($(outputCol)).metadata)
-//  }
-//
-//  @Since("1.5.0")
-//  override def transformSchema(schema: StructType): StructType = {
-//    var outputSchema = validateAndTransformSchema(schema)
-//    if ($(outputCol).nonEmpty) {
-//      outputSchema = SchemaUtils.updateAttributeGroupSize(outputSchema,
-//        $(outputCol), $(k))
-//    }
-//    outputSchema
-//  }
-//
-//  @Since("1.5.0")
-//  override def copy(extra: ParamMap): PCAModel = {
-//    val copied = new PCAModel(uid, pc, explainedVariance)
-//    copyValues(copied, extra).setParent(parent)
-//  }
-//
-//  @Since("1.6.0")
-//  override def write: MLWriter = new PCAModelWriter(this)
-//
-//  @Since("3.0.0")
-//  override def toString: String = {
-//    s"PCAModel: uid=$uid, k=${$(k)}"
-//  }
-//}
-//
-//@Since("1.6.0")
-//object PCAModel extends MLReadable[PCAModel] {
-//
-//  private[PCAModel] class PCAModelWriter(instance: PCAModel) extends MLWriter {
-//
-//    private case class Data(pc: DenseMatrix, explainedVariance: DenseVector)
-//
-//    override protected def saveImpl(path: String): Unit = {
-//      DefaultParamsWriter.saveMetadata(instance, path, sc)
-//      val data = Data(instance.pc, instance.explainedVariance)
-//      val dataPath = new Path(path, "data").toString
-//      sparkSession.createDataFrame(Seq(data)).repartition(1).write.parquet(dataPath)
-//    }
-//  }
-//
-//  private class PCAModelReader extends MLReader[PCAModel] {
-//
-//    private val className = classOf[PCAModel].getName
-//
-//    /**
-//     * Loads a [[PCAModel]] from data located at the input path. Note that the model includes an
-//     * `explainedVariance` member that is not recorded by Spark 1.6 and earlier. A model
-//     * can be loaded from such older data but will have an empty vector for
-//     * `explainedVariance`.
-//     *
-//     * @param path path to serialized model data
-//     * @return a [[PCAModel]]
-//     */
-//    override def load(path: String): PCAModel = {
-//      val metadata = DefaultParamsReader.loadMetadata(path, sc, className)
-//
-//      val dataPath = new Path(path, "data").toString
-//      val model = if (majorVersion(metadata.sparkVersion) >= 2) {
-//        val Row(pc: DenseMatrix, explainedVariance: DenseVector) =
-//          sparkSession.read.parquet(dataPath)
-//            .select("pc", "explainedVariance")
-//            .head()
-//        new PCAModel(metadata.uid, pc, explainedVariance)
-//      } else {
-//        // pc field is the old matrix format in Spark <= 1.6
-//        // explainedVariance field is not present in Spark <= 1.6
-//        val Row(pc: OldDenseMatrix) = sparkSession.read.parquet(dataPath).select("pc").head()
-//        new PCAModel(metadata.uid, pc.asML, new DenseVector(Array.emptyDoubleArray))
-//      }
-//      metadata.getAndSetParams(model)
-//      model
-//    }
-//  }
-//
-//  @Since("1.6.0")
-//  override def read: MLReader[PCAModel] = new PCAModelReader
-//
-//  @Since("1.6.0")
-//  override def load(path: String): PCAModel = super.load(path)
-//}

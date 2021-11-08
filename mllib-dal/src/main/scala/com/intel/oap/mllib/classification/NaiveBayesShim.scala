@@ -17,28 +17,24 @@
 package com.intel.oap.mllib.classification
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.{SPARK_VERSION, SparkException}
-import org.apache.spark.ml.classification.{NaiveBayesModel, NaiveBayes => SparkNaiveBayes}
+import org.apache.spark.ml.classification.NaiveBayesModel
 import org.apache.spark.ml.classification.spark320.{NaiveBayes => NaiveBayesSpark320}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.sql.Dataset
+import org.apache.spark.{SPARK_VERSION, SparkException}
 
 trait NaiveBayesShim extends Logging {
-  def initShim(extra: ParamMap): Unit
+  def initShim(params: ParamMap): Unit
   def train(dataset: Dataset[_]): NaiveBayesModel
 }
 
 object NaiveBayesShim extends Logging {
-
   def create(uid: String): NaiveBayesShim = {
-
     logInfo(s"Loading NaiveBayes for Spark $SPARK_VERSION")
-
     val shim = SPARK_VERSION match {
       case "3.1.1" | "3.1.2" | "3.2.0" => new NaiveBayesSpark320(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     shim
   }
-
 }

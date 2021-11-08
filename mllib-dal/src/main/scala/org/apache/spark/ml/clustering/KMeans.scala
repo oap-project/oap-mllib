@@ -21,7 +21,6 @@ import com.intel.oap.mllib.clustering.KMeansShim
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.ml.util._
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.types.StructType
@@ -89,21 +88,10 @@ class KMeans @Since("1.5.0") (
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
   @Since("2.0.0")
-  override def fit(dataset: Dataset[_]): KMeansModel = instrumented { instr =>
-    val kmeans = KMeansShim.create(uid)
-      .setFeaturesCol($(featuresCol))
-      .setPredictionCol($(predictionCol))
-      .setK($(k))
-      .setInitMode($(initMode))
-      .setDistanceMeasure($(distanceMeasure))
-      .setInitSteps($(initSteps))
-      .setMaxIter($(maxIter))
-      .setTol($(tol))
-      .setSeed($(seed))
-    if (isDefined(weightCol) && $(weightCol).nonEmpty) {
-      kmeans.setWeightCol($(weightCol))
-    }
-    kmeans.fit(dataset)
+  override def fit(dataset: Dataset[_]): KMeansModel = {
+    val shim = KMeansShim.create(uid)
+    shim.initShim(extractParamMap())
+    shim.fit(dataset)
   }
 
   @Since("1.5.0")

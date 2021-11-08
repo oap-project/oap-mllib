@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-package org.apache.spark.ml.stat
+package org.apache.spark.ml.stat.spark320
 
-import scala.collection.JavaConverters._
-import org.apache.spark.annotation.{Experimental, Since}
+import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
+import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg.{SQLDataTypes, Vector}
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.mllib.stat.{Statistics => OldStatistics}
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
 import org.apache.spark.storage.StorageLevel
-import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
+
+import scala.collection.JavaConverters._
 
 /**
  * API for correlation functions in MLlib, compatible with DataFrames and Datasets.
@@ -35,7 +36,7 @@ import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
  * to spark.ml's Vector types.
  */
 @Since("2.2.0")
-object Correlation {
+class Correlation extends CorrelationShim {
 
   /**
    * Compute the correlation matrix for the input Dataset of Vectors using the specified method.
@@ -67,8 +68,36 @@ object Correlation {
    */
   @Since("2.2.0")
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame = {
-    val shim = CorrelationShim.create()
-    shim.corr(dataset, column, method)
+    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+      dataset.sparkSession.sparkContext)
+    if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
+      val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
+      if (handlePersistence) {
+        dataset.persist(StorageLevel.MEMORY_AND_DISK)
+      }
+      val rdd = dataset.select(column).rdd.map {
+        case Row(v: Vector) => v
+      }
+      val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
+      val executor_cores = Utils.sparkExecutorCores()
+      val matrix = new CorrelationDALImpl(executor_num, executor_cores)
+        .computeCorrelationMatrix(rdd)
+      val name = s"$method($column)"
+      val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
+      val dataframe = dataset.sparkSession.createDataFrame(Seq(Row(matrix)).asJava, schema)
+      if (handlePersistence) {
+        dataset.unpersist()
+      }
+      dataframe
+    } else {
+      val rdd = dataset.select(column).rdd.map {
+        case Row(v: Vector) => OldVectors.fromML(v)
+      }
+      val oldM = OldStatistics.corr(rdd, method)
+      val name = s"$method($column)"
+      val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
+      dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
+    }
   }
 
   /**
