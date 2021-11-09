@@ -275,7 +275,7 @@
                 <version>1.8</version>
                 <executions>
                     <execution>
-                        <phase>process-resources</phase>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <target name="build-natives" description="Build native code">
                                 <echo>Building native code</echo>
