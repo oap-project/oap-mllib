@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-sudo apt-get update
-sudo apt-get install python3-pip python3-setuptools python3-wheel
+sudo apt-get update -q
+sudo apt-get install -y -q python3-pip python3-setuptools python3-wheel
 
 pip3 install --user numpy -q
 
