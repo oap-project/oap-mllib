@@ -22,14 +22,17 @@ cd $GITHUB_WORKSPACE/mllib-dal
 # Setup cluster
 source $GITHUB_WORKSPACE/dev/test-cluster/setup-cluster.sh
 
+# Setup OAP MLlib envs
+cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
+
+source $GITHUB_WORKSPACE/conf/env.sh
+
 echo **************
 echo $OAP_MLLIB_JAR
 jar -tf $OAP_MLLIB_JAR | grep lib
+echo **************
 
-# Setup OAP MLlib envs
-# cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
-
-# cd $GITHUB_WORKSPACE/examples
+cd $GITHUB_WORKSPACE/examples
 
 # # Copy examples data to HDFS
 # hadoop fs -copyFromLocal data /
