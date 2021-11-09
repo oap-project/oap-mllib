@@ -46,12 +46,6 @@ fi
 
 export OAP_MLLIB_TESTING=true
 
-versionArray=(
-  spark-3.1.1 \
-  spark-3.1.2 \
-  spark-3.2.0
-)
-
 suiteArray=(
   "clustering.MLlibKMeansSuite" \
   "feature.MLlibPCASuite" \
@@ -61,33 +55,22 @@ suiteArray=(
   "stat.MLlibCorrelationSuite"
 )
 
-# Set default version
-SPARK_VER=$SPARK_VERSION
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./test.sh [-p spark-x.x.x] [-d CPU_ONLY_PROFILE | CPU_GPU_PROFILE] [-q] [-h] [test suite name]"
+  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] <test suite name>"
   echo
-  echo Supported Spark versions:
-  for version in ${versionArray[*]}
-  do
-    echo "    $version"
-  done
-  echo
-  echo Supported Test suites:
-  for suite in ${suiteArray[*]}
-  do
-    echo "    $suite"
-  done
+  echo "-p  Supported Platform Profiles:"
+    echo "    CPU_ONLY_PROFILE"
+    echo "    CPU_GPU_PROFILE"
   echo
 }
 
-while getopts "p:d:qh" opt
+while getopts "p:qh" opt
 do
 case $opt in
-  p) SPARK_VER=$OPTARG ;;
-  d) PLATFORM_PROFILE=$OPTARG ;;
+  p) PLATFORM_OPT=$OPTARG ;;
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
   h | *)
      print_usage
@@ -98,18 +81,9 @@ done
 
 shift "$((OPTIND-1))"
 
-print_usage
-
-export PLATFORM_PROFILE=${PLATFORM_PROFILE:-CPU_ONLY_PROFILE}
-
-echo === Testing Environments ===
-echo JAVA_HOME=$JAVA_HOME
-echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-echo Spark Version: $SPARK_VER
-echo Platform Profile: $PLATFORM_PROFILE
-echo ============================
-
 SUITE=$1
+
+print_usage
 
 if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_PROFILE) ]]; then
   echo
@@ -118,24 +92,34 @@ if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_P
   exit 1
 fi
 
-if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
-  echo Error: $SPARK_VER version is not supported!
-  exit 1
-fi
-
 if [[ ! ${suiteArray[*]} =~ $SUITE ]]; then
   echo Error: $SUITE test suite is not supported!
   exit 1
 fi
 
+# Import RELEASE envs
+SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
+OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
+source $OAP_MLLIB_ROOT/RELEASE
+
+export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
+export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
+
+echo === Testing Environments ===
+echo JAVA_HOME=$JAVA_HOME
+echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
+echo Spark Version: $SPARK_VERSION
+echo Platform Profile: $PLATFORM_PROFILE
+echo ============================
+
 if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dtest=none test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi

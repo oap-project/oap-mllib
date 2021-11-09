@@ -14,18 +14,16 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
 
-# Prepare lib resources
+#
+# Build test for CPU
+#
 cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
+./build.sh -p CPU_ONLY_PROFILE -q
 
-# Test for all versions
-SupportedSparkVersions=("spark-3.1.1" "spark-3.1.2" "spark-3.2.0")
-for SparkVer in ${SupportedSparkVersions[*]}; do
-    echo
-    echo "========================================"
-    echo "Building with Spark Version: $SparkVer"
-    echo "========================================"
-    echo
-    cd $GITHUB_WORKSPACE/mllib-dal
-    ./build.sh -q
-done
+#
+# Build test for GPU
+#
+cd $GITHUB_WORKSPACE/mllib-dal
+../dev/prepare-build-deps-gpu.sh
+./build.sh -p CPU_GPU_PROFILE -q

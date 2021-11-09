@@ -23,6 +23,6 @@ jobs:
           key: ${{ runner.os }}_spark-3.1.1_hadoop-3.2.0_oneapi-2021.4.0
           restore-keys: |
             ${{ runner.os }}-
-      - name: Build Test
+      - name: Build Test for CPU and GPU
         run: |
           ${{github.workspace}}/dev/ci-build-test.sh
