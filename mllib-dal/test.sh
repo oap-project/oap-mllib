@@ -67,7 +67,7 @@ MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo Usage: ./test.sh [-p spark-x.x.x] [-q] [-h] [test suite name]
+  echo "Usage: ./test.sh [-p spark-x.x.x] [-d CPU_ONLY_PROFILE | CPU_GPU_PROFILE] [-q] [-h] [test suite name]"
   echo
   echo Supported Spark versions:
   for version in ${versionArray[*]}
@@ -83,10 +83,11 @@ print_usage() {
   echo
 }
 
-while getopts "hqp:" opt
+while getopts "p:d:qh" opt
 do
 case $opt in
   p) SPARK_VER=$OPTARG ;;
+  d) PLATFORM_PROFILE=$OPTARG ;;
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
   h | *)
      print_usage
@@ -99,7 +100,7 @@ shift "$((OPTIND-1))"
 
 print_usage
 
-export PLATFORM_PROFILE=CPU_ONLY_PROFILE
+export PLATFORM_PROFILE=${PLATFORM_PROFILE:-CPU_ONLY_PROFILE}
 
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
@@ -109,6 +110,13 @@ echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 
 SUITE=$1
+
+if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_PROFILE) ]]; then
+  echo
+  echo Platform Profile should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE, but \"$PLATFORM_PROFILE\" found!
+  echo
+  exit 1
+fi
 
 if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
   echo Error: $SPARK_VER version is not supported!

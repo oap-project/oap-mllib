@@ -49,24 +49,21 @@ versionArray=(
   spark-3.2.0
 )
 
-SPARK_VER=spark-3.2.0
+SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
+export OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
+source $OAP_MLLIB_ROOT/RELEASE
+
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
   echo Usage: ./build.sh [-q] [-h]
   echo
-  echo Supported Spark versions:
-  for version in ${versionArray[*]}
-  do
-    echo "    $version"
-  done
-  echo
 }
 
 while getopts "hqp:" opt
 do
-case $opt in  
+case $opt in
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
   h | *)
     print_usage
@@ -74,11 +71,6 @@ case $opt in
     ;;
 esac
 done
-
-if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
-  echo Error: $SPARK_VER version is not supported!
-  exit 1
-fi
 
 print_usage
 
@@ -91,7 +83,7 @@ echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
-echo Spark Version: $SPARK_VER
+echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
 echo =============================
 echo
