@@ -22,6 +22,9 @@ cd $GITHUB_WORKSPACE/mllib-dal
 # Load Spark envs
 source $GITHUB_WORKSPACE/dev/test-cluster/load-spark-envs.sh
 
+# Setup cluster
+source $GITHUB_WORKSPACE/dev/test-cluster/setup-cluster.sh
+
 # Setup OAP MLlib envs
 cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
 
