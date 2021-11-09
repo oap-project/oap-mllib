@@ -7,7 +7,7 @@ APP_CLASS=org.apache.spark.examples.ml.PCAExample
 
 # Dataset is created in the code, so no need to pass in as parameter
 
-time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
+time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \

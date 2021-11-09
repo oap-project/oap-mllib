@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# set -x
-
 if [[ ! $# -eq 1 ]]; then
     echo
     echo "Usage: ./prepare-shim-codebash.sh <spark-source-code-dir>"

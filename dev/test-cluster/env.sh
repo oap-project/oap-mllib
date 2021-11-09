@@ -1,7 +1,5 @@
 # == OAP MLlib users to customize the following environments for running examples ======= #
 
-set -x
-
 # ============== Minimum Settings ============= #
 
 # Set Spark master
