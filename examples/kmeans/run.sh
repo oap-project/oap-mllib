@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 source ../../conf/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
