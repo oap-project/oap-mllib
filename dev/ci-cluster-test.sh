@@ -22,20 +22,24 @@ cd $GITHUB_WORKSPACE/mllib-dal
 # Setup cluster
 source $GITHUB_WORKSPACE/dev/test-cluster/setup-cluster.sh
 
+echo **************
+echo $OAP_MLLIB_JAR
+jar -tf $OAP_MLLIB_JAR | grep lib
+
 # Setup OAP MLlib envs
-cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
+# cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
 
-cd $GITHUB_WORKSPACE/examples
+# cd $GITHUB_WORKSPACE/examples
 
-# Copy examples data to HDFS
-hadoop fs -copyFromLocal data /
-hadoop fs -find /
+# # Copy examples data to HDFS
+# hadoop fs -copyFromLocal data /
+# hadoop fs -find /
 
-echo "========================================="
-echo "Cluster Testing with Spark Version: $SPARK_VERSION"
-echo "========================================="
+# echo "========================================="
+# echo "Cluster Testing with Spark Version: $SPARK_VERSION"
+# echo "========================================="
 
-# Build and run all examples
-./build-all-scala.sh
-./run-all-scala.sh
-./run-all-pyspark.sh
+# # Build and run all examples
+# ./build-all-scala.sh
+# ./run-all-scala.sh
+# ./run-all-pyspark.sh
