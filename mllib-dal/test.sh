@@ -105,12 +105,14 @@ source $OAP_MLLIB_ROOT/RELEASE
 export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
+echo
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
+echo
 
 if [[ -z $SUITE ]]; then
   echo

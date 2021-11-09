@@ -121,6 +121,7 @@ then
   check_gpu_libs
 fi
 
+echo
 echo === Building Environments ===
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
@@ -131,8 +132,6 @@ echo Clang Version: $(clang -dumpversion)
 echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
 echo =============================
-echo
-echo Building with Spark $SPARK_VERSION ...
 echo
 
 mvn $MVN_NO_TRANSFER_PROGRESS -DskipTests clean package
