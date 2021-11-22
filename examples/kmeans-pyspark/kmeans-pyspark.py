@@ -39,7 +39,7 @@ if __name__ == "__main__":
         .getOrCreate()
 
     if (len(sys.argv) != 2) :
-        println("Require data file path as input parameter")
+        print("Require data file path as input parameter")
         sys.exit(1)
 
     # $example on$

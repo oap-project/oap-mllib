@@ -22,7 +22,7 @@
 #endif
 
 #include "OneCCL.h"
-#include "org_apache_spark_ml_stat_CorrelationDALImpl.h"
+#include "com_intel_oap_mllib_stat_CorrelationDALImpl.h"
 #include "service.h"
 
 using namespace std;
@@ -138,13 +138,8 @@ static void correlation_compute(JNIEnv *env,
    }
 }
 
-/*
- * Class:     org_apache_spark_ml_stat_CorrelationDALImpl
- * Method:    cCorrelationTrainDAL
- * Signature: (JJDDIILorg/apache/spark/ml/stat/CorrelationResult;)J
- */
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_stat_CorrelationDALImpl_cCorrelationTrainDAL(
+Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData,
     jint executor_num, jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array, jobject resultObj) {
 

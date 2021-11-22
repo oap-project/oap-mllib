@@ -17,7 +17,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "org_apache_spark_ml_util_OneDAL__.h"
+#include "com_intel_oap_mllib_OneDAL__.h"
 #include "service.h"
 
 using namespace daal;
@@ -26,12 +26,18 @@ using namespace daal::data_management;
 // Use oneDAL lib function
 extern bool daal_check_is_intel_cpu();
 
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cSetDouble
- * Signature: (JIID)V
- */
-JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble(
+JNIEXPORT void JNICALL
+Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable(
+    JNIEnv *, jobject, jlong rowMergedNumericTableAddr,
+    jlong numericTableAddr) {
+    data_management::RowMergedNumericTablePtr pRowMergedNumericTable = (*(
+        data_management::RowMergedNumericTablePtr *)rowMergedNumericTableAddr);
+    data_management::NumericTablePtr pNumericTable =
+        (*(data_management::NumericTablePtr *)numericTableAddr);
+    pRowMergedNumericTable->addNumericTable(pNumericTable);
+}
+
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDouble(
     JNIEnv *env, jobject, jlong numTableAddr, jint row, jint column,
     jdouble value) {
     HomogenNumericTable<double> *nt =
@@ -46,7 +52,7 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneDAL_00024_cSetDouble(
  * Signature: (JI[DII)V
  */
 JNIEXPORT void JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cSetDoubleBatch(
+Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
     JNIEnv *env, jobject, jlong numTableAddr, jint curRows, jdoubleArray batch,
     jint numRows, jint numCols) {
     HomogenNumericTable<double> *nt =
@@ -57,55 +63,24 @@ Java_org_apache_spark_ml_util_OneDAL_00024_cSetDoubleBatch(
     env->ReleasePrimitiveArrayCritical(batch, values, JNI_ABORT);
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cAddNumericTable
- * Signature: (JJ)V
- */
 JNIEXPORT void JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cAddNumericTable(
-    JNIEnv *, jobject, jlong rowMergedNumericTableAddr,
-    jlong numericTableAddr) {
-    data_management::RowMergedNumericTablePtr pRowMergedNumericTable = (*(
-        data_management::RowMergedNumericTablePtr *)rowMergedNumericTableAddr);
-    data_management::NumericTablePtr pNumericTable =
-        (*(data_management::NumericTablePtr *)numericTableAddr);
-    pRowMergedNumericTable->addNumericTable(pNumericTable);
-}
-
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cFreeDataMemory
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cFreeDataMemory(
+Java_com_intel_oap_mllib_OneDAL_00024_cFreeDataMemory(
     JNIEnv *, jobject, jlong numericTableAddr) {
     data_management::NumericTablePtr pNumericTable =
         (*(data_management::NumericTablePtr *)numericTableAddr);
     pNumericTable->freeDataMemory();
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cCheckPlatformCompatibility
- * Signature: ()Z
- */
 JNIEXPORT jboolean JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cCheckPlatformCompatibility(
+Java_com_intel_oap_mllib_OneDAL_00024_cCheckPlatformCompatibility(
     JNIEnv *, jobject) {
     // Only guarantee compatibility and performance on Intel platforms, use
     // oneDAL lib function
     return daal_check_is_intel_cpu();
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cNewCSRNumericTableFloat
- * Signature: ([F[J[JJJ)J
- */
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableFloat(
+Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableFloat(
     JNIEnv *env, jobject, jfloatArray data, jlongArray colIndices,
     jlongArray rowOffsets, jlong nFeatures, jlong nVectors) {
 
@@ -142,13 +117,8 @@ Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableFloat(
     return (jlong)ret;
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneDAL__
- * Method:    cNewCSRNumericTableDouble
- * Signature: ([D[J[JJJ)J
- */
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_util_OneDAL_00024_cNewCSRNumericTableDouble(
+Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble(
     JNIEnv *env, jobject, jdoubleArray data, jlongArray colIndices,
     jlongArray rowOffsets, jlong nFeatures, jlong nVectors) {
 

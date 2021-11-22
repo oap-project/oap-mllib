@@ -1,11 +1,23 @@
 #!/usr/bin/env bash
 
+# exit when any command fails
+set -e
+
+# keep track of the last executed command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo an error message before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
+SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
+OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
+source $OAP_MLLIB_ROOT/RELEASE
+
 if [[ -n $DAALROOT ]]; then
   echo
   echo ====================================================================================
   echo WARNING: DAALROOT detected. It is recommended to test without oneAPI environment!
   echo ====================================================================================
-  echo  
+  echo
 fi
 
 # Unset FI_PROVIDER_PATH if present otherwise may hang
@@ -16,7 +28,7 @@ if [[ -n $FI_PROVIDER_PATH ]]; then
   echo ====================================================================================
 fi
 
-if [[ ! -f target/oap-mllib-1.2.0.jar ]]; then
+if [[ ! -f target/oap-mllib-$OAP_MLLIB_VERSION.jar ]]; then
   echo Please run ./build.sh first to do a complete build before testing!
   exit 1
 fi
@@ -34,13 +46,6 @@ fi
 
 export OAP_MLLIB_TESTING=true
 
-versionArray=(
-  spark-3.0.0 \
-  spark-3.0.1 \
-  spark-3.0.2 \
-  spark-3.1.1
-)
-
 suiteArray=(
   "clustering.MLlibKMeansSuite" \
   "feature.MLlibPCASuite" \
@@ -50,32 +55,22 @@ suiteArray=(
   "stat.MLlibCorrelationSuite"
 )
 
-# Set default version
-SPARK_VER=spark-3.1.1
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo Usage: ./test.sh [-p spark-x.x.x] [-q] [-h] [test suite name]
+  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] <test suite name>"
   echo
-  echo Supported Spark versions:
-  for version in ${versionArray[*]}
-  do
-    echo "    $version"
-  done
-  echo
-  echo Supported Test suites:
-  for suite in ${suiteArray[*]}
-  do
-    echo "    $suite"
-  done
+  echo "-p  Supported Platform Profiles:"
+    echo "    CPU_ONLY_PROFILE"
+    echo "    CPU_GPU_PROFILE"
   echo
 }
 
-while getopts "hqp:" opt
+while getopts "p:qh" opt
 do
 case $opt in
-  p) SPARK_VER=$OPTARG ;;
+  p) PLATFORM_OPT=$OPTARG ;;
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
   h | *)
      print_usage
@@ -86,21 +81,14 @@ done
 
 shift "$((OPTIND-1))"
 
-print_usage
-
-export PLATFORM_PROFILE=CPU_ONLY_PROFILE
-
-echo === Testing Environments ===
-echo JAVA_HOME=$JAVA_HOME
-echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-echo Spark Version: $SPARK_VER
-echo Platform Profile: $PLATFORM_PROFILE
-echo ============================
-
 SUITE=$1
 
-if [[ ! ${versionArray[*]} =~ $SPARK_VER ]]; then
-  echo Error: $SPARK_VER version is not supported!
+print_usage
+
+if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_PROFILE) ]]; then
+  echo
+  echo Platform Profile should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE, but \"$PLATFORM_PROFILE\" found!
+  echo
   exit 1
 fi
 
@@ -109,14 +97,31 @@ if [[ ! ${suiteArray[*]} =~ $SUITE ]]; then
   exit 1
 fi
 
+# Import RELEASE envs
+SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
+OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
+source $OAP_MLLIB_ROOT/RELEASE
+
+export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
+export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
+
+echo
+echo === Testing Environments ===
+echo JAVA_HOME=$JAVA_HOME
+echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
+echo Spark Version: $SPARK_VERSION
+echo Platform Profile: $PLATFORM_PROFILE
+echo ============================
+echo
+
 if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -P$SPARK_VER -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi
