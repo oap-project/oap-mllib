@@ -1,7 +1,7 @@
 #include <unistd.h>
 
 #include "OneCCL.h"
-#include "org_apache_spark_ml_classification_NaiveBayesDALImpl.h"
+#include "com_intel_oap_mllib_classification_NaiveBayesDALImpl.h"
 #include "service.h"
 
 #define PROFILE 1
@@ -121,13 +121,8 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
     return training::ResultPtr();
 }
 
-/*
- * Class:     org_apache_spark_ml_classification_NaiveBayesDALImpl
- * Method:    cNaiveBayesDALCompute
- * Signature: (JJIIILorg/apache/spark/ml/classification/NaiveBayesResult;)V
- */
 JNIEXPORT void JNICALL
-Java_org_apache_spark_ml_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
+Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     JNIEnv *env, jobject obj, jlong pFeaturesTab, jlong pLabelsTab,
     jint class_num, jint executor_num, jint executor_cores, jobject resultObj) {
 

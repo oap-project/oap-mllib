@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-sudo apt-get update
-sudo apt-get install python3-pip python3-setuptools python3-wheel
+sudo apt-get update -q
+sudo apt-get install -y -q python3-pip python3-setuptools python3-wheel
 
-pip3 install --user numpy
+pip3 install --user numpy -q
 
-echo python is in $(which python) 
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+
+echo python is in $(which python)
 python --version
 
-echo python3 is in $(which python3) 
+echo python3 is in $(which python3)
 python3 --version

@@ -29,7 +29,7 @@
 #include <oneapi/ccl.hpp>
 
 #include "OneCCL.h"
-#include "org_apache_spark_ml_util_OneCCL__.h"
+#include "com_intel_oap_mllib_OneCCL__.h"
 
 extern const int ccl_root = 0;
 
@@ -41,12 +41,7 @@ static std::vector<ccl::communicator> g_comms;
 
 ccl::communicator &getComm() { return g_comms[0]; }
 
-/*
- * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    c_init
- * Signature: (IILjava/lang/String;Lorg/apache/spark/ml/util/CCLParam;)I
- */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init(
+JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
     jobject param) {
 
@@ -87,12 +82,7 @@ JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1init(
     return 1;
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    c_cleanup
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup(
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(
     JNIEnv *env, jobject obj) {
 
     g_comms.pop_back();
@@ -100,33 +90,18 @@ JNIEXPORT void JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_c_1cleanup(
     std::cerr << "OneCCL (native): cleanup" << std::endl;
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    isRoot
- * Signature: ()Z
- */
 JNIEXPORT jboolean JNICALL
-Java_org_apache_spark_ml_util_OneCCL_00024_isRoot(JNIEnv *env, jobject obj) {
+Java_com_intel_oap_mllib_OneCCL_00024_isRoot(JNIEnv *env, jobject obj) {
 
     return getComm().rank() == 0;
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    rankID
- * Signature: ()I
- */
 JNIEXPORT jint JNICALL
-Java_org_apache_spark_ml_util_OneCCL_00024_rankID(JNIEnv *env, jobject obj) {
+Java_com_intel_oap_mllib_OneCCL_00024_rankID(JNIEnv *env, jobject obj) {
     return getComm().rank();
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    setEnv
- * Signature: (Ljava/lang/String;Ljava/lang/String;Z)I
- */
-JNIEXPORT jint JNICALL Java_org_apache_spark_ml_util_OneCCL_00024_setEnv(
+JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_setEnv(
     JNIEnv *env, jobject obj, jstring key, jstring value, jboolean overwrite) {
 
     char *k = (char *)env->GetStringUTFChars(key, NULL);
@@ -201,13 +176,8 @@ static bool is_valid_ip(char ip[]) {
     return false;
 }
 
-/*
- * Class:     org_apache_spark_ml_util_OneCCL__
- * Method:    getAvailPort
- * Signature: (Ljava/lang/String;)I
- */
 JNIEXPORT jint JNICALL
-Java_org_apache_spark_ml_util_OneCCL_00024_c_1getAvailPort(JNIEnv *env,
+Java_com_intel_oap_mllib_OneCCL_00024_c_1getAvailPort(JNIEnv *env,
                                                            jobject obj,
                                                            jstring localIP) {
 

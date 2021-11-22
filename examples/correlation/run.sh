@@ -6,7 +6,7 @@ source ../../conf/env.sh
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.CorrelationExample
 
-time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
+time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \

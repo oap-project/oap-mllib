@@ -19,7 +19,7 @@
 #include <iostream>
 
 #include "OneCCL.h"
-#include "org_apache_spark_ml_recommendation_ALSDALImpl.h"
+#include "com_intel_oap_mllib_recommendation_ALSDALImpl.h"
 #include "service.h"
 
 #include "ALSShuffle.h"
@@ -444,14 +444,8 @@ static size_t getOffsetFromOffsetTable(NumericTablePtr offsetTable) {
     return ret;
 }
 
-/*
- * Class:     org_apache_spark_ml_recommendation_ALSDALImpl
- * Method:    cShuffleData
- * Signature:
- * (Ljava/nio/ByteBuffer;IILorg/apache/spark/ml/recommendation/ALSPartitionInfo;)Ljava/nio/ByteBuffer;
- */
 JNIEXPORT jobject JNICALL
-Java_org_apache_spark_ml_recommendation_ALSDALImpl_cShuffleData(
+Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     JNIEnv *env, jobject obj, jobject dataBuffer, jint nTotalKeys, jint nBlocks,
     jobject infoObj) {
     //   cout << "cShuffleData: rank " << rankId << endl;
@@ -488,14 +482,8 @@ Java_org_apache_spark_ml_recommendation_ALSDALImpl_cShuffleData(
     return env->NewDirectByteBuffer(ratings, newRatingsNum * RATING_SIZE);
 }
 
-/*
- * Class:     org_apache_spark_ml_recommendation_ALSDALImpl
- * Method:    cDALImplictALS
- * Signature: (JJIIDDIIILorg/apache/spark/ml/recommendation/ALSResult;)J
- */
-
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_recommendation_ALSDALImpl_cDALImplictALS(
+Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     JNIEnv *env, jobject obj, jlong numTableAddr, jlong nUsers, jint nFactors,
     jint maxIter, jdouble regParam, jdouble alpha, jint executor_num,
     jint executor_cores, jint partitionId, jobject resultObj) {

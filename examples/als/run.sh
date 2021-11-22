@@ -9,7 +9,7 @@ DATA_FILE=$HDFS_ROOT/data/onedal_als_csr_ratings.txt
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.ALSExample
 
-time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
+time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \

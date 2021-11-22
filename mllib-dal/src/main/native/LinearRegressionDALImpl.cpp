@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "OneCCL.h"
-#include "org_apache_spark_ml_regression_LinearRegressionDALImpl.h"
+#include "com_intel_oap_mllib_regression_LinearRegressionDALImpl.h"
 #include "service.h"
 
 using namespace std;
@@ -194,13 +194,8 @@ static NumericTablePtr ridge_regression_compute(
     return resultTable;
 }
 
-/*
- * Class:     org_apache_spark_ml_regression_LinearRegressionDALImpl
- * Method:    cLinearRegressionTrainDAL
- * Signature: (JJDDIILorg/apache/spark/ml/regression/LiRResult;)J
- */
 JNIEXPORT jlong JNICALL
-Java_org_apache_spark_ml_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
+Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabLabel,
     jdouble regParam, jdouble elasticNetParam, jint executor_num,
     jint executor_cores, jobject resultObj) {

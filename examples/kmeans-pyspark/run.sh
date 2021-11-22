@@ -8,7 +8,7 @@ DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 
 APP_PY=kmeans-pyspark.py
 
-time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER -v \
+time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \

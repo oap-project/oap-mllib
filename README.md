@@ -24,7 +24,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.2.0-bin-spark-3.1.1/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-x.x.x-bin-spark-x.x.x/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -44,7 +44,7 @@ You can also build the package from source code, please refer to [Building](#bui
 
 * CentOS 7.0+, Ubuntu 18.04 LTS+
 * Java JRE 8.0+ Runtime
-* Apache Spark 3.0.0+
+* Apache Spark 3.1.1, 3.1.2 and 3.2.0
 
 Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [here](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
 
@@ -94,8 +94,7 @@ Edit related variables in "`Minimun Settings`" of `env.sh`
 #### Upload example data files to HDFS
 ```bash
     $ cd examples
-    $ hadoop fs -mkdir -p /user/$USER
-    $ hadoop fs -copyFromLocal data
+    $ hadoop fs -copyFromLocal data /
     $ hadoop fs -ls data
 ```
 #### Run K-means
@@ -123,13 +122,14 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
+    - MPI Library (MPI)
     - Collective Communications Library (oneCCL)]
 
 Generally you only need to install __Intel® oneAPI Base Toolkit for Linux__ with all or selected components mentioned above. Intel® oneAPI Base Toolkit can be downloaded and installed from [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html). Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
 Scala and Java dependency descriptions are already included in Maven POM file.
 
-***Note:*** You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies: DPC++/C++, oneDAL, oneTBB, oneCCL.
+***Note:*** You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies.
 
 ### Build
 
@@ -149,6 +149,7 @@ Environment | Description
 JAVA_HOME   | Path to JDK home directory
 DAALROOT    | Path to oneDAL home directory
 TBB_ROOT    | Path to oneTBB home directory
+I_MPI_ROOT  | Path to Intel MPI home directory
 CCL_ROOT    | Path to oneCCL home directory
 
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
@@ -164,12 +165,8 @@ If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-sr
 To build, run the following commands:
 ```bash
     $ cd mllib-dal
+    $ ../dev/prepare-build-deps.sh
     $ ./build.sh
-```
-
-If no parameter is given, the Spark version __3.1.1__ will be activated by default. You can also specify a different Spark version with option `-p spark-x.x.x`. For example:
-```bash
-    $ ./build.sh -p spark-3.0.0
 ```
 
 The built JAR package will be placed in `target` directory with the name `oap-mllib-x.x.x.jar`.
@@ -201,7 +198,8 @@ Algorithm         | CPU | GPU | Maturity
 ------------------|-----|-----|---------
 K-Means           | X   | X   | Stable
 PCA               | X   | X   | Stable
-ALS               | X   |     | Experimental
+ALS               | X   |     | Stable
 Naive Bayes       | X   |     | Stable
-Linear Regression | X   |     | Stable
+Linear Regression | X   |     | Experimental
+Ridge Regression  | X   |     | Experimental
 Correlation       | X   | X   | Experimental
