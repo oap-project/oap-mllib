@@ -24,7 +24,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-1.2.0-bin-spark-3.1.1/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-x.x.x-bin-spark-x.x.x/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -198,7 +198,8 @@ Algorithm         | CPU | GPU | Maturity
 ------------------|-----|-----|---------
 K-Means           | X   | X   | Stable
 PCA               | X   | X   | Stable
-ALS               | X   |     | Experimental
+ALS               | X   |     | Stable
 Naive Bayes       | X   |     | Stable
-Linear Regression | X   |     | Stable
+Linear Regression | X   |     | Experimental
+Ridge Regression  | X   |     | Experimental
 Correlation       | X   | X   | Experimental
