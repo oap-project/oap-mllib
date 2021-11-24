@@ -32,11 +32,7 @@ object Utils {
   }
 
   def isOAPEnabled(sc: SparkContext): Boolean = {
-    return sc.conf.getBoolean("spark.oap.mllib.enabled", true)
-  }
-
-  def isOAPEnabled(sc: SparkContext): Boolean = {
-    return sc.conf.getBoolean("spark.oap.mllib.enabled", true)
+    return sc.getConf.getBoolean("spark.oap.mllib.enabled", true)
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {

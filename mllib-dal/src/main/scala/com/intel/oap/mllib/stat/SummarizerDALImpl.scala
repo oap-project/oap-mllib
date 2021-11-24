@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package org.apache.spark.mllib.stat
+package com.intel.oap.mllib.stat
 
+import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.util.Utils.getOneCCLIPPort
-import org.apache.spark.ml.util.{OneCCL, OneDAL}
-import org.apache.spark.mllib.stat.SummarizerResult
+import org.apache.spark.ml.linalg.{Vector}
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
-import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary => Summary}
+import org.apache.spark.mllib.stat.{MultivariateStatisticalDALSummary, MultivariateStatisticalSummary => Summary}
 import org.apache.spark.rdd.RDD
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
+
 
 class SummarizerDALImpl(
                           val executorNum: Int,
@@ -32,11 +32,10 @@ class SummarizerDALImpl(
   extends Serializable with Logging {
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
-
     val kvsIPPort = getOneCCLIPPort(data)
 
     val sparkContext = data.sparkContext
-    val useGPU = sparkContext.conf.getBoolean("spark.oap.mllib.useGPU", false)
+    val useGPU = sparkContext.getConf.getBoolean("spark.oap.mllib.useGPU", false)
 
     val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
@@ -73,10 +72,15 @@ class SummarizerDALImpl(
       val ret = if (OneCCL.isRoot()) {
 
         val convResultStartTime = System.nanoTime()
-        val meanArray= OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.meanNumericTable))
-        val varianceArray = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.varianceNumericTable))
-        val maxrray= OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.maximumNumericTable))
-        val minArray = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.minimumNumericTable))
+        val meanMatrix = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.meanNumericTable))
+        val varianceMatrix = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.varianceNumericTable))
+        val maxMatrix= OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.maximumNumericTable))
+        val minMatrix = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.minimumNumericTable))
+
+        val meanVector = OldVectors.dense(meanMatrix.toArray)
+        val varianceVector = OldVectors.dense(varianceMatrix.toArray)
+        val maxVector = OldVectors.dense(maxMatrix.toArray)
+        val minVector = OldVectors.dense(minMatrix.toArray)
 
         val convResultEndTime = System.nanoTime()
 
@@ -84,7 +88,7 @@ class SummarizerDALImpl(
 
         logInfo(s"SummarizerDAL result conversion took ${durationCovResult} secs")
 
-        Iterator((meanArray(0), varianceArray(0), maxrray(0), minArray(0)))
+        Iterator((meanVector, varianceVector, maxVector, minVector))
       } else {
         Iterator.empty
       }
@@ -102,8 +106,7 @@ class SummarizerDALImpl(
     val maxVector = results(0)._3
     val minVector = results(0)._4
 
-    val summary = new MultivariateStatisticalDALSummary(OldVectors.fromML(meanVector), OldVectors.fromML(varianceVector)
-      , OldVectors.fromML(maxVector), OldVectors.fromML(minVector))
+    val summary = new MultivariateStatisticalDALSummary(meanVector, varianceVector, maxVector, minVector)
 
     summary
   }
