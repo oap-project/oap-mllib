@@ -31,6 +31,10 @@ object Utils {
     return sc.getConf.getBoolean("spark.oap.mllib.enabled", true)
   }
 
+  def isOAPEnabled(sc: SparkContext): Boolean = {
+    return sc.getConf.getBoolean("spark.oap.mllib.enabled", true)
+  }
+
   def getOneCCLIPPort(data: RDD[_]): String = {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.getConf.get("spark.oap.mllib.oneccl.kvs.ip",
