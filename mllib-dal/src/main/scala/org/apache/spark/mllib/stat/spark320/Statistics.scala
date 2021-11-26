@@ -50,7 +50,7 @@ class Statistics extends SummarizerShim {
   def colStats(X: RDD[Vector]): MultivariateStatisticalSummary = {
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       X.sparkContext)
-    if (Utils.isOAPEnabled(X.sparkContext) && isPlatformSupported) {
+    if (Utils.isOAPEnabled() && isPlatformSupported) {
       val handlePersistence = (X.getStorageLevel == StorageLevel.NONE)
       if (handlePersistence) {
         X.persist(StorageLevel.MEMORY_AND_DISK)

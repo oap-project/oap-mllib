@@ -32,9 +32,13 @@ import org.apache.spark.rdd.RDD
 object SummaryStatisticsExample {
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("SummaryStatisticsExample")
-    val sc = new SparkContext(conf)
 
+    val spark = SparkSession
+      .builder
+      .appName("SummaryStatisticsExample")
+      .getOrCreate()
+
+    val sc = spark.sparkContext
     // $example on$
     val data = sc.parallelize( Seq(
       Vectors.dense(5.308206,9.869278,1.018934,4.292158,6.081011,6.585723,2.411094,4.767308,-3.256320,-6.029562),
