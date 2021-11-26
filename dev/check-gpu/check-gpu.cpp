@@ -9,15 +9,15 @@ int check_gpu() {
         if (!devices.empty()) {
             gpu_found = true;
             std::cout << "Platform: "
-	                  << platform.get_info<sycl::info::platform::name>()
-	                  << std::endl;
+                      << platform.get_info<sycl::info::platform::name>()
+                      << std::endl;
             for (auto &device : devices) {
                 std::cout << "-- GPU device: "
                           << device.get_info<sycl::info::device::name>() << std::endl;
             }            
         }
     }
-    
+
     if (!gpu_found)
         std::cout << "No GPU found!" << std::endl; 
 
