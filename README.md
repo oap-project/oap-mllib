@@ -183,6 +183,8 @@ als                |  ALS example for Scala
 naive-bayes        |  Naive Bayes example for Scala
 linear-regression  |  Linear Regression example for Scala
 correlation        |  Correlation example for Scala
+summarizer         |  summarizer example for Scala
+
 
 ### Python Examples
 
@@ -203,3 +205,4 @@ Naive Bayes       | X   |     | Stable
 Linear Regression | X   |     | Experimental
 Ridge Regression  | X   |     | Experimental
 Correlation       | X   | X   | Experimental
+Summarizer        | X   | X   | Experimental

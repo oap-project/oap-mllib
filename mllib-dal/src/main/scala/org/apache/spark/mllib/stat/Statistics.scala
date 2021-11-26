@@ -17,15 +17,20 @@
 
 package org.apache.spark.mllib.stat
 
-import com.intel.oap.mllib.stat.{CorrelationShim, SummarizerShim}
+import com.intel.oap.mllib.stat.{SummarizerShim}
+
+import scala.annotation.varargs
+
 import org.apache.spark.annotation.Since
-import org.apache.spark.api.java.JavaRDD
-import org.apache.spark.rdd.RDD
+import org.apache.spark.api.java.{JavaDoubleRDD, JavaRDD}
+import org.apache.spark.ml.stat._
 import org.apache.spark.mllib.linalg.{Matrix, Vector}
+import org.apache.spark.mllib.linalg.distributed.RowMatrix
+import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.stat.correlation.Correlations
-
-
-
+import org.apache.spark.mllib.stat.test.{ChiSqTest, ChiSqTestResult, KolmogorovSmirnovTest,
+  KolmogorovSmirnovTestResult}
+import org.apache.spark.rdd.RDD
 
 /**
   * API for statistical functions in MLlib.
@@ -44,6 +49,22 @@ object Statistics {
     val shim = SummarizerShim.create()
     shim.colStats(X)
   }
+
+  /**
+    * Computes required column-wise summary statistics for the input RDD[(Vector, Double)].
+    *
+    * @param X an RDD containing vectors and weights for which column-wise summary statistics
+    *          are to be computed.
+    * @return [[SummarizerBuffer]] object containing column-wise summary statistics.
+    */
+  private[mllib] def colStats(X: RDD[(Vector, Double)], requested: Seq[String]) = {
+    X.treeAggregate(Summarizer.createSummarizerBuffer(requested: _*))(
+      seqOp = { case (c, (v, w)) => c.add(v.nonZeroIterator, v.size, w) },
+      combOp = { case (c1, c2) => c1.merge(c2) },
+      depth = 2
+    )
+  }
+
   /**
     * Compute the Pearson correlation matrix for the input RDD of Vectors.
     * Columns with 0 covariance produce NaN entries in the correlation matrix.
@@ -116,4 +137,116 @@ object Statistics {
   def corr(x: JavaRDD[java.lang.Double], y: JavaRDD[java.lang.Double], method: String): Double =
     corr(x.rdd.asInstanceOf[RDD[Double]], y.rdd.asInstanceOf[RDD[Double]], method)
 
+  /**
+    * Conduct Pearson's chi-squared goodness of fit test of the observed data against the
+    * expected distribution.
+    *
+    * @param observed Vector containing the observed categorical counts/relative frequencies.
+    * @param expected Vector containing the expected categorical counts/relative frequencies.
+    *                 `expected` is rescaled if the `expected` sum differs from the `observed` sum.
+    * @return ChiSquaredTest object containing the test statistic, degrees of freedom, p-value,
+    *         the method used, and the null hypothesis.
+    *
+    * @note The two input Vectors need to have the same size.
+    * `observed` cannot contain negative values.
+    * `expected` cannot contain nonpositive values.
+    */
+  @Since("1.1.0")
+  def chiSqTest(observed: Vector, expected: Vector): ChiSqTestResult = {
+    ChiSqTest.chiSquared(observed, expected)
+  }
+
+  /**
+    * Conduct Pearson's chi-squared goodness of fit test of the observed data against the uniform
+    * distribution, with each category having an expected frequency of `1 / observed.size`.
+    *
+    * @param observed Vector containing the observed categorical counts/relative frequencies.
+    * @return ChiSquaredTest object containing the test statistic, degrees of freedom, p-value,
+    *         the method used, and the null hypothesis.
+    *
+    * @note `observed` cannot contain negative values.
+    */
+  @Since("1.1.0")
+  def chiSqTest(observed: Vector): ChiSqTestResult = ChiSqTest.chiSquared(observed)
+
+  /**
+    * Conduct Pearson's independence test on the input contingency matrix, which cannot contain
+    * negative entries or columns or rows that sum up to 0.
+    *
+    * @param observed The contingency matrix (containing either counts or relative frequencies).
+    * @return ChiSquaredTest object containing the test statistic, degrees of freedom, p-value,
+    *         the method used, and the null hypothesis.
+    */
+  @Since("1.1.0")
+  def chiSqTest(observed: Matrix): ChiSqTestResult = ChiSqTest.chiSquaredMatrix(observed)
+
+  /**
+    * Conduct Pearson's independence test for every feature against the label across the input RDD.
+    * For each feature, the (feature, label) pairs are converted into a contingency matrix for which
+    * the chi-squared statistic is computed. All label and feature values must be categorical.
+    *
+    * @param data an `RDD[LabeledPoint]` containing the labeled dataset with categorical features.
+    *             Real-valued features will be treated as categorical for each distinct value.
+    * @return an array containing the ChiSquaredTestResult for every feature against the label.
+    *         The order of the elements in the returned array reflects the order of input features.
+    */
+  @Since("1.1.0")
+  def chiSqTest(data: RDD[LabeledPoint]): Array[ChiSqTestResult] = {
+    ChiSqTest.chiSquaredFeatures(data)
+  }
+
+  /**
+    * Java-friendly version of `chiSqTest()`
+    */
+  @Since("1.5.0")
+  def chiSqTest(data: JavaRDD[LabeledPoint]): Array[ChiSqTestResult] = chiSqTest(data.rdd)
+
+  /**
+    * Conduct the two-sided Kolmogorov-Smirnov (KS) test for data sampled from a
+    * continuous distribution. By comparing the largest difference between the empirical cumulative
+    * distribution of the sample data and the theoretical distribution we can provide a test for the
+    * the null hypothesis that the sample data comes from that theoretical distribution.
+    * For more information on KS Test:
+    * @see <a href="https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Smirnov_test">
+    * Kolmogorov-Smirnov test (Wikipedia)</a>
+    *
+    * @param data an `RDD[Double]` containing the sample of data to test
+    * @param cdf a `Double => Double` function to calculate the theoretical CDF at a given value
+    * @return [[org.apache.spark.mllib.stat.test.KolmogorovSmirnovTestResult]] object containing test
+    *        statistic, p-value, and null hypothesis.
+    */
+  @Since("1.5.0")
+  def kolmogorovSmirnovTest(data: RDD[Double], cdf: Double => Double)
+  : KolmogorovSmirnovTestResult = {
+    KolmogorovSmirnovTest.testOneSample(data, cdf)
+  }
+
+  /**
+    * Convenience function to conduct a one-sample, two-sided Kolmogorov-Smirnov test for probability
+    * distribution equality. Currently supports the normal distribution, taking as parameters
+    * the mean and standard deviation.
+    * (distName = "norm")
+    * @param data an `RDD[Double]` containing the sample of data to test
+    * @param distName a `String` name for a theoretical distribution
+    * @param params `Double*` specifying the parameters to be used for the theoretical distribution
+    * @return [[org.apache.spark.mllib.stat.test.KolmogorovSmirnovTestResult]] object containing test
+    *        statistic, p-value, and null hypothesis.
+    */
+  @Since("1.5.0")
+  @varargs
+  def kolmogorovSmirnovTest(data: RDD[Double], distName: String, params: Double*)
+  : KolmogorovSmirnovTestResult = {
+    KolmogorovSmirnovTest.testOneSample(data, distName, params: _*)
+  }
+
+  /**
+    * Java-friendly version of `kolmogorovSmirnovTest()`
+    */
+  @Since("1.5.0")
+  @varargs
+  def kolmogorovSmirnovTest( data: JavaDoubleRDD,
+                             distName: String,
+                             params: Double*): KolmogorovSmirnovTestResult = {
+    kolmogorovSmirnovTest(data.rdd.asInstanceOf[RDD[Double]], distName, params: _*)
+  }
 }
