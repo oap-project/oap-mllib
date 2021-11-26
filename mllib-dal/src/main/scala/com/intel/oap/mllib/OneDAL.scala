@@ -100,7 +100,6 @@ object OneDAL {
     // returned DoubleBuffer is ByteByffer, need to copy as double array
     dataDouble = table.getBlockOfRows(0, 1, dataDouble)
     val arrayDouble = new Array[Double](numCols.toInt)
-
     dataDouble.get(arrayDouble)
 
     table.releaseBlockOfRows(0, 1, dataDouble)
