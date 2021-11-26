@@ -25,10 +25,8 @@ import org.apache.spark.mllib.stat.{MultivariateStatisticalDALSummary, Multivari
 import org.apache.spark.rdd.RDD
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 
-
-class SummarizerDALImpl(
-                          val executorNum: Int,
-                          val executorCores: Int)
+class SummarizerDALImpl(val executorNum: Int,
+                        val executorCores: Int)
   extends Serializable with Logging {
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
@@ -72,15 +70,10 @@ class SummarizerDALImpl(
       val ret = if (OneCCL.isRoot()) {
 
         val convResultStartTime = System.nanoTime()
-        val meanMatrix = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.meanNumericTable))
-        val varianceMatrix = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.varianceNumericTable))
-        val maxMatrix= OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.maximumNumericTable))
-        val minMatrix = OneDAL.numericTableToOldMatrix(OneDAL.makeNumericTable(result.minimumNumericTable))
-
-        val meanVector = OldVectors.dense(meanMatrix.toArray)
-        val varianceVector = OldVectors.dense(varianceMatrix.toArray)
-        val maxVector = OldVectors.dense(maxMatrix.toArray)
-        val minVector = OldVectors.dense(minMatrix.toArray)
+        val meanVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.meanNumericTable))
+        val varianceVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.varianceNumericTable))
+        val maxVector= OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.maximumNumericTable))
+        val minVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.minimumNumericTable))
 
         val convResultEndTime = System.nanoTime()
 
@@ -106,16 +99,15 @@ class SummarizerDALImpl(
     val maxVector = results(0)._3
     val minVector = results(0)._4
 
-    val summary = new MultivariateStatisticalDALSummary(meanVector, varianceVector, maxVector, minVector)
+    val summary = new MultivariateStatisticalDALSummary(OldVectors.fromML(meanVector), OldVectors.fromML(varianceVector), OldVectors.fromML(maxVector), OldVectors.fromML(minVector))
 
     summary
   }
 
-
   @native private def cSummarizerTrainDAL(data: Long,
-                                           executor_num: Int,
-                                           executor_cores: Int,
-                                           useGPU: Boolean,
-                                           gpuIndices: Array[Int],
-                                           result: SummarizerResult): Long
+                                          executor_num: Int,
+                                          executor_cores: Int,
+                                          useGPU: Boolean,
+                                          gpuIndices: Array[Int],
+                                          result: SummarizerResult): Long
 }

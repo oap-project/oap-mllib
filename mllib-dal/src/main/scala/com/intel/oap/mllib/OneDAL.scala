@@ -93,6 +93,21 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
+  def numericTable1xNToVector(table: NumericTable): Vector = {
+    val numCols = table.getNumberOfColumns.toInt
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, 1, dataDouble)
+    val arrayDouble = new Array[Double](numCols.toInt)
+
+    dataDouble.get(arrayDouble)
+
+    table.releaseBlockOfRows(0, 1, dataDouble)
+
+    Vectors.dense(arrayDouble)
+  }
+
   // Convert DAL numeric table to array of vectors
   def numericTableToVectors(table: NumericTable): Array[Vector] = {
     val numRows = table.getNumberOfRows.toInt

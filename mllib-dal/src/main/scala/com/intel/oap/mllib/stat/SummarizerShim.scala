@@ -40,4 +40,3 @@ object SummarizerShim extends Logging {
     summarizer
   }
 }
-

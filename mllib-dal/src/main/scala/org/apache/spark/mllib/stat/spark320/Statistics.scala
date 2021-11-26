@@ -38,7 +38,7 @@ import scala.annotation.varargs
   * API for statistical functions in MLlib.
   */
 @Since("1.1.0")
-class Statistics extends SummarizerShim{
+class Statistics extends SummarizerShim {
 
   /**
     * Computes column-wise summary statistics for the input RDD[Vector].
