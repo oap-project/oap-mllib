@@ -58,11 +58,6 @@ object SummaryStatisticsExample {
     println(summary.variance)  // column-wise variance
     println(summary.max)
     println(summary.min)
-    println(summary.count)
-    println(summary.normL1)
-    println(summary.normL2)
-    println(summary.weightSum)
-    println(summary.numNonzeros)  // number of nonzeros in each column
     // $example off$
 
     sc.stop()
