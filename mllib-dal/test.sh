@@ -52,7 +52,8 @@ suiteArray=(
   "recommendation.MLlibALSSuite" \
   "classification.MLlibNaiveBayesSuite" \
   "regression.MLlibLinearRegressionSuite" \
-  "stat.MLlibCorrelationSuite"
+  "stat.MLlibCorrelationSuite" \
+  "stat.MultivariateOnlineSummarizerSuite"
 )
 
 MVN_NO_TRANSFER_PROGRESS=
