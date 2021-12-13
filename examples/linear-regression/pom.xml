@@ -13,7 +13,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <oap.version>1.2.0</oap.version>
-    <scala.version>2.12.10</scala.version>
+    <scala.version>2.12.15</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
     <spark.version>3.2.0</spark.version>
   </properties>
@@ -23,7 +23,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.12.10</version>
+      <version>${scala.version}</version>
     </dependency>
 
     <dependency>
