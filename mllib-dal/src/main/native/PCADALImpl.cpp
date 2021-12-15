@@ -28,6 +28,7 @@
 using namespace std;
 using namespace daal;
 using namespace daal::algorithms;
+using namespace daal::services;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
@@ -195,7 +196,17 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         daal::services::Environment::getInstance()->setDefaultExecutionContext(
             ctx);
 
-        doPCADALCompute(env, obj, rankId, comm, pData, nBlocks, resultObj);
+        using daal::data_management::internal::convertToSyclHomogen;
+
+        Status st;
+        NumericTablePtr pSyclHomogen = convertToSyclHomogen<algorithmFPType>(*pData, st);
+        if (!st.ok()) {
+            std::cout << "Failed to convert row merged table to SYCL homogen one"
+                      << std::endl;
+            return 0L;
+        }
+
+        doPCADALCompute(env, obj, rankId, comm, pSyclHomogen, nBlocks, resultObj);
 
         env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
     } else
