@@ -37,6 +37,17 @@
       <artifactId>spark-sql_2.12</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
+      <!--This is needed to exclude log4j1.x from Spark core dependency to avoid vulnerabilities -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
