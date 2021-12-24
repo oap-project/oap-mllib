@@ -74,7 +74,7 @@ object OneDAL {
   }
 
   def isDenseDataset(ds: Dataset[_]): Boolean = {
-    val row = ds.select(new Column("*")).head()
+    val row = ds.select(new Column("features")).head()
 
     row.get(0).isInstanceOf[DenseVector]
   }
