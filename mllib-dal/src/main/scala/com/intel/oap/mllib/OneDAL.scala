@@ -20,14 +20,14 @@ import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable
 import com.intel.daal.services.DaalContext
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
-import org.apache.spark.mllib.linalg.{Vector => OldVector, Matrix => OldMatrix, DenseMatrix => OldDenseMatrix}
+import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
-
 import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
+
 import scala.collection.mutable.ArrayBuffer
 
 object OneDAL {
@@ -74,7 +74,7 @@ object OneDAL {
   }
 
   def isDenseDataset(ds: Dataset[_]): Boolean = {
-    val row = ds.select("features").head()
+    val row = ds.select(new Column("*")).head()
 
     row.get(0).isInstanceOf[DenseVector]
   }
