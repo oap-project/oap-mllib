@@ -196,13 +196,13 @@ als-pyspark     |  ALS example for PySpark
 
 ## List of Accelerated Algorithms
 
-Algorithm         | CPU | GPU | Maturity
-------------------|-----|-----|---------
-K-Means           | X   | X   | Stable
-PCA               | X   | X   | Stable
-ALS               | X   |     | Stable
-Naive Bayes       | X   |     | Stable
-Linear Regression | X   |     | Experimental
-Ridge Regression  | X   |     | Experimental
-Correlation       | X   | X   | Experimental
-Summarizer        | X   | X   | Experimental
+Algorithm         | CPU | GPU |
+------------------|-----|-----|
+K-Means           | X   | X   |
+PCA               | X   | X   |
+ALS               | X   |     |
+Naive Bayes       | X   |     |
+Linear Regression | X   |     |
+Ridge Regression  | X   |     |
+Correlation       | X   | X   |
+Summarizer        | X   | X   |
