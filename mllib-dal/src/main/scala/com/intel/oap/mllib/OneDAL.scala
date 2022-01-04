@@ -73,8 +73,8 @@ object OneDAL {
     OldMatrix
   }
 
-  def isDenseDataset(ds: Dataset[_]): Boolean = {
-    val row = ds.select(new Column("features")).head()
+  def isDenseDataset(ds: Dataset[_], columnName: String): Boolean = {
+    val row = ds.select(columnName).head()
 
     row.get(0).isInstanceOf[DenseVector]
   }

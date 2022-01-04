@@ -57,11 +57,11 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   /**
    * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
    */
-  def train(labeledPoints: Dataset[_]): LinearRegressionDALModel = {
+  def train(labeledPoints: Dataset[_], columnName: String): LinearRegressionDALModel = {
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
-    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints)) {
+    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, columnName)) {
       OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
     } else {
       OneDAL.rddLabeledPointToSparseTables(labeledPoints, executorNum)

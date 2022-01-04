@@ -108,10 +108,10 @@ object LinearRegressionExample {
     println(s"LinearRegressionExample with parameters:\n$params")
 
     val training = spark.read.format("libsvm")
-      .load(params.input)
+      .load(params.input).toDF("label", "featurescolumn")
 
     val lir = new LinearRegression()
-      .setFeaturesCol("features")
+      .setFeaturesCol("featurescolumn")
       .setLabelCol("label")
       .setRegParam(params.regParam)
       .setElasticNetParam(params.elasticNetParam)
