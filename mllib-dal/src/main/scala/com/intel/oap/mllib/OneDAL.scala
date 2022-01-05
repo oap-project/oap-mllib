@@ -22,7 +22,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
-import org.apache.spark.sql.{Column, Dataset, Row, SparkSession}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import java.lang
 import java.nio.DoubleBuffer
@@ -73,8 +73,8 @@ object OneDAL {
     OldMatrix
   }
 
-  def isDenseDataset(ds: Dataset[_], columnName: String): Boolean = {
-    val row = ds.select(columnName).head()
+  def isDenseDataset(ds: Dataset[_], featuresCol: String): Boolean = {
+    val row = ds.select(featuresCol).head()
 
     row.get(0).isInstanceOf[DenseVector]
   }

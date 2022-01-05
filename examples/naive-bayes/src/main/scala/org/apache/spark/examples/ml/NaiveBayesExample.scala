@@ -38,13 +38,13 @@ object NaiveBayesExample {
 
     // $example on$
     // Load the data stored in LIBSVM format as a DataFrame.
-    val data = spark.read.format("libsvm").load(args(0)).toDF("label", "featurescolumn")
+    val data = spark.read.format("libsvm").load(args(0)).toDF("label", "features")
     val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3), seed = 1234L)
 
     // Train a NaiveBayes model.
     val model = new NaiveBayes()
       .setLabelCol("label")
-      .setFeaturesCol("featurescolumn")
+      .setFeaturesCol("features")
       .fit(data)
 
     // Select example rows to display.
