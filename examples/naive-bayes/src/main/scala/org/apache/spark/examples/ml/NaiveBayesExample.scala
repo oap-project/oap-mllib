@@ -39,14 +39,26 @@ object NaiveBayesExample {
     // $example on$
     // Load the data stored in LIBSVM format as a DataFrame.
     val data = spark.read.format("libsvm").load(args(0)).toDF("label", "featurescolumn")
-    println(data.schema.fieldNames.toList)
+    val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3), seed = 1234L)
+
     // Train a NaiveBayes model.
     val model = new NaiveBayes()
       .setLabelCol("label")
       .setFeaturesCol("featurescolumn")
       .fit(data)
 
-    println(model.getFeaturesCol)
+    // Select example rows to display.
+    val predictions = model.transform(testData)
+    predictions.show()
+
+    // Select (prediction, true label) and compute test error
+    val evaluator = new MulticlassClassificationEvaluator()
+      .setLabelCol("label")
+      .setPredictionCol("prediction")
+      .setMetricName("accuracy")
+    val accuracy = evaluator.evaluate(predictions)
+    println(s"Test set accuracy = $accuracy")
+    // $example off$
     spark.stop()
   }
 }
