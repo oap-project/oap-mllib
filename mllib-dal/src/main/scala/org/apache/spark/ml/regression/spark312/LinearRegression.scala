@@ -459,7 +459,7 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
         executor_num, executor_cores)
 
       // Return same model as WeightedLeastSquaresModel
-      val model = optimizer.train(dataset, $(featuresCol))
+      val model = optimizer.train(dataset, $(labelCol), $(featuresCol))
 
       val lrModel = copyValues(
         new LinearRegressionModel(uid, model.coefficients, model.intercept))

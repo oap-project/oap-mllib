@@ -153,7 +153,7 @@ class NaiveBayes @Since("1.5.0") (
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
 
     val dalModel = new NaiveBayesDALImpl(uid, numClasses,
-      executor_num, executor_cores).train(labeledPointsDS, ${featuresCol})
+      executor_num, executor_cores).train(labeledPointsDS, ${labelCol}, ${featuresCol})
 
     val model = copyValues(new NaiveBayesModel(
       dalModel.uid, dalModel.pi, dalModel.theta, dalModel.sigma))

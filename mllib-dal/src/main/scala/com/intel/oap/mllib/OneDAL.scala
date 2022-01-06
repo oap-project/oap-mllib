@@ -176,6 +176,8 @@ object OneDAL {
 
 
   def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
+                                    labelCol: String,
+                                    featuresCol: String,
                                     executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -193,7 +195,7 @@ object OneDAL {
 
     dataForConversion.cache().count()
 
-    val labeledPointsRDD = dataForConversion.toDF().map {
+    val labeledPointsRDD = dataForConversion.select(labelCol, featuresCol).toDF().map {
       case Row(label: Double, features: Vector) => (features, label)
     }.rdd
 
@@ -283,6 +285,8 @@ object OneDAL {
   }
 
   def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
+                                            labelCol: String,
+                                            featuresCol: String,
                                             executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -290,7 +294,7 @@ object OneDAL {
 
     val spark = SparkSession.active
 
-    val labeledPointsRDD = labeledPoints.rdd.map {
+    val labeledPointsRDD = labeledPoints.select(labelCol, featuresCol).rdd.map {
       case Row(label: Double, features: Vector) => (features, label)
     }
 
@@ -321,6 +325,8 @@ object OneDAL {
   }
 
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],
+                                    labelCol: String,
+                                    featuresCol: String,
                                     executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -336,7 +342,8 @@ object OneDAL {
       labeledPoints
     }
 
-    val tables = dataForConversion.toDF().mapPartitions { it: Iterator[Row] =>
+    val tables = dataForConversion.select(labelCol, featuresCol)
+      .toDF().mapPartitions { it: Iterator[Row] =>
       val rows = it.toArray
 
       val features = rows.map {
