@@ -20,14 +20,14 @@ import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable
 import com.intel.daal.services.DaalContext
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
-import org.apache.spark.mllib.linalg.{Vector => OldVector, Matrix => OldMatrix, DenseMatrix => OldDenseMatrix}
+import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
-
 import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
+
 import scala.collection.mutable.ArrayBuffer
 
 object OneDAL {
@@ -73,8 +73,8 @@ object OneDAL {
     OldMatrix
   }
 
-  def isDenseDataset(ds: Dataset[_]): Boolean = {
-    val row = ds.select("features").head()
+  def isDenseDataset(ds: Dataset[_], featuresCol: String): Boolean = {
+    val row = ds.select(featuresCol).head()
 
     row.get(0).isInstanceOf[DenseVector]
   }
@@ -176,6 +176,8 @@ object OneDAL {
 
 
   def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
+                                    labelCol: String,
+                                    featuresCol: String,
                                     executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -193,7 +195,7 @@ object OneDAL {
 
     dataForConversion.cache().count()
 
-    val labeledPointsRDD = dataForConversion.toDF().map {
+    val labeledPointsRDD = dataForConversion.select(labelCol, featuresCol).toDF().map {
       case Row(label: Double, features: Vector) => (features, label)
     }.rdd
 
@@ -283,6 +285,8 @@ object OneDAL {
   }
 
   def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
+                                            labelCol: String,
+                                            featuresCol: String,
                                             executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -290,7 +294,7 @@ object OneDAL {
 
     val spark = SparkSession.active
 
-    val labeledPointsRDD = labeledPoints.rdd.map {
+    val labeledPointsRDD = labeledPoints.select(labelCol, featuresCol).rdd.map {
       case Row(label: Double, features: Vector) => (features, label)
     }
 
@@ -321,6 +325,8 @@ object OneDAL {
   }
 
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],
+                                    labelCol: String,
+                                    featuresCol: String,
                                     executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
@@ -336,7 +342,8 @@ object OneDAL {
       labeledPoints
     }
 
-    val tables = dataForConversion.toDF().mapPartitions { it: Iterator[Row] =>
+    val tables = dataForConversion.select(labelCol, featuresCol)
+      .toDF().mapPartitions { it: Iterator[Row] =>
       val rows = it.toArray
 
       val features = rows.map {

@@ -536,6 +536,35 @@ class MLlibNaiveBayesSuite extends MLTest with DefaultReadWriteTest {
         assert(expected.sigma === Matrices.zeros(0, 0) && actual.sigma === Matrices.zeros(0, 0))
       }
   }
+
+  test("oap-mllib-163: should support all kind of labelCol name and featuresCol name") {
+    val df_1 = complementDataset.toDF("label_alias", "features_alias")
+    val nb_1 = new NaiveBayes().setLabelCol("label_alias")
+    val e_1 = intercept[IllegalArgumentException](nb_1.fit(df_1)).getMessage
+    assert(e_1.contains("features does not exist. Available: label_alias, features_alias"))
+
+    val df_2 = complementDataset.toDF("label_alias", "features_alias")
+    val nb_2 = new NaiveBayes().setFeaturesCol("features_alias")
+    val e_2 = intercept[IllegalArgumentException](nb_2.fit(df_2)).getMessage
+    assert(e_2.contains("label does not exist. Available: label_alias, features_alias"))
+
+    val df_3 = complementDataset.toDF("label_alias", "features_alias")
+    val nb_3 = new NaiveBayes().setLabelCol("label_alias").setFeaturesCol("features_alias")
+    val model = nb_3.fit(df_3)
+    assert(model.hasParent)
+  }
+
+  test("oap-mllib-163: should support column in any order") {
+    val df_1 = complementDataset.select("label", "features").toDF()
+    val nb_1 = new NaiveBayes().setLabelCol("label").setFeaturesCol("features")
+    val model_1 = nb_1.fit(df_1)
+    assert(model_1.hasParent)
+
+    val df_2 = complementDataset.select("features", "label").toDF()
+    val nb_2 = new NaiveBayes().setLabelCol("label").setFeaturesCol("features")
+    val model_2 = nb_2.fit(df_2)
+    assert(model_2.hasParent)
+  }
 }
 
 object NaiveBayesSuite {

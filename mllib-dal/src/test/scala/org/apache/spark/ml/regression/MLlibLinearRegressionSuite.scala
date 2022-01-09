@@ -1292,6 +1292,38 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
     assert(model1.coefficients ~== model2.coefficients relTol 1E-3)
     assert(model1.intercept ~== model2.intercept relTol 1E-3)
   }
+
+  test("oap-mllib-163: should support all kind of labelCol name and featuresCol name") {
+    val df_1 = datasetWithDenseFeature.toDF("label_alias", "features_alias")
+    val nb_1 = new LinearRegression().setLabelCol("label_alias")
+    val e_1 = intercept[IllegalArgumentException](nb_1.fit(df_1)).getMessage
+    assert(e_1.contains("features does not exist. Available: label_alias, features_alias"))
+
+    val df_2 = datasetWithDenseFeature.toDF("label_alias", "features_alias")
+    val nb_2 = new LinearRegression().setFeaturesCol("features_alias")
+    val e_2 = intercept[IllegalArgumentException](nb_2.fit(df_2)).getMessage
+    assert(e_2.contains("label does not exist. Available: label_alias, features_alias"))
+
+    val df_3 = datasetWithDenseFeature.toDF("label_alias", "features_alias")
+    val nb_3 = new LinearRegression().setLabelCol("label_alias").setFeaturesCol("features_alias")
+    val model = nb_3.fit(df_3)
+    assert(model.hasParent)
+    assert(model.hasSummary)
+  }
+
+  test("oap-mllib-163: should support column in any order") {
+    val df_1 = datasetWithDenseFeature.select("label", "features").toDF()
+    val nb_1 = new LinearRegression().setLabelCol("label").setFeaturesCol("features")
+    val model_1 = nb_1.fit(df_1)
+    assert(model_1.hasParent)
+    assert(model_1.hasSummary)
+
+    val df_2 = datasetWithDenseFeature.select("features", "label").toDF()
+    val nb_2 = new LinearRegression().setLabelCol("label").setFeaturesCol("features")
+    val model_2 = nb_2.fit(df_2)
+    assert(model_2.hasParent)
+    assert(model_2.hasSummary)
+  }
 }
 
 object LinearRegressionSuite {
