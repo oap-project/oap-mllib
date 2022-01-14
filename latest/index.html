@@ -54,6 +54,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#compatibility">Compatibility</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#online-documentation">Online Documentation</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#javascala-users-preferred">Java/Scala Users Preferred</a>
@@ -95,12 +97,6 @@
     <li class="toctree-l3"><a class="reference internal" href="#prerequisites_1">Prerequisites</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#build">Build</a>
-        <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#building-oneccl">Building oneCCL</a>
-    </li>
-    <li class="toctree-l4"><a class="reference internal" href="#building-oap-mllib">Building OAP MLlib</a>
-    </li>
-        </ul>
     </li>
         </ul>
     </li>
@@ -165,12 +161,14 @@
 <h2 id="overview">Overview</h2>
 <p>OAP MLlib is an optimized package to accelerate machine learning algorithms in  <a href="https://spark.apache.org/mllib">Apache Spark MLlib</a>.  It is compatible with Spark MLlib and leverages open source <a href="https://github.com/oneapi-src/oneDAL">Intel® oneAPI Data Analytics Library (oneDAL)</a> to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source <a href="https://github.com/oneapi-src/oneCCL">Intel® oneAPI Collective Communications Library (oneCCL)</a> to provide efficient communication patterns in multi-node multi-GPU clusters.</p>
 <h2 id="compatibility">Compatibility</h2>
-<p>OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration. </p>
-<p>Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib. </p>
-<p>For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used. </p>
+<p>OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration.</p>
+<p>Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib.</p>
+<p>For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used.</p>
+<h2 id="online-documentation">Online Documentation</h2>
+<p>You can find the all the OAP MLlib documents on the <a href="https://oap-project.github.io/oap-mllib">project web page</a>.</p>
 <h2 id="getting-started">Getting Started</h2>
 <h3 id="javascala-users-preferred">Java/Scala Users Preferred</h3>
-<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.2.0/oap-1.2.0-bin.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-1.2.0-bin-spark-3.1.1/jars</code>.</p>
+<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.3.0/oap-1.3.0-bin.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-x.x.x-bin-spark-x.x.x/jars</code>.</p>
 <p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
 <h3 id="pythonpyspark-users-preferred">Python/PySpark Users Preferred</h3>
 <p>Use a pre-built JAR to get started. If you have finished <a href="OAP-Installation-Guide/">OAP Installation Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
@@ -182,14 +180,14 @@
 <ul>
 <li>CentOS 7.0+, Ubuntu 18.04 LTS+</li>
 <li>Java JRE 8.0+ Runtime</li>
-<li>Apache Spark 3.0.0+</li>
+<li>Apache Spark 3.1.1, 3.1.2 and 3.2.0</li>
 </ul>
 <p>Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to <a href="https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html">here</a> for details.</p>
 <p>Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.</p>
 <h3 id="spark-configuration">Spark Configuration</h3>
 <h4 id="general-configuration">General Configuration</h4>
 <h5 id="yarn-cluster-manager">YARN Cluster Manager</h5>
-<p>Users usually run Spark application on <strong>YARN</strong> with <strong>client</strong> mode. In that case, you only need to add the following configurations in <code>spark-defaults.conf</code> or in <code>spark-submit</code> command line before running. </p>
+<p>Users usually run Spark application on <strong>YARN</strong> with <strong>client</strong> mode. In that case, you only need to add the following configurations in <code>spark-defaults.conf</code> or in <code>spark-submit</code> command line before running.</p>
 <pre><code># absolute path of the jar for uploading
 spark.files                       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for driver class path
@@ -211,20 +209,19 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <p>OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As <code>spark.shuffle.reduceLocality.enabled</code> option is <code>true</code> by default, when the dataset is not evenly distributed accross executors, this option may result in assigning more than 1 rank to single executor and task failing. The error could be fixed by setting <code>spark.shuffle.reduceLocality.enabled</code> to <code>false</code>.</p>
 <h3 id="sanity-check">Sanity Check</h3>
 <h4 id="setup-envsh">Setup <code>env.sh</code></h4>
-<pre><code>    $ cd conf
+<pre><code class="bash">    $ cd conf
     $ cp env.sh.template env.sh
 </code></pre>
 
 <p>Edit related variables in "<code>Minimun Settings</code>" of <code>env.sh</code></p>
 <h4 id="upload-example-data-files-to-hdfs">Upload example data files to HDFS</h4>
-<pre><code>    $ cd examples
-    $ hadoop fs -mkdir -p /user/$USER
-    $ hadoop fs -copyFromLocal data
+<pre><code class="bash">    $ cd examples
+    $ hadoop fs -copyFromLocal data /
     $ hadoop fs -ls data
 </code></pre>
 
 <h4 id="run-k-means">Run K-means</h4>
-<pre><code>    $ cd examples/kmeans
+<pre><code class="bash">    $ cd examples/kmeans
     $ ./build.sh
     $ ./run.sh
 </code></pre>
@@ -238,37 +235,25 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <li>JDK 8.0+</li>
 <li>Apache Maven 3.6.2+</li>
 <li>GNU GCC 4.8.5+</li>
-<li>Intel® oneAPI Toolkits 2021.3.0 Components:<ul>
+<li>Intel® oneAPI Base Toolkit (&gt;=2021.4.0) Components :<ul>
 <li>DPC++/C++ Compiler (dpcpp/clang++)</li>
 <li>Data Analytics Library (oneDAL)</li>
 <li>Threading Building Blocks (oneTBB)</li>
+<li>MPI Library (MPI)</li>
+<li>Collective Communications Library (oneCCL)]</li>
 </ul>
 </li>
-<li><a href="https://github.com/oneapi-src/oneCCL">Open Source Intel® oneAPI Collective Communications Library (oneCCL)</a></li>
 </ul>
-<p>Intel® oneAPI Toolkits and its components can be downloaded and install from <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>. Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. Generally you only need to install oneAPI Base Toolkit for Linux with all or selected components mentioned above. Instead of using oneCCL included in Intel® oneAPI Toolkits, we prefer to build from open source oneCCL to resolve some bugs.</p>
-<p>More details about oneAPI can be found <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>.</p>
-<p>Scala and Java dependency descriptions are already included in Maven POM file. </p>
-<p><strong><em>Note:</em></strong> You can refer to <a href="../dev/install-build-deps-centos.sh">this script</a> to install correct dependencies: DPC++/C++, oneDAL, oneTBB, oneCCL.</p>
+<p>Generally you only need to install <strong>Intel® oneAPI Base Toolkit for Linux</strong> with all or selected components mentioned above. Intel® oneAPI Base Toolkit can be downloaded and installed from <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>. Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. More details about oneAPI can be found <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>.</p>
+<p>Scala and Java dependency descriptions are already included in Maven POM file.</p>
+<p><strong><em>Note:</em></strong> You can refer to <a href="../dev/install-build-deps-centos.sh">this script</a> to install correct dependencies.</p>
 <h3 id="build">Build</h3>
-<h4 id="building-oneccl">Building oneCCL</h4>
-<p>To clone and build from open source oneCCL, run the following commands:</p>
-<pre><code>    $ git clone https://github.com/oneapi-src/oneCCL
-    $ cd oneCCL
-    $ git checkout 2021.2.1
-    $ mkdir build &amp;&amp; cd build
-    $ cmake ..
-    $ make -j install
-</code></pre>
-
-<p>The generated files will be placed in <code>/your/oneCCL_source_code/build/_install</code></p>
-<h4 id="building-oap-mllib">Building OAP MLlib</h4>
 <p>To clone and checkout source code, run the following commands:</p>
-<pre><code>    $ git clone https://github.com/oap-project/oap-mllib.git   
+<pre><code class="bash">    $ git clone https://github.com/oap-project/oap-mllib.git
 </code></pre>
 
 <p><strong>Optional</strong> to checkout specific release branch:</p>
-<pre><code>    $ cd oap-mllib &amp;&amp; git checkout ${version} 
+<pre><code class="bash">    $ cd oap-mllib &amp;&amp; git checkout ${version}
 </code></pre>
 
 <p>We rely on environment variables to find required toolchains and libraries. Please make sure the following environment variables are set for building:</p>
@@ -293,26 +278,25 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <td>Path to oneTBB home directory</td>
 </tr>
 <tr>
+<td>I_MPI_ROOT</td>
+<td>Path to Intel MPI home directory</td>
+</tr>
+<tr>
 <td>CCL_ROOT</td>
 <td>Path to oneCCL home directory</td>
 </tr>
 </tbody>
 </table>
 <p>We suggest you to source <code>setvars.sh</code> script into current shell to setup building environments as following:</p>
-<pre><code>    $ source /opt/intel/oneapi/setvars.sh
-    $ source /your/oneCCL_source_code/build/_install/env/setvars.sh
+<pre><code class="bash">    $ source /opt/intel/oneapi/setvars.sh
 </code></pre>
 
-<p><strong>Be noticed we are using our own built oneCCL instead, we should source oneCCL's <code>setvars.sh</code> to overwrite oneAPI one.</strong></p>
 <p>You can also refer to <a href="../dev/ci-test.sh">this CI script</a> to setup the building environments.</p>
-<p>If you prefer to buid your own open source <a href="https://github.com/oneapi-src/oneDAL">oneDAL</a>, <a href="https://github.com/oneapi-src/oneTBB">oneTBB</a> versions rather than use the ones included in oneAPI TookKits, you can refer to the related build instructions and manually source <code>setvars.sh</code> accordingly.</p>
-<p>To build, run the following commands: </p>
-<pre><code>    $ cd mllib-dal
+<p>If you prefer to buid your own open source <a href="https://github.com/oneapi-src/oneDAL">oneDAL</a>, <a href="https://github.com/oneapi-src/oneTBB">oneTBB</a>, <a href="https://github.com/oneapi-src/oneCCL">oneCCL</a> versions rather than use the ones included in oneAPI Base Toolkit, you can refer to the related build instructions and manually source <code>setvars.sh</code> accordingly.</p>
+<p>To build, run the following commands:</p>
+<pre><code class="bash">    $ cd mllib-dal
+    $ ../dev/prepare-build-deps.sh
     $ ./build.sh
-</code></pre>
-
-<p>If no parameter is given, the Spark version <strong>3.1.1</strong> will be activated by default. You can also specify a different Spark version with option <code>-p spark-x.x.x</code>. For example:</p>
-<pre><code>    $ ./build.sh -p spark-3.0.0
 </code></pre>
 
 <p>The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x.jar</code>.</p>
@@ -346,6 +330,14 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <td>linear-regression</td>
 <td>Linear Regression example for Scala</td>
 </tr>
+<tr>
+<td>correlation</td>
+<td>Correlation example for Scala</td>
+</tr>
+<tr>
+<td>summarizer</td>
+<td>Summarizer example for Scala</td>
+</tr>
 </tbody>
 </table>
 <h3 id="python-examples">Python Examples</h3>
@@ -376,45 +368,50 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <thead>
 <tr>
 <th>Algorithm</th>
-<th>Category</th>
-<th>Maturity</th>
+<th>CPU</th>
+<th>GPU</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>K-Means</td>
-<td>CPU</td>
-<td>Stable</td>
-</tr>
-<tr>
-<td>K-Means</td>
-<td>GPU</td>
-<td>Experimental</td>
+<td>X</td>
+<td>X</td>
 </tr>
 <tr>
 <td>PCA</td>
-<td>CPU</td>
-<td>Stable</td>
-</tr>
-<tr>
-<td>PCA</td>
-<td>GPU</td>
-<td>Experimental</td>
+<td>X</td>
+<td>X</td>
 </tr>
 <tr>
 <td>ALS</td>
-<td>CPU</td>
-<td>Stable</td>
+<td>X</td>
+<td></td>
 </tr>
 <tr>
 <td>Naive Bayes</td>
-<td>CPU</td>
-<td>Experimental</td>
+<td>X</td>
+<td></td>
 </tr>
 <tr>
 <td>Linear Regression</td>
-<td>CPU</td>
-<td>Experimental</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Ridge Regression</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Correlation</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Summarizer</td>
+<td>X</td>
+<td>X</td>
 </tr>
 </tbody>
 </table>
@@ -471,5 +468,5 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-11-12 08:49:30.420431+00:00
+Build Date UTC : 2022-01-14 03:03:39.719415+00:00
 -->
