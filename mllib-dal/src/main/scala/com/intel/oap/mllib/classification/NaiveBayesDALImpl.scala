@@ -37,14 +37,16 @@ class NaiveBayesDALImpl(val uid: String,
                         val executorNum: Int,
                         val executorCores: Int
                        ) extends Serializable with Logging {
-  def train(labeledPoints: Dataset[_]): NaiveBayesDALModel = {
+  def train(labeledPoints: Dataset[_],
+            labelCol: String,
+            featuresCol: String): NaiveBayesDALModel = {
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
-    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints)) {
-      OneDAL.rddLabeledPointToMergedTables(labeledPoints, executorNum)
+    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+      OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
     } else {
-      OneDAL.rddLabeledPointToSparseTables(labeledPoints, executorNum)
+      OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
     }
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
