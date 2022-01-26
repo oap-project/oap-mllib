@@ -32,13 +32,9 @@ using namespace daal::services;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static void pca_compute(JNIEnv *env,
-                        jobject obj,
-                        int rankId,
-                        ccl::communicator &comm,
-                        NumericTablePtr &pData,
-                        int nBlocks,
-                        jobject resultObj){
+static void pca_compute(JNIEnv *env, jobject obj, int rankId,
+                        ccl::communicator &comm, NumericTablePtr &pData,
+                        int nBlocks, jobject resultObj) {
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -105,7 +101,7 @@ static void pca_compute(JNIEnv *env,
         }
 
         /* Set the parameter to choose the type of the output matrix */
-        masterAlgorithm.parameter.outputMatrixType = covariance::correlationMatrix;
+        masterAlgorithm.parameter.outputMatrixType = covariance::covarianceMatrix;
 
         /* Merge and finalizeCompute covariance decomposition on the master node */
         masterAlgorithm.compute();
@@ -120,11 +116,13 @@ static void pca_compute(JNIEnv *env,
                << std::endl;
 
         t1 = std::chrono::high_resolution_clock::now();
+
         /*Create an algorithm for principal component analysis using the correlation method*/
-        pca::Batch<> algorithm;
+        pca::Batch<algorithmFPType> algorithm;
+
         /* Set the algorithm input data*/
         algorithm.input.set(pca::correlation, covariance_result->get(covariance::covariance));
-        algorithm.parameter.resultsToCompute = pca::eigenvalues;
+        algorithm.parameter.resultsToCompute = pca::eigenvalue;
 
         /* Compute results of the PCA algorithm*/
         algorithm.compute();
