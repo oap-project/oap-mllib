@@ -16,17 +16,18 @@
 
 package com.intel.oap.mllib.feature
 
+import java.nio.DoubleBuffer
+
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Service}
 import org.apache.spark.TaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
-import org.apache.spark.mllib.linalg.{DenseVector => OldDenseVector, DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
+import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, DenseVector => OldDenseVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
-
 import java.util.Arrays
 
 class PCADALModel private[mllib] (
@@ -77,6 +78,8 @@ class PCADALImpl(val k: Int,
         val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeNumericTable(
           result.explainedVarianceNumericTable)
+        Service.printNumericTable("pcNumericTable", pcNumericTable)
+        Service.printNumericTable("explainedVarianceNumericTable", explainedVarianceNumericTable)
 
         val principleComponents = getPrincipleComponentsFromDAL(pcNumericTable, k)
         val explainedVariance = getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
@@ -96,7 +99,8 @@ class PCADALImpl(val k: Int,
 
     val pc = results(0)._1
     val explainedVariance = results(0)._2
-
+    println("train pc " + pc)
+    println("train explainedVariance" + explainedVariance)
     val parentModel = new PCADALModel(k,
       OldDenseMatrix.fromML(pc),
       OldVectors.fromML(explainedVariance).toDense
@@ -114,7 +118,19 @@ class PCADALImpl(val k: Int,
   }
 
   private def getPrincipleComponentsFromDAL(table: NumericTable, k: Int): DenseMatrix = {
+    Service.printNumericTable("getPrincipleComponentsFromDAL table", table)
     val data = table.asInstanceOf[HomogenNumericTable].getDoubleArray()
+    println(data.toList)
+
+    val data_numRows = table.getNumberOfRows.toInt
+    val data_numCols = table.getNumberOfColumns.toInt
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, data_numRows, dataDouble)
+    val arrayDouble = new Array[Double](data_numRows * data_numCols)
+    dataDouble.get(arrayDouble)
+    println(arrayDouble.toList)
 
     val numRows = table.getNumberOfRows.toInt
 
@@ -123,8 +139,7 @@ class PCADALImpl(val k: Int,
     val numCols = table.getNumberOfColumns.toInt
 
     // Column-major, transpose of top K rows of NumericTable
-    new DenseMatrix(numCols, k, data.slice(0, numCols * k), false)
-
+    new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
 //    val result = DenseMatrix.zeros(numCols, k)
 //
 //    for (row <- 0 until k) {
@@ -137,9 +152,19 @@ class PCADALImpl(val k: Int,
   }
 
   private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
-    val data = table_1xn.asInstanceOf[HomogenNumericTable].getDoubleArray()
-    val sum = data.sum
-    val topK = Arrays.copyOfRange(data, 0, k)
+    Service.printNumericTable("getExplainedVarianceFromDAL table_1xn", table_1xn)
+    val numCols = table_1xn.getNumberOfColumns.toInt
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table_1xn.getBlockOfRows(0, 1, dataDouble)
+    val arrayDouble = new Array[Double](numCols.toInt)
+    dataDouble.get(arrayDouble)
+    println(arrayDouble.toList)
+
+
+    val sum = arrayDouble.sum
+    val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
       topK(i) = topK(i) / sum
     new DenseVector(topK)
