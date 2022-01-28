@@ -113,20 +113,16 @@ class PCADALImpl(val k: Int,
   }
 
   private def getPrincipleComponentsFromDAL(table: NumericTable, k: Int): DenseMatrix = {
-    val data_numRows = table.getNumberOfRows.toInt
-    val data_numCols = table.getNumberOfColumns.toInt
-
-    var dataDouble: DoubleBuffer = null
-    // returned DoubleBuffer is ByteByffer, need to copy as double array
-    dataDouble = table.getBlockOfRows(0, data_numRows, dataDouble)
-    val arrayDouble = new Array[Double](data_numRows * data_numCols)
-    dataDouble.get(arrayDouble)
-
     val numRows = table.getNumberOfRows.toInt
-
     require(k <= numRows, "k should be less or equal to row number")
 
     val numCols = table.getNumberOfColumns.toInt
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
 
     // Column-major, transpose of top K rows of NumericTable
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
