@@ -236,7 +236,7 @@ object OneDAL {
     matrixLabel
   }
 
-  private def vectorsToSparseNumericTable(vectors: Array[Vector],
+  def vectorsToSparseNumericTable(vectors: Array[Vector],
                                           nFeatures: Long): CSRNumericTable = {
     require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
 
@@ -264,11 +264,13 @@ object OneDAL {
         columnIndices(indexValues) = column + 1
 
         if (row > curRow) {
+          // multiple rows without non-zero elements
+          for (i <- 0 until (row-curRow).toInt) {
+            // one-based indexValues
+            rowOffsets += indexValues + 1
+          }
           curRow = row
-          // one-based indexValues
-          rowOffsets += indexValues + 1
         }
-
         indexValues = indexValues + 1
       }
     }
@@ -276,6 +278,14 @@ object OneDAL {
     rowOffsets += indexValues + 1
 
     val contextLocal = new DaalContext()
+
+    // check CSR encoding
+    require(values.length == ratingsNum,
+      "the length of values should be equal to the number of non-zero elements")
+    require(columnIndices.length == ratingsNum,
+      "the length of columnIndices should be equal to the number of non-zero elements")
+    require(rowOffsets.size == (csrRowNum + 1),
+      "the size of rowOffsets should be equal to the number of rows + 1")
 
     val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
       nFeatures, csrRowNum)
@@ -412,6 +422,8 @@ object OneDAL {
       OneDAL.cSetDoubleBatch(matrix.getCNumericTable, dalRow, rowArray, 1, numCols)
       dalRow += 1
     }
+
+    Service.printNumericTable("vectors To Dense NumericTable", matrix)
 
     matrix
   }
