@@ -423,8 +423,6 @@ object OneDAL {
       dalRow += 1
     }
 
-    Service.printNumericTable("vectors To Dense NumericTable", matrix)
-
     matrix
   }
 
