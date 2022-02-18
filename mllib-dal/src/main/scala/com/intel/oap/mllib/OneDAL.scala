@@ -253,7 +253,6 @@ object OneDAL {
     val rowOffsets = ArrayBuffer[Long](1L)
 
     var indexValues = 0
-    var curRow = 0L
 
     // Converted to one CSRNumericTable
     for (row <- 0 until vectors.length) {
@@ -263,28 +262,20 @@ object OneDAL {
         // one-based indexValues
         columnIndices(indexValues) = column + 1
 
-        if (row > curRow) {
-          // multiple rows without non-zero elements
-          for (i <- 0 until (row-curRow).toInt) {
-            // one-based indexValues
-            rowOffsets += indexValues + 1
-          }
-          curRow = row
-        }
         indexValues = indexValues + 1
       }
+      // one-based row indexValues
+      rowOffsets += indexValues + 1
     }
-    // one-based row indexValues
-    rowOffsets += indexValues + 1
 
     val contextLocal = new DaalContext()
 
     // check CSR encoding
-    require(values.length == ratingsNum,
+    assert(values.length == ratingsNum,
       "the length of values should be equal to the number of non-zero elements")
-    require(columnIndices.length == ratingsNum,
+    assert(columnIndices.length == ratingsNum,
       "the length of columnIndices should be equal to the number of non-zero elements")
-    require(rowOffsets.size == (csrRowNum + 1),
+    assert(rowOffsets.size == (csrRowNum + 1),
       "the size of rowOffsets should be equal to the number of rows + 1")
 
     val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
