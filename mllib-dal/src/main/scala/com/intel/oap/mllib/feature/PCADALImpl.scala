@@ -116,12 +116,7 @@ class PCADALImpl(val k: Int,
     val data_numRows = table.getNumberOfRows.toInt
     val data_numCols = table.getNumberOfColumns.toInt
 
-    var dataDouble: DoubleBuffer = null
-    // returned DoubleBuffer is ByteByffer, need to copy as double array
-    dataDouble = table.getBlockOfRows(0, data_numRows, dataDouble)
-    val arrayDouble = new Array[Double](data_numRows * data_numCols)
-    dataDouble.get(arrayDouble)
-
+    val arrayDouble = getDoubleBufferDataFromDAL(table, data_numRows, data_numCols)
     val numRows = table.getNumberOfRows.toInt
 
     require(k <= numRows, "k should be less or equal to row number")
@@ -142,19 +137,28 @@ class PCADALImpl(val k: Int,
   }
 
   private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
-    val numCols = table_1xn.getNumberOfColumns.toInt
-
-    var dataDouble: DoubleBuffer = null
-    // returned DoubleBuffer is ByteByffer, need to copy as double array
-    dataDouble = table_1xn.getBlockOfRows(0, 1, dataDouble)
-    val arrayDouble = new Array[Double](numCols.toInt)
-    dataDouble.get(arrayDouble)
-
+    val data_numRows = table_1xn.getNumberOfRows.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, data_numRows, 1)
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
       topK(i) = topK(i) / sum
     new DenseVector(topK)
+  }
+
+  // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would be error on GPU,
+  // so use table.getBlockOfRows instead of it.
+  private def getDoubleBufferDataFromDAL(table: NumericTable,
+                                         numRows: Int,
+                                         numCols: Int): Array[Double] = {
+    var dataDouble: DoubleBuffer = null
+
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble: Array[Double] = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
+
+    arrayDouble
   }
 
   // Single entry to call Correlation PCA DAL backend with parameter K
