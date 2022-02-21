@@ -132,8 +132,8 @@ class PCADALImpl(val k: Int,
   }
 
   private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
-    val data_numRows = table_1xn.getNumberOfRows.toInt
-    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, data_numRows, 1)
+    val data_numCols = table_1xn.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, data_numCols)
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
