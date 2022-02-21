@@ -74,7 +74,6 @@ class PCADALImpl(val k: Int,
       )
 
       val ret = if (OneCCL.isRoot()) {
-
         val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeNumericTable(
           result.explainedVarianceNumericTable)
