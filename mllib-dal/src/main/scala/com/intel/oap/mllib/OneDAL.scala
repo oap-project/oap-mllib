@@ -237,7 +237,7 @@ object OneDAL {
   }
 
   def vectorsToSparseNumericTable(vectors: Array[Vector],
-                                          nFeatures: Long): CSRNumericTable = {
+                                  nFeatures: Long): CSRNumericTable = {
     require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
 
     println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
