@@ -241,8 +241,8 @@ object OneDAL {
     matrixLabel
   }
 
-  private def vectorsToSparseNumericTable(vectors: Array[Vector],
-                                          nFeatures: Long): CSRNumericTable = {
+  def vectorsToSparseNumericTable(vectors: Array[Vector],
+                                  nFeatures: Long): CSRNumericTable = {
     require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
 
     println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
@@ -255,10 +255,10 @@ object OneDAL {
     val columnIndices = Array.fill(ratingsNum) {
       0L
     }
+    // First row index is 1
     val rowOffsets = ArrayBuffer[Long](1L)
 
     var indexValues = 0
-    var curRow = 0L
 
     // Converted to one CSRNumericTable
     for (row <- 0 until vectors.length) {
@@ -268,19 +268,21 @@ object OneDAL {
         // one-based indexValues
         columnIndices(indexValues) = column + 1
 
-        if (row > curRow) {
-          curRow = row
-          // one-based indexValues
-          rowOffsets += indexValues + 1
-        }
-
         indexValues = indexValues + 1
       }
+      // one-based row indexValues
+      rowOffsets += indexValues + 1
     }
-    // one-based row indexValues
-    rowOffsets += indexValues + 1
 
     val contextLocal = new DaalContext()
+
+    // check CSR encoding
+    assert(values.length == ratingsNum,
+      "the length of values should be equal to the number of non-zero elements")
+    assert(columnIndices.length == ratingsNum,
+      "the length of columnIndices should be equal to the number of non-zero elements")
+    assert(rowOffsets.size == (csrRowNum + 1),
+      "the size of rowOffsets should be equal to the number of rows + 1")
 
     val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
       nFeatures, csrRowNum)
