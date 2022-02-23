@@ -250,7 +250,7 @@ object OneDAL {
     val columnIndices = Array.fill(ratingsNum) {
       0L
     }
-    val rowOffsets = ArrayBuffer[Long](1L)
+    val rowOffsets = ArrayBuffer[Long]()
 
     var indexValues = 0
 
