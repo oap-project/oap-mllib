@@ -25,12 +25,17 @@ import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import java.lang
-import java.nio.DoubleBuffer
+import java.nio.{ByteBuffer, ByteOrder, DoubleBuffer}
 import java.util.logging.{Level, Logger}
+
+import com.intel.oap.mllib.recommendation.ALSPartitionInfo
 
 import scala.collection.mutable.ArrayBuffer
 
 object OneDAL {
+
+  // Rating struct size is size of Long+Long+Float
+  val RATING_SIZE = 8 + 8 + 4
 
   LibLoader.loadLibraries()
 
@@ -322,6 +327,74 @@ object OneDAL {
     tables.count()
 
     tables
+  }
+
+  def bufferToCSRNumericTable(buffer: ByteBuffer, info: ALSPartitionInfo,
+                              nVectors: Int, nFeatures: Int,
+                              nBlocks: Int, rankId: Int): CSRNumericTable = {
+
+    // Use little endian
+    buffer.order(ByteOrder.LITTLE_ENDIAN)
+    println(s"nVectors : ${nVectors}; nFeatures : ${nFeatures}; " +
+      s"nBlocks : ${nBlocks}; rankId : ${rankId}")
+    val ratingsNum = info.ratingsNum
+    val csrRowNum = info.csrRowNum
+    println(s"ratingsNum : ${ratingsNum}; csrRowNum : ${csrRowNum}; ")
+    val values = Array.fill(ratingsNum) {
+      0.0f
+    }
+    val columnIndices = Array.fill(ratingsNum) {
+      0L
+    }
+    val rowOffsets = ArrayBuffer[Long](1L)
+
+    var index = 0
+    var curRow = 0L
+    // Each partition converted to one CSRNumericTable
+    for (i <- 0 until ratingsNum) {
+      // Modify row index for each partition (start from 0)
+      val row = buffer.getLong(i * RATING_SIZE) - getPartitionOffset(rankId, nFeatures, nBlocks)
+      val column = buffer.getLong(i * RATING_SIZE + 8)
+      val rating = buffer.getFloat(i * RATING_SIZE + 16)
+
+      values(index) = rating
+      // one-based index
+      columnIndices(index) = column + 1
+
+      if (row > curRow) {
+        // multiple rows without non-zero elements
+        for (i <- 0 until (row-curRow).toInt) {
+          // one-based indexValues
+          rowOffsets += index + 1
+        }
+        curRow = row
+      }
+
+      index = index + 1
+    }
+    // one-based row index
+    rowOffsets += index + 1
+
+    // check CSR encoding
+    assert(values.length == ratingsNum,
+      "the length of values should be equal to the number of non-zero elements")
+    assert(columnIndices.length == ratingsNum,
+      "the length of columnIndices should be equal to the number of non-zero elements")
+    assert(rowOffsets.size == (csrRowNum + 1),
+      "the size of rowOffsets should be equal to the number of rows + 1")
+
+    val contextLocal = new DaalContext()
+    val cTable = OneDAL.cNewCSRNumericTableFloat(values, columnIndices, rowOffsets.toArray,
+      nVectors, csrRowNum)
+    val table = new CSRNumericTable(contextLocal, cTable)
+
+    table
+  }
+
+  private def getPartitionOffset(partitionId: Int, nRatings: Int, nBlocks: Int): Int = {
+    require(partitionId >= 0 && partitionId < nBlocks)
+    val itemsInBlock = nRatings / nBlocks
+    partitionId * itemsInBlock
   }
 
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],

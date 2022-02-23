@@ -51,9 +51,6 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
                                                         seed: Long
                                                       ) extends Serializable with Logging {
 
-  // Rating struct size is size of Long+Long+Float
-  val RATING_SIZE = 8 + 8 + 4
-
   def train(): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
     val executorNum = Utils.sparkExecutorNum(data.sparkContext)
     val executorCores = Utils.sparkExecutorCores()
@@ -87,13 +84,14 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
         OneCCL.init(executorNum, rank, kvsIPPort)
         val rankId = OneCCL.rankID()
 
-        println("rankId", rankId, "nUsers", nVectors, "nItems", nFeatures)
+        println("rankId", rankId, "nVectors", nVectors, "nFeatures", nFeatures)
 
         val buffer = ratingsToByteBuffer(iter.toArray)
         val bufferInfo = new ALSPartitionInfo
         val shuffledBuffer = cShuffleData(buffer, nFeatures.toInt, nBlocks, bufferInfo)
+        println(s"ratingsNum : ${bufferInfo.ratingsNum}; csrRowNum : ${bufferInfo.csrRowNum}; ")
 
-        val table = bufferToCSRNumericTable(shuffledBuffer, bufferInfo,
+        val table = OneDAL.bufferToCSRNumericTable(shuffledBuffer, bufferInfo,
           nVectors.toInt, nFeatures.toInt, nBlocks, rankId)
 
         val result = new ALSResult()
@@ -166,60 +164,6 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
       buffer.putFloat(rating.rating)
     }
     buffer
-  }
-
-  private def bufferToCSRNumericTable(buffer: ByteBuffer, info: ALSPartitionInfo,
-                                      nVectors: Int, nFeatures: Int,
-                                      nBlocks: Int, rankId: Int): CSRNumericTable = {
-    // Use little endian
-    buffer.order(ByteOrder.LITTLE_ENDIAN)
-
-    val ratingsNum = info.ratingsNum
-    val csrRowNum = info.csrRowNum
-    val values = Array.fill(ratingsNum) {
-      0.0f
-    }
-    val columnIndices = Array.fill(ratingsNum) {
-      0L
-    }
-    val rowOffsets = ArrayBuffer[Long](1L)
-
-    var index = 0
-    var curRow = 0L
-    // Each partition converted to one CSRNumericTable
-    for (i <- 0 until ratingsNum) {
-      // Modify row index for each partition (start from 0)
-      val row = buffer.getLong(i * RATING_SIZE) - getPartitionOffset(rankId, nFeatures, nBlocks)
-      val column = buffer.getLong(i * RATING_SIZE + 8)
-      val rating = buffer.getFloat(i * RATING_SIZE + 16)
-
-      values(index) = rating
-      // one-based index
-      columnIndices(index) = column + 1
-
-      if (row > curRow) {
-        curRow = row
-        // one-based index
-        rowOffsets += index + 1
-      }
-
-      index = index + 1
-    }
-    // one-based row index
-    rowOffsets += index + 1
-
-    val contextLocal = new DaalContext()
-    val cTable = OneDAL.cNewCSRNumericTableFloat(values, columnIndices, rowOffsets.toArray,
-      nVectors, csrRowNum)
-    val table = new CSRNumericTable(contextLocal, cTable)
-
-    table
-  }
-
-  private def getPartitionOffset(partitionId: Int, nRatings: Int, nBlocks: Int): Int = {
-    require(partitionId >= 0 && partitionId < nBlocks)
-    val itemsInBlock = nRatings / nBlocks
-    return partitionId * itemsInBlock
   }
 
   // Return Map partitionId -> (ratingsNum, csrRowNum, rowOffset)
