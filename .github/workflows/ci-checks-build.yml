@@ -31,8 +31,8 @@ jobs:
           cd ${{github.workspace}}/mllib-dal
           ${{github.workspace}}/dev/code-checks/lint-java.sh
 
-  code-checks-cpp:
-    name: Code Checks for Java
+  code-checks-c++:
+    name: Code Checks for C++
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
