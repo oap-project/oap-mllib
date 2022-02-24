@@ -21,6 +21,8 @@ if [ -z $CLANG_FORMAT ]; then
     exit 1
 fi
 
+echo Using clang-format ($CLANG_FORMAT) version $(clang-format --version) ...
+
 if [ ! -f .clang-format ]; then
     echo .clang-format is not found in current directory, please generate it.
     exit 1
