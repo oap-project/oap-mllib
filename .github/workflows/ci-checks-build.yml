@@ -36,11 +36,14 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format-10
       - name: Check C++ code
         run: |
           cd ${{github.workspace}}/mllib-dal/src/main/native
           ${{github.workspace}}/dev/code-checks/lint-cpp.sh
-
 
   code-build:
     name: Code Build
