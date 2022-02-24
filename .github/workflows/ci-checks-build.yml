@@ -1,4 +1,4 @@
-name: OAP MLlib Code Checks and Build
+name: OAP MLlib Checks and Build
 
 on: [push, pull_request]
 
