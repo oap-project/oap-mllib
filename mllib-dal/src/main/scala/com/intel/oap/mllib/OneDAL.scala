@@ -331,17 +331,15 @@ object OneDAL {
     tables
   }
 
-  def bufferToCSRNumericTable(buffer: ByteBuffer, info: ALSPartitionInfo,
-                              nVectors: Int, nFeatures: Int,
-                              nBlocks: Int, rankId: Int): CSRNumericTable = {
+  private def bufferToCSRNumericTable(buffer: ByteBuffer, info: ALSPartitionInfo,
+                                      nVectors: Int, nFeatures: Int,
+                                      nBlocks: Int, rankId: Int): CSRNumericTable = {
 
     // Use little endian
     buffer.order(ByteOrder.LITTLE_ENDIAN)
-    println(s"nVectors : ${nVectors}; nFeatures : ${nFeatures}; " +
-      s"nBlocks : ${nBlocks}; rankId : ${rankId}")
+
     val ratingsNum = info.ratingsNum
     val csrRowNum = info.csrRowNum
-    println(s"ratingsNum : ${ratingsNum}; csrRowNum : ${csrRowNum}; ")
     val values = Array.fill(ratingsNum) {
       0.0f
     }
