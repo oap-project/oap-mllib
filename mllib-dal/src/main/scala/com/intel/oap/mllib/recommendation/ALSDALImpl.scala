@@ -198,15 +198,26 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
       columnIndices(index) = column + 1
 
       if (row > curRow) {
+        // multiple rows without non-zero elements
+        for (i <- 0 until (row-curRow).toInt) {
+          // one-based indexValues
+          rowOffsets += index + 1
+        }
         curRow = row
-        // one-based index
-        rowOffsets += index + 1
       }
 
       index = index + 1
     }
     // one-based row index
     rowOffsets += index + 1
+
+    // check CSR encoding
+    assert(values.length == ratingsNum,
+      "the length of values should be equal to the number of non-zero elements")
+    assert(columnIndices.length == ratingsNum,
+      "the length of columnIndices should be equal to the number of non-zero elements")
+    assert(rowOffsets.size == (csrRowNum + 1),
+      "the size of rowOffsets should be equal to the number of rows + 1")
 
     val contextLocal = new DaalContext()
     val cTable = OneDAL.cNewCSRNumericTableFloat(values, columnIndices, rowOffsets.toArray,
