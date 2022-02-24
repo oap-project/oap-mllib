@@ -25,4 +25,4 @@ jobs:
             ${{ runner.os }}-
       - name: Build Test for CPU and GPU
         run: |
-          ${{github.workspace}}/dev/ci-build-test.sh
+          ${{github.workspace}}/dev/ci/ci-build-test.sh

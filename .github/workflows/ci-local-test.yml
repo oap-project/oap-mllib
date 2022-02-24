@@ -25,4 +25,4 @@ jobs:
             ${{ runner.os }}-
       - name: Local Test
         run: |
-          ${{github.workspace}}/dev/ci-local-test.sh
+          ${{github.workspace}}/dev/ci/ci-local-test.sh

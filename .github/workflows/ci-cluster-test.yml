@@ -25,4 +25,4 @@ jobs:
             ${{ runner.os }}-
       - name: Cluster Test
         run: |
-          ${{github.workspace}}/dev/ci-cluster-test.sh
+          ${{github.workspace}}/dev/ci/ci-cluster-test.sh
