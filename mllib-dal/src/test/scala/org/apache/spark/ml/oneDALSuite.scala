@@ -54,17 +54,4 @@ class oneDALSuite extends FunctionsSuite with Logging {
 
     assert((resultMatrix.toArray sameElements matrix.toArray) === true)
   }
-
-  test("test buffer to CSRNumericTable") {
-    val data = Seq(
-      Rating(0, 17, 0.938283.toFloat),
-      Rating(1, 1, 0.124207.toFloat),
-      Rating(1, 8, 0.411504.toFloat),
-      //      Rating(),
-      //      Rating(),
-      Rating(1, 8, 0.411504.toFloat),
-      Rating(0, 17, 0.938283.toFloat),
-      Rating(1, 13, 0.746992.toFloat),
-    )
-  }
 }
