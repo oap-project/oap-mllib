@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   local-test:
-    name: Local Test for all unit tests
+    name: Local Test for Units
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
           ${{github.workspace}}/dev/ci/ci-local-test.sh
 
   cluster-test:
-    name: Cluster Test for all examples
+    name: Cluster Test for Examples
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
