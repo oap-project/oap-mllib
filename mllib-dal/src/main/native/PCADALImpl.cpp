@@ -51,7 +51,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
     std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "covariance (native): local step took " << duration << " secs"
+    std::cout << "Covariance (native): local step took " << duration << " secs"
              << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
@@ -112,7 +112,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "covariance (native): master step took " << duration << " secs"
+        std::cout << "Covariance (native): master step took " << duration << " secs"
                << std::endl;
 
         t1 = std::chrono::high_resolution_clock::now();
