@@ -78,7 +78,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
     duration =
        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "covariance (native): gather to master took " << duration << " secs"
+    std::cout << "Covariance (native): gather to master took " << duration << " secs"
              << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
