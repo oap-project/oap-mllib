@@ -33,8 +33,8 @@ using namespace daal::services;
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
-                        ccl::communicator &comm, NumericTablePtr &pData,
-                        int nBlocks, jobject resultObj) {
+                            ccl::communicator &comm, NumericTablePtr &pData,
+                            int nBlocks, jobject resultObj) {
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -50,7 +50,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-       std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     std::cout << "covariance (native): local step took " << duration << " secs"
              << std::endl;
 
@@ -68,7 +68,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
     byte *nodeResults = new byte[perNodeArchLength];
     dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
     std::vector<size_t> aReceiveCount(comm.size(),
-                                     perNodeArchLength); // 4 x "14016"
+                                     perNodeArchLength);
 
     /* Transfer partial results to step 2 on the root node */
     ccl::gather((int8_t *)nodeResults, perNodeArchLength,
@@ -78,7 +78,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
     duration =
        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "covariance (native): ccl_allgatherv took " << duration << " secs"
+    std::cout << "covariance (native): gather to master took " << duration << " secs"
              << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -117,7 +117,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
         t1 = std::chrono::high_resolution_clock::now();
 
-        /*Create an algorithm for principal component analysis using the correlation method*/
+        /* Create an algorithm for principal component analysis using the correlation method*/
         pca::Batch<algorithmFPType> algorithm;
 
         /* Set the algorithm input data*/
@@ -136,11 +136,11 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
         /* Print the results */
         pca::ResultPtr result = algorithm.getResult();
         printNumericTable(result->get(pca::eigenvalues),
-                        "First 10 eigenvalues with first 20 dimensions:", 10,
-                        20);
+                          "First 10 eigenvalues with first 20 dimensions:", 10,
+                          20);
         printNumericTable(result->get(pca::eigenvectors),
-                        "First 10 eigenvectors with first 20 dimensions:", 10,
-                        20);
+                          "First 10 eigenvectors with first 20 dimensions:", 10,
+                          20);
 
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
@@ -174,8 +174,6 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     const size_t nBlocks = executor_num;
 
     NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-    // Source data already normalized
-    pData->setNormalizationFlag(NumericTableIface::standardScoreNormalized);
 
 #ifdef CPU_GPU_PROFILE
     if (use_gpu) {

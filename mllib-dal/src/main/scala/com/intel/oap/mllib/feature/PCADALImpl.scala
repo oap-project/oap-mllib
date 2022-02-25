@@ -42,9 +42,7 @@ class PCADALImpl(val k: Int,
 
   def train(data: RDD[Vector]): PCADALModel = {
 
-    val normalizedData = normalizeData(data)
-
-    val coalescedTables = OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
+    val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
@@ -103,14 +101,6 @@ class PCADALImpl(val k: Int,
     parentModel
   }
 
-  // Normalize data before training
-  private def normalizeData(input: RDD[Vector]): RDD[Vector] = {
-    val vectors = input.map(OldVectors.fromML(_))
-    val scaler = new MLlibStandardScaler(withMean = true, withStd = false).fit(vectors)
-    val res = scaler.transform(vectors)
-    res.map(_.asML)
-  }
-
   private def getPrincipleComponentsFromDAL(table: NumericTable, k: Int): DenseMatrix = {
     val numRows = table.getNumberOfRows.toInt
     val numCols = table.getNumberOfColumns.toInt
@@ -120,20 +110,11 @@ class PCADALImpl(val k: Int,
 
     // Column-major, transpose of top K rows of NumericTable
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
-//    val result = DenseMatrix.zeros(numCols, k)
-//
-//    for (row <- 0 until k) {
-//      for (col <- 0 until numCols) {
-//        result(col, row) = data(row * numCols + col)
-//      }
-//    }
-//
-//    result
   }
 
   private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
-    val data_numCols = table_1xn.getNumberOfColumns.toInt
-    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, data_numCols)
+    val dataNumCols = table_1xn.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, dataNumCols)
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)

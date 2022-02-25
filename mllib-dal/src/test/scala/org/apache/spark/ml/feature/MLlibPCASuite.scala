@@ -17,12 +17,13 @@
 
 package org.apache.spark.ml.feature
 
-import org.apache.spark.ml.linalg._
+import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrices, Vector, Vectors}
 import org.apache.spark.ml.param.ParamsSuite
 import org.apache.spark.ml.util.TestingUtils._
-import org.apache.spark.ml.util.{DefaultReadWriteTest, MLTest}
+import org.apache.spark.ml.util.{DefaultReadWriteTest, MLTest, MLTestingUtils}
 import org.apache.spark.mllib.linalg.distributed.RowMatrix
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
+import org.apache.spark.sql.Row
 
 class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
 
@@ -80,10 +81,14 @@ class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
       // use absolute value to compare due to sign flip
       val resultVec = Vectors.dense(elem._1.toArray.map(math.abs(_)))
       val expectedVec = Vectors.dense(elem._2.toArray.map(math.abs(_)))
+      println(resultVec.toArray.toList.toString())
+      println(expectedVec.toArray.toList.toString())
+
       // Compare pc only for large enough explained variance
       if (expectedVariance(index) > 1e-5)
         assert(resultVec ~== expectedVec absTol 1e-5,
           "Principle components result (absolute value) is different with expected one.")
+        println(expectedVariance(index))
     }
   }
 
@@ -101,5 +106,83 @@ class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
       Vectors.dense(0.5, 0.5).asInstanceOf[DenseVector])
     val newInstance = testDefaultReadWrite(instance)
     assert(newInstance.pc === instance.pc)
+  }
+
+  test("normalized data") {
+    val norData = Seq(
+      Vectors.dense(-2.0,0.6666666666666667,-1.0,1.333333333333333,-4.0),
+      Vectors.dense(0.0,-0.3333333333333333,2.0,-1.666666666666667,1.0),
+      Vectors.dense(2.0,-0.3333333333333333,-1.0,0.33333333333333304,3.0),
+    )
+
+    val k = 2
+    val nordataRDD = sc.parallelize(norData, 2)
+
+    val mat = new RowMatrix(nordataRDD.map(OldVectors.fromML))
+    val pc = mat.computePrincipalComponents(k)
+    val expected = mat.multiply(pc).rows.map(_.asML)
+
+    val df = nordataRDD.zip(expected).toDF("features", "expected")
+
+    val pca = new PCA()
+      .setInputCol("features")
+      .setOutputCol("pcaFeatures")
+      .setK(k)
+
+    val training_df = df.select("features")
+    val pcaModel = pca.fit(training_df)
+    val transformed = pcaModel.transform(training_df)
+    transformed.show(false)
+    checkVectorSizeOnDF(transformed, "pcaFeatures", pcaModel.getK)
+
+    MLTestingUtils.checkCopyAndUids(pca, pcaModel)
+    testTransformer[(Vector, Vector)](df, pcaModel, "pcaFeatures", "expected") {
+      case Row(result: Vector, expected: Vector) =>
+        val newResultABS = result.toArray.map(f => f.abs)
+        val newExpectedABS = expected.toArray.map(f => f.abs )
+        val newResult = Vectors.dense(newResultABS)
+        val newExpected = Vectors.dense(newExpectedABS)
+        assert(newResult ~== newExpected absTol 1e-5,
+          "Transformed vector is different with expected vector.")
+    }
+  }
+
+  test("unnormalized data") {
+    val data = Array(
+      Vectors.sparse(5, Seq((1, 1.0), (3, 7.0))),
+      Vectors.dense(2.0, 0.0, 3.0, 4.0, 5.0),
+      Vectors.dense(4.0, 0.0, 0.0, 6.0, 7.0)
+    )
+    val k = 2
+
+    val dataRDD = sc.parallelize(data, 2)
+
+    val mat = new RowMatrix(dataRDD.map(OldVectors.fromML))
+    val pc = mat.computePrincipalComponents(k)
+    val expected = mat.multiply(pc).rows.map(_.asML)
+
+    val df = dataRDD.zip(expected).toDF("features", "expected")
+    df.show(false)
+    val training_df = df.select("features")
+    val pca = new PCA()
+      .setInputCol("features")
+      .setOutputCol("pcaFeatures")
+      .setK(k)
+
+    val pcaModel = pca.fit(training_df)
+    val transformed = pcaModel.transform(training_df)
+    transformed.show(false)
+    checkVectorSizeOnDF(transformed, "pcaFeatures", pcaModel.getK)
+
+    MLTestingUtils.checkCopyAndUids(pca, pcaModel)
+    testTransformer[(Vector, Vector)](df, pcaModel, "pcaFeatures", "expected") {
+      case Row(result: Vector, expected: Vector) =>
+        val newResultABS = result.toArray.map(f => f.abs)
+        val newExpectedABS = expected.toArray.map(f => f.abs )
+        val newResult = Vectors.dense(newResultABS)
+        val newExpected = Vectors.dense(newExpectedABS)
+        assert(newResult ~== newExpected absTol 1e-5,
+          "Transformed vector is different with expected vector.")
+    }
   }
 }
