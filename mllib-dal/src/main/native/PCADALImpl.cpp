@@ -45,13 +45,13 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
     /* Set the input data set to the algorithm */
     localAlgorithm.input.set(covariance::data, pData);
 
-    /* Compute covariance */
+    /* Compute covariance for PCA*/
     localAlgorithm.compute();
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
     std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "covariance (native): local step took " << duration << " secs"
+    std::cout << " PCA (native): Covariance local step took " << duration << " secs"
              << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
@@ -78,7 +78,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
     duration =
        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "covariance (native): gather to master took " << duration << " secs"
+    std::cout << "PCA (native): Covariance gather to master took " << duration << " secs"
              << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -112,7 +112,7 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "covariance (native): master step took " << duration << " secs"
+        std::cout << "PCA (native): Covariance master step took " << duration << " secs"
                << std::endl;
 
         t1 = std::chrono::high_resolution_clock::now();
