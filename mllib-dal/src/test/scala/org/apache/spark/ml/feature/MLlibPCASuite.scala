@@ -81,8 +81,6 @@ class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
       // use absolute value to compare due to sign flip
       val resultVec = Vectors.dense(elem._1.toArray.map(math.abs(_)))
       val expectedVec = Vectors.dense(elem._2.toArray.map(math.abs(_)))
-      println(resultVec.toArray.toList.toString())
-      println(expectedVec.toArray.toList.toString())
 
       // Compare pc only for large enough explained variance
       if (expectedVariance(index) > 1e-5)
