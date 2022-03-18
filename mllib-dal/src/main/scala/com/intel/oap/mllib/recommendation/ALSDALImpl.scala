@@ -198,8 +198,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
       columnIndices(index) = column + 1
 
       if (row > curRow) {
-        // multiple rows without non-zero elements
-        for (i <- 0 until (row-curRow).toInt) {
+        // multiple rows with zero elements
+        for (i <- 0 until (row - curRow).toInt) {
           // one-based indexValues
           rowOffsets += index + 1
         }
