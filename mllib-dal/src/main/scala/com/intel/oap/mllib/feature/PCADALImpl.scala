@@ -16,6 +16,8 @@
 
 package com.intel.oap.mllib.feature
 
+import java.nio.DoubleBuffer
+
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
@@ -24,9 +26,8 @@ import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
-import org.apache.spark.mllib.linalg.{DenseVector => OldDenseVector, DenseMatrix => OldDenseMatrix, Vectors => OldVectors}
+import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, DenseVector => OldDenseVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
-
 import java.util.Arrays
 
 class PCADALModel private[mllib] (
@@ -41,9 +42,7 @@ class PCADALImpl(val k: Int,
 
   def train(data: RDD[Vector]): PCADALModel = {
 
-    val normalizedData = normalizeData(data)
-
-    val coalescedTables = OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
+    val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
@@ -73,11 +72,9 @@ class PCADALImpl(val k: Int,
       )
 
       val ret = if (OneCCL.isRoot()) {
-
         val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeNumericTable(
           result.explainedVarianceNumericTable)
-
         val principleComponents = getPrincipleComponentsFromDAL(pcNumericTable, k)
         val explainedVariance = getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
 
@@ -96,7 +93,6 @@ class PCADALImpl(val k: Int,
 
     val pc = results(0)._1
     val explainedVariance = results(0)._2
-
     val parentModel = new PCADALModel(k,
       OldDenseMatrix.fromML(pc),
       OldVectors.fromML(explainedVariance).toDense
@@ -105,44 +101,40 @@ class PCADALImpl(val k: Int,
     parentModel
   }
 
-  // Normalize data before training
-  private def normalizeData(input: RDD[Vector]): RDD[Vector] = {
-    val vectors = input.map(OldVectors.fromML(_))
-    val scaler = new MLlibStandardScaler(withMean = true, withStd = false).fit(vectors)
-    val res = scaler.transform(vectors)
-    res.map(_.asML)
-  }
-
   private def getPrincipleComponentsFromDAL(table: NumericTable, k: Int): DenseMatrix = {
-    val data = table.asInstanceOf[HomogenNumericTable].getDoubleArray()
-
     val numRows = table.getNumberOfRows.toInt
-
+    val numCols = table.getNumberOfColumns.toInt
     require(k <= numRows, "k should be less or equal to row number")
 
-    val numCols = table.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, numCols)
 
     // Column-major, transpose of top K rows of NumericTable
-    new DenseMatrix(numCols, k, data.slice(0, numCols * k), false)
-
-//    val result = DenseMatrix.zeros(numCols, k)
-//
-//    for (row <- 0 until k) {
-//      for (col <- 0 until numCols) {
-//        result(col, row) = data(row * numCols + col)
-//      }
-//    }
-//
-//    result
+    new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
   }
 
   private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
-    val data = table_1xn.asInstanceOf[HomogenNumericTable].getDoubleArray()
-    val sum = data.sum
-    val topK = Arrays.copyOfRange(data, 0, k)
+    val dataNumCols = table_1xn.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, dataNumCols)
+    val sum = arrayDouble.sum
+    val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
       topK(i) = topK(i) / sum
     new DenseVector(topK)
+  }
+
+  // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
+  // so use table.getBlockOfRows instead of it.
+  private def getDoubleBufferDataFromDAL(table: NumericTable,
+                                         numRows: Int,
+                                         numCols: Int): Array[Double] = {
+    var dataDouble: DoubleBuffer = null
+
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble: Array[Double] = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
+
+    arrayDouble
   }
 
   // Single entry to call Correlation PCA DAL backend with parameter K
