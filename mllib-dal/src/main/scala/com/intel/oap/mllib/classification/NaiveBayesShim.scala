@@ -31,7 +31,7 @@ trait NaiveBayesShim extends Logging {
 object NaiveBayesShim extends Logging {
   def create(uid: String): NaiveBayesShim = {
     logInfo(s"Loading NaiveBayes for Spark $SPARK_VERSION")
-    val shim = SPARK_VERSION match {
+    val shim = SPARK_VERSION.substring(0, 5) match {
       case "3.1.1" | "3.1.2" | "3.2.0" => new NaiveBayesSpark320(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
