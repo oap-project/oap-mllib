@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.feature
 
 import com.intel.oap.mllib.feature.PCAShim
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml._
 import org.apache.spark.ml.param._
@@ -30,9 +33,10 @@ import org.apache.spark.sql.types.StructType
  * principal components.
  */
 @Since("1.5.0")
-class PCA @Since("1.5.0") (
-    @Since("1.5.0") override val uid: String)
-  extends Estimator[PCAModel] with PCAParams with DefaultParamsWritable {
+class PCA @Since("1.5.0")(@Since("1.5.0") override val uid: String)
+    extends Estimator[PCAModel]
+    with PCAParams
+    with DefaultParamsWritable {
 
   @Since("1.5.0")
   def this() = this(Identifiable.randomUID("pca"))

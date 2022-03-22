@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
+
 package org.apache.spark.ml.optim.aggregator
 
 import org.apache.spark.broadcast.Broadcast
@@ -159,9 +162,11 @@ private[ml] class LeastSquaresAggregator(
     fitIntercept: Boolean,
     bcFeaturesStd: Broadcast[Array[Double]],
     bcFeaturesMean: Broadcast[Array[Double]])(bcCoefficients: Broadcast[Vector])
-  extends DifferentiableLossAggregator[Instance, LeastSquaresAggregator] {
-  require(labelStd > 0.0, s"${this.getClass.getName} requires the label standard " +
-    s"deviation to be positive.")
+    extends DifferentiableLossAggregator[Instance, LeastSquaresAggregator] {
+  require(
+    labelStd > 0.0,
+    s"${this.getClass.getName} requires the label standard " +
+      s"deviation to be positive.")
 
   private val numFeatures = bcFeaturesStd.value.length
   protected override val dim: Int = numFeatures
@@ -175,7 +180,7 @@ private[ml] class LeastSquaresAggregator(
     val len = coefficientsArray.length
     while (i < len) {
       if (featuresStd(i) != 0.0) {
-        coefficientsArray(i) /=  featuresStd(i)
+        coefficientsArray(i) /= featuresStd(i)
         sum += coefficientsArray(i) * featuresMean(i)
       } else {
         coefficientsArray(i) = 0.0
@@ -197,32 +202,34 @@ private[ml] class LeastSquaresAggregator(
    * @return This LeastSquaresAggregator object.
    */
   def add(instance: Instance): LeastSquaresAggregator = {
-    instance match { case Instance(label, weight, features) =>
-      require(numFeatures == features.size, s"Dimensions mismatch when adding new sample." +
-        s" Expecting $numFeatures but got ${features.size}.")
-      require(weight >= 0.0, s"instance weight, $weight has to be >= 0.0")
+    instance match {
+      case Instance(label, weight, features) =>
+        require(
+          numFeatures == features.size,
+          s"Dimensions mismatch when adding new sample." +
+            s" Expecting $numFeatures but got ${features.size}.")
+        require(weight >= 0.0, s"instance weight, $weight has to be >= 0.0")
 
-      if (weight == 0.0) return this
+        if (weight == 0.0) return this
 
-      val diff = BLAS.dot(features, effectiveCoefficientsVector) - label / labelStd + offset
+        val diff = BLAS.dot(features, effectiveCoefficientsVector) - label / labelStd + offset
 
-      if (diff != 0) {
-        val localGradientSumArray = gradientSumArray
-        val localFeaturesStd = featuresStd
-        features.foreachNonZero { (index, value) =>
-          val fStd = localFeaturesStd(index)
-          if (fStd != 0.0) {
-            localGradientSumArray(index) += weight * diff * value / fStd
+        if (diff != 0) {
+          val localGradientSumArray = gradientSumArray
+          val localFeaturesStd = featuresStd
+          features.foreachNonZero { (index, value) =>
+            val fStd = localFeaturesStd(index)
+            if (fStd != 0.0) {
+              localGradientSumArray(index) += weight * diff * value / fStd
+            }
           }
+          lossSum += weight * diff * diff / 2.0
         }
-        lossSum += weight * diff * diff / 2.0
-      }
-      weightSum += weight
-      this
+        weightSum += weight
+        this
     }
   }
 }
-
 
 /**
  * BlockLeastSquaresAggregator computes the gradient and loss for LeastSquares loss function
@@ -242,9 +249,11 @@ private[ml] class BlockLeastSquaresAggregator(
     fitIntercept: Boolean,
     bcFeaturesStd: Broadcast[Array[Double]],
     bcFeaturesMean: Broadcast[Array[Double]])(bcCoefficients: Broadcast[Vector])
-  extends DifferentiableLossAggregator[InstanceBlock, BlockLeastSquaresAggregator] {
-  require(labelStd > 0.0, s"${this.getClass.getName} requires the label standard " +
-    s"deviation to be positive.")
+    extends DifferentiableLossAggregator[InstanceBlock, BlockLeastSquaresAggregator] {
+  require(
+    labelStd > 0.0,
+    s"${this.getClass.getName} requires the label standard " +
+      s"deviation to be positive.")
 
   private val numFeatures = bcFeaturesStd.value.length
   protected override val dim: Int = numFeatures
@@ -277,9 +286,12 @@ private[ml] class BlockLeastSquaresAggregator(
    */
   def add(block: InstanceBlock): BlockLeastSquaresAggregator = {
     require(block.matrix.isTransposed)
-    require(numFeatures == block.numFeatures, s"Dimensions mismatch when adding new " +
-      s"instance. Expecting $numFeatures but got ${block.numFeatures}.")
-    require(block.weightIter.forall(_ >= 0),
+    require(
+      numFeatures == block.numFeatures,
+      s"Dimensions mismatch when adding new " +
+        s"instance. Expecting $numFeatures but got ${block.numFeatures}.")
+    require(
+      block.weightIter.forall(_ >= 0),
       s"instance weights ${block.weightIter.mkString("[", ",", "]")} has to be >= 0.0")
 
     if (block.weightIter.forall(_ == 0)) return this

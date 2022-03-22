@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.classification
 
 import com.intel.oap.mllib.classification.NaiveBayesShim
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.param.ParamMap
@@ -48,10 +51,10 @@ import org.apache.spark.sql.Dataset
  */
 // scalastyle:on line.size.limit
 @Since("1.5.0")
-class NaiveBayes @Since("1.5.0") (
-    @Since("1.5.0") override val uid: String)
-  extends ProbabilisticClassifier[Vector, NaiveBayes, NaiveBayesModel]
-  with NaiveBayesParams with DefaultParamsWritable {
+class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
+    extends ProbabilisticClassifier[Vector, NaiveBayes, NaiveBayesModel]
+    with NaiveBayesParams
+    with DefaultParamsWritable {
 
   import NaiveBayes._
 
@@ -99,6 +102,7 @@ class NaiveBayes @Since("1.5.0") (
 
 @Since("1.6.0")
 object NaiveBayes extends DefaultParamsReadable[NaiveBayes] {
+
   /** String name for multinomial model type. */
   private[classification] val Multinomial: String = "multinomial"
 
@@ -116,12 +120,14 @@ object NaiveBayes extends DefaultParamsReadable[NaiveBayes] {
     Set(Multinomial, Bernoulli, Gaussian, Complement)
 
   private[ml] def requireNonnegativeValues(v: Vector): Unit = {
-    require(v.nonZeroIterator.forall(_._2 > 0.0),
+    require(
+      v.nonZeroIterator.forall(_._2 > 0.0),
       s"Naive Bayes requires nonnegative feature values but found $v.")
   }
 
   private[ml] def requireZeroOneBernoulliValues(v: Vector): Unit = {
-    require(v.nonZeroIterator.forall(_._2 == 1.0),
+    require(
+      v.nonZeroIterator.forall(_._2 == 1.0),
       s"Bernoulli naive Bayes requires 0 or 1 feature values but found $v.")
   }
 

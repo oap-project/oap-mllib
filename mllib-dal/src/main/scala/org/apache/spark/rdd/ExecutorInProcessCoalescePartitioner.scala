@@ -1,11 +1,13 @@
+// scalastyle:off
 /*
- * Copyright 2020 Intel Corporation
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.rdd
 
@@ -22,8 +25,7 @@ import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.{Partition, SparkException}
 import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 
-class ExecutorInProcessCoalescePartitioner
-  extends PartitionCoalescer with Serializable {
+class ExecutorInProcessCoalescePartitioner extends PartitionCoalescer with Serializable {
 
   def coalesce(maxPartitions: Int, prev: RDD[_]): Array[PartitionGroup] = {
     val map = new mutable.HashMap[String, mutable.HashSet[Partition]]()
@@ -31,12 +33,12 @@ class ExecutorInProcessCoalescePartitioner
     prev.partitions.foreach(p => {
       val loc = prev.context.getPreferredLocs(prev, p.index)
       loc.foreach {
-        case location : ExecutorCacheTaskLocation =>
+        case location: ExecutorCacheTaskLocation =>
           val execLoc = "executor_" + location.host + "_" + location.executorId
           val partValue = map.getOrElse(execLoc, new mutable.HashSet[Partition]())
           partValue.add(p)
           map.put(execLoc, partValue)
-        case _ : TaskLocation =>
+        case _: TaskLocation =>
           throw new SparkException("ExecutorInProcessCoalescePartitioner: Invalid task location!")
       }
     })
