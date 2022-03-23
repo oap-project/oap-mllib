@@ -186,6 +186,95 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
   }
 
   /**
+   * Initializes factors randomly given the in-link blocks.
+   *
+   * @param inBlocks in-link blocks
+   * @param rank rank
+   * @return initialized factor blocks
+   */
+  private def initialize[ID](
+      inBlocks: RDD[(Int, InBlock[ID])],
+      rank: Int,
+      seed: Long): RDD[(Int, FactorBlock)] = {
+    // Choose a unit vector uniformly at random from the unit sphere, but from the
+    // "first quadrant" where all elements are nonnegative. This can be done by choosing
+    // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
+    // This appears to create factorizations that have a slightly better reconstruction
+    // (<1%) compared picking elements uniformly at random in [0,1].
+    inBlocks.mapPartitions({ iter =>
+      iter.map {
+        case (srcBlockId, inBlock) =>
+          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
+          val factors = Array.fill(inBlock.srcIds.length) {
+            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
+            val nrm = blas.snrm2(rank, factor, 1)
+            blas.sscal(rank, 1.0f / nrm, factor, 1)
+            factor
+          }
+          (srcBlockId, factors)
+      }
+    }, preservesPartitioning = true)
+  }
+
+  /**
+   * Groups an RDD of [[Rating]]s by the user partition and item partition to which each `Rating`
+   * maps according to the given partitioners.  The returned pair RDD holds the ratings, encoded in
+   * a memory-efficient format but otherwise unchanged, keyed by the (user partition ID, item
+   * partition ID) pair.
+   *
+   * Performance note: This is an expensive operation that performs an RDD shuffle.
+   *
+   * Implementation note: This implementation produces the same result as the following but
+   * generates fewer intermediate objects:
+   *
+   * {{{
+   *     ratings.map { r =>
+   *       ((srcPart.getPartition(r.user), dstPart.getPartition(r.item)), r)
+   *     }.aggregateByKey(new RatingBlockBuilder)(
+   *         seqOp = (b, r) => b.add(r),
+   *         combOp = (b0, b1) => b0.merge(b1.build()))
+   *       .mapValues(_.build())
+   * }}}
+   *
+   * @param ratings raw ratings
+   * @param srcPart partitioner for src IDs
+   * @param dstPart partitioner for dst IDs
+   * @return an RDD of rating blocks in the form of ((srcBlockId, dstBlockId), ratingBlock)
+   */
+  private def partitionRatings[ID: ClassTag](
+      ratings: RDD[Rating[ID]],
+      srcPart: Partitioner,
+      dstPart: Partitioner): RDD[((Int, Int), RatingBlock[ID])] = {
+    val numPartitions = srcPart.numPartitions * dstPart.numPartitions
+    ratings.mapPartitions { iter =>
+      val builders = Array.fill(numPartitions)(new RatingBlockBuilder[ID])
+      iter.flatMap { r =>
+        val srcBlockId = srcPart.getPartition(r.user)
+        val dstBlockId = dstPart.getPartition(r.item)
+        val idx = srcBlockId + srcPart.numPartitions * dstBlockId
+        val builder = builders(idx)
+        builder.add(r)
+        if (builder.size >= 2048) { // 2048 * (3 * 4) = 24k
+          builders(idx) = new RatingBlockBuilder
+          Iterator.single(((srcBlockId, dstBlockId), builder.build()))
+        } else {
+          Iterator.empty
+        }
+      } ++ {
+        builders.iterator.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
+          val srcBlockId = idx % srcPart.numPartitions
+          val dstBlockId = idx / srcPart.numPartitions
+          ((srcBlockId, dstBlockId), block.build())
+        }
+      }
+    }.groupByKey().mapValues { blocks =>
+      val builder = new RatingBlockBuilder[ID]
+      blocks.foreach(builder.merge)
+      builder.build()
+    }.setName("ratingBlocks")
+  }
+
+  /**
    * Implementation of the ALS algorithm.
    *
    * This implementation of the ALS factorization algorithm partitions the two sets of factors among
@@ -351,95 +440,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       itemInBlocks.unpersist()
     }
     (userIdAndFactors, itemIdAndFactors)
-  }
-
-  /**
-   * Initializes factors randomly given the in-link blocks.
-   *
-   * @param inBlocks in-link blocks
-   * @param rank rank
-   * @return initialized factor blocks
-   */
-  private def initialize[ID](
-      inBlocks: RDD[(Int, InBlock[ID])],
-      rank: Int,
-      seed: Long): RDD[(Int, FactorBlock)] = {
-    // Choose a unit vector uniformly at random from the unit sphere, but from the
-    // "first quadrant" where all elements are nonnegative. This can be done by choosing
-    // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
-    // This appears to create factorizations that have a slightly better reconstruction
-    // (<1%) compared picking elements uniformly at random in [0,1].
-    inBlocks.mapPartitions({ iter =>
-      iter.map {
-        case (srcBlockId, inBlock) =>
-          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
-          val factors = Array.fill(inBlock.srcIds.length) {
-            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
-            val nrm = blas.snrm2(rank, factor, 1)
-            blas.sscal(rank, 1.0f / nrm, factor, 1)
-            factor
-          }
-          (srcBlockId, factors)
-      }
-    }, preservesPartitioning = true)
-  }
-
-  /**
-   * Groups an RDD of [[Rating]]s by the user partition and item partition to which each `Rating`
-   * maps according to the given partitioners.  The returned pair RDD holds the ratings, encoded in
-   * a memory-efficient format but otherwise unchanged, keyed by the (user partition ID, item
-   * partition ID) pair.
-   *
-   * Performance note: This is an expensive operation that performs an RDD shuffle.
-   *
-   * Implementation note: This implementation produces the same result as the following but
-   * generates fewer intermediate objects:
-   *
-   * {{{
-   *     ratings.map { r =>
-   *       ((srcPart.getPartition(r.user), dstPart.getPartition(r.item)), r)
-   *     }.aggregateByKey(new RatingBlockBuilder)(
-   *         seqOp = (b, r) => b.add(r),
-   *         combOp = (b0, b1) => b0.merge(b1.build()))
-   *       .mapValues(_.build())
-   * }}}
-   *
-   * @param ratings raw ratings
-   * @param srcPart partitioner for src IDs
-   * @param dstPart partitioner for dst IDs
-   * @return an RDD of rating blocks in the form of ((srcBlockId, dstBlockId), ratingBlock)
-   */
-  private def partitionRatings[ID: ClassTag](
-      ratings: RDD[Rating[ID]],
-      srcPart: Partitioner,
-      dstPart: Partitioner): RDD[((Int, Int), RatingBlock[ID])] = {
-    val numPartitions = srcPart.numPartitions * dstPart.numPartitions
-    ratings.mapPartitions { iter =>
-      val builders = Array.fill(numPartitions)(new RatingBlockBuilder[ID])
-      iter.flatMap { r =>
-        val srcBlockId = srcPart.getPartition(r.user)
-        val dstBlockId = dstPart.getPartition(r.item)
-        val idx = srcBlockId + srcPart.numPartitions * dstBlockId
-        val builder = builders(idx)
-        builder.add(r)
-        if (builder.size >= 2048) { // 2048 * (3 * 4) = 24k
-          builders(idx) = new RatingBlockBuilder
-          Iterator.single(((srcBlockId, dstBlockId), builder.build()))
-        } else {
-          Iterator.empty
-        }
-      } ++ {
-        builders.iterator.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
-          val srcBlockId = idx % srcPart.numPartitions
-          val dstBlockId = idx / srcPart.numPartitions
-          ((srcBlockId, dstBlockId), block.build())
-        }
-      }
-    }.groupByKey().mapValues { blocks =>
-      val builder = new RatingBlockBuilder[ID]
-      blocks.foreach(builder.merge)
-      builder.build()
-    }.setName("ratingBlocks")
   }
 
   /**
@@ -1039,19 +1039,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
     }
   }
 
-  /**
-   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
-   * Caching of the input factors is handled in [[ALS#train]].
-   */
-  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
-    factorBlocks.values.aggregate(new NormalEquation(rank))(
-      seqOp = (ne, factors) => {
-        factors.foreach(ne.add(_, 0.0))
-        ne
-      },
-      combOp = (ne1, ne2) => ne1.merge(ne2))
-  }
-
   /** Trait for least squares solvers applied to the normal equation. */
   private[recommendation] trait LeastSquaresNESolver extends Serializable {
     /** Solves a least squares problem with regularization (possibly with other constraints). */
@@ -1116,6 +1103,19 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       ju.Arrays.fill(ata, 0.0)
       ju.Arrays.fill(atb, 0.0)
     }
+  }
+
+  /**
+   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
+   * Caching of the input factors is handled in [[ALS#train]].
+   */
+  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
+    factorBlocks.values.aggregate(new NormalEquation(rank))(
+      seqOp = (ne, factors) => {
+        factors.foreach(ne.add(_, 0.0))
+        ne
+      },
+      combOp = (ne1, ne2) => ne1.merge(ne2))
   }
 
   /**

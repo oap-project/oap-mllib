@@ -1036,19 +1036,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
     }
   }
 
-  /**
-   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
-   * Caching of the input factors is handled in [[ALS#train]].
-   */
-  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
-    factorBlocks.values.aggregate(new NormalEquation(rank))(
-      seqOp = (ne, factors) => {
-        factors.foreach(ne.add(_, 0.0))
-        ne
-      },
-      combOp = (ne1, ne2) => ne1.merge(ne2))
-  }
-
   /** Trait for least squares solvers applied to the normal equation. */
   private[recommendation] trait LeastSquaresNESolver extends Serializable {
     /** Solves a least squares problem with regularization (possibly with other constraints). */
@@ -1113,6 +1100,19 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       ju.Arrays.fill(ata, 0.0)
       ju.Arrays.fill(atb, 0.0)
     }
+  }
+
+  /**
+   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
+   * Caching of the input factors is handled in [[ALS#train]].
+   */
+  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
+    factorBlocks.values.aggregate(new NormalEquation(rank))(
+      seqOp = (ne, factors) => {
+        factors.foreach(ne.add(_, 0.0))
+        ne
+      },
+      combOp = (ne1, ne2) => ne1.merge(ne2))
   }
 
   /**

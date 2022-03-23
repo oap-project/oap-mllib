@@ -239,10 +239,11 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
   @Since("1.6.0")
   override def load(path: String): ALS = super.load(path)
 
-  /**
-   * Factor block that stores factors (Array[Float]) in an Array.
-   */
-  private type FactorBlock = Array[Array[Float]]
+  /** Trait for least squares solvers applied to the normal equation. */
+  private[recommendation] trait LeastSquaresNESolver extends Serializable {
+    /** Solves a least squares problem with regularization (possibly with other constraints). */
+    def solve(ne: NormalEquation, lambda: Double): Array[Float]
+  }
 
   /** Cholesky solver for least square problems. */
   private[recommendation] class CholeskySolver extends LeastSquaresNESolver {
@@ -428,35 +429,9 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
   }
 
   /**
-   * Initializes factors randomly given the in-link blocks.
-   *
-   * @param inBlocks in-link blocks
-   * @param rank rank
-   * @return initialized factor blocks
+   * Factor block that stores factors (Array[Float]) in an Array.
    */
-  private def initialize[ID](
-      inBlocks: RDD[(Int, InBlock[ID])],
-      rank: Int,
-      seed: Long): RDD[(Int, FactorBlock)] = {
-    // Choose a unit vector uniformly at random from the unit sphere, but from the
-    // "first quadrant" where all elements are nonnegative. This can be done by choosing
-    // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
-    // This appears to create factorizations that have a slightly better reconstruction
-    // (<1%) compared picking elements uniformly at random in [0,1].
-    inBlocks.mapPartitions({ iter =>
-      iter.map {
-        case (srcBlockId, inBlock) =>
-          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
-          val factors = Array.fill(inBlock.srcIds.length) {
-            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
-            val nrm = blas.snrm2(rank, factor, 1)
-            blas.sscal(rank, 1.0f / nrm, factor, 1)
-            factor
-          }
-          (srcBlockId, factors)
-      }
-    }, preservesPartitioning = true)
-  }
+  private type FactorBlock = Array[Array[Float]]
 
   /**
    * A mapping of the columns of the items factor matrix that are needed when calculating each row
@@ -626,10 +601,35 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
     require(dstPtrs.length == srcIds.length + 1)
   }
 
-  /** Trait for least squares solvers applied to the normal equation. */
-  private[recommendation] trait LeastSquaresNESolver extends Serializable {
-    /** Solves a least squares problem with regularization (possibly with other constraints). */
-    def solve(ne: NormalEquation, lambda: Double): Array[Float]
+  /**
+   * Initializes factors randomly given the in-link blocks.
+   *
+   * @param inBlocks in-link blocks
+   * @param rank rank
+   * @return initialized factor blocks
+   */
+  private def initialize[ID](
+      inBlocks: RDD[(Int, InBlock[ID])],
+      rank: Int,
+      seed: Long): RDD[(Int, FactorBlock)] = {
+    // Choose a unit vector uniformly at random from the unit sphere, but from the
+    // "first quadrant" where all elements are nonnegative. This can be done by choosing
+    // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
+    // This appears to create factorizations that have a slightly better reconstruction
+    // (<1%) compared picking elements uniformly at random in [0,1].
+    inBlocks.mapPartitions({ iter =>
+      iter.map {
+        case (srcBlockId, inBlock) =>
+          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
+          val factors = Array.fill(inBlock.srcIds.length) {
+            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
+            val nrm = blas.snrm2(rank, factor, 1)
+            blas.sscal(rank, 1.0f / nrm, factor, 1)
+            factor
+          }
+          (srcBlockId, factors)
+      }
+    }, preservesPartitioning = true)
   }
 
   /**
@@ -792,6 +792,9 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
       val ratings: Array[Float])(
       implicit ord: Ordering[ID]) {
 
+    /** Size the of block. */
+    def length: Int = srcIds.length
+
     /**
      * Compresses the block into an `InBlock`. The algorithm is the same as converting a sparse
      * matrix from coordinate list (COO) format into compressed sparse column (CSC) format.
@@ -844,9 +847,6 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
       val duration = (System.nanoTime() - start) / 1e9
       logDebug(s"Sorting took $duration seconds. (sortId = $sortId)")
     }
-
-    /** Size the of block. */
-    def length: Int = srcIds.length
   }
 
   /**
@@ -880,12 +880,6 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
 
     override def getKey(
         data: UncompressedInBlock[ID],
-        pos: Int): KeyWrapper[ID] = {
-      getKey(data, pos, null)
-    }
-
-    override def getKey(
-        data: UncompressedInBlock[ID],
         pos: Int,
         reuse: KeyWrapper[ID]): KeyWrapper[ID] = {
       if (reuse == null) {
@@ -895,10 +889,10 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
       }
     }
 
-    override def swap(data: UncompressedInBlock[ID], pos0: Int, pos1: Int): Unit = {
-      swapElements(data.srcIds, pos0, pos1)
-      swapElements(data.dstEncodedIndices, pos0, pos1)
-      swapElements(data.ratings, pos0, pos1)
+    override def getKey(
+        data: UncompressedInBlock[ID],
+        pos: Int): KeyWrapper[ID] = {
+      getKey(data, pos, null)
     }
 
     private def swapElements[@specialized(Int, Float) T](
@@ -908,6 +902,12 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
       val tmp = data(pos0)
       data(pos0) = data(pos1)
       data(pos1) = tmp
+    }
+
+    override def swap(data: UncompressedInBlock[ID], pos0: Int, pos1: Int): Unit = {
+      swapElements(data.srcIds, pos0, pos1)
+      swapElements(data.dstEncodedIndices, pos0, pos1)
+      swapElements(data.ratings, pos0, pos1)
     }
 
     override def copyRange(
