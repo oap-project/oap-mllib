@@ -72,8 +72,7 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     params.toSeq.foreach { paramMap.put(_) }
   }
   override def train(dataset: Dataset[_]): NaiveBayesModel = {
-    val naivebayes_data = dataset.select($(labelCol), $(featuresCol))
-    trainWithLabelCheck(naivebayes_data, positiveLabel = true)
+    trainWithLabelCheck(dataset, positiveLabel = true)
   }
 
   /**
@@ -142,6 +141,9 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
 
     val sc = spark.sparkContext
 
+    // drop dataset useless features and cache data
+    val naiveBayes_data = dataset.select($(labelCol), $(featuresCol)).cache()
+
     val executor_num = Utils.sparkExecutorNum(sc)
     val executor_cores = Utils.sparkExecutorCores()
 
@@ -155,13 +157,13 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     // numClasses should be explicitly included in the parquet metadata
     // This can be done by applying StringIndexer to the label column
     val numClasses = confClasses match {
-      case -1 => getNumClasses(dataset)
+      case -1 => getNumClasses(naiveBayes_data)
       case _ => confClasses
     }
 
     instr.logNumClasses(numClasses)
 
-    val labeledPointsDS = dataset
+    val labeledPointsDS = naiveBayes_data
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
 
     val dalModel = new NaiveBayesDALImpl(uid, numClasses, executor_num, executor_cores)
