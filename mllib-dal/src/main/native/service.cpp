@@ -1,5 +1,5 @@
-#include "error_handling.h"
 #include "service.h"
+#include "error_handling.h"
 
 using namespace daal;
 using namespace daal::data_management;
