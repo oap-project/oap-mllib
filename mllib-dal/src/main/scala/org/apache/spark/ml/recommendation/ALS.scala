@@ -393,47 +393,6 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
       ju.Arrays.fill(atb, 0.0)
     }
   }
-  /**
-   * A mapping of the columns of the items factor matrix that are needed when calculating each row
-   * of the users factor matrix, and vice versa.
-   *
-   * Specifically, when calculating a user factor vector, since only those columns of the items
-   * factor matrix that correspond to the items that that user has rated are needed, we can avoid
-   * having to repeatedly copy the entire items factor matrix to each worker later in the algorithm
-   * by precomputing these dependencies for all users, storing them in an RDD of `OutBlock`s.  The
-   * items' dependencies on the columns of the users factor matrix is computed similarly.
-   *
-   * =Example=
-   *
-   * Using the example provided in the `InBlock` Scaladoc, `userOutBlocks` would look like the
-   * following:
-   *
-   * {{{
-   *     userOutBlocks.collect() == Seq(
-   *       0 -> Array(Array(0, 1), Array(0, 1)),
-   *       1 -> Array(Array(0), Array(0))
-   *     )
-   * }}}
-   *
-   * Each value in this map-like sequence is of type `Array[Array[Int]]`.  The values in the
-   * inner array are the ranks of the sorted user IDs in that partition; so in the example above,
-   * `Array(0, 1)` in partition 0 refers to user IDs 0 and 6, since when all unique user IDs in
-   * partition 0 are sorted, 0 is the first ID and 6 is the second.  The position of each inner
-   * array in its enclosing outer array denotes the partition number to which item IDs map; in the
-   * example, the first `Array(0, 1)` is in position 0 of its outer array, denoting item IDs that
-   * map to partition 0.
-   *
-   * In summary, the data structure encodes the following information:
-   *
-   *   *  There are ratings with user IDs 0 and 6 (encoded in `Array(0, 1)`, where 0 and 1 are the
-   *   indices of the user IDs 0 and 6 on partition 0) whose item IDs map to partitions 0 and 1
-   *   (represented by the fact that `Array(0, 1)` appears in both the 0th and 1st positions).
-   *
-   *   *  There are ratings with user ID 3 (encoded in `Array(0)`, where 0 is the index of the user
-   *   ID 3 on partition 1) whose item IDs map to partitions 0 and 1 (represented by the fact that
-   *   `Array(0)` appears in both the 0th and 1st positions).
-   */
-  private type OutBlock = Array[Array[Int]]
 
   def train[ID: ClassTag]( // scalastyle:ignore
     ratings: RDD[Rating[ID]],
@@ -498,6 +457,48 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
       }
     }, preservesPartitioning = true)
   }
+
+  /**
+   * A mapping of the columns of the items factor matrix that are needed when calculating each row
+   * of the users factor matrix, and vice versa.
+   *
+   * Specifically, when calculating a user factor vector, since only those columns of the items
+   * factor matrix that correspond to the items that that user has rated are needed, we can avoid
+   * having to repeatedly copy the entire items factor matrix to each worker later in the algorithm
+   * by precomputing these dependencies for all users, storing them in an RDD of `OutBlock`s.  The
+   * items' dependencies on the columns of the users factor matrix is computed similarly.
+   *
+   * =Example=
+   *
+   * Using the example provided in the `InBlock` Scaladoc, `userOutBlocks` would look like the
+   * following:
+   *
+   * {{{
+   *     userOutBlocks.collect() == Seq(
+   *       0 -> Array(Array(0, 1), Array(0, 1)),
+   *       1 -> Array(Array(0), Array(0))
+   *     )
+   * }}}
+   *
+   * Each value in this map-like sequence is of type `Array[Array[Int]]`.  The values in the
+   * inner array are the ranks of the sorted user IDs in that partition; so in the example above,
+   * `Array(0, 1)` in partition 0 refers to user IDs 0 and 6, since when all unique user IDs in
+   * partition 0 are sorted, 0 is the first ID and 6 is the second.  The position of each inner
+   * array in its enclosing outer array denotes the partition number to which item IDs map; in the
+   * example, the first `Array(0, 1)` is in position 0 of its outer array, denoting item IDs that
+   * map to partition 0.
+   *
+   * In summary, the data structure encodes the following information:
+   *
+   *   *  There are ratings with user IDs 0 and 6 (encoded in `Array(0, 1)`, where 0 and 1 are the
+   *   indices of the user IDs 0 and 6 on partition 0) whose item IDs map to partitions 0 and 1
+   *   (represented by the fact that `Array(0, 1)` appears in both the 0th and 1st positions).
+   *
+   *   *  There are ratings with user ID 3 (encoded in `Array(0)`, where 0 is the index of the user
+   *   ID 3 on partition 1) whose item IDs map to partitions 0 and 1 (represented by the fact that
+   *   `Array(0)` appears in both the 0th and 1st positions).
+   */
+  private type OutBlock = Array[Array[Int]]
 
   /**
    * In-link block for computing user and item factor matrices.
@@ -625,6 +626,60 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
     require(dstPtrs.length == srcIds.length + 1)
   }
 
+  /** Trait for least squares solvers applied to the normal equation. */
+  private[recommendation] trait LeastSquaresNESolver extends Serializable {
+    /** Solves a least squares problem with regularization (possibly with other constraints). */
+    def solve(ne: NormalEquation, lambda: Double): Array[Float]
+  }
+
+  /**
+   * A rating block that contains src IDs, dst IDs, and ratings, stored in primitive arrays.
+   */
+  private[recommendation] case class RatingBlock[@specialized(Int, Long) ID: ClassTag](
+      srcIds: Array[ID],
+      dstIds: Array[ID],
+      ratings: Array[Float]) {
+    /** Size of the block. */
+    def size: Int = srcIds.length
+    require(dstIds.length == srcIds.length)
+    require(ratings.length == srcIds.length)
+  }
+
+  /**
+   * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
+   */
+  private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
+    extends Serializable {
+
+    private val srcIds = mutable.ArrayBuilder.make[ID]
+    private val dstIds = mutable.ArrayBuilder.make[ID]
+    private val ratings = mutable.ArrayBuilder.make[Float]
+    var size = 0
+
+    /** Adds a rating. */
+    def add(r: Rating[ID]): this.type = {
+      size += 1
+      srcIds += r.user
+      dstIds += r.item
+      ratings += r.rating
+      this
+    }
+
+    /** Merges another [[RatingBlockBuilder]]. */
+    def merge(other: RatingBlock[ID]): this.type = {
+      size += other.srcIds.length
+      srcIds ++= other.srcIds
+      dstIds ++= other.dstIds
+      ratings ++= other.ratings
+      this
+    }
+
+    /** Builds a [[RatingBlock]]. */
+    def build(): RatingBlock[ID] = {
+      RatingBlock[ID](srcIds.result(), dstIds.result(), ratings.result())
+    }
+  }
+
   /**
    * Groups an RDD of [[Rating]]s by the user partition and item partition to which each `Rating`
    * maps according to the given partitioners.  The returned pair RDD holds the ratings, encoded in
@@ -684,16 +739,202 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
   }
 
   /**
-   * A rating block that contains src IDs, dst IDs, and ratings, stored in primitive arrays.
+   * Builder for uncompressed in-blocks of (srcId, dstEncodedIndex, rating) tuples.
+   *
+   * @param encoder encoder for dst indices
    */
-  private[recommendation] case class RatingBlock[@specialized(Int, Long) ID: ClassTag](
-      srcIds: Array[ID],
-      dstIds: Array[ID],
-      ratings: Array[Float]) {
-    /** Size of the block. */
-    def size: Int = srcIds.length
-    require(dstIds.length == srcIds.length)
-    require(ratings.length == srcIds.length)
+  private[recommendation] class UncompressedInBlockBuilder[@specialized(Int, Long) ID: ClassTag](
+      encoder: LocalIndexEncoder)(
+      implicit ord: Ordering[ID]) {
+
+    private val srcIds = mutable.ArrayBuilder.make[ID]
+    private val dstEncodedIndices = mutable.ArrayBuilder.make[Int]
+    private val ratings = mutable.ArrayBuilder.make[Float]
+
+    /**
+     * Adds a dst block of (srcId, dstLocalIndex, rating) tuples.
+     *
+     * @param dstBlockId dst block ID
+     * @param srcIds original src IDs
+     * @param dstLocalIndices dst local indices
+     * @param ratings ratings
+     */
+    def add(
+        dstBlockId: Int,
+        srcIds: Array[ID],
+        dstLocalIndices: Array[Int],
+        ratings: Array[Float]): this.type = {
+      val sz = srcIds.length
+      require(dstLocalIndices.length == sz)
+      require(ratings.length == sz)
+      this.srcIds ++= srcIds
+      this.ratings ++= ratings
+      var j = 0
+      while (j < sz) {
+        this.dstEncodedIndices += encoder.encode(dstBlockId, dstLocalIndices(j))
+        j += 1
+      }
+      this
+    }
+
+    /** Builds a [[UncompressedInBlock]]. */
+    def build(): UncompressedInBlock[ID] = {
+      new UncompressedInBlock(srcIds.result(), dstEncodedIndices.result(), ratings.result())
+    }
+  }
+
+  /**
+   * A block of (srcId, dstEncodedIndex, rating) tuples stored in primitive arrays.
+   */
+  private[recommendation] class UncompressedInBlock[@specialized(Int, Long) ID: ClassTag](
+      val srcIds: Array[ID],
+      val dstEncodedIndices: Array[Int],
+      val ratings: Array[Float])(
+      implicit ord: Ordering[ID]) {
+
+    /**
+     * Compresses the block into an `InBlock`. The algorithm is the same as converting a sparse
+     * matrix from coordinate list (COO) format into compressed sparse column (CSC) format.
+     * Sorting is done using Spark's built-in Timsort to avoid generating too many objects.
+     */
+    def compress(): InBlock[ID] = {
+      val sz = length
+      assert(sz > 0, "Empty in-link block should not exist.")
+      sort()
+      val uniqueSrcIdsBuilder = mutable.ArrayBuilder.make[ID]
+      val dstCountsBuilder = mutable.ArrayBuilder.make[Int]
+      var preSrcId = srcIds(0)
+      uniqueSrcIdsBuilder += preSrcId
+      var curCount = 1
+      var i = 1
+      while (i < sz) {
+        val srcId = srcIds(i)
+        if (srcId != preSrcId) {
+          uniqueSrcIdsBuilder += srcId
+          dstCountsBuilder += curCount
+          preSrcId = srcId
+          curCount = 0
+        }
+        curCount += 1
+        i += 1
+      }
+      dstCountsBuilder += curCount
+      val uniqueSrcIds = uniqueSrcIdsBuilder.result()
+      val numUniqueSrdIds = uniqueSrcIds.length
+      val dstCounts = dstCountsBuilder.result()
+      val dstPtrs = new Array[Int](numUniqueSrdIds + 1)
+      var sum = 0
+      i = 0
+      while (i < numUniqueSrdIds) {
+        sum += dstCounts(i)
+        i += 1
+        dstPtrs(i) = sum
+      }
+      InBlock(uniqueSrcIds, dstPtrs, dstEncodedIndices, ratings)
+    }
+
+    private def sort(): Unit = {
+      val sz = length
+      // Since there might be interleaved log messages, we insert a unique id for easy pairing.
+      val sortId = Utils.random.nextInt()
+      logDebug(s"Start sorting an uncompressed in-block of size $sz. (sortId = $sortId)")
+      val start = System.nanoTime()
+      val sorter = new Sorter(new UncompressedInBlockSort[ID])
+      sorter.sort(this, 0, length, Ordering[KeyWrapper[ID]])
+      val duration = (System.nanoTime() - start) / 1e9
+      logDebug(s"Sorting took $duration seconds. (sortId = $sortId)")
+    }
+
+    /** Size the of block. */
+    def length: Int = srcIds.length
+  }
+
+  /**
+   * A wrapper that holds a primitive key.
+   *
+   * @see [[UncompressedInBlockSort]]
+   */
+  private class KeyWrapper[@specialized(Int, Long) ID: ClassTag](
+      implicit ord: Ordering[ID]) extends Ordered[KeyWrapper[ID]] {
+
+    var key: ID = _
+
+    override def compare(that: KeyWrapper[ID]): Int = {
+      ord.compare(key, that.key)
+    }
+
+    def setKey(key: ID): this.type = {
+      this.key = key
+      this
+    }
+  }
+
+  /**
+   * [[SortDataFormat]] of [[UncompressedInBlock]] used by [[Sorter]].
+   */
+  private class UncompressedInBlockSort[@specialized(Int, Long) ID: ClassTag](
+      implicit ord: Ordering[ID])
+    extends SortDataFormat[KeyWrapper[ID], UncompressedInBlock[ID]] {
+
+    override def newKey(): KeyWrapper[ID] = new KeyWrapper()
+
+    override def getKey(
+        data: UncompressedInBlock[ID],
+        pos: Int): KeyWrapper[ID] = {
+      getKey(data, pos, null)
+    }
+
+    override def getKey(
+        data: UncompressedInBlock[ID],
+        pos: Int,
+        reuse: KeyWrapper[ID]): KeyWrapper[ID] = {
+      if (reuse == null) {
+        new KeyWrapper().setKey(data.srcIds(pos))
+      } else {
+        reuse.setKey(data.srcIds(pos))
+      }
+    }
+
+    override def swap(data: UncompressedInBlock[ID], pos0: Int, pos1: Int): Unit = {
+      swapElements(data.srcIds, pos0, pos1)
+      swapElements(data.dstEncodedIndices, pos0, pos1)
+      swapElements(data.ratings, pos0, pos1)
+    }
+
+    private def swapElements[@specialized(Int, Float) T](
+        data: Array[T],
+        pos0: Int,
+        pos1: Int): Unit = {
+      val tmp = data(pos0)
+      data(pos0) = data(pos1)
+      data(pos1) = tmp
+    }
+
+    override def copyRange(
+        src: UncompressedInBlock[ID],
+        srcPos: Int,
+        dst: UncompressedInBlock[ID],
+        dstPos: Int,
+        length: Int): Unit = {
+      System.arraycopy(src.srcIds, srcPos, dst.srcIds, dstPos, length)
+      System.arraycopy(src.dstEncodedIndices, srcPos, dst.dstEncodedIndices, dstPos, length)
+      System.arraycopy(src.ratings, srcPos, dst.ratings, dstPos, length)
+    }
+
+    override def allocate(length: Int): UncompressedInBlock[ID] = {
+      new UncompressedInBlock(
+        new Array[ID](length), new Array[Int](length), new Array[Float](length))
+    }
+
+    override def copyElement(
+        src: UncompressedInBlock[ID],
+        srcPos: Int,
+        dst: UncompressedInBlock[ID],
+        dstPos: Int): Unit = {
+      dst.srcIds(dstPos) = src.srcIds(srcPos)
+      dst.dstEncodedIndices(dstPos) = src.dstEncodedIndices(srcPos)
+      dst.ratings(dstPos) = src.ratings(srcPos)
+    }
   }
 
   /**
@@ -884,246 +1125,6 @@ object ALS extends DefaultParamsReadable[ALS] with Logging {
         ne
       },
       combOp = (ne1, ne2) => ne1.merge(ne2))
-  }
-
-  /** Trait for least squares solvers applied to the normal equation. */
-  private[recommendation] trait LeastSquaresNESolver extends Serializable {
-    /** Solves a least squares problem with regularization (possibly with other constraints). */
-    def solve(ne: NormalEquation, lambda: Double): Array[Float]
-  }
-
-  /**
-   * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
-   */
-  private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
-    extends Serializable {
-
-    private val srcIds = mutable.ArrayBuilder.make[ID]
-    private val dstIds = mutable.ArrayBuilder.make[ID]
-    private val ratings = mutable.ArrayBuilder.make[Float]
-    var size = 0
-
-    /** Adds a rating. */
-    def add(r: Rating[ID]): this.type = {
-      size += 1
-      srcIds += r.user
-      dstIds += r.item
-      ratings += r.rating
-      this
-    }
-
-    /** Merges another [[RatingBlockBuilder]]. */
-    def merge(other: RatingBlock[ID]): this.type = {
-      size += other.srcIds.length
-      srcIds ++= other.srcIds
-      dstIds ++= other.dstIds
-      ratings ++= other.ratings
-      this
-    }
-
-    /** Builds a [[RatingBlock]]. */
-    def build(): RatingBlock[ID] = {
-      RatingBlock[ID](srcIds.result(), dstIds.result(), ratings.result())
-    }
-  }
-
-  /**
-   * Builder for uncompressed in-blocks of (srcId, dstEncodedIndex, rating) tuples.
-   *
-   * @param encoder encoder for dst indices
-   */
-  private[recommendation] class UncompressedInBlockBuilder[@specialized(Int, Long) ID: ClassTag](
-      encoder: LocalIndexEncoder)(
-      implicit ord: Ordering[ID]) {
-
-    private val srcIds = mutable.ArrayBuilder.make[ID]
-    private val dstEncodedIndices = mutable.ArrayBuilder.make[Int]
-    private val ratings = mutable.ArrayBuilder.make[Float]
-
-    /**
-     * Adds a dst block of (srcId, dstLocalIndex, rating) tuples.
-     *
-     * @param dstBlockId dst block ID
-     * @param srcIds original src IDs
-     * @param dstLocalIndices dst local indices
-     * @param ratings ratings
-     */
-    def add(
-        dstBlockId: Int,
-        srcIds: Array[ID],
-        dstLocalIndices: Array[Int],
-        ratings: Array[Float]): this.type = {
-      val sz = srcIds.length
-      require(dstLocalIndices.length == sz)
-      require(ratings.length == sz)
-      this.srcIds ++= srcIds
-      this.ratings ++= ratings
-      var j = 0
-      while (j < sz) {
-        this.dstEncodedIndices += encoder.encode(dstBlockId, dstLocalIndices(j))
-        j += 1
-      }
-      this
-    }
-
-    /** Builds a [[UncompressedInBlock]]. */
-    def build(): UncompressedInBlock[ID] = {
-      new UncompressedInBlock(srcIds.result(), dstEncodedIndices.result(), ratings.result())
-    }
-  }
-
-  /**
-   * A block of (srcId, dstEncodedIndex, rating) tuples stored in primitive arrays.
-   */
-  private[recommendation] class UncompressedInBlock[@specialized(Int, Long) ID: ClassTag](
-      val srcIds: Array[ID],
-      val dstEncodedIndices: Array[Int],
-      val ratings: Array[Float])(
-      implicit ord: Ordering[ID]) {
-
-    /** Size the of block. */
-    def length: Int = srcIds.length
-
-    /**
-     * Compresses the block into an `InBlock`. The algorithm is the same as converting a sparse
-     * matrix from coordinate list (COO) format into compressed sparse column (CSC) format.
-     * Sorting is done using Spark's built-in Timsort to avoid generating too many objects.
-     */
-    def compress(): InBlock[ID] = {
-      val sz = length
-      assert(sz > 0, "Empty in-link block should not exist.")
-      sort()
-      val uniqueSrcIdsBuilder = mutable.ArrayBuilder.make[ID]
-      val dstCountsBuilder = mutable.ArrayBuilder.make[Int]
-      var preSrcId = srcIds(0)
-      uniqueSrcIdsBuilder += preSrcId
-      var curCount = 1
-      var i = 1
-      while (i < sz) {
-        val srcId = srcIds(i)
-        if (srcId != preSrcId) {
-          uniqueSrcIdsBuilder += srcId
-          dstCountsBuilder += curCount
-          preSrcId = srcId
-          curCount = 0
-        }
-        curCount += 1
-        i += 1
-      }
-      dstCountsBuilder += curCount
-      val uniqueSrcIds = uniqueSrcIdsBuilder.result()
-      val numUniqueSrdIds = uniqueSrcIds.length
-      val dstCounts = dstCountsBuilder.result()
-      val dstPtrs = new Array[Int](numUniqueSrdIds + 1)
-      var sum = 0
-      i = 0
-      while (i < numUniqueSrdIds) {
-        sum += dstCounts(i)
-        i += 1
-        dstPtrs(i) = sum
-      }
-      InBlock(uniqueSrcIds, dstPtrs, dstEncodedIndices, ratings)
-    }
-
-    private def sort(): Unit = {
-      val sz = length
-      // Since there might be interleaved log messages, we insert a unique id for easy pairing.
-      val sortId = Utils.random.nextInt()
-      logDebug(s"Start sorting an uncompressed in-block of size $sz. (sortId = $sortId)")
-      val start = System.nanoTime()
-      val sorter = new Sorter(new UncompressedInBlockSort[ID])
-      sorter.sort(this, 0, length, Ordering[KeyWrapper[ID]])
-      val duration = (System.nanoTime() - start) / 1e9
-      logDebug(s"Sorting took $duration seconds. (sortId = $sortId)")
-    }
-  }
-
-  /**
-   * A wrapper that holds a primitive key.
-   *
-   * @see [[UncompressedInBlockSort]]
-   */
-  private class KeyWrapper[@specialized(Int, Long) ID: ClassTag](
-      implicit ord: Ordering[ID]) extends Ordered[KeyWrapper[ID]] {
-
-    var key: ID = _
-
-    override def compare(that: KeyWrapper[ID]): Int = {
-      ord.compare(key, that.key)
-    }
-
-    def setKey(key: ID): this.type = {
-      this.key = key
-      this
-    }
-  }
-
-  /**
-   * [[SortDataFormat]] of [[UncompressedInBlock]] used by [[Sorter]].
-   */
-  private class UncompressedInBlockSort[@specialized(Int, Long) ID: ClassTag](
-      implicit ord: Ordering[ID])
-    extends SortDataFormat[KeyWrapper[ID], UncompressedInBlock[ID]] {
-
-    override def newKey(): KeyWrapper[ID] = new KeyWrapper()
-
-    override def getKey(
-        data: UncompressedInBlock[ID],
-        pos: Int,
-        reuse: KeyWrapper[ID]): KeyWrapper[ID] = {
-      if (reuse == null) {
-        new KeyWrapper().setKey(data.srcIds(pos))
-      } else {
-        reuse.setKey(data.srcIds(pos))
-      }
-    }
-
-    override def getKey(
-        data: UncompressedInBlock[ID],
-        pos: Int): KeyWrapper[ID] = {
-      getKey(data, pos, null)
-    }
-
-    private def swapElements[@specialized(Int, Float) T](
-        data: Array[T],
-        pos0: Int,
-        pos1: Int): Unit = {
-      val tmp = data(pos0)
-      data(pos0) = data(pos1)
-      data(pos1) = tmp
-    }
-
-    override def swap(data: UncompressedInBlock[ID], pos0: Int, pos1: Int): Unit = {
-      swapElements(data.srcIds, pos0, pos1)
-      swapElements(data.dstEncodedIndices, pos0, pos1)
-      swapElements(data.ratings, pos0, pos1)
-    }
-
-    override def copyRange(
-        src: UncompressedInBlock[ID],
-        srcPos: Int,
-        dst: UncompressedInBlock[ID],
-        dstPos: Int,
-        length: Int): Unit = {
-      System.arraycopy(src.srcIds, srcPos, dst.srcIds, dstPos, length)
-      System.arraycopy(src.dstEncodedIndices, srcPos, dst.dstEncodedIndices, dstPos, length)
-      System.arraycopy(src.ratings, srcPos, dst.ratings, dstPos, length)
-    }
-
-    override def allocate(length: Int): UncompressedInBlock[ID] = {
-      new UncompressedInBlock(
-        new Array[ID](length), new Array[Int](length), new Array[Float](length))
-    }
-
-    override def copyElement(
-        src: UncompressedInBlock[ID],
-        srcPos: Int,
-        dst: UncompressedInBlock[ID],
-        dstPos: Int): Unit = {
-      dst.srcIds(dstPos) = src.srcIds(srcPos)
-      dst.dstEncodedIndices(dstPos) = src.dstEncodedIndices(srcPos)
-      dst.ratings(dstPos) = src.ratings(srcPos)
-    }
   }
 
   /**
