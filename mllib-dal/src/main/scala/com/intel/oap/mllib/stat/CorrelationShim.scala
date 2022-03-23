@@ -25,7 +25,7 @@ import org.apache.spark.storage.StorageLevel
 
 import scala.reflect.ClassTag
 
-import org.apache.spark.ml.stat.spark320.{Correlation => CorrelationSpark320 }
+import org.apache.spark.ml.stat.spark320.{Correlation => CorrelationSpark320}
 
 trait CorrelationShim extends Serializable with Logging {
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame
@@ -35,7 +35,7 @@ object CorrelationShim extends Logging {
   def create(): CorrelationShim = {
     logInfo(s"Loading Correlation for Spark $SPARK_VERSION")
     val als = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" | "3.2.0" => new CorrelationSpark320()
+      case "3.1.1" | "3.1.2" | "3.2.0" | "3.2.1" => new CorrelationSpark320()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     als
