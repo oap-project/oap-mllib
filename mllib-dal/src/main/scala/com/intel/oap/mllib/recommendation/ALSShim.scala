@@ -28,26 +28,26 @@ import scala.reflect.ClassTag
 
 trait ALSShim extends Serializable with Logging {
   def train[ID: ClassTag]( // scalastyle:ignore
-    ratings: RDD[Rating[ID]],
-    rank: Int,
-    numUserBlocks: Int,
-    numItemBlocks: Int,
-    maxIter: Int,
-    regParam: Double,
-    implicitPrefs: Boolean,
-    alpha: Double,
-    nonnegative: Boolean,
-    intermediateRDDStorageLevel: StorageLevel,
-    finalRDDStorageLevel: StorageLevel,
-    checkpointInterval: Int,
-    seed: Long)(implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])])
+      ratings: RDD[Rating[ID]],
+      rank: Int,
+      numUserBlocks: Int,
+      numItemBlocks: Int,
+      maxIter: Int,
+      regParam: Double,
+      implicitPrefs: Boolean,
+      alpha: Double,
+      nonnegative: Boolean,
+      intermediateRDDStorageLevel: StorageLevel,
+      finalRDDStorageLevel: StorageLevel,
+      checkpointInterval: Int,
+      seed: Long)(implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])])
 }
 
 object ALSShim extends Logging {
   def create(): ALSShim = {
     logInfo(s"Loading ALS for Spark $SPARK_VERSION")
     val als = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" => new ALSSpark312()
+      case "3.1.1" | "3.1.2" | "3.1.3" => new ALSSpark312()
       case "3.2.0" => new ALSSpark320()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }

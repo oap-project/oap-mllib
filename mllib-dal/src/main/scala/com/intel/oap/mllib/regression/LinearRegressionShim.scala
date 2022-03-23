@@ -33,7 +33,7 @@ object LinearRegressionShim extends Logging {
   def create(uid: String): LinearRegressionShim = {
     logInfo(s"Loading ALS for Spark $SPARK_VERSION")
     val linearRegression = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" => new LinearRegressionSpark312(uid)
+      case "3.1.1" | "3.1.2" | "3.1.3" => new LinearRegressionSpark312(uid)
       case "3.2.0" => new LinearRegressionSpark320(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }

@@ -32,7 +32,7 @@ object PCAShim extends Logging {
   def create(uid: String): PCAShim = {
     logInfo(s"Loading PCA for Spark $SPARK_VERSION")
     val pca = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" | "3.2.0" => new PCASpark320(uid)
+      case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" => new PCASpark320(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     pca
