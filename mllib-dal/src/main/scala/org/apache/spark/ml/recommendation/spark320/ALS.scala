@@ -181,6 +181,95 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
   }
 
   /**
+   * Initializes factors randomly given the in-link blocks.
+   *
+   * @param inBlocks in-link blocks
+   * @param rank rank
+   * @return initialized factor blocks
+   */
+  private def initialize[ID](
+      inBlocks: RDD[(Int, InBlock[ID])],
+      rank: Int,
+      seed: Long): RDD[(Int, FactorBlock)] = {
+    // Choose a unit vector uniformly at random from the unit sphere, but from the
+    // "first quadrant" where all elements are nonnegative. This can be done by choosing
+    // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
+    // This appears to create factorizations that have a slightly better reconstruction
+    // (<1%) compared picking elements uniformly at random in [0,1].
+    inBlocks.mapPartitions({ iter =>
+      iter.map {
+        case (srcBlockId, inBlock) =>
+          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
+          val factors = Array.fill(inBlock.srcIds.length) {
+            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
+            val nrm = blas.snrm2(rank, factor, 1)
+            blas.sscal(rank, 1.0f / nrm, factor, 1)
+            factor
+          }
+          (srcBlockId, factors)
+      }
+    }, preservesPartitioning = true)
+  }
+
+  /**
+   * Groups an RDD of [[Rating]]s by the user partition and item partition to which each `Rating`
+   * maps according to the given partitioners.  The returned pair RDD holds the ratings, encoded in
+   * a memory-efficient format but otherwise unchanged, keyed by the (user partition ID, item
+   * partition ID) pair.
+   *
+   * Performance note: This is an expensive operation that performs an RDD shuffle.
+   *
+   * Implementation note: This implementation produces the same result as the following but
+   * generates fewer intermediate objects:
+   *
+   * {{{
+   *     ratings.map { r =>
+   *       ((srcPart.getPartition(r.user), dstPart.getPartition(r.item)), r)
+   *     }.aggregateByKey(new RatingBlockBuilder)(
+   *         seqOp = (b, r) => b.add(r),
+   *         combOp = (b0, b1) => b0.merge(b1.build()))
+   *       .mapValues(_.build())
+   * }}}
+   *
+   * @param ratings raw ratings
+   * @param srcPart partitioner for src IDs
+   * @param dstPart partitioner for dst IDs
+   * @return an RDD of rating blocks in the form of ((srcBlockId, dstBlockId), ratingBlock)
+   */
+  private def partitionRatings[ID: ClassTag](
+      ratings: RDD[Rating[ID]],
+      srcPart: Partitioner,
+      dstPart: Partitioner): RDD[((Int, Int), RatingBlock[ID])] = {
+    val numPartitions = srcPart.numPartitions * dstPart.numPartitions
+    ratings.mapPartitions { iter =>
+      val builders = Array.fill(numPartitions)(new RatingBlockBuilder[ID])
+      iter.flatMap { r =>
+        val srcBlockId = srcPart.getPartition(r.user)
+        val dstBlockId = dstPart.getPartition(r.item)
+        val idx = srcBlockId + srcPart.numPartitions * dstBlockId
+        val builder = builders(idx)
+        builder.add(r)
+        if (builder.size >= 2048) { // 2048 * (3 * 4) = 24k
+          builders(idx) = new RatingBlockBuilder
+          Iterator.single(((srcBlockId, dstBlockId), builder.build()))
+        } else {
+          Iterator.empty
+        }
+      } ++ {
+        builders.view.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
+          val srcBlockId = idx % srcPart.numPartitions
+          val dstBlockId = idx / srcPart.numPartitions
+          ((srcBlockId, dstBlockId), block.build())
+        }
+      }
+    }.groupByKey().mapValues { blocks =>
+      val builder = new RatingBlockBuilder[ID]
+      blocks.foreach(builder.merge)
+      builder.build()
+    }.setName("ratingBlocks")
+  }
+
+  /**
    * Implementation of the ALS algorithm.
    *
    * This implementation of the ALS factorization algorithm partitions the two sets of factors among
@@ -348,95 +437,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       itemInBlocks.unpersist()
     }
     (userIdAndFactors, itemIdAndFactors)
-  }
-
-  /**
-   * Initializes factors randomly given the in-link blocks.
-   *
-   * @param inBlocks in-link blocks
-   * @param rank rank
-   * @return initialized factor blocks
-   */
-  private def initialize[ID](
-      inBlocks: RDD[(Int, InBlock[ID])],
-      rank: Int,
-      seed: Long): RDD[(Int, FactorBlock)] = {
-    // Choose a unit vector uniformly at random from the unit sphere, but from the
-    // "first quadrant" where all elements are nonnegative. This can be done by choosing
-    // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
-    // This appears to create factorizations that have a slightly better reconstruction
-    // (<1%) compared picking elements uniformly at random in [0,1].
-    inBlocks.mapPartitions({ iter =>
-      iter.map {
-        case (srcBlockId, inBlock) =>
-          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
-          val factors = Array.fill(inBlock.srcIds.length) {
-            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
-            val nrm = blas.snrm2(rank, factor, 1)
-            blas.sscal(rank, 1.0f / nrm, factor, 1)
-            factor
-          }
-          (srcBlockId, factors)
-      }
-    }, preservesPartitioning = true)
-  }
-
-  /**
-   * Groups an RDD of [[Rating]]s by the user partition and item partition to which each `Rating`
-   * maps according to the given partitioners.  The returned pair RDD holds the ratings, encoded in
-   * a memory-efficient format but otherwise unchanged, keyed by the (user partition ID, item
-   * partition ID) pair.
-   *
-   * Performance note: This is an expensive operation that performs an RDD shuffle.
-   *
-   * Implementation note: This implementation produces the same result as the following but
-   * generates fewer intermediate objects:
-   *
-   * {{{
-   *     ratings.map { r =>
-   *       ((srcPart.getPartition(r.user), dstPart.getPartition(r.item)), r)
-   *     }.aggregateByKey(new RatingBlockBuilder)(
-   *         seqOp = (b, r) => b.add(r),
-   *         combOp = (b0, b1) => b0.merge(b1.build()))
-   *       .mapValues(_.build())
-   * }}}
-   *
-   * @param ratings raw ratings
-   * @param srcPart partitioner for src IDs
-   * @param dstPart partitioner for dst IDs
-   * @return an RDD of rating blocks in the form of ((srcBlockId, dstBlockId), ratingBlock)
-   */
-  private def partitionRatings[ID: ClassTag](
-      ratings: RDD[Rating[ID]],
-      srcPart: Partitioner,
-      dstPart: Partitioner): RDD[((Int, Int), RatingBlock[ID])] = {
-    val numPartitions = srcPart.numPartitions * dstPart.numPartitions
-    ratings.mapPartitions { iter =>
-      val builders = Array.fill(numPartitions)(new RatingBlockBuilder[ID])
-      iter.flatMap { r =>
-        val srcBlockId = srcPart.getPartition(r.user)
-        val dstBlockId = dstPart.getPartition(r.item)
-        val idx = srcBlockId + srcPart.numPartitions * dstBlockId
-        val builder = builders(idx)
-        builder.add(r)
-        if (builder.size >= 2048) { // 2048 * (3 * 4) = 24k
-          builders(idx) = new RatingBlockBuilder
-          Iterator.single(((srcBlockId, dstBlockId), builder.build()))
-        } else {
-          Iterator.empty
-        }
-      } ++ {
-        builders.view.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
-          val srcBlockId = idx % srcPart.numPartitions
-          val dstBlockId = idx / srcPart.numPartitions
-          ((srcBlockId, dstBlockId), block.build())
-        }
-      }
-    }.groupByKey().mapValues { blocks =>
-      val builder = new RatingBlockBuilder[ID]
-      blocks.foreach(builder.merge)
-      builder.build()
-    }.setName("ratingBlocks")
   }
 
   /**
@@ -705,6 +705,41 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
   }
 
   /**
+   * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
+   */
+  private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
+    extends Serializable {
+
+    private val srcIds = mutable.ArrayBuilder.make[ID]
+    private val dstIds = mutable.ArrayBuilder.make[ID]
+    private val ratings = mutable.ArrayBuilder.make[Float]
+    var size = 0
+
+    /** Adds a rating. */
+    def add(r: Rating[ID]): this.type = {
+      size += 1
+      srcIds += r.user
+      dstIds += r.item
+      ratings += r.rating
+      this
+    }
+
+    /** Merges another [[RatingBlockBuilder]]. */
+    def merge(other: RatingBlock[ID]): this.type = {
+      size += other.srcIds.length
+      srcIds ++= other.srcIds
+      dstIds ++= other.dstIds
+      ratings ++= other.ratings
+      this
+    }
+
+    /** Builds a [[RatingBlock]]. */
+    def build(): RatingBlock[ID] = {
+      RatingBlock[ID](srcIds.result(), dstIds.result(), ratings.result())
+    }
+  }
+
+  /**
    * Compute dst factors by constructing and solving least square problems.
    *
    * @param srcFactorBlocks src factors
@@ -799,120 +834,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
           j += 1
         }
         dstFactors
-    }
-  }
-
-  /**
-   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
-   * Caching of the input factors is handled in [[ALS#train]].
-   */
-  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
-    factorBlocks.values.aggregate(new NormalEquation(rank))(
-      seqOp = (ne, factors) => {
-        factors.foreach(ne.add(_, 0.0))
-        ne
-      },
-      combOp = (ne1, ne2) => ne1.merge(ne2))
-  }
-
-  /** Trait for least squares solvers applied to the normal equation. */
-  private[recommendation] trait LeastSquaresNESolver extends Serializable {
-    /** Solves a least squares problem with regularization (possibly with other constraints). */
-    def solve(ne: NormalEquation, lambda: Double): Array[Float]
-  }
-
-  /**
-   * Representing a normal equation to solve the following weighted least squares problem:
-   *
-   * minimize \sum,,i,, c,,i,, (a,,i,,^T^ x - d,,i,,)^2^ + lambda * x^T^ x.
-   *
-   * Its normal equation is given by
-   *
-   * \sum,,i,, c,,i,, (a,,i,, a,,i,,^T^ x - d,,i,, a,,i,,) + lambda * x = 0.
-   *
-   * Distributing and letting b,,i,, = c,,i,, * d,,i,,
-   *
-   * \sum,,i,, c,,i,, a,,i,, a,,i,,^T^ x - b,,i,, a,,i,, + lambda * x = 0.
-   */
-  private[recommendation] class NormalEquation(val k: Int) extends Serializable {
-
-    /** Number of entries in the upper triangular part of a k-by-k matrix. */
-    val triK = k * (k + 1) / 2
-    /** A^T^ * A */
-    val ata = new Array[Double](triK)
-    /** A^T^ * b */
-    val atb = new Array[Double](k)
-
-    private val da = new Array[Double](k)
-    private val upper = "U"
-
-    /** Adds an observation. */
-    def add(a: Array[Float], b: Double, c: Double = 1.0): NormalEquation = {
-      require(c >= 0.0)
-      require(a.length == k)
-      copyToDouble(a)
-      blas.dspr(upper, k, c, da, 1, ata)
-      if (b != 0.0) {
-        blas.daxpy(k, b, da, 1, atb, 1)
-      }
-      this
-    }
-
-    private def copyToDouble(a: Array[Float]): Unit = {
-      var i = 0
-      while (i < k) {
-        da(i) = a(i)
-        i += 1
-      }
-    }
-
-    /** Merges another normal equation object. */
-    def merge(other: NormalEquation): NormalEquation = {
-      require(other.k == k)
-      blas.daxpy(ata.length, 1.0, other.ata, 1, ata, 1)
-      blas.daxpy(atb.length, 1.0, other.atb, 1, atb, 1)
-      this
-    }
-
-    /** Resets everything to zero, which should be called after each solve. */
-    def reset(): Unit = {
-      ju.Arrays.fill(ata, 0.0)
-      ju.Arrays.fill(atb, 0.0)
-    }
-  }
-
-  /**
-   * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
-   */
-  private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
-    extends Serializable {
-
-    private val srcIds = mutable.ArrayBuilder.make[ID]
-    private val dstIds = mutable.ArrayBuilder.make[ID]
-    private val ratings = mutable.ArrayBuilder.make[Float]
-    var size = 0
-
-    /** Adds a rating. */
-    def add(r: Rating[ID]): this.type = {
-      size += 1
-      srcIds += r.user
-      dstIds += r.item
-      ratings += r.rating
-      this
-    }
-
-    /** Merges another [[RatingBlockBuilder]]. */
-    def merge(other: RatingBlock[ID]): this.type = {
-      size += other.srcIds.length
-      srcIds ++= other.srcIds
-      dstIds ++= other.dstIds
-      ratings ++= other.ratings
-      this
-    }
-
-    /** Builds a [[RatingBlock]]. */
-    def build(): RatingBlock[ID] = {
-      RatingBlock[ID](srcIds.result(), dstIds.result(), ratings.result())
     }
   }
 
@@ -1112,6 +1033,85 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       dst.srcIds(dstPos) = src.srcIds(srcPos)
       dst.dstEncodedIndices(dstPos) = src.dstEncodedIndices(srcPos)
       dst.ratings(dstPos) = src.ratings(srcPos)
+    }
+  }
+
+  /**
+   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
+   * Caching of the input factors is handled in [[ALS#train]].
+   */
+  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
+    factorBlocks.values.aggregate(new NormalEquation(rank))(
+      seqOp = (ne, factors) => {
+        factors.foreach(ne.add(_, 0.0))
+        ne
+      },
+      combOp = (ne1, ne2) => ne1.merge(ne2))
+  }
+
+  /** Trait for least squares solvers applied to the normal equation. */
+  private[recommendation] trait LeastSquaresNESolver extends Serializable {
+    /** Solves a least squares problem with regularization (possibly with other constraints). */
+    def solve(ne: NormalEquation, lambda: Double): Array[Float]
+  }
+
+  /**
+   * Representing a normal equation to solve the following weighted least squares problem:
+   *
+   * minimize \sum,,i,, c,,i,, (a,,i,,^T^ x - d,,i,,)^2^ + lambda * x^T^ x.
+   *
+   * Its normal equation is given by
+   *
+   * \sum,,i,, c,,i,, (a,,i,, a,,i,,^T^ x - d,,i,, a,,i,,) + lambda * x = 0.
+   *
+   * Distributing and letting b,,i,, = c,,i,, * d,,i,,
+   *
+   * \sum,,i,, c,,i,, a,,i,, a,,i,,^T^ x - b,,i,, a,,i,, + lambda * x = 0.
+   */
+  private[recommendation] class NormalEquation(val k: Int) extends Serializable {
+
+    /** Number of entries in the upper triangular part of a k-by-k matrix. */
+    val triK = k * (k + 1) / 2
+    /** A^T^ * A */
+    val ata = new Array[Double](triK)
+    /** A^T^ * b */
+    val atb = new Array[Double](k)
+
+    private val da = new Array[Double](k)
+    private val upper = "U"
+
+    /** Adds an observation. */
+    def add(a: Array[Float], b: Double, c: Double = 1.0): NormalEquation = {
+      require(c >= 0.0)
+      require(a.length == k)
+      copyToDouble(a)
+      blas.dspr(upper, k, c, da, 1, ata)
+      if (b != 0.0) {
+        blas.daxpy(k, b, da, 1, atb, 1)
+      }
+      this
+    }
+
+    private def copyToDouble(a: Array[Float]): Unit = {
+      var i = 0
+      while (i < k) {
+        da(i) = a(i)
+        i += 1
+      }
+    }
+
+    /** Merges another normal equation object. */
+    def merge(other: NormalEquation): NormalEquation = {
+      require(other.k == k)
+      blas.daxpy(ata.length, 1.0, other.ata, 1, ata, 1)
+      blas.daxpy(atb.length, 1.0, other.atb, 1, atb, 1)
+      this
+    }
+
+    /** Resets everything to zero, which should be called after each solve. */
+    def reset(): Unit = {
+      ju.Arrays.fill(ata, 0.0)
+      ju.Arrays.fill(atb, 0.0)
     }
   }
 

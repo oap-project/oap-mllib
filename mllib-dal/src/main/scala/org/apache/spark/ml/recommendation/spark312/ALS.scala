@@ -239,14 +239,14 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       .persist(intermediateRDDStorageLevel)
     val (userInBlocks, userOutBlocks) =
       makeBlocks("user", blockRatings, userPart, itemPart, intermediateRDDStorageLevel)
-    userOutBlocks.count() // materialize blockRatings and user blocks
+    userOutBlocks.count()    // materialize blockRatings and user blocks
     val swappedBlockRatings = blockRatings.map {
       case ((userBlockId, itemBlockId), RatingBlock(userIds, itemIds, localRatings)) =>
         ((itemBlockId, userBlockId), RatingBlock(itemIds, userIds, localRatings))
     }
     val (itemInBlocks, itemOutBlocks) =
       makeBlocks("item", swappedBlockRatings, itemPart, userPart, intermediateRDDStorageLevel)
-    itemOutBlocks.count() // materialize item blocks
+    itemOutBlocks.count()    // materialize item blocks
 
     // Encoders for storing each user/item's partition ID and index within its partition using a
     // single integer; used as an optimization
@@ -274,7 +274,7 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
           case e: IOException =>
             logWarning(s"Cannot delete checkpoint file $file:", e)
         }
-    }
+      }
 
     if (implicitPrefs) {
       for (iter <- 1 to maxIter) {
@@ -609,7 +609,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       dstPtrs: Array[Int],
       dstEncodedIndices: Array[Int],
       ratings: Array[Float]) {
-
     /** Size of the block. */
     def size: Int = ratings.length
     require(dstEncodedIndices.length == size)
@@ -702,11 +701,45 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       srcIds: Array[ID],
       dstIds: Array[ID],
       ratings: Array[Float]) {
-
     /** Size of the block. */
     def size: Int = srcIds.length
     require(dstIds.length == srcIds.length)
     require(ratings.length == srcIds.length)
+  }
+
+  /**
+   * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
+   */
+  private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
+    extends Serializable {
+
+    private val srcIds = mutable.ArrayBuilder.make[ID]
+    private val dstIds = mutable.ArrayBuilder.make[ID]
+    private val ratings = mutable.ArrayBuilder.make[Float]
+    var size = 0
+
+    /** Adds a rating. */
+    def add(r: Rating[ID]): this.type = {
+      size += 1
+      srcIds += r.user
+      dstIds += r.item
+      ratings += r.rating
+      this
+    }
+
+    /** Merges another [[RatingBlockBuilder]]. */
+    def merge(other: RatingBlock[ID]): this.type = {
+      size += other.srcIds.length
+      srcIds ++= other.srcIds
+      dstIds ++= other.dstIds
+      ratings ++= other.ratings
+      this
+    }
+
+    /** Builds a [[RatingBlock]]. */
+    def build(): RatingBlock[ID] = {
+      RatingBlock[ID](srcIds.result(), dstIds.result(), ratings.result())
+    }
   }
 
   /**
@@ -804,120 +837,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
           j += 1
         }
         dstFactors
-    }
-  }
-
-  /**
-   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
-   * Caching of the input factors is handled in [[ALS#train]].
-   */
-  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
-    factorBlocks.values.aggregate(new NormalEquation(rank))(
-      seqOp = (ne, factors) => {
-        factors.foreach(ne.add(_, 0.0))
-        ne
-      },
-      combOp = (ne1, ne2) => ne1.merge(ne2))
-  }
-
-  /** Trait for least squares solvers applied to the normal equation. */
-  private[recommendation] trait LeastSquaresNESolver extends Serializable {
-    /** Solves a least squares problem with regularization (possibly with other constraints). */
-    def solve(ne: NormalEquation, lambda: Double): Array[Float]
-  }
-
-  /**
-   * Representing a normal equation to solve the following weighted least squares problem:
-   *
-   * minimize \sum,,i,, c,,i,, (a,,i,,^T^ x - d,,i,,)^2^ + lambda * x^T^ x.
-   *
-   * Its normal equation is given by
-   *
-   * \sum,,i,, c,,i,, (a,,i,, a,,i,,^T^ x - d,,i,, a,,i,,) + lambda * x = 0.
-   *
-   * Distributing and letting b,,i,, = c,,i,, * d,,i,,
-   *
-   * \sum,,i,, c,,i,, a,,i,, a,,i,,^T^ x - b,,i,, a,,i,, + lambda * x = 0.
-   */
-  private[recommendation] class NormalEquation(val k: Int) extends Serializable {
-
-    /** Number of entries in the upper triangular part of a k-by-k matrix. */
-    val triK = k * (k + 1) / 2
-    /** A^T^ * A */
-    val ata = new Array[Double](triK)
-    /** A^T^ * b */
-    val atb = new Array[Double](k)
-
-    private val da = new Array[Double](k)
-    private val upper = "U"
-
-    /** Adds an observation. */
-    def add(a: Array[Float], b: Double, c: Double = 1.0): NormalEquation = {
-      require(c >= 0.0)
-      require(a.length == k)
-      copyToDouble(a)
-      blas.dspr(upper, k, c, da, 1, ata)
-      if (b != 0.0) {
-        blas.daxpy(k, b, da, 1, atb, 1)
-      }
-      this
-    }
-
-    private def copyToDouble(a: Array[Float]): Unit = {
-      var i = 0
-      while (i < k) {
-        da(i) = a(i)
-        i += 1
-      }
-    }
-
-    /** Merges another normal equation object. */
-    def merge(other: NormalEquation): NormalEquation = {
-      require(other.k == k)
-      blas.daxpy(ata.length, 1.0, other.ata, 1, ata, 1)
-      blas.daxpy(atb.length, 1.0, other.atb, 1, atb, 1)
-      this
-    }
-
-    /** Resets everything to zero, which should be called after each solve. */
-    def reset(): Unit = {
-      ju.Arrays.fill(ata, 0.0)
-      ju.Arrays.fill(atb, 0.0)
-    }
-  }
-
-  /**
-   * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
-   */
-  private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
-    extends Serializable {
-
-    private val srcIds = mutable.ArrayBuilder.make[ID]
-    private val dstIds = mutable.ArrayBuilder.make[ID]
-    private val ratings = mutable.ArrayBuilder.make[Float]
-    var size = 0
-
-    /** Adds a rating. */
-    def add(r: Rating[ID]): this.type = {
-      size += 1
-      srcIds += r.user
-      dstIds += r.item
-      ratings += r.rating
-      this
-    }
-
-    /** Merges another [[RatingBlockBuilder]]. */
-    def merge(other: RatingBlock[ID]): this.type = {
-      size += other.srcIds.length
-      srcIds ++= other.srcIds
-      dstIds ++= other.dstIds
-      ratings ++= other.ratings
-      this
-    }
-
-    /** Builds a [[RatingBlock]]. */
-    def build(): RatingBlock[ID] = {
-      RatingBlock[ID](srcIds.result(), dstIds.result(), ratings.result())
     }
   }
 
@@ -1117,6 +1036,85 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       dst.srcIds(dstPos) = src.srcIds(srcPos)
       dst.dstEncodedIndices(dstPos) = src.dstEncodedIndices(srcPos)
       dst.ratings(dstPos) = src.ratings(srcPos)
+    }
+  }
+
+  /**
+   * Computes the Gramian matrix of user or item factors, which is only used in implicit preference.
+   * Caching of the input factors is handled in [[ALS#train]].
+   */
+  private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
+    factorBlocks.values.aggregate(new NormalEquation(rank))(
+      seqOp = (ne, factors) => {
+        factors.foreach(ne.add(_, 0.0))
+        ne
+      },
+      combOp = (ne1, ne2) => ne1.merge(ne2))
+  }
+
+  /** Trait for least squares solvers applied to the normal equation. */
+  private[recommendation] trait LeastSquaresNESolver extends Serializable {
+    /** Solves a least squares problem with regularization (possibly with other constraints). */
+    def solve(ne: NormalEquation, lambda: Double): Array[Float]
+  }
+
+  /**
+   * Representing a normal equation to solve the following weighted least squares problem:
+   *
+   * minimize \sum,,i,, c,,i,, (a,,i,,^T^ x - d,,i,,)^2^ + lambda * x^T^ x.
+   *
+   * Its normal equation is given by
+   *
+   * \sum,,i,, c,,i,, (a,,i,, a,,i,,^T^ x - d,,i,, a,,i,,) + lambda * x = 0.
+   *
+   * Distributing and letting b,,i,, = c,,i,, * d,,i,,
+   *
+   * \sum,,i,, c,,i,, a,,i,, a,,i,,^T^ x - b,,i,, a,,i,, + lambda * x = 0.
+   */
+  private[recommendation] class NormalEquation(val k: Int) extends Serializable {
+
+    /** Number of entries in the upper triangular part of a k-by-k matrix. */
+    val triK = k * (k + 1) / 2
+    /** A^T^ * A */
+    val ata = new Array[Double](triK)
+    /** A^T^ * b */
+    val atb = new Array[Double](k)
+
+    private val da = new Array[Double](k)
+    private val upper = "U"
+
+    /** Adds an observation. */
+    def add(a: Array[Float], b: Double, c: Double = 1.0): NormalEquation = {
+      require(c >= 0.0)
+      require(a.length == k)
+      copyToDouble(a)
+      blas.dspr(upper, k, c, da, 1, ata)
+      if (b != 0.0) {
+        blas.daxpy(k, b, da, 1, atb, 1)
+      }
+      this
+    }
+
+    private def copyToDouble(a: Array[Float]): Unit = {
+      var i = 0
+      while (i < k) {
+        da(i) = a(i)
+        i += 1
+      }
+    }
+
+    /** Merges another normal equation object. */
+    def merge(other: NormalEquation): NormalEquation = {
+      require(other.k == k)
+      blas.daxpy(ata.length, 1.0, other.ata, 1, ata, 1)
+      blas.daxpy(atb.length, 1.0, other.atb, 1, atb, 1)
+      this
+    }
+
+    /** Resets everything to zero, which should be called after each solve. */
+    def reset(): Unit = {
+      ju.Arrays.fill(ata, 0.0)
+      ju.Arrays.fill(atb, 0.0)
     }
   }
 
