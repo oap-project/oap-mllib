@@ -70,8 +70,8 @@ class Correlation extends CorrelationShim {
    */
   @Since("2.2.0")
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame = {
-    val isPlatformSupported =
-      Utils.checkClusterPlatformCompatibility(dataset.sparkSession.sparkContext)
+    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+      dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
       val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
       if (handlePersistence) {

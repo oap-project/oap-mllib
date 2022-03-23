@@ -44,22 +44,22 @@ import org.apache.spark.storage.StorageLevel
 class Statistics extends SummarizerShim {
 
   /**
-   * Computes column-wise summary statistics for the input RDD[Vector].
-   *
-   * @param X an RDD[Vector] for which column-wise summary statistics are to be computed.
-   * @return [[org.apache.spark.mllib.stat.MultivariateStatisticalSummary]]
-   *        object containing column-wise summary statistics.
-   */
+    * Computes column-wise summary statistics for the input RDD[Vector].
+    *
+    * @param X an RDD[Vector] for which column-wise summary statistics are to be computed.
+    * @return [[org.apache.spark.mllib.stat.MultivariateStatisticalSummary]] object containing column-wise summary statistics.
+    */
   @Since("1.1.0")
   def colStats(X: RDD[Vector]): MultivariateStatisticalSummary = {
-    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(X.sparkContext)
+    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+      X.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported) {
       val handlePersistence = (X.getStorageLevel == StorageLevel.NONE)
       if (handlePersistence) {
         X.persist(StorageLevel.MEMORY_AND_DISK)
       }
-      val rdd = X.map { v =>
-        v.asML
+      val rdd = X.map {
+        v => v.asML
       }
       val executor_num = Utils.sparkExecutorNum(X.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
