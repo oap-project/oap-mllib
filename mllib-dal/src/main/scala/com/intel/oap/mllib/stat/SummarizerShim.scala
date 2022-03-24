@@ -23,7 +23,7 @@ import org.apache.spark.mllib.stat.MultivariateStatisticalSummary
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset}
 
-import org.apache.spark.mllib.stat.spark320.{Statistics => SummarizerSpark320 }
+import org.apache.spark.mllib.stat.spark321.{Statistics => SummarizerSpark321 }
 
 trait SummarizerShim extends Serializable with Logging {
   def colStats(X: RDD[Vector]): MultivariateStatisticalSummary
@@ -34,7 +34,7 @@ object SummarizerShim extends Logging {
   def create(): SummarizerShim = {
     logInfo(s"Loading Summarizer for Spark $SPARK_VERSION")
     val summarizer = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" | "3.2.0" => new SummarizerSpark320()
+      case "3.1.1" | "3.1.2" | "3.2.0" | "3.2.1" => new SummarizerSpark321()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     summarizer
