@@ -43,11 +43,12 @@ import org.apache.spark.storage.StorageLevel
 @Since("1.1.0")
 class Statistics extends SummarizerShim {
 
-  /**
+   /**
     * Computes column-wise summary statistics for the input RDD[Vector].
     *
     * @param X an RDD[Vector] for which column-wise summary statistics are to be computed.
-    * @return [[org.apache.spark.mllib.stat.MultivariateStatisticalSummary]] object containing column-wise summary statistics.
+    * @return [[org.apache.spark.mllib.stat.MultivariateStatisticalSummary]]
+    *        object containing column-wise summary statistics.
     */
   @Since("1.1.0")
   def colStats(X: RDD[Vector]): MultivariateStatisticalSummary = {
