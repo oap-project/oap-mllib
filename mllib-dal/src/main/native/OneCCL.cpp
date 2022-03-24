@@ -82,8 +82,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     return 1;
 }
 
-JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(
-    JNIEnv *env, jobject obj) {
+JNIEXPORT void JNICALL
+Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
 
     g_comms.pop_back();
 
@@ -176,10 +176,8 @@ static bool is_valid_ip(char ip[]) {
     return false;
 }
 
-JNIEXPORT jint JNICALL
-Java_com_intel_oap_mllib_OneCCL_00024_c_1getAvailPort(JNIEnv *env,
-                                                           jobject obj,
-                                                           jstring localIP) {
+JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1getAvailPort(
+    JNIEnv *env, jobject obj, jstring localIP) {
 
     // start from beginning of dynamic port
     const int port_start_base = 3000;

@@ -266,16 +266,18 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCente
         using daal::data_management::internal::convertToSyclHomogen;
 
         Status st;
-        NumericTablePtr pSyclHomogen = convertToSyclHomogen<algorithmFPType>(*pData, st);
+        NumericTablePtr pSyclHomogen =
+            convertToSyclHomogen<algorithmFPType>(*pData, st);
         if (!st.ok()) {
-            std::cout << "Failed to convert row merged table to SYCL homogen one"
-                      << std::endl;
+            std::cout
+                << "Failed to convert row merged table to SYCL homogen one"
+                << std::endl;
             return 0L;
         }
 
         ret = doKMeansDALComputeWithInitCenters(
-            env, obj, rankId, comm, pSyclHomogen, centroids, cluster_num, tolerance,
-            iteration_num, executor_num, resultObj);
+            env, obj, rankId, comm, pSyclHomogen, centroids, cluster_num,
+            tolerance, iteration_num, executor_num, resultObj);
 
         env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
     } else

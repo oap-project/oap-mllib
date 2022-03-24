@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,23 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.classification.spark320
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{NaiveBayesDALImpl, NaiveBayesShim}
+
 import org.apache.spark.annotation.Since
+import org.apache.spark.ml.classification._
+import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg._
+import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.stat.Summarizer
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
-import org.apache.spark.ml.classification._
-import org.apache.spark.ml.param.ParamMap
 
 // scalastyle:off line.size.limit
 

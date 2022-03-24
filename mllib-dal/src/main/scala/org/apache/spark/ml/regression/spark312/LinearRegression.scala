@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,16 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.regression.spark312
 
-import scala.collection.mutable
 import breeze.linalg.{DenseVector => BDV}
-import breeze.optimize.{CachedDiffFunction, DiffFunction, FirstOrderMinimizer, LBFGS => BreezeLBFGS, LBFGSB => BreezeLBFGSB, OWLQN => BreezeOWLQN}
+import breeze.optimize.{
+  CachedDiffFunction,
+  DiffFunction,
+  FirstOrderMinimizer,
+  LBFGS => BreezeLBFGS,
+  LBFGSB => BreezeLBFGSB,
+  OWLQN => BreezeOWLQN
+}
 import breeze.stats.distributions.StudentsT
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim}
 import org.apache.hadoop.fs.Path
+import scala.collection.mutable
+
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -36,6 +46,7 @@ import org.apache.spark.ml.optim.aggregator._
 import org.apache.spark.ml.optim.loss.{L2Regularization, RDDLossFunction}
 import org.apache.spark.ml.param.{DoubleParam, Param, ParamMap, ParamValidators}
 import org.apache.spark.ml.param.shared._
+import org.apache.spark.ml.regression.{LinearRegression => SparkLinearRegression, _}
 import org.apache.spark.ml.stat._
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
@@ -49,7 +60,6 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DataType, DoubleType, StructType}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.VersionUtils.majorMinorVersion
-import org.apache.spark.ml.regression.{LinearRegression => SparkLinearRegression, _}
 
 /**
  * Params for linear regression.
@@ -716,85 +726,6 @@ object LinearRegression extends DefaultParamsReadable[LinearRegression] {
   private[regression] val supportedLosses = Array(SquaredError, Huber)
 }
 
-///**
-// * Model produced by [[LinearRegression]].
-// */
-//@Since("1.3.0")
-//class LinearRegressionModel private[ml] (
-//    @Since("1.4.0") override val uid: String,
-//    @Since("2.0.0") val coefficients: Vector,
-//    @Since("1.3.0") val intercept: Double,
-//    @Since("2.3.0") val scale: Double)
-//  extends RegressionModel[Vector, LinearRegressionModel]
-//  with LinearRegressionParams with GeneralMLWritable
-//  with HasTrainingSummary[LinearRegressionTrainingSummary] {
-//
-//  private[ml] def this(uid: String, coefficients: Vector, intercept: Double) =
-//    this(uid, coefficients, intercept, 1.0)
-//
-//  override val numFeatures: Int = coefficients.size
-//
-//  /**
-//   * Gets summary (e.g. residuals, mse, r-squared ) of model on training set. An exception is
-//   * thrown if `hasSummary` is false.
-//   */
-//  @Since("1.5.0")
-//  override def summary: LinearRegressionTrainingSummary = super.summary
-//
-//  /**
-//   * Evaluates the model on a test dataset.
-//   *
-//   * @param dataset Test dataset to evaluate model on.
-//   */
-//  @Since("2.0.0")
-//  def evaluate(dataset: Dataset[_]): LinearRegressionSummary = {
-//    // Handle possible missing or invalid prediction columns
-//    val (summaryModel, predictionColName) = findSummaryModelAndPredictionCol()
-//    new LinearRegressionSummary(summaryModel.transform(dataset), predictionColName,
-//      $(labelCol), $(featuresCol), summaryModel, Array(0.0))
-//  }
-//
-//  /**
-//   * If the prediction column is set returns the current model and prediction column,
-//   * otherwise generates a new column and sets it as the prediction column on a new copy
-//   * of the current model.
-//   */
-//  private[regression] def findSummaryModelAndPredictionCol(): (LinearRegressionModel, String) = {
-//    $(predictionCol) match {
-//      case "" =>
-//        val predictionColName = "prediction_" + java.util.UUID.randomUUID.toString
-//        (copy(ParamMap.empty).setPredictionCol(predictionColName), predictionColName)
-//      case p => (this, p)
-//    }
-//  }
-//
-//
-//  override def predict(features: Vector): Double = {
-//    dot(features, coefficients) + intercept
-//  }
-//
-//  @Since("1.4.0")
-//  override def copy(extra: ParamMap): LinearRegressionModel = {
-//    val newModel = copyValues(new LinearRegressionModel(uid, coefficients, intercept), extra)
-//    newModel.setSummary(trainingSummary).setParent(parent)
-//  }
-//
-//  /**
-//   * Returns a [[org.apache.spark.ml.util.GeneralMLWriter]] instance for this ML instance.
-//   *
-//   * For [[LinearRegressionModel]], this does NOT currently save the training [[summary]].
-//   * An option to save [[summary]] may be added in the future.
-//   *
-//   * This also does not save the [[parent]] currently.
-//   */
-//  @Since("1.6.0")
-//  override def write: GeneralMLWriter = new GeneralMLWriter(this)
-//
-//  @Since("3.0.0")
-//  override def toString: String = {
-//    s"LinearRegressionModel: uid=$uid, numFeatures=$numFeatures"
-//  }
-//}
 
 /** A writer for LinearRegression that handles the "internal" (or default) format */
 private class InternalLinearRegressionModelWriter
@@ -838,274 +769,3 @@ private class PMMLLinearRegressionModelWriter
     oldModel.toPMML(sc, path)
   }
 }
-
-//@Since("1.6.0")
-//object LinearRegressionModel extends MLReadable[LinearRegressionModel] {
-//
-//  @Since("1.6.0")
-//  override def read: MLReader[LinearRegressionModel] = new LinearRegressionModelReader
-//
-//  @Since("1.6.0")
-//  override def load(path: String): LinearRegressionModel = super.load(path)
-//
-//  private class LinearRegressionModelReader extends MLReader[LinearRegressionModel] {
-//
-//    /** Checked against metadata when loading model */
-//    private val className = classOf[LinearRegressionModel].getName
-//
-//    override def load(path: String): LinearRegressionModel = {
-//      val metadata = DefaultParamsReader.loadMetadata(path, sc, className)
-//
-//      val dataPath = new Path(path, "data").toString
-//      val data = sparkSession.read.format("parquet").load(dataPath)
-//      val (majorVersion, minorVersion) = majorMinorVersion(metadata.sparkVersion)
-//      val model = if (majorVersion < 2 || (majorVersion == 2 && minorVersion <= 2)) {
-//        // Spark 2.2 and before
-//        val Row(intercept: Double, coefficients: Vector) =
-//          MLUtils.convertVectorColumnsToML(data, "coefficients")
-//            .select("intercept", "coefficients")
-//            .head()
-//        new LinearRegressionModel(metadata.uid, coefficients, intercept)
-//      } else {
-//        // Spark 2.3 and later
-//        val Row(intercept: Double, coefficients: Vector, scale: Double) =
-//          data.select("intercept", "coefficients", "scale").head()
-//        new LinearRegressionModel(metadata.uid, coefficients, intercept, scale)
-//      }
-//
-//      metadata.getAndSetParams(model)
-//      model
-//    }
-//  }
-//}
-
-///**
-// * Linear regression training results. Currently, the training summary ignores the
-// * training weights except for the objective trace.
-// *
-// * @param predictions predictions output by the model's `transform` method.
-// * @param objectiveHistory objective function (scaled loss + regularization) at each iteration.
-// */
-//@Since("1.5.0")
-//class LinearRegressionTrainingSummary private[regression] (
-//    predictions: DataFrame,
-//    predictionCol: String,
-//    labelCol: String,
-//    featuresCol: String,
-//    model: LinearRegressionModel,
-//    diagInvAtWA: Array[Double],
-//    val objectiveHistory: Array[Double])
-//  extends LinearRegressionSummary(
-//    predictions,
-//    predictionCol,
-//    labelCol,
-//    featuresCol,
-//    model,
-//    diagInvAtWA) {
-//
-//  /**
-//   * Number of training iterations until termination
-//   *
-//   * This value is only available when using the "l-bfgs" solver.
-//   *
-//   * @see `LinearRegression.solver`
-//   */
-//  @Since("1.5.0")
-//  val totalIterations = {
-//    assert(objectiveHistory.length > 0, s"objectiveHistory length should be greater than 1.")
-//    objectiveHistory.length - 1
-//  }
-//}
-
-///**
-// * Linear regression results evaluated on a dataset.
-// *
-// * @param predictions predictions output by the model's `transform` method.
-// * @param predictionCol Field in "predictions" which gives the predicted value of the label at
-// *                      each instance.
-// * @param labelCol Field in "predictions" which gives the true label of each instance.
-// * @param featuresCol Field in "predictions" which gives the features of each instance as a vector.
-// */
-//@Since("1.5.0")
-//class LinearRegressionSummary private[regression] (
-//    @transient val predictions: DataFrame,
-//    val predictionCol: String,
-//    val labelCol: String,
-//    val featuresCol: String,
-//    private val privateModel: LinearRegressionModel,
-//    private val diagInvAtWA: Array[Double]) extends Serializable {
-//
-//  @transient private val metrics = {
-//    val weightCol =
-//      if (!privateModel.isDefined(privateModel.weightCol) || privateModel.getWeightCol.isEmpty) {
-//        lit(1.0)
-//      } else {
-//        col(privateModel.getWeightCol).cast(DoubleType)
-//      }
-//
-//    new RegressionMetrics(
-//      predictions
-//        .select(col(predictionCol), col(labelCol).cast(DoubleType), weightCol)
-//        .rdd
-//        .map { case Row(pred: Double, label: Double, weight: Double) => (pred, label, weight) },
-//      !privateModel.getFitIntercept)
-//  }
-//
-//  /**
-//   * Returns the explained variance regression score.
-//   * explainedVariance = 1 - variance(y - \hat{y}) / variance(y)
-//   * Reference: <a href="http://en.wikipedia.org/wiki/Explained_variation">
-//   * Wikipedia explain variation</a>
-//   */
-//  @Since("1.5.0")
-//  val explainedVariance: Double = metrics.explainedVariance
-//
-//  /**
-//   * Returns the mean absolute error, which is a risk function corresponding to the
-//   * expected value of the absolute error loss or l1-norm loss.
-//   */
-//  @Since("1.5.0")
-//  val meanAbsoluteError: Double = metrics.meanAbsoluteError
-//
-//  /**
-//   * Returns the mean squared error, which is a risk function corresponding to the
-//   * expected value of the squared error loss or quadratic loss.
-//   */
-//  @Since("1.5.0")
-//  val meanSquaredError: Double = metrics.meanSquaredError
-//
-//  /**
-//   * Returns the root mean squared error, which is defined as the square root of
-//   * the mean squared error.
-//   */
-//  @Since("1.5.0")
-//  val rootMeanSquaredError: Double = metrics.rootMeanSquaredError
-//
-//  /**
-//   * Returns R^2^, the coefficient of determination.
-//   * Reference: <a href="http://en.wikipedia.org/wiki/Coefficient_of_determination">
-//   * Wikipedia coefficient of determination</a>
-//   */
-//  @Since("1.5.0")
-//  val r2: Double = metrics.r2
-//
-//  /**
-//   * Returns Adjusted R^2^, the adjusted coefficient of determination.
-//   * Reference: <a href="https://en.wikipedia.org/wiki/Coefficient_of_determination#Adjusted_R2">
-//   * Wikipedia coefficient of determination</a>
-//   */
-//  @Since("2.3.0")
-//  val r2adj: Double = {
-//    val interceptDOF = if (privateModel.getFitIntercept) 1 else 0
-//    1 - (1 - r2) * (numInstances - interceptDOF) /
-//      (numInstances - privateModel.coefficients.size - interceptDOF)
-//  }
-//
-//  /** Residuals (label - predicted value) */
-//  @Since("1.5.0")
-//  @transient lazy val residuals: DataFrame = {
-//    val t = udf { (pred: Double, label: Double) => label - pred }
-//    predictions.select(t(col(predictionCol), col(labelCol)).as("residuals"))
-//  }
-//
-//  /** Number of instances in DataFrame predictions */
-//  lazy val numInstances: Long = metrics.count
-//
-//  /** Degrees of freedom */
-//  @Since("2.2.0")
-//  val degreesOfFreedom: Long = if (privateModel.getFitIntercept) {
-//    numInstances - privateModel.coefficients.size - 1
-//  } else {
-//    numInstances - privateModel.coefficients.size
-//  }
-//
-//  /**
-//   * The weighted residuals, the usual residuals rescaled by
-//   * the square root of the instance weights.
-//   */
-//  lazy val devianceResiduals: Array[Double] = {
-//    val weighted =
-//      if (!privateModel.isDefined(privateModel.weightCol) || privateModel.getWeightCol.isEmpty) {
-//        lit(1.0)
-//      } else {
-//        sqrt(col(privateModel.getWeightCol))
-//      }
-//    val dr = predictions
-//      .select(col(privateModel.getLabelCol).minus(col(privateModel.getPredictionCol))
-//        .multiply(weighted).as("weightedResiduals"))
-//      .select(min(col("weightedResiduals")).as("min"), max(col("weightedResiduals")).as("max"))
-//      .first()
-//    Array(dr.getDouble(0), dr.getDouble(1))
-//  }
-//
-//  /**
-//   * Standard error of estimated coefficients and intercept.
-//   * This value is only available when using the "normal" solver.
-//   *
-//   * If `LinearRegression.fitIntercept` is set to true,
-//   * then the last element returned corresponds to the intercept.
-//   *
-//   * @see `LinearRegression.solver`
-//   */
-//  lazy val coefficientStandardErrors: Array[Double] = {
-//    if (diagInvAtWA.length == 1 && diagInvAtWA(0) == 0) {
-//      throw new UnsupportedOperationException(
-//        "No Std. Error of coefficients available for this LinearRegressionModel")
-//    } else {
-//      val rss =
-//        if (!privateModel.isDefined(privateModel.weightCol) || privateModel.getWeightCol.isEmpty) {
-//          meanSquaredError * numInstances
-//        } else {
-//          val t = udf { (pred: Double, label: Double, weight: Double) =>
-//            math.pow(label - pred, 2.0) * weight }
-//          predictions.select(t(col(privateModel.getPredictionCol), col(privateModel.getLabelCol),
-//            col(privateModel.getWeightCol)).as("wse")).agg(sum(col("wse"))).first().getDouble(0)
-//        }
-//      val sigma2 = rss / degreesOfFreedom
-//      diagInvAtWA.map(_ * sigma2).map(math.sqrt)
-//    }
-//  }
-//
-//  /**
-//   * T-statistic of estimated coefficients and intercept.
-//   * This value is only available when using the "normal" solver.
-//   *
-//   * If `LinearRegression.fitIntercept` is set to true,
-//   * then the last element returned corresponds to the intercept.
-//   *
-//   * @see `LinearRegression.solver`
-//   */
-//  lazy val tValues: Array[Double] = {
-//    if (diagInvAtWA.length == 1 && diagInvAtWA(0) == 0) {
-//      throw new UnsupportedOperationException(
-//        "No t-statistic available for this LinearRegressionModel")
-//    } else {
-//      val estimate = if (privateModel.getFitIntercept) {
-//        Array.concat(privateModel.coefficients.toArray, Array(privateModel.intercept))
-//      } else {
-//        privateModel.coefficients.toArray
-//      }
-//      estimate.zip(coefficientStandardErrors).map { x => x._1 / x._2 }
-//    }
-//  }
-//
-//  /**
-//   * Two-sided p-value of estimated coefficients and intercept.
-//   * This value is only available when using the "normal" solver.
-//   *
-//   * If `LinearRegression.fitIntercept` is set to true,
-//   * then the last element returned corresponds to the intercept.
-//   *
-//   * @see `LinearRegression.solver`
-//   */
-//  lazy val pValues: Array[Double] = {
-//    if (diagInvAtWA.length == 1 && diagInvAtWA(0) == 0) {
-//      throw new UnsupportedOperationException(
-//        "No p-value available for this LinearRegressionModel")
-//    } else {
-//      tValues.map { x => 2.0 * (1.0 - StudentsT(degreesOfFreedom.toDouble).cdf(math.abs(x))) }
-//    }
-//  }
-//
-//}
-

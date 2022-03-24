@@ -26,8 +26,7 @@ using namespace daal::data_management;
 // Use oneDAL lib function
 extern bool daal_check_is_intel_cpu();
 
-JNIEXPORT void JNICALL
-Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable(
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable(
     JNIEnv *, jobject, jlong rowMergedNumericTableAddr,
     jlong numericTableAddr) {
     data_management::RowMergedNumericTablePtr pRowMergedNumericTable = (*(
@@ -51,8 +50,7 @@ JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDouble(
  * Method:    cSetDoubleBatch
  * Signature: (JI[DII)V
  */
-JNIEXPORT void JNICALL
-Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
     JNIEnv *env, jobject, jlong numTableAddr, jint curRows, jdoubleArray batch,
     jint numRows, jint numCols) {
     HomogenNumericTable<double> *nt =
@@ -63,8 +61,7 @@ Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
     env->ReleasePrimitiveArrayCritical(batch, values, JNI_ABORT);
 }
 
-JNIEXPORT void JNICALL
-Java_com_intel_oap_mllib_OneDAL_00024_cFreeDataMemory(
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cFreeDataMemory(
     JNIEnv *, jobject, jlong numericTableAddr) {
     data_management::NumericTablePtr pNumericTable =
         (*(data_management::NumericTablePtr *)numericTableAddr);
@@ -72,8 +69,8 @@ Java_com_intel_oap_mllib_OneDAL_00024_cFreeDataMemory(
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_intel_oap_mllib_OneDAL_00024_cCheckPlatformCompatibility(
-    JNIEnv *, jobject) {
+Java_com_intel_oap_mllib_OneDAL_00024_cCheckPlatformCompatibility(JNIEnv *,
+                                                                  jobject) {
     // Only guarantee compatibility and performance on Intel platforms, use
     // oneDAL lib function
     return daal_check_is_intel_cpu();
