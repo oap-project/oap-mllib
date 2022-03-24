@@ -35,7 +35,7 @@ object CorrelationShim extends Logging {
   def create(): CorrelationShim = {
     logInfo(s"Loading Correlation for Spark $SPARK_VERSION")
     val als = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" | "3.2.0" => new CorrelationSpark320()
+      case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" => new CorrelationSpark320()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     als

@@ -34,7 +34,7 @@ object SummarizerShim extends Logging {
   def create(): SummarizerShim = {
     logInfo(s"Loading Summarizer for Spark $SPARK_VERSION")
     val summarizer = SPARK_VERSION match {
-      case "3.1.1" | "3.1.2" | "3.2.0" => new SummarizerSpark320()
+      case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" => new SummarizerSpark320()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     summarizer
