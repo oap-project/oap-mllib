@@ -140,7 +140,7 @@ class NaiveBayes @Since("1.5.0") (
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
 
-    logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
+    logInfo(s"NaiveBayesDAL fit using $executorNum Executors")
 
     // DAL only support [0..numClasses) as labels, should map original labels using StringIndexer
     // Todo: optimize getting num of classes
