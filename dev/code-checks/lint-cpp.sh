@@ -14,14 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CLANG_FORMAT=$(which clang-format)
+CLANG_FORMAT=$(which clang-format-10)
+CLANG_FORMAT_VERSION=$($CLANG_FORMAT --version)
 
 if [ -z $CLANG_FORMAT ]; then
     echo clang-format not found, please install it.
     exit 1
 fi
 
-if [ -f .clang-format ]; then
+echo
+echo "Using clang-format ($CLANG_FORMAT) version $CLANG_FORMAT_VERSION ..."
+echo "NOTICE: clang-format version should be >= 10.0.0"
+echo
+
+if [ ! -f .clang-format ]; then
     echo .clang-format is not found in current directory, please generate it.
     exit 1
 fi

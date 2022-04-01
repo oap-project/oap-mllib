@@ -49,7 +49,7 @@
     <property name="fileExtensions" value="java, properties, xml"/>
 
     <module name="SuppressionFilter">
-      <property name="file" value="../dev/codestyle/checkstyle-suppressions.xml"/>
+      <property name="file" value="../dev/code-checks/checkstyle-suppressions.xml"/>
     </module>
 
     <!-- Checks for whitespace                               -->

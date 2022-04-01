@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,25 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.clustering.spark320
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansShim}
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.clustering.{KMeans => SparkKMeans, _}
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.ml.util._
-import org.apache.spark.mllib.clustering.{DistanceMeasure, VectorWithNorm, KMeans => MLlibKMeans}
-import org.apache.spark.mllib.linalg.VectorImplicits._
+import org.apache.spark.ml.util.Instrumentation.instrumented
+import org.apache.spark.mllib.clustering.{DistanceMeasure, KMeans => MLlibKMeans, VectorWithNorm}
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
+import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DoubleType
-import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.storage.StorageLevel
 
 /**

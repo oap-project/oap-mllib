@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,23 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.classification.spark320
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{NaiveBayesDALImpl, NaiveBayesShim}
+
 import org.apache.spark.annotation.Since
+import org.apache.spark.ml.classification._
+import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg._
+import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.stat.Summarizer
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
-import org.apache.spark.ml.classification._
-import org.apache.spark.ml.param.ParamMap
 
 // scalastyle:off line.size.limit
 
@@ -130,10 +133,14 @@ class NaiveBayes @Since("1.5.0") (
 
     val sc = spark.sparkContext
 
-    val executor_num = Utils.sparkExecutorNum(sc)
-    val executor_cores = Utils.sparkExecutorCores()
+    // select label and features columns and cache data.
+    val naiveBayesData = dataset.select($(labelCol), $(featuresCol)).cache()
+    naiveBayesData.count()
 
-    logInfo(s"NaiveBayesDAL fit using $executor_num Executors")
+    val executorNum = Utils.sparkExecutorNum(sc)
+    val executorCores = Utils.sparkExecutorCores()
+
+    logInfo(s"NaiveBayesDAL fit using $executorNum Executors")
 
     // DAL only support [0..numClasses) as labels, should map original labels using StringIndexer
     // Todo: optimize getting num of classes
@@ -143,17 +150,17 @@ class NaiveBayes @Since("1.5.0") (
     // numClasses should be explicitly included in the parquet metadata
     // This can be done by applying StringIndexer to the label column
     val numClasses = confClasses match {
-      case -1 => getNumClasses(dataset)
+      case -1 => getNumClasses(naiveBayesData)
       case _ => confClasses
     }
 
     instr.logNumClasses(numClasses)
 
-    val labeledPointsDS = dataset
+    val labeledPointsDS = naiveBayesData
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
 
     val dalModel = new NaiveBayesDALImpl(uid, numClasses,
-      executor_num, executor_cores).train(labeledPointsDS, ${labelCol}, ${featuresCol})
+      executorNum, executorCores).train(labeledPointsDS, ${labelCol}, ${featuresCol})
 
     val model = copyValues(new NaiveBayesModel(
       dalModel.uid, dalModel.pi, dalModel.theta, dalModel.sigma))

@@ -46,8 +46,9 @@ public final class LibLoader {
    * Load all native libs
    */
   public static synchronized void loadLibraries() throws IOException {
-    if (isLoaded)
+    if (isLoaded) {
       return;
+    }
 
     if (!loadLibSYCL()) {
       log.debug("SYCL libraries are not available, will load CPU libraries only.");
@@ -80,7 +81,8 @@ public final class LibLoader {
    */
   private static synchronized Boolean loadLibSYCL() throws IOException {
     // Check if SYCL libraries are available
-    InputStream streamIn = LibLoader.class.getResourceAsStream(LIBRARY_PATH_IN_JAR + "/libsycl.so.5");
+    InputStream streamIn = LibLoader.class.getResourceAsStream(LIBRARY_PATH_IN_JAR +
+            "/libsycl.so.5");
     if (streamIn == null) {
       return false;
     }
@@ -160,7 +162,7 @@ public final class LibLoader {
       streamIn.close();
     }
 
-    System.load(fileOut.toString());    
+    System.load(fileOut.toString());
     log.debug("DONE: Loading library " + fileOut.toString() +" as resource.");
   }
 

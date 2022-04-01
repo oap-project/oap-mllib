@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,25 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.recommendation.spark312
 
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.intel.oap.mllib.{Utils => DALUtils}
+import com.intel.oap.mllib.recommendation.{ALSDALImpl, ALSShim}
 import java.{util => ju}
 import java.io.IOException
 import java.util.Locale
+import org.apache.hadoop.fs.Path
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.{Sorting, Try}
 import scala.util.hashing.byteswap64
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.intel.oap.mllib.recommendation.{ALSDALImpl, ALSShim}
-import com.intel.oap.mllib.{Utils => DALUtils}
-import org.apache.hadoop.fs.Path
+
 import org.apache.spark.{Partitioner, SparkException}
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.ml.recommendation._
+import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.ml.util.DefaultParamsReadable
 import org.apache.spark.mllib.linalg.CholeskyDecomposition
 import org.apache.spark.mllib.optimization.NNLS
