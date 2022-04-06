@@ -16,14 +16,15 @@
 
 package com.intel.oap.mllib.stat
 
+import com.intel.oap.mllib.Utils
+
 import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.stat.MultivariateStatisticalSummary
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset}
-
-import org.apache.spark.mllib.stat.spark321.{Statistics => SummarizerSpark321 }
+import org.apache.spark.mllib.stat.spark321.{Statistics => SummarizerSpark321}
 
 trait SummarizerShim extends Serializable with Logging {
   def colStats(X: RDD[Vector]): MultivariateStatisticalSummary
@@ -33,7 +34,7 @@ trait SummarizerShim extends Serializable with Logging {
 object SummarizerShim extends Logging {
   def create(): SummarizerShim = {
     logInfo(s"Loading Summarizer for Spark $SPARK_VERSION")
-    val summarizer = SPARK_VERSION match {
+    val summarizer = Utils.getSparkVersion() match {
       case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" | "3.2.1" => new SummarizerSpark321()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }

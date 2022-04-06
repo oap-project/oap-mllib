@@ -16,6 +16,7 @@
 
 package com.intel.oap.mllib.stat
 
+import com.intel.oap.mllib.Utils
 import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
@@ -24,8 +25,7 @@ import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.storage.StorageLevel
 
 import scala.reflect.ClassTag
-
-import org.apache.spark.ml.stat.spark321.{Correlation => CorrelationSpark321 }
+import org.apache.spark.ml.stat.spark321.{Correlation => CorrelationSpark321}
 
 trait CorrelationShim extends Serializable with Logging {
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame
@@ -34,7 +34,7 @@ trait CorrelationShim extends Serializable with Logging {
 object CorrelationShim extends Logging {
   def create(): CorrelationShim = {
     logInfo(s"Loading Correlation for Spark $SPARK_VERSION")
-    val als = SPARK_VERSION match {
+    val als = Utils.getSparkVersion() match {
       case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" | "3.2.1" => new CorrelationSpark321()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
