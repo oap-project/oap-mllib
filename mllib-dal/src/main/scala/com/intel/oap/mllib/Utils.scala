@@ -27,7 +27,14 @@ object Utils {
 
   def isOAPEnabled(): Boolean = {
     val sc = SparkSession.active.sparkContext
-    return sc.getConf.getBoolean("spark.oap.mllib.enabled", true)
+    val isDynamicAllication = sc.getConf.getBoolean("spark.dynamicAllocation.enabled", false)
+    val isOap = sc.getConf.getBoolean("spark.oap.mllib.enabled", true)
+    if (isOap && isDynamicAllication) {
+      throw new Exception(
+        s"OAP MLlib does not support dynamic allocation, " +
+          s"spark.dynamicAllocation.enabled should be set to false")
+    }
+    isOap
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {
