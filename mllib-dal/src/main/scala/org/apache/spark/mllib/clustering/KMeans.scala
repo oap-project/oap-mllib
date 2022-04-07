@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.mllib.clustering
 
@@ -45,13 +47,26 @@ class KMeans private (
     private var initializationSteps: Int,
     private var epsilon: Double,
     private var seed: Long,
-    private var distanceMeasure: String) extends Serializable with Logging {
+    private var distanceMeasure: String)
+    extends Serializable
+    with Logging {
 
   @Since("0.8.0")
-  private def this(k: Int, maxIterations: Int, initializationMode: String, initializationSteps: Int,
-      epsilon: Double, seed: Long) =
-    this(k, maxIterations, initializationMode, initializationSteps,
-      epsilon, seed, DistanceMeasure.EUCLIDEAN)
+  private def this(
+      k: Int,
+      maxIterations: Int,
+      initializationMode: String,
+      initializationSteps: Int,
+      epsilon: Double,
+      seed: Long) =
+    this(
+      k,
+      maxIterations,
+      initializationMode,
+      initializationSteps,
+      epsilon,
+      seed,
+      DistanceMeasure.EUCLIDEAN)
 
   /**
    * Constructs a KMeans instance with default parameters: {k: 2, maxIterations: 20,
@@ -59,8 +74,15 @@ class KMeans private (
    * distanceMeasure: "euclidean"}.
    */
   @Since("0.8.0")
-  def this() = this(2, 20, KMeans.K_MEANS_PARALLEL, 2, 1e-4, Utils.random.nextLong(),
-    DistanceMeasure.EUCLIDEAN)
+  def this() =
+    this(
+      2,
+      20,
+      KMeans.K_MEANS_PARALLEL,
+      2,
+      1e-4,
+      Utils.random.nextLong(),
+      DistanceMeasure.EUCLIDEAN)
 
   /**
    * Number of clusters to create (k).
@@ -79,8 +101,7 @@ class KMeans private (
    */
   @Since("0.8.0")
   def setK(k: Int): this.type = {
-    require(k > 0,
-      s"Number of clusters must be positive but got ${k}")
+    require(k > 0, s"Number of clusters must be positive but got ${k}")
     this.k = k
     this
   }
@@ -96,7 +117,8 @@ class KMeans private (
    */
   @Since("0.8.0")
   def setMaxIterations(maxIterations: Int): this.type = {
-    require(maxIterations >= 0,
+    require(
+      maxIterations >= 0,
       s"Maximum of iterations must be nonnegative but got ${maxIterations}")
     this.maxIterations = maxIterations
     this
@@ -132,7 +154,8 @@ class KMeans private (
    */
   @Since("0.8.0")
   def setInitializationSteps(initializationSteps: Int): this.type = {
-    require(initializationSteps > 0,
+    require(
+      initializationSteps > 0,
       s"Number of initialization steps must be positive but got ${initializationSteps}")
     this.initializationSteps = initializationSteps
     this
@@ -150,8 +173,7 @@ class KMeans private (
    */
   @Since("0.8.0")
   def setEpsilon(epsilon: Double): this.type = {
-    require(epsilon >= 0,
-      s"Distance threshold must be nonnegative but got ${epsilon}")
+    require(epsilon >= 0, s"Distance threshold must be nonnegative but got ${epsilon}")
     this.epsilon = epsilon
     this
   }
@@ -219,7 +241,8 @@ class KMeans private (
       handlePersistence: Boolean,
       instr: Option[Instrumentation]): KMeansModel = {
     val norms = instances.map { case (v, _) => Vectors.norm(v, 2.0) }
-    val vectors = instances.zip(norms)
+    val vectors = instances
+      .zip(norms)
       .map { case ((v, w), norm) => new VectorWithNorm(v, norm, w) }
 
     if (handlePersistence) {

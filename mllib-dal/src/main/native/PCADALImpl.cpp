@@ -50,9 +50,9 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-    std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << " PCA (native): Covariance local step took " << duration << " secs"
-             << std::endl;
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    std::cout << " PCA (native): Covariance local step took " << duration
+              << " secs" << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -63,47 +63,49 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
     size_t perNodeArchLength = dataArch.getSizeOfArchive();
 
     serializedData =
-       services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
+        services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
 
     byte *nodeResults = new byte[perNodeArchLength];
     dataArch.copyArchiveToArray(nodeResults, perNodeArchLength);
-    std::vector<size_t> aReceiveCount(comm.size(),
-                                     perNodeArchLength);
+    std::vector<size_t> aReceiveCount(comm.size(), perNodeArchLength);
 
     /* Transfer partial results to step 2 on the root node */
     ccl::gather((int8_t *)nodeResults, perNodeArchLength,
-               (int8_t *)(serializedData.get()), perNodeArchLength, comm)
-       .wait();
+                (int8_t *)(serializedData.get()), perNodeArchLength, comm)
+        .wait();
     t2 = std::chrono::high_resolution_clock::now();
 
     duration =
-       std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance gather to master took " << duration << " secs"
-             << std::endl;
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    std::cout << "PCA (native): Covariance gather to master took " << duration
+              << " secs" << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
         covariance::Distributed<step2Master, algorithmFPType> masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
-           /* Deserialize partial results from step 1 */
-           OutputDataArchive dataArch(serializedData.get() +
-                                          perNodeArchLength * i,
-                                      perNodeArchLength);
+            /* Deserialize partial results from step 1 */
+            OutputDataArchive dataArch(serializedData.get() +
+                                           perNodeArchLength * i,
+                                       perNodeArchLength);
 
-           covariance::PartialResultPtr dataForStep2FromStep1(new covariance::PartialResult());
-           dataForStep2FromStep1->deserialize(dataArch);
+            covariance::PartialResultPtr dataForStep2FromStep1(
+                new covariance::PartialResult());
+            dataForStep2FromStep1->deserialize(dataArch);
 
-           /* Set local partial results as input for the master-node algorithm
-           */
-           masterAlgorithm.input.add(covariance::partialResults,
-                                  dataForStep2FromStep1);
+            /* Set local partial results as input for the master-node algorithm
+             */
+            masterAlgorithm.input.add(covariance::partialResults,
+                                      dataForStep2FromStep1);
         }
 
         /* Set the parameter to choose the type of the output matrix */
-        masterAlgorithm.parameter.outputMatrixType = covariance::covarianceMatrix;
+        masterAlgorithm.parameter.outputMatrixType =
+            covariance::covarianceMatrix;
 
-        /* Merge and finalizeCompute covariance decomposition on the master node */
+        /* Merge and finalizeCompute covariance decomposition on the master node
+         */
         masterAlgorithm.compute();
         masterAlgorithm.finalizeCompute();
 
@@ -111,17 +113,19 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
         covariance::ResultPtr covariance_result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-           std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "PCA (native): Covariance master step took " << duration << " secs"
-               << std::endl;
+            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+        std::cout << "PCA (native): Covariance master step took " << duration
+                  << " secs" << std::endl;
 
         t1 = std::chrono::high_resolution_clock::now();
 
-        /* Create an algorithm for principal component analysis using the correlation method*/
+        /* Create an algorithm for principal component analysis using the
+         * correlation method*/
         pca::Batch<algorithmFPType> algorithm;
 
         /* Set the algorithm input data*/
-        algorithm.input.set(pca::correlation, covariance_result->get(covariance::covariance));
+        algorithm.input.set(pca::correlation,
+                            covariance_result->get(covariance::covariance));
         algorithm.parameter.resultsToCompute = pca::eigenvalue;
 
         /* Compute results of the PCA algorithm*/
@@ -129,9 +133,9 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
         t2 = std::chrono::high_resolution_clock::now();
         duration =
-          std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
         std::cout << "PCA (native): master step took " << duration << " secs"
-                << std::endl;
+                  << std::endl;
 
         /* Print the results */
         pca::ResultPtr result = algorithm.getResult();
@@ -147,18 +151,18 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
         jfieldID pcNumericTableField =
-          env->GetFieldID(clazz, "pcNumericTable", "J");
+            env->GetFieldID(clazz, "pcNumericTable", "J");
         jfieldID explainedVarianceNumericTableField =
-          env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
+            env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
 
         NumericTablePtr *eigenvalues =
-          new NumericTablePtr(result->get(pca::eigenvalues));
+            new NumericTablePtr(result->get(pca::eigenvalues));
         NumericTablePtr *eigenvectors =
-          new NumericTablePtr(result->get(pca::eigenvectors));
+            new NumericTablePtr(result->get(pca::eigenvectors));
 
         env->SetLongField(resultObj, pcNumericTableField, (jlong)eigenvectors);
         env->SetLongField(resultObj, explainedVarianceNumericTableField,
-                        (jlong)eigenvalues);
+                          (jlong)eigenvalues);
     }
 }
 
@@ -196,14 +200,17 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         using daal::data_management::internal::convertToSyclHomogen;
 
         Status st;
-        NumericTablePtr pSyclHomogen = convertToSyclHomogen<algorithmFPType>(*pData, st);
+        NumericTablePtr pSyclHomogen =
+            convertToSyclHomogen<algorithmFPType>(*pData, st);
         if (!st.ok()) {
-            std::cout << "Failed to convert row merged table to SYCL homogen one"
-                      << std::endl;
+            std::cout
+                << "Failed to convert row merged table to SYCL homogen one"
+                << std::endl;
             return 0L;
         }
 
-        doPCADALCompute(env, obj, rankId, comm, pSyclHomogen, nBlocks, resultObj);
+        doPCADALCompute(env, obj, rankId, comm, pSyclHomogen, nBlocks,
+                        resultObj);
 
         env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
     } else

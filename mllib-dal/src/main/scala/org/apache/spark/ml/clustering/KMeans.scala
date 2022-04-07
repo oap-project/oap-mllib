@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.clustering
 
 import com.intel.oap.mllib.clustering.KMeansShim
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.param._
@@ -106,4 +109,3 @@ object KMeans extends DefaultParamsReadable[KMeans] {
   @Since("1.6.0")
   override def load(path: String): KMeans = super.load(path)
 }
-

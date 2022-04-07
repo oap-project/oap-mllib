@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.stat
 
+import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
 import scala.collection.JavaConverters._
+
 import org.apache.spark.annotation.{Experimental, Since}
 import org.apache.spark.ml.linalg.{SQLDataTypes, Vector}
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.mllib.stat.{Statistics => OldStatistics}
-import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
+import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.storage.StorageLevel
-import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
 
 /**
  * API for correlation functions in MLlib, compatible with DataFrames and Datasets.

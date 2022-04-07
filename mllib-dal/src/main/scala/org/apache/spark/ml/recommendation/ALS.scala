@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,17 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.recommendation
 
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.intel.oap.mllib.recommendation.ALSShim
+import java.{util => ju}
+import scala.collection.mutable
+import scala.reflect.ClassTag
+import scala.util.Sorting
+import scala.util.hashing.byteswap64
+
+import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.param._
-import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.ml.util._
+import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.mllib.linalg.CholeskyDecomposition
 import org.apache.spark.mllib.optimization.NNLS
 import org.apache.spark.rdd.{DeterministicLevel, RDD}
@@ -35,13 +44,6 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Utils
 import org.apache.spark.util.collection.{OpenHashMap, OpenHashSet, SortDataFormat, Sorter}
 import org.apache.spark.util.random.XORShiftRandom
-import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
-
-import java.{util => ju}
-import scala.collection.mutable
-import scala.reflect.ClassTag
-import scala.util.Sorting
-import scala.util.hashing.byteswap64
 
 /**
  * Alternating Least Squares (ALS) matrix factorization.

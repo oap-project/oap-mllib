@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,16 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
-package org.apache.spark.ml.recommendation.spark320
+package org.apache.spark.ml.recommendation.spark321
 
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.intel.oap.mllib.recommendation.{ALSDALImpl, ALSShim}
 import com.intel.oap.mllib.{Utils => DALUtils}
+import com.intel.oap.mllib.recommendation.{ALSDALImpl, ALSShim}
+import java.{util => ju}
+import java.io.IOException
 import org.apache.hadoop.fs.Path
+import scala.collection.mutable
+import scala.reflect.ClassTag
+import scala.util.Sorting
+import scala.util.hashing.byteswap64
+
+import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.ml.recommendation._
+import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.ml.util.DefaultParamsReadable
 import org.apache.spark.mllib.linalg.CholeskyDecomposition
 import org.apache.spark.mllib.optimization.NNLS
@@ -32,14 +42,6 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Utils
 import org.apache.spark.util.collection.{OpenHashMap, OpenHashSet, SortDataFormat, Sorter}
 import org.apache.spark.util.random.XORShiftRandom
-import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
-
-import java.io.IOException
-import java.{util => ju}
-import scala.collection.mutable
-import scala.reflect.ClassTag
-import scala.util.Sorting
-import scala.util.hashing.byteswap64
 
 /**
  * An implementation of ALS that supports generic ID types, specialized for Int and Long. This is
