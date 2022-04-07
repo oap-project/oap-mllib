@@ -17,7 +17,7 @@
  */
 // scalastyle:on
 
-package org.apache.spark.ml.recommendation.spark312
+package org.apache.spark.ml.recommendation.spark313
 
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.intel.oap.mllib.{Utils => DALUtils}
