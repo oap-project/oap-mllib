@@ -32,7 +32,6 @@ public class SimpleMetadataImpl implements TableMetadataImpl{
     public long getFeatureCount() {
         return cGetFeatureCount(this.cObject);
     }
-
     @Override
     public Common.FeatureType getFeatureType(int index) {
         return Common.FeatureType.get(cGetFeatureType(this.cObject, index));

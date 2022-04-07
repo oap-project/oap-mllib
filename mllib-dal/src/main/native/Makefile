@@ -36,6 +36,7 @@ CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I$(CMPLR_ROOT)/linux/include \
                  -I$(CMPLR_ROOT)/linux/include/sycl
 
+
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
@@ -64,6 +65,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
 ONEDAL_LIBS := -lonedal_dpc \
                -lonedal_core \
 	       -lonedal_thread
+
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
@@ -100,6 +102,7 @@ OBJS += \
   ./oneapi/dal/ColumnAccessorImpl.o  \
   ./oneapi/dal/RowAccessorImpl.o
 
+
 DEFINES=-D$(PLATFORM_PROFILE)
 
 
@@ -117,7 +120,7 @@ all: $(OUTPUT)
 # Compile
 %.o: %.cpp
 	@echo 'Building file: $<'
-	$(CXX) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
+	$(DPCPP) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -125,7 +128,7 @@ all: $(OUTPUT)
 $(OUTPUT): $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Linker'
-	$(CXX) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
+	$(DPCPP) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

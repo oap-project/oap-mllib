@@ -58,13 +58,13 @@ public class HomogenTableImpl implements HomogenTableIface {
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             double[] data,
+<<<<<<< HEAD
                             Common.DataLayout dataLayout,
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = dInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
 
     }
-
     @Override
     public long getColumnCount() {
         return cGetColumnCount(this.cObject);
@@ -74,7 +74,6 @@ public class HomogenTableImpl implements HomogenTableIface {
     public long getRowCount() {
         return cGetRowCount(this.cObject);
     }
-
 
     @Override
     public long getKind() {
@@ -98,7 +97,6 @@ public class HomogenTableImpl implements HomogenTableIface {
     public long getPullRowsIface() {
         return 0;
     }
-
 
     @Override
     public ColumnAccessor getPullColumnIface() {

@@ -42,4 +42,3 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     com.intel.oneapi.dal.table.SimpleMetadataImpl \
     com.intel.oneapi.dal.table.ColumnAccessor \
     com.intel.oneapi.dal.table.RowAccessor
-

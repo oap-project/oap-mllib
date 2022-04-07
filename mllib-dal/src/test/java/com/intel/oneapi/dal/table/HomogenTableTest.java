@@ -42,11 +42,10 @@ public class HomogenTableTest {
                 53.620204d, 33.219769d, 85.208661d, 15.966239d};
         HomogenTable table = new HomogenTable(5, 2,
                 data, CommonTest.getComputeDevice());
-
-
         assertEquals(true, table.hasData());
         assertEquals(new Long(2), table.getColumnCount());
         assertEquals(new Long(5), table.getRowCount());
+<<<<<<< HEAD
         assertEquals(Common.DataLayout.ROW_MAJOR,table.getDataLayout());
 
         TableMetadata metadata = table.getMetaData();
@@ -173,7 +172,6 @@ public class HomogenTableTest {
         assertEquals(true, table.hasData());
         assertEquals(new Long(2), table.getColumnCount());
         assertEquals(new Long(5), table.getRowCount());
-
         assertEquals(COLUMN_MAJOR, table.getDataLayout());
         TableMetadata metadata = table.getMetaData();
         for (int i =0; i < 2; i++) {
