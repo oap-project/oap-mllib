@@ -14,6 +14,7 @@
 
 CC := clang
 CXX := clang++
+DPCPP := dpcpp
 RM := rm -rf
 
 PLATFORM_PROFILE ?= CPU_ONLY_PROFILE
@@ -22,7 +23,11 @@ $(info )
 $(info === Profile is $(PLATFORM_PROFILE) ===)
 $(info )
 
-CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17
+CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
+                 -I$(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/ \
+                 -I$(I_MPI_ROOT)/include \
+                 -I$(DAALROOT)/include \
+                 -I$(CMPLR_ROOT)/include
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
@@ -35,16 +40,22 @@ endif
 
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I $(CCL_ROOT)/include/cpu_icc \
+        -I $(CCL_ROOT)/include/cpu_gpu_dpcpp \
         -I $(DAALROOT)/include \
+        -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
+        -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
         -I ./javah \
         -I ./
 
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_icc -lccl \
+LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
         -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a  \
-        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
+        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_dpc.a \
+        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
+        -L$(CMPLR_ROOT)/linux/lib -lOpenCL \
+        -L/usr/local/lib64 -l:libstdc++.a \
+        -L$(I_MPI_ROOT)
+
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON)
@@ -60,7 +71,10 @@ CPP_SRCS += \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
   ./CorrelationDALImpl.cpp \
-  ./SummarizerDALImpl.cpp
+  ./SummarizerDALImpl.cpp \
+  ./homogen_table_impl.cpp \
+  ./simple_metadata_impl.cpp
+
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
@@ -70,7 +84,10 @@ OBJS += \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
   ./CorrelationDALImpl.o \
-  ./SummarizerDALImpl.o
+  ./SummarizerDALImpl.o \
+  ./homogen_table_impl.o \
+  ./simple_metadata_impl.o
+
 
 DEFINES=-D$(PLATFORM_PROFILE)
 
@@ -82,12 +99,13 @@ endif
 # Output Binary
 OUTPUT = ../../../src/main/resources/lib/libMLlibDAL.so
 
+
 all: $(OUTPUT)
 
 # Compile
 %.o: %.cpp
 	@echo 'Building file: $<'
-	$(CXX) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
+	$(DPCPP) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -95,7 +113,7 @@ all: $(OUTPUT)
 $(OUTPUT): $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Linker'
-	$(CXX) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
+	$(DPCPP) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
