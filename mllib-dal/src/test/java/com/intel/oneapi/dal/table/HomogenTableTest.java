@@ -45,7 +45,6 @@ public class HomogenTableTest {
         assertEquals(true, table.hasData());
         assertEquals(new Long(2), table.getColumnCount());
         assertEquals(new Long(5), table.getRowCount());
-<<<<<<< HEAD
         assertEquals(Common.DataLayout.ROW_MAJOR,table.getDataLayout());
 
         TableMetadata metadata = table.getMetaData();
@@ -53,9 +52,7 @@ public class HomogenTableTest {
             assertEquals(metadata.getDataType(i), FLOAT64);
             assertEquals(metadata.getFeatureType(i), Common.FeatureType.RATIO);
         }
-
         assertArrayEquals(data, table.getDoubleData());
-
     }
     @Test
     // can construct rowmajor long table 5x2
