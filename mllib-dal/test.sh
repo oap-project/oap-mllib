@@ -50,7 +50,15 @@ suiteArray=(
   "HomogenTableTest" \
   "ColumnAccessorTest" \
   "RowAccessorTest" \
-  "com.intel.oap.mllib.ConvertHomogenTableSuite"
+  "com.intel.oap.mllib.ConvertHomogenTableSuite" \
+  "clustering.MLlibKMeansSuite" \
+  "feature.MLlibPCASuite" \
+  "recommendation.MLlibALSSuite" \
+  "classification.MLlibNaiveBayesSuite" \
+  "regression.MLlibLinearRegressionSuite" \
+  "stat.MLlibCorrelationSuite" \
+  "stat.MultivariateOnlineSummarizerSuite" \
+  "oneDALSuite"
 )
 
 MVN_NO_TRANSFER_PROGRESS=
