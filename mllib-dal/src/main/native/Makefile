@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CC := dpcpp
-CXX := dpcpp
+# Use gcc for CPU and dpcpp for GPU
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+  CC := gcc
+  CXX := g++
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+  CC := dpcpp
+  CXX := dpcpp
+endif
+
 RM := rm -rf
 
 PLATFORM_PROFILE ?= CPU_ONLY_PROFILE
