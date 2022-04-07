@@ -24,7 +24,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.3.0/oap-1.3.0-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-x.x.x-bin-spark-x.x.x/jars`.
+Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.3.1/oap-1.3.1-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-x.x.x-bin-spark-x.x.x/jars`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -118,7 +118,7 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 4.8.5+
-* Intel® oneAPI Base Toolkit (>=2021.4.0) Components :
+* Intel® oneAPI Base Toolkit (>=2022.1) Components :
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
@@ -158,7 +158,7 @@ We suggest you to source `setvars.sh` script into current shell to setup buildin
     $ source /opt/intel/oneapi/setvars.sh
 ```
 
-You can also refer to [this CI script](dev/ci-test.sh) to setup the building environments.
+You can also refer to [this CI script](dev/ci/ci-build-test.sh) to setup the building environments.
 
 If you prefer to buid your own open source [oneDAL](https://github.com/oneapi-src/oneDAL), [oneTBB](https://github.com/oneapi-src/oneTBB), [oneCCL](https://github.com/oneapi-src/oneCCL) versions rather than use the ones included in oneAPI Base Toolkit, you can refer to the related build instructions and manually source `setvars.sh` accordingly.
 
