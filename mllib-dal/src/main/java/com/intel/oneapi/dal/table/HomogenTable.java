@@ -8,11 +8,6 @@ import java.io.IOException;
 public class HomogenTable extends Table {
     HomogenTableImpl impl;
 
-    public HomogenTable(){
-        super();
-//        impl = new EmptyTableImpl();
-    }
-
     public HomogenTable(long cTable){
         super();
         impl = new HomogenTableImpl(cTable);
