@@ -3,7 +3,6 @@ package com.intel.oneapi.dal.table;
 public abstract class Table {
     public Table() {
     }
-
     protected abstract Long getColumnCount();
 
     protected abstract Long getRowCount();

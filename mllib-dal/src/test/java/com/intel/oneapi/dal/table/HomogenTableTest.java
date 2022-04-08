@@ -96,7 +96,6 @@ public class HomogenTableTest {
 
         assertArrayEquals(data, table.getFloatData());
     }
-
     @Test
     // can construct colmajor int table
     public void createColmajorIntTable() throws Exception {

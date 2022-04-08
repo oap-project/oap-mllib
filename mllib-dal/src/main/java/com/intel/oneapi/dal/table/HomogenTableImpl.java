@@ -58,12 +58,10 @@ public class HomogenTableImpl implements HomogenTableIface {
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             double[] data,
-<<<<<<< HEAD
                             Common.DataLayout dataLayout,
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = dInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
-
     }
     @Override
     public long getColumnCount() {
