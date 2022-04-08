@@ -128,7 +128,15 @@ echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-echo Clang Version: $(clang -dumpversion)
+
+if [[ $PLATFORM_PROFILE == CPU_ONLY_PROFILE ]]
+then
+  echo GCC Version: $(gcc -dumpversion)
+elif [[ $PLATFORM_PROFILE == CPU_GPU_PROFILE ]]
+then
+  echo DPCPP Version: $(dpcpp -dumpversion)
+fi
+
 echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
 echo =============================

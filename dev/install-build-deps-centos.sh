@@ -15,7 +15,7 @@ EOF
   sudo mv /tmp/oneAPI.repo /etc/yum.repos.d  
   # sudo yum groupinstall -y "Development Tools"
   # sudo yum install -y cmake
-  sudo yum install -y intel-oneapi-dpcpp-cpp-2021.4.0 intel-oneapi-dal-devel-2021.4.0 intel-oneapi-tbb-devel-2021.4.0 intel-oneapi-ccl-devel-2021.4.0 intel-oneapi-mpi-devel-2021.4.0
+  sudo yum install -y intel-oneapi-dpcpp-cpp-2022.0.2 intel-oneapi-dal-devel-2021.5.3  intel-oneapi-tbb-devel-2021.5.1 intel-oneapi-ccl-devel-2021.5.1 intel-oneapi-mpi-devel-2021.5.1
 else
   echo "oneAPI components already installed!"
 fi  

@@ -12,8 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CC := clang
-CXX := clang++
+# Use gcc for CPU and dpcpp for GPU
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+  CC := gcc
+  CXX := g++
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+  CC := dpcpp
+  CXX := dpcpp
+endif
+
 RM := rm -rf
 
 PLATFORM_PROFILE ?= CPU_ONLY_PROFILE
@@ -35,13 +42,13 @@ endif
 
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I $(CCL_ROOT)/include/cpu_icc \
+        -I $(CCL_ROOT)/include/cpu \
         -I $(DAALROOT)/include \
         -I ./javah \
         -I ./
 
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_icc -lccl \
+LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu -lccl \
         -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
         -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a  \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
