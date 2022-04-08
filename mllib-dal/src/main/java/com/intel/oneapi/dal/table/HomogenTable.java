@@ -1,10 +1,5 @@
 package com.intel.oneapi.dal.table;
 
-
-import com.intel.oap.mllib.LibLoader;
-
-import java.io.IOException;
-
 public class HomogenTable extends Table {
     HomogenTableImpl impl;
 

@@ -1,8 +1,5 @@
 package com.intel.oneapi.dal.table;
 
-import com.intel.oap.mllib.LibLoader;
-
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class TableMetadata {

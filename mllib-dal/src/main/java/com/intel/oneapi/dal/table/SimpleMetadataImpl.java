@@ -24,7 +24,7 @@ public class SimpleMetadataImpl extends SerializableImpl implements TableMetadat
         this.dtypes = dtypes;
         this.ftypes = ftypes;
         if (this.dtypes.size() != this.ftypes.size()) {
-            throw new Exception("element_count_in_data_type_and_feature_type_arrays_does_not_match");
+            throw new Exception("element count and feature type arrays does not match");
         }
     }
     @Override
@@ -32,20 +32,20 @@ public class SimpleMetadataImpl extends SerializableImpl implements TableMetadat
         return cGetFeatureCount(this.cObject);
     }
 
-    protected native long cGetFeatureCount(long cObject);
+    private native long cGetFeatureCount(long cObject);
 
     @Override
     public Common.FeatureType getFeatureType(int index) {
         return Common.FeatureType.get(cGetFeatureType(this.cObject, index));
     }
 
-    protected native int cGetFeatureType(long cObject, int index);
+    private native int cGetFeatureType(long cObject, int index);
 
     @Override
     public Common.DataType getDataType(int index) throws Exception {
         return Common.DataType.get(cGetDataType(this.cObject, index));
     }
 
-    protected native int cGetDataType(long cObject, int index);
+    private native int cGetDataType(long cObject, int index);
 
 }

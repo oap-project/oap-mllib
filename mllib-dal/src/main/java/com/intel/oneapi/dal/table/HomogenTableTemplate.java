@@ -1,9 +1,7 @@
 package com.intel.oneapi.dal.table;
 
-interface HomogenTableTemplate extends HomogenTableIface{
-    public long getPullRowsIface();
-
-    public long getPullColumnIface();
-
-    public long getPullCSRBlockIface();
+public interface HomogenTableTemplate extends HomogenTableIface{
+    long getPullRowsIface();
+    long getPullColumnIface();
+    long getPullCSRBlockIface();
 }

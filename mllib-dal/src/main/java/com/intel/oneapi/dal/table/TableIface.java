@@ -1,23 +1,14 @@
 package com.intel.oneapi.dal.table;
 
 
-interface TableIface extends AccessProviderIface{
-
-    public long getColumnCount();
-
-    public long getRowCount();
-
-    public long getKind();
-
-    public Common.DataLayout getDataLayout();
-
-    public TableMetadata getMetaData();
-
-    public long getPullRowsIface();
-
-    public long getPullColumnIface();
-
-    public long getPullCSRBlockIface();
-
-    public boolean hasData();
+public interface TableIface extends AccessProviderIface{
+   long getColumnCount();
+   long getRowCount();
+   long getKind();
+   Common.DataLayout getDataLayout();
+   TableMetadata getMetaData();
+   long getPullRowsIface();
+   long getPullColumnIface();
+   long getPullCSRBlockIface();
+   boolean hasData();
 }
