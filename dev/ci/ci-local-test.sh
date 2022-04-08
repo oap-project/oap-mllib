@@ -19,7 +19,7 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
 ./build.sh -p CPU_ONLY_PROFILE -q
 
-find / -name libsvml.so
+ls -l /opt/intel/oneapi
 
 unset LD_LIBRARY_PATH
 ./test.sh -p CPU_ONLY_PROFILE -q
