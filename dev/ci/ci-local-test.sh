@@ -19,8 +19,6 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
 ./build.sh -p CPU_ONLY_PROFILE -q
 
-sudo apt-get list intel-oneapi*
-
 ls -l /opt/intel/oneapi
 
 unset LD_LIBRARY_PATH
