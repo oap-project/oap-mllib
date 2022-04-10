@@ -9,6 +9,7 @@ if [ ! -d /opt/intel/oneapi ]; then
 
   # add signed entry to apt sources and configure the APT client to use Intel repository:
   echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+
   sudo apt-get update
   sudo apt-get list intel-oneapi*
   # sudo apt-get install -y build-essential cmake
