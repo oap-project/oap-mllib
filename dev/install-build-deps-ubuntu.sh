@@ -11,6 +11,7 @@ if [ ! -d /opt/intel/oneapi ]; then
   sudo apt-get update
   # sudo apt-get install -y build-essential cmake
   sudo apt-get install -y intel-oneapi-python* intel-oneapi-dpcpp-cpp-2021.4.0 intel-oneapi-dal-devel-2021.4.0 intel-oneapi-tbb-devel-2021.4.0 intel-oneapi-ccl-devel-2021.4.0 intel-oneapi-mpi-devel-2021.4.0
+  ls -l /opt/intel/oneapi/tbb/2021.5.1/env/../lib/intel64/gcc4.8/
 else
   echo "oneAPI components already installed!"
 fi
