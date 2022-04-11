@@ -21,7 +21,6 @@ package org.apache.spark.ml.classification.spark321
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{NaiveBayesDALImpl, NaiveBayesShim}
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification._
 import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
@@ -34,6 +33,7 @@ import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import org.apache.spark.storage.StorageLevel
 
 // scalastyle:off line.size.limit
 
@@ -135,6 +135,7 @@ class NaiveBayes @Since("1.5.0") (
 
     // select label and features columns and cache data.
     val naiveBayesData = dataset.select($(labelCol), $(featuresCol)).cache()
+    naiveBayesData.persist(StorageLevel.MEMORY_AND_DISK)
     naiveBayesData.count()
 
     val executorNum = Utils.sparkExecutorNum(sc)
