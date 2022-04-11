@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="None">
+  
+  
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>OAP MLlib - 1.3.1</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "User Guide";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> OAP MLlib - 1.3.1</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href=".">User Guide</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#compatibility">Compatibility</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#online-documentation">Online Documentation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#javascala-users-preferred">Java/Scala Users Preferred</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pythonpyspark-users-preferred">Python/PySpark Users Preferred</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#building-from-scratch">Building From Scratch</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#running">Running</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#supported-spark-versions">Supported Spark Versions</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#spark-configuration">Spark Configuration</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#general-configuration">General Configuration</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#oap-mllib-specific-configuration">OAP MLlib Specific Configuration</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sanity-check">Sanity Check</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#setup-envsh">Setup env.sh</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#upload-example-data-files-to-hdfs">Upload example data files to HDFS</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#run-k-means">Run K-means</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pyspark-support">PySpark Support</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#building">Building</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#prerequisites_1">Prerequisites</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#build">Build</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#scala-examples">Scala Examples</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#python-examples">Python Examples</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#list-of-accelerated-algorithms">List of Accelerated Algorithms</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="OAP-Installation-Guide/">OAP Installation Guide</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="OAP-Developer-Guide/">OAP Developer Guide</a>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="" href="../">Version Selector</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">OAP MLlib - 1.3.1</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>User Guide</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="oap-mllib">OAP MLlib</h1>
+<h2 id="overview">Overview</h2>
+<p>OAP MLlib is an optimized package to accelerate machine learning algorithms in  <a href="https://spark.apache.org/mllib">Apache Spark MLlib</a>.  It is compatible with Spark MLlib and leverages open source <a href="https://github.com/oneapi-src/oneDAL">Intel® oneAPI Data Analytics Library (oneDAL)</a> to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source <a href="https://github.com/oneapi-src/oneCCL">Intel® oneAPI Collective Communications Library (oneCCL)</a> to provide efficient communication patterns in multi-node multi-GPU clusters.</p>
+<h2 id="compatibility">Compatibility</h2>
+<p>OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration.</p>
+<p>Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib.</p>
+<p>For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used.</p>
+<h2 id="online-documentation">Online Documentation</h2>
+<p>You can find the all the OAP MLlib documents on the <a href="https://oap-project.github.io/oap-mllib">project web page</a>.</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="javascala-users-preferred">Java/Scala Users Preferred</h3>
+<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.3.1/oap-1.3.1-bin.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-x.x.x-bin-spark-x.x.x/jars</code>.</p>
+<p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
+<h3 id="pythonpyspark-users-preferred">Python/PySpark Users Preferred</h3>
+<p>Use a pre-built JAR to get started. If you have finished <a href="OAP-Installation-Guide/">OAP Installation Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
+<p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
+<h3 id="building-from-scratch">Building From Scratch</h3>
+<p>You can also build the package from source code, please refer to <a href="#building">Building</a> section.</p>
+<h2 id="running">Running</h2>
+<h3 id="supported-spark-versions">Supported Spark Versions</h3>
+<p>OAP MLlib's latest version supports multiple Spark versions as below. </p>
+<ul>
+<li>Apache Spark 3.1.1</li>
+<li>Apache Spark 3.1.2</li>
+<li>Apache Spark 3.1.3</li>
+<li>Apache Spark 3.2.0</li>
+<li>Apache Spark 3.2.1</li>
+</ul>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>CentOS 7.0+, Ubuntu 18.04 LTS+</li>
+<li>Java JRE 8.0+ Runtime</li>
+<li>Apache Spark 3.1.1, 3.1.2, 3.1.3, 3.2.0 or 3.2.1</li>
+</ul>
+<p>Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to <a href="https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html">here</a> for details.</p>
+<p>Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.</p>
+<h3 id="spark-configuration">Spark Configuration</h3>
+<h4 id="general-configuration">General Configuration</h4>
+<h5 id="yarn-cluster-manager">YARN Cluster Manager</h5>
+<p>Users usually run Spark application on <strong>YARN</strong> with <strong>client</strong> mode. In that case, you only need to add the following configurations in <code>spark-defaults.conf</code> or in <code>spark-submit</code> command line before running.</p>
+<pre><code># absolute path of the jar for uploading
+spark.files                       /path/to/oap-mllib-x.x.x.jar
+# absolute path of the jar for driver class path
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
+# relative path of the jar for executor class path
+spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
+</code></pre>
+<h5 id="standalone-cluster-manager">Standalone Cluster Manager</h5>
+<p>For standalone cluster manager, you need to upload the jar to every node or use shared network folder and then specify absolute paths for extraClassPath.</p>
+<pre><code># absolute path of the jar for driver class path
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
+# absolute path of the jar for executor class path
+spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
+</code></pre>
+<h4 id="oap-mllib-specific-configuration">OAP MLlib Specific Configuration</h4>
+<p>OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune <code>spark.executor.memoryOverhead</code> to allocate enough native memory. Setting this value to larger than <strong>dataset size / executor number</strong> is a good starting point.</p>
+<p>OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As <code>spark.shuffle.reduceLocality.enabled</code> option is <code>true</code> by default, when the dataset is not evenly distributed accross executors, this option may result in assigning more than 1 rank to single executor and task failing. The error could be fixed by setting <code>spark.shuffle.reduceLocality.enabled</code> to <code>false</code>.</p>
+<h3 id="sanity-check">Sanity Check</h3>
+<h4 id="setup-envsh">Setup <code>env.sh</code></h4>
+<pre><code class="language-bash">    $ cd conf
+    $ cp env.sh.template env.sh
+</code></pre>
+<p>Edit related variables in "<code>Minimun Settings</code>" of <code>env.sh</code></p>
+<h4 id="upload-example-data-files-to-hdfs">Upload example data files to HDFS</h4>
+<pre><code class="language-bash">    $ cd examples
+    $ hadoop fs -copyFromLocal data /
+    $ hadoop fs -ls data
+</code></pre>
+<h4 id="run-k-means">Run K-means</h4>
+<pre><code class="language-bash">    $ cd examples/kmeans
+    $ ./build.sh
+    $ ./run.sh
+</code></pre>
+<h3 id="pyspark-support">PySpark Support</h3>
+<p>As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. Examples can be found in the <a href="#examples">Examples</a> section.</p>
+<h2 id="building">Building</h2>
+<h3 id="prerequisites_1">Prerequisites</h3>
+<p>We use <a href="https://maven.apache.org/">Apache Maven</a> to manage and build source code.  The following tools and libraries are also needed to build OAP MLlib:</p>
+<ul>
+<li>JDK 8.0+</li>
+<li>Apache Maven 3.6.2+</li>
+<li>GNU GCC 7+</li>
+<li>Intel® oneAPI Base Toolkit (&gt;=2022.1) Components :<ul>
+<li>DPC++/C++ Compiler (dpcpp/clang++)</li>
+<li>Data Analytics Library (oneDAL)</li>
+<li>Threading Building Blocks (oneTBB)</li>
+<li>MPI Library (MPI)</li>
+<li>Collective Communications Library (oneCCL)]</li>
+</ul>
+</li>
+</ul>
+<p>Generally you only need to install <strong>Intel® oneAPI Base Toolkit for Linux</strong> with all or selected components mentioned above. Intel® oneAPI Base Toolkit can be downloaded and installed from <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>. Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. More details about oneAPI can be found <a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">here</a>.</p>
+<p>Scala and Java dependency descriptions are already included in Maven POM file.</p>
+<p><strong><em>Note:</em></strong> You can refer to <a href="../dev/install-build-deps-centos.sh">this script</a> to install correct dependencies.</p>
+<h3 id="build">Build</h3>
+<p>To clone and checkout source code, run the following commands:</p>
+<pre><code class="language-bash">    $ git clone https://github.com/oap-project/oap-mllib.git
+</code></pre>
+<p><strong>Optional</strong> to checkout specific release branch:</p>
+<pre><code class="language-bash">    $ cd oap-mllib &amp;&amp; git checkout ${version}
+</code></pre>
+<p>We rely on environment variables to find required toolchains and libraries. Please make sure the following environment variables are set for building:</p>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JAVA_HOME</td>
+<td>Path to JDK home directory</td>
+</tr>
+<tr>
+<td>DAALROOT</td>
+<td>Path to oneDAL home directory</td>
+</tr>
+<tr>
+<td>TBB_ROOT</td>
+<td>Path to oneTBB home directory</td>
+</tr>
+<tr>
+<td>I_MPI_ROOT</td>
+<td>Path to Intel MPI home directory</td>
+</tr>
+<tr>
+<td>CCL_ROOT</td>
+<td>Path to oneCCL home directory</td>
+</tr>
+</tbody>
+</table>
+<p>We suggest you to source <code>setvars.sh</code> script into current shell to setup building environments as following:</p>
+<pre><code class="language-bash">    $ source /opt/intel/oneapi/setvars.sh
+</code></pre>
+<p>You can also refer to <a href="../dev/ci/ci-build-test.sh">this CI script</a> to setup the building environments.</p>
+<p>If you prefer to buid your own open source <a href="https://github.com/oneapi-src/oneDAL">oneDAL</a>, <a href="https://github.com/oneapi-src/oneTBB">oneTBB</a>, <a href="https://github.com/oneapi-src/oneCCL">oneCCL</a> versions rather than use the ones included in oneAPI Base Toolkit, you can refer to the related build instructions and manually source <code>setvars.sh</code> accordingly.</p>
+<p>To build, run the following commands:</p>
+<pre><code class="language-bash">    $ cd mllib-dal
+    $ ../dev/prepare-build-deps.sh
+    $ ./build.sh
+</code></pre>
+<p>The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x.jar</code>.</p>
+<h2 id="examples">Examples</h2>
+<h3 id="scala-examples">Scala Examples</h3>
+<table>
+<thead>
+<tr>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kmeans</td>
+<td>K-means example for Scala</td>
+</tr>
+<tr>
+<td>pca</td>
+<td>PCA example for Scala</td>
+</tr>
+<tr>
+<td>als</td>
+<td>ALS example for Scala</td>
+</tr>
+<tr>
+<td>naive-bayes</td>
+<td>Naive Bayes example for Scala</td>
+</tr>
+<tr>
+<td>linear-regression</td>
+<td>Linear Regression example for Scala</td>
+</tr>
+<tr>
+<td>correlation</td>
+<td>Correlation example for Scala</td>
+</tr>
+<tr>
+<td>summarizer</td>
+<td>Summarizer example for Scala</td>
+</tr>
+</tbody>
+</table>
+<h3 id="python-examples">Python Examples</h3>
+<table>
+<thead>
+<tr>
+<th>Example</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kmeans-pyspark</td>
+<td>K-means example for PySpark</td>
+</tr>
+<tr>
+<td>pca-pyspark</td>
+<td>PCA example for PySpark</td>
+</tr>
+<tr>
+<td>als-pyspark</td>
+<td>ALS example for PySpark</td>
+</tr>
+</tbody>
+</table>
+<h2 id="list-of-accelerated-algorithms">List of Accelerated Algorithms</h2>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>CPU</th>
+<th>GPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K-Means</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>PCA</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>ALS</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Naive Bayes</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Linear Regression</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Ridge Regression</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Correlation</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Summarizer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+</tbody>
+</table>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="OAP-Installation-Guide/" class="btn btn-neutral float-right" title="OAP Installation Guide">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="OAP-Installation-Guide/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.1
+Build Date UTC : 2022-04-11 04:45:01
+-->

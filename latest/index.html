@@ -68,6 +68,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#running">Running</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#supported-spark-versions">Supported Spark Versions</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#spark-configuration">Spark Configuration</a>
@@ -168,7 +170,7 @@
 <p>You can find the all the OAP MLlib documents on the <a href="https://oap-project.github.io/oap-mllib">project web page</a>.</p>
 <h2 id="getting-started">Getting Started</h2>
 <h3 id="javascala-users-preferred">Java/Scala Users Preferred</h3>
-<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.3.0/oap-1.3.0-bin.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-x.x.x-bin-spark-x.x.x/jars</code>.</p>
+<p>Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from <a href="https://github.com/oap-project/oap-tools/releases/download/v1.3.1/oap-1.3.1-bin.tar.gz">OAP-JARs-Tarball</a> and extract this Tarball to get <code>oap-mllib-x.x.x.jar</code> under <code>oap-x.x.x-bin-spark-x.x.x/jars</code>.</p>
 <p>Then you can refer to the following <a href="#running">Running</a> section to try out.</p>
 <h3 id="pythonpyspark-users-preferred">Python/PySpark Users Preferred</h3>
 <p>Use a pre-built JAR to get started. If you have finished <a href="OAP-Installation-Guide/">OAP Installation Guide</a>, you can find compiled OAP MLlib JAR <code>oap-mllib-x.x.x.jar</code> in <code>$HOME/miniconda2/envs/oapenv/oap_jars/</code>.</p>
@@ -176,11 +178,20 @@
 <h3 id="building-from-scratch">Building From Scratch</h3>
 <p>You can also build the package from source code, please refer to <a href="#building">Building</a> section.</p>
 <h2 id="running">Running</h2>
+<h3 id="supported-spark-versions">Supported Spark Versions</h3>
+<p>OAP MLlib's latest version supports multiple Spark versions as below. </p>
+<ul>
+<li>Apache Spark 3.1.1</li>
+<li>Apache Spark 3.1.2</li>
+<li>Apache Spark 3.1.3</li>
+<li>Apache Spark 3.2.0</li>
+<li>Apache Spark 3.2.1</li>
+</ul>
 <h3 id="prerequisites">Prerequisites</h3>
 <ul>
 <li>CentOS 7.0+, Ubuntu 18.04 LTS+</li>
 <li>Java JRE 8.0+ Runtime</li>
-<li>Apache Spark 3.1.1, 3.1.2 and 3.2.0</li>
+<li>Apache Spark 3.1.1, 3.1.2, 3.1.3, 3.2.0 or 3.2.1</li>
 </ul>
 <p>Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to <a href="https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html">here</a> for details.</p>
 <p>Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.</p>
@@ -195,7 +206,6 @@ spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path of the jar for executor class path
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 </code></pre>
-
 <h5 id="standalone-cluster-manager">Standalone Cluster Manager</h5>
 <p>For standalone cluster manager, you need to upload the jar to every node or use shared network folder and then specify absolute paths for extraClassPath.</p>
 <pre><code># absolute path of the jar for driver class path
@@ -203,29 +213,25 @@ spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # absolute path of the jar for executor class path
 spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 </code></pre>
-
 <h4 id="oap-mllib-specific-configuration">OAP MLlib Specific Configuration</h4>
 <p>OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune <code>spark.executor.memoryOverhead</code> to allocate enough native memory. Setting this value to larger than <strong>dataset size / executor number</strong> is a good starting point.</p>
 <p>OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As <code>spark.shuffle.reduceLocality.enabled</code> option is <code>true</code> by default, when the dataset is not evenly distributed accross executors, this option may result in assigning more than 1 rank to single executor and task failing. The error could be fixed by setting <code>spark.shuffle.reduceLocality.enabled</code> to <code>false</code>.</p>
 <h3 id="sanity-check">Sanity Check</h3>
 <h4 id="setup-envsh">Setup <code>env.sh</code></h4>
-<pre><code class="bash">    $ cd conf
+<pre><code class="language-bash">    $ cd conf
     $ cp env.sh.template env.sh
 </code></pre>
-
 <p>Edit related variables in "<code>Minimun Settings</code>" of <code>env.sh</code></p>
 <h4 id="upload-example-data-files-to-hdfs">Upload example data files to HDFS</h4>
-<pre><code class="bash">    $ cd examples
+<pre><code class="language-bash">    $ cd examples
     $ hadoop fs -copyFromLocal data /
     $ hadoop fs -ls data
 </code></pre>
-
 <h4 id="run-k-means">Run K-means</h4>
-<pre><code class="bash">    $ cd examples/kmeans
+<pre><code class="language-bash">    $ cd examples/kmeans
     $ ./build.sh
     $ ./run.sh
 </code></pre>
-
 <h3 id="pyspark-support">PySpark Support</h3>
 <p>As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. Examples can be found in the <a href="#examples">Examples</a> section.</p>
 <h2 id="building">Building</h2>
@@ -234,8 +240,8 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <ul>
 <li>JDK 8.0+</li>
 <li>Apache Maven 3.6.2+</li>
-<li>GNU GCC 4.8.5+</li>
-<li>Intel® oneAPI Base Toolkit (&gt;=2021.4.0) Components :<ul>
+<li>GNU GCC 7+</li>
+<li>Intel® oneAPI Base Toolkit (&gt;=2022.1) Components :<ul>
 <li>DPC++/C++ Compiler (dpcpp/clang++)</li>
 <li>Data Analytics Library (oneDAL)</li>
 <li>Threading Building Blocks (oneTBB)</li>
@@ -249,13 +255,11 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 <p><strong><em>Note:</em></strong> You can refer to <a href="../dev/install-build-deps-centos.sh">this script</a> to install correct dependencies.</p>
 <h3 id="build">Build</h3>
 <p>To clone and checkout source code, run the following commands:</p>
-<pre><code class="bash">    $ git clone https://github.com/oap-project/oap-mllib.git
+<pre><code class="language-bash">    $ git clone https://github.com/oap-project/oap-mllib.git
 </code></pre>
-
 <p><strong>Optional</strong> to checkout specific release branch:</p>
-<pre><code class="bash">    $ cd oap-mllib &amp;&amp; git checkout ${version}
+<pre><code class="language-bash">    $ cd oap-mllib &amp;&amp; git checkout ${version}
 </code></pre>
-
 <p>We rely on environment variables to find required toolchains and libraries. Please make sure the following environment variables are set for building:</p>
 <table>
 <thead>
@@ -288,17 +292,15 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 </tbody>
 </table>
 <p>We suggest you to source <code>setvars.sh</code> script into current shell to setup building environments as following:</p>
-<pre><code class="bash">    $ source /opt/intel/oneapi/setvars.sh
+<pre><code class="language-bash">    $ source /opt/intel/oneapi/setvars.sh
 </code></pre>
-
-<p>You can also refer to <a href="../dev/ci-test.sh">this CI script</a> to setup the building environments.</p>
+<p>You can also refer to <a href="../dev/ci/ci-build-test.sh">this CI script</a> to setup the building environments.</p>
 <p>If you prefer to buid your own open source <a href="https://github.com/oneapi-src/oneDAL">oneDAL</a>, <a href="https://github.com/oneapi-src/oneTBB">oneTBB</a>, <a href="https://github.com/oneapi-src/oneCCL">oneCCL</a> versions rather than use the ones included in oneAPI Base Toolkit, you can refer to the related build instructions and manually source <code>setvars.sh</code> accordingly.</p>
 <p>To build, run the following commands:</p>
-<pre><code class="bash">    $ cd mllib-dal
+<pre><code class="language-bash">    $ cd mllib-dal
     $ ../dev/prepare-build-deps.sh
     $ ./build.sh
 </code></pre>
-
 <p>The built JAR package will be placed in <code>target</code> directory with the name <code>oap-mllib-x.x.x.jar</code>.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="scala-examples">Scala Examples</h3>
@@ -467,6 +469,6 @@ spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 </html>
 
 <!--
-MkDocs version : 1.1.2
-Build Date UTC : 2022-01-14 03:03:39.719415+00:00
+MkDocs version : 1.1
+Build Date UTC : 2022-04-11 04:44:45
 -->
