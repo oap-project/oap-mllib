@@ -40,11 +40,21 @@ You can also build the package from source code, please refer to [Building](#bui
 
 ## Running
 
+### Supported Spark Versions
+
+OAP MLlib's latest version supports multiple Spark versions as below. 
+
+* Apache Spark 3.1.1
+* Apache Spark 3.1.2
+* Apache Spark 3.1.3
+* Apache Spark 3.2.0
+* Apache Spark 3.2.1
+
 ### Prerequisites
 
 * CentOS 7.0+, Ubuntu 18.04 LTS+
 * Java JRE 8.0+ Runtime
-* Apache Spark 3.1.1, 3.1.2 and 3.2.0
+* Apache Spark 3.1.1, 3.1.2, 3.1.3, 3.2.0 or 3.2.1
 
 Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [here](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
 
@@ -117,7 +127,7 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 
 * JDK 8.0+
 * Apache Maven 3.6.2+
-* GNU GCC 4.8.5+
+* GNU GCC 7+
 * Intel® oneAPI Base Toolkit (>=2022.1) Components :
     - DPC++/C++ Compiler (dpcpp/clang++)
     - Data Analytics Library (oneDAL)
