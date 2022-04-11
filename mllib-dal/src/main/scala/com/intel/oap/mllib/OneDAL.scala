@@ -28,6 +28,8 @@ import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
 
+import com.intel.oneapi.dal.table.{Common, HomogenTable}
+
 import scala.collection.mutable.ArrayBuffer
 
 object OneDAL {
@@ -153,6 +155,23 @@ object OneDAL {
     matrix
   }
 
+  def makeHomogenTable(cData: Long): HomogenTable = {
+    val table = new HomogenTable(cData)
+
+    table
+  }
+
+  def homogenTable1xNToVector(table: HomogenTable): Vector = {
+    val numCols = table.getColumnCount
+
+    var dataDouble: DoubleBuffer = null
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    val arrayDouble = new Array[Double](numCols.toInt)
+    dataDouble.get(arrayDouble)
+
+
+    Vectors.dense(arrayDouble)
+  }
 
   def rddDoubleToNumericTables(doubles: RDD[Double], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
@@ -223,7 +242,7 @@ object OneDAL {
     tables
   }
 
-  private def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
+  private[mllib] def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
     val context = new DaalContext()
     val matrixLabel = new DALMatrix(context, classOf[lang.Double],
@@ -234,6 +253,51 @@ object OneDAL {
     }
 
     matrixLabel
+  }
+
+  private[mllib] def doubleArrayToHomogenTable(points: Array[Double]): HomogenTable = {
+
+    val table = new HomogenTable(1, points.length, points, classOf[java.lang.Double])
+
+    table
+  }
+
+  def makeHomogenTable(arrayVectors: Array[Vector]): HomogenTable = {
+    val numCols = arrayVectors.head.size
+    val numRows: Int = arrayVectors.size
+    val arrayDouble = new Array[Double](numRows * numCols)
+    var index = 0
+    for( vector: Vector <- arrayVectors) {
+      for (i <- 0 until vector.toArray.length ) {
+        arrayDouble(index) = vector(i)
+        if (index < (numRows * numCols)) {
+          index = index + 1
+        }
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
+      classOf[java.lang.Double])
+
+    table
+  }
+
+  def makeHomogenTable(arrayVectors: Array[OldVector]): HomogenTable = {
+    val numCols = arrayVectors.head.size
+    val numRows: Int = arrayVectors.size
+    val arrayDouble = new Array[Double](numRows * numCols)
+    var index = 0
+    for( vector: OldVector <- arrayVectors) {
+      for (i <- 0 until vector.toArray.length ) {
+        arrayDouble(index) = vector(i)
+        if (index < (numRows * numCols)) {
+          index = index + 1
+        }
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
+      classOf[java.lang.Double])
+
+    table
   }
 
   def vectorsToSparseNumericTable(vectors: Array[Vector],
