@@ -11,7 +11,7 @@ if [ ! -d /opt/intel/oneapi ]; then
   echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
 
   sudo apt-get update
-  sudo apt-get list intel-oneapi*
+  ls /var/lib/apt/lists/intel-oneapi* | sed -E 's/.*\/([^\/_]*).*/\1/' | sort -u
   # sudo apt-get install -y build-essential cmake
   sudo apt-get install -y intel-oneapi-dpcpp-cpp-2022.0.2 intel-oneapi-dal-devel-2021.5.3  intel-oneapi-tbb-devel-2021.5.1 intel-oneapi-ccl-devel-2021.5.1 intel-oneapi-mpi-devel-2021.5.1
 else
