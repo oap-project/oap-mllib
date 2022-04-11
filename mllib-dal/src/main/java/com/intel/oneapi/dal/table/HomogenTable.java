@@ -47,7 +47,7 @@ public class HomogenTable extends Table {
             impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
                     Common.DataType.float32, dataLayout);
         } else if (cls == Double.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (double[])data, 
+            impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
                     Common.DataType.float64, dataLayout);
         }
     }
