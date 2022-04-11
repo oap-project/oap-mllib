@@ -12,16 +12,21 @@ public class HomogenTable extends Table {
                         long colCount,
                         Object data,
                         Class<? extends Number> cls){
+        super();
         // default
         Common.DataLayout dataLayout = Common.DataLayout.row_major;
         if (cls == Integer.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (int[])data, Common.DataType.int32, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (int[])data,
+                    Common.DataType.int32, dataLayout);
         } else if (cls == Long.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (long[])data, Common.DataType.int64, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
+                    Common.DataType.int64, dataLayout);
         } else if (cls == Float.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (float[])data, Common.DataType.float32, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
+                    Common.DataType.float32, dataLayout);
         } else if (cls == Double.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (double[])data, Common.DataType.float64, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
+                    Common.DataType.float64, dataLayout);
         }
     }
 
@@ -33,13 +38,17 @@ public class HomogenTable extends Table {
         super();
         Common.DataLayout dataLayout = Common.DataLayout.get(Layoutindex);
         if (cls == Integer.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (int[])data, Common.DataType.int32, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (int[])data,
+                    Common.DataType.int32, dataLayout);
         } else if (cls == Long.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (long[])data, Common.DataType.int64, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
+                    Common.DataType.int64, dataLayout);
         } else if (cls == Float.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (float[])data, Common.DataType.float32, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
+                    Common.DataType.float32, dataLayout);
         } else if (cls == Double.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (double[])data, Common.DataType.float64, dataLayout);
+            impl = new HomogenTableImpl(rowCount, colCount, (double[])data, 
+                    Common.DataType.float64, dataLayout);
         }
     }
 
