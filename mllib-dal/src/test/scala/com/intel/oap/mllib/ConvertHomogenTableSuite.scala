@@ -32,7 +32,6 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     )
 
     val table = OneDAL.makeHomogenTable(data, TestCommon.getComputeDevice)
-
     assert(table.hasData == true)
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 10)
@@ -54,7 +53,6 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.hasData == true)
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 1)
-
     assert(table.getDataLayout == ROW_MAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
@@ -62,7 +60,6 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
       assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
     }
     assertArrayEquals(table.getDoubleData, data)
-
   }
 
   test("test convert old vector to homogentable") {
@@ -80,11 +77,9 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     )
 
     val table = OneDAL.makeHomogenTable(data, TestCommon.getComputeDevice)
-
     assert(table.hasData == true)
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 10)
-
     assert(table.getDataLayout == ROW_MAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {

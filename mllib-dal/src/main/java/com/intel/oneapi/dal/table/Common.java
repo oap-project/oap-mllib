@@ -14,6 +14,7 @@ public class Common {
         public static DataLayout get(int ordinal) {
             return values[ordinal];
         }
+
     }
     public enum DataType {
         INT8, INT16, INT32, INT64, UINT8,
