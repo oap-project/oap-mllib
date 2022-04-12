@@ -27,6 +27,7 @@
 #include "GPU.h"
 #endif
 
+
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
@@ -34,6 +35,7 @@
 #include "com_intel_oneapi_dal_table_HomogenTableImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
+
 
 using namespace std;
 using namespace oneapi::dal;
@@ -56,7 +58,6 @@ static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
        g_SharedPtrVector<T>.push_back(ptr);
        g_mtx.unlock();
 }
-
 
 static data_layout getDataLayout(jint cLayout) {
     data_layout layout;
@@ -395,7 +396,6 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetFloatData(
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     const float *data = htable.get_data<float>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
-
     jfloatArray newFloatArray = env->NewFloatArray(datasize);
     env->SetFloatArrayRegion(newFloatArray, 0, datasize, data);
     return newFloatArray;
@@ -431,6 +431,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const double *data = htable.get_data<double>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
+
     jdoubleArray newDoubleArray = env->NewDoubleArray(datasize);
     env->SetDoubleArrayRegion(newDoubleArray, 0, datasize, data);
     return newDoubleArray;
@@ -438,6 +439,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
 
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
+<<<<<<< HEAD
  * Method:    cEmptyTableInit
  * Signature: ()J
  */

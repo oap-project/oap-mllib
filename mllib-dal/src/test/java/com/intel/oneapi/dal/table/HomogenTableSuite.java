@@ -7,7 +7,9 @@ import static com.intel.oneapi.dal.table.Common.DataType.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+
 public class HomogenTableSuite {
+
     @Test
     public void createEmptyTable() {
         HomogenTable table = new HomogenTable(CommonTest.getComputeDevice());
