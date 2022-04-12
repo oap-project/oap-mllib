@@ -134,9 +134,11 @@ class NaiveBayes @Since("1.5.0") (
     val sc = spark.sparkContext
 
     // select label and features columns and cache data.
-    val naiveBayesData = dataset.select($(labelCol), $(featuresCol)).cache()
-    naiveBayesData.persist(StorageLevel.MEMORY_AND_DISK)
-    naiveBayesData.count()
+    val naiveBayesData = dataset.select($(labelCol), $(featuresCol))
+    log.warn("We do not cache the data, and preprocessing workloads with " +
+      "a lot of preprocessing may affect performance, so you can clean the " +
+      "data when loading the data.")
+
 
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
