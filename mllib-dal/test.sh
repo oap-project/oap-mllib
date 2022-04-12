@@ -54,7 +54,8 @@ suiteArray=(
   "regression.MLlibLinearRegressionSuite" \
   "stat.MLlibCorrelationSuite" \
   "stat.MultivariateOnlineSummarizerSuite" \
-  "oneDALSuite"
+  "oneDALSuite" \
+  "HomogenTableSuite"
 )
 
 MVN_NO_TRANSFER_PROGRESS=
@@ -84,6 +85,7 @@ done
 shift "$((OPTIND-1))"
 
 SUITE=$1
+MODULE=$2
 
 print_usage
 
@@ -121,9 +123,15 @@ if [[ -z $SUITE ]]; then
   echo Testing ALL suites...
   echo
   mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
+else if [ $MODULE == "java"]; then
+  echo
+  echo Testing com.intel.oneapi.dal.table.$SUITE ...
+  echo
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=com.intel.oneapi.dal.table.$SUITE test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
   mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi
+
