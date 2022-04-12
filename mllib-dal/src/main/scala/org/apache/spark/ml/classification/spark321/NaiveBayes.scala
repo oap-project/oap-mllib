@@ -133,9 +133,10 @@ class NaiveBayes @Since("1.5.0") (
 
     val sc = spark.sparkContext
 
-    // select label and features columns
-    val naiveBayesData = dataset.select($(labelCol), $(featuresCol))
-
+    // select label and features columns and cache data.
+    val naiveBayesData = dataset.select($(labelCol), $(featuresCol)).cache()
+    naiveBayesData.persist(StorageLevel.MEMORY_AND_DISK)
+    naiveBayesData.count()
 
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
