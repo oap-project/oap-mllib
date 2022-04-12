@@ -11,37 +11,33 @@ public class HomogenTable extends Table {
     public HomogenTable(long rowCount,
                         long colCount,
                         int[] data,
-                        Common.DataType dataType,
                         Common.DataLayout dataLayout){
         super();
-        impl = new HomogenTableImpl(rowCount, colCount, data, dataType, dataLayout);
+        impl = new HomogenTableImpl(rowCount, colCount, data, dataLayout);
     }
 
     public HomogenTable(long rowCount,
                         long colCount,
                         float[] data,
-                        Common.DataType dataType,
                         Common.DataLayout dataLayout){
         super();
-        impl = new HomogenTableImpl(rowCount, colCount, data, dataType, dataLayout);
+        impl = new HomogenTableImpl(rowCount, colCount, data, dataLayout);
     }
 
     public HomogenTable(long rowCount,
                         long colCount,
                         long[] data,
-                        Common.DataType dataType,
                         Common.DataLayout dataLayout){
         super();
-        impl = new HomogenTableImpl(rowCount, colCount, data, dataType, dataLayout);
+        impl = new HomogenTableImpl(rowCount, colCount, data, dataLayout);
     }
 
     public HomogenTable(long rowCount,
                         long colCount,
                         double[] data,
-                        Common.DataType dataType,
                         Common.DataLayout dataLayout){
         super();
-        impl = new HomogenTableImpl(rowCount, colCount, data, dataType, dataLayout);
+        impl = new HomogenTableImpl(rowCount, colCount, data, dataLayout);
     }
 
     @Override
