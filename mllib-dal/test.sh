@@ -58,7 +58,8 @@ suiteArray=(
   "regression.MLlibLinearRegressionSuite" \
   "stat.MLlibCorrelationSuite" \
   "stat.MultivariateOnlineSummarizerSuite" \
-  "oneDALSuite"
+  "oneDALSuite" \
+  "HomogenTableSuite"
 )
 
 MVN_NO_TRANSFER_PROGRESS=
@@ -155,3 +156,4 @@ else
       fi
   done
 fi
+
