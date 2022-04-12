@@ -32,7 +32,6 @@ public class HomogenTable extends Table {
         super();
         impl = new HomogenTableImpl(rowCount, colCount, data,
                 dataLayout, device);
-
     }
 
     public HomogenTable(long rowCount,

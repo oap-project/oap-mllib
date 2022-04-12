@@ -1,4 +1,5 @@
 package com.intel.oneapi.dal.table;
+
 public interface TableIface {
    long getColumnCount();
    long getRowCount();

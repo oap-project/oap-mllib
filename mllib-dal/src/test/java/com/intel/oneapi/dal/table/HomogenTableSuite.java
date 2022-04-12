@@ -7,7 +7,7 @@ import static com.intel.oneapi.dal.table.Common.DataType.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class HomogenTableTest {
+public class HomogenTableSuite {
     @Test
     public void createEmptyTable() {
         HomogenTable table = new HomogenTable(CommonTest.getComputeDevice());
@@ -108,6 +108,7 @@ public class HomogenTableTest {
         assertEquals(new Long(5), table.getRowCount());
 
         assertEquals(COLUMN_MAJOR, table.getDataLayout());
+
         TableMetadata metadata = table.getMetaData();
         for (int i =0; i < 2; i++) {
             assertEquals(metadata.getDataType(i), INT32);
@@ -127,7 +128,6 @@ public class HomogenTableTest {
         assertEquals(true, table.hasData());
         assertEquals(new Long(2), table.getColumnCount());
         assertEquals(new Long(5), table.getRowCount());
-
         assertEquals(COLUMN_MAJOR, table.getDataLayout());
         TableMetadata metadata = table.getMetaData();
         for (int i =0; i < 2; i++) {
