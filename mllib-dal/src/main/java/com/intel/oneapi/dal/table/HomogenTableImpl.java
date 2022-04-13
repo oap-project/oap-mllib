@@ -108,6 +108,8 @@ public class HomogenTableImpl implements HomogenTableIface {
         return 0;
     }
 
+    private native long cGetPullCSRBlockIface(long cObject);
+
     @Override
     public boolean hasData() {
         return this.getColumnCount() > 0 && this.getRowCount() > 0;
