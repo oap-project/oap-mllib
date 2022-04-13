@@ -135,9 +135,9 @@ class NaiveBayes @Since("1.5.0") (
 
     // select label and features columns and cache data.
     val naiveBayesData = dataset.select($(labelCol), $(featuresCol))
-    log.warn("We do not cache the data, and preprocessing workloads with " +
-      "a lot of preprocessing may affect performance, so you can clean the " +
-      "data when loading the data.")
+    log.warn("We do not cache the data. If the workloads with a lot " +
+      "of preprocessing may affect performance, so you can cache the " +
+      "training data after preprocessing.")
 
 
     val executorNum = Utils.sparkExecutorNum(sc)
