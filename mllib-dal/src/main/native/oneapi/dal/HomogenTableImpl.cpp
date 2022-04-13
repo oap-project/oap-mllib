@@ -20,6 +20,7 @@
 #include <string.h>
 #include <string>
 #include <typeinfo>
+#include <vector>
 
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
@@ -30,6 +31,9 @@
 
 using namespace std;
 using namespace oneapi::dal;
+
+
+std::vector<std::shared_ptr<homogen_table>> cVector;
 
 static data_layout getDataLayout(jint cLayout) {
     data_layout layout;
@@ -63,6 +67,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
         getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
+    cVector.push_back(*tablePtr);
     return (jlong)tablePtr;
 }
 
@@ -81,6 +86,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
         getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
+    cVector.push_back(*tablePtr);
     return (jlong)tablePtr;
 }
 /*
@@ -98,6 +104,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
         getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
+    cVector.push_back(*tablePtr);
     return (jlong)tablePtr;
 }
 
@@ -116,6 +123,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
         getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
+    cVector.push_back(*tablePtr);
     return (jlong)tablePtr;
 }
 
@@ -194,25 +202,6 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetMetaData(
 
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
- * Method:    cGetPullColumnIface
- * Signature: ()J
- */
-// JNIEXPORT jlong JNICALL
-// Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetPullColumnIface
-//   (JNIEnv *, jobject, jlong tableAddr) {
-//   }
-
-/*
- * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
- * Method:    cGetPullCSRBlockIface
- * Signature: ()J
- */
-// JNIEXPORT jlong JNICALL
-// Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetPullCSRBlockIface
-//   (JNIEnv *, jobject, jlong tableAddr);
-
-/*
- * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    cGetData
  * Signature: ()J
  */
@@ -287,12 +276,3 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
     env->SetDoubleArrayRegion(newDoubleArray, 0, datasize, data);
     return newDoubleArray;
 }
-
-/*
- * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
- * Method:    cGetAccessIfacehost
- * Signature: ()J
- */
-// JNIEXPORT jlong JNICALL
-// Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetAccessIfacehost
-//   (JNIEnv *, jobject, jlong tableAddr);

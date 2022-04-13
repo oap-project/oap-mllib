@@ -52,7 +52,7 @@ public class HomogenTableSuite {
         for (int i =0; i < 2; i++) {
             System.out.println(metadata.getFeatureCount());
             System.out.println(metadata.getDataType(i));
-            assertEquals(metadata.getDataType(i), FLOAT32);
+            assertEquals(metadata.getDataType(i), FLOAT64);
             assertEquals(metadata.getFeatureType(i), Common.FeatureType.RATIO);
         }
 
@@ -158,7 +158,7 @@ public class HomogenTableSuite {
         assertEquals(COLUMNMAJOR,table.getDataLayout());
         TableMetadata metadata = table.getMetaData();
         for (int i =0; i < 2; i++) {
-            assertEquals(metadata.getDataType(i), INT32);
+            assertEquals(metadata.getDataType(i), INT64);
             assertEquals(metadata.getFeatureType(i), Common.FeatureType.ORDINAL);
         }
         assertArrayEquals(data, table.getLongData());
