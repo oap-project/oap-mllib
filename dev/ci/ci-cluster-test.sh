@@ -10,7 +10,7 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
-
+rm -rf /opt/intel/oneapi
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
 
