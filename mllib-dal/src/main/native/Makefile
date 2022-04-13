@@ -33,7 +33,8 @@ CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I$(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/ \
                  -I$(I_MPI_ROOT)/include \
                  -I$(DAALROOT)/include \
-                 -I$(CMPLR_ROOT)/include
+                 -I$(CMPLR_ROOT)/linux/include \
+                 -I$(CMPLR_ROOT)/linux/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
@@ -77,8 +78,8 @@ CPP_SRCS += \
   ./LinearRegressionDALImpl.cpp \
   ./CorrelationDALImpl.cpp \
   ./SummarizerDALImpl.cpp \
-  ./homogen_table_impl.cpp \
-  ./simple_metadata_impl.cpp
+  ./oneapi/dal/HomogenTableImpl.cpp \
+  ./oneapi/dal/SimpleMetadataImpl.cpp
 
 
 OBJS += \
@@ -90,8 +91,8 @@ OBJS += \
   ./LinearRegressionDALImpl.o \
   ./CorrelationDALImpl.o \
   ./SummarizerDALImpl.o \
-  ./homogen_table_impl.o \
-  ./simple_metadata_impl.o
+  ./oneapi/dal/HomogenTableImpl.o \
+  ./oneapi/dal/SimpleMetadataImpl.o
 
 
 DEFINES=-D$(PLATFORM_PROFILE)
@@ -110,7 +111,7 @@ all: $(OUTPUT)
 # Compile
 %.o: %.cpp
 	@echo 'Building file: $<'
-	$(DPCPP) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
+	$(CXX) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -118,7 +119,7 @@ all: $(OUTPUT)
 $(OUTPUT): $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Linker'
-	$(DPCPP) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
+	$(CXX) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
