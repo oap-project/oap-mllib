@@ -36,7 +36,6 @@ CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I$(CMPLR_ROOT)/linux/include \
                  -I$(CMPLR_ROOT)/linux/include/sycl
 
-
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
@@ -120,7 +119,7 @@ all: $(OUTPUT)
 # Compile
 %.o: %.cpp
 	@echo 'Building file: $<'
-	$(DPCPP) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
+	$(CXX) $(CFLAGS) $(INCS) $(DEFINES) -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
@@ -128,7 +127,7 @@ all: $(OUTPUT)
 $(OUTPUT): $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Linker'
-	$(DPCPP) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
+	$(CXX) $(CFLAGS) -shared -o $(OUTPUT) $(OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
