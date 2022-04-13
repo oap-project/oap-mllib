@@ -123,7 +123,7 @@ if [[ -z $SUITE ]]; then
   echo Testing ALL suites...
   echo
   mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
-else if [ $MODULE == "java"]; then
+elif [[ $MODULE == "java" ]]; then
   echo
   echo Testing com.intel.oneapi.dal.table.$SUITE ...
   echo
