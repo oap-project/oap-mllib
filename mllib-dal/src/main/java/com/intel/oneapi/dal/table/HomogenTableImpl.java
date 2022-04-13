@@ -4,7 +4,7 @@ import com.intel.oap.mllib.LibLoader;
 
 import java.io.IOException;
 
-public class HomogenTableImpl implements HomogenTableTemplate {
+public class HomogenTableImpl implements HomogenTableIface {
     static {
         try {
             LibLoader.loadLibraries();
@@ -164,12 +164,13 @@ public class HomogenTableImpl implements HomogenTableTemplate {
         return 0;
     }
 
+    private native long cGetPullCSRBlockIface(long cObject);
+
     @Override
     public boolean hasData() {
         return this.getColumnCount() > 0 && this.getRowCount() > 0;
     }
 
-    private native long cGetPullCSRBlockIface(long cObject);
 
     @Override
     public int[] getIntData() {
@@ -184,9 +185,6 @@ public class HomogenTableImpl implements HomogenTableTemplate {
     }
 
     private native long[] cGetLongData(long cObject);
-
-
-    private native long cGetAccessIfacehost(long cObject);
 
     @Override
     public float[] getFloatData() {
