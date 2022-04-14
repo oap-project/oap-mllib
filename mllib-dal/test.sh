@@ -123,7 +123,7 @@ if [[ -z $SUITE ]]; then
   echo
   echo Testing ALL suites...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=$SUITE test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
