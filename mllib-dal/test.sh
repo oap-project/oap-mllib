@@ -87,7 +87,6 @@ done
 shift "$((OPTIND-1))"
 
 SUITE=$1
-MODULE=$2
 
 print_usage
 
