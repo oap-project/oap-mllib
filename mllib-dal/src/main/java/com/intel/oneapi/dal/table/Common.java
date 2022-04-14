@@ -2,14 +2,14 @@ package com.intel.oneapi.dal.table;
 
 public class Common {
     public enum FeatureType {
-        nominal, ordinal, interval, ratio ;
+        NOMINAL, ORDINAL, INTERVAL, RATIO;
         private static final FeatureType[] values = values();
         public static FeatureType get(int ordinal) {
             return values[ordinal];
         }
     }
     public enum DataLayout {
-        unknown, row_major, column_major;
+        UNKNOW, ROWMAJOR, COLUMNMAJOR;
         private static final DataLayout[] values = values();
         public static DataLayout get(int ordinal) {
             return values[ordinal];
@@ -17,10 +17,11 @@ public class Common {
 
     }
     public enum DataType {
-        int8, int16, int32, int64, uint8,
-        uint16, uint32, uint64, float32, float64, bfloat16;
+        INT8, INT16, INT32, INT64, UINT8,
+        UINT16, UINT32, UINT64, FLOAT32, FLOAT64, BFLOAT16;
         private static final DataType[] values = values();
         public static DataType get(int ordinal) {
+
             return values[ordinal];
         }
     }

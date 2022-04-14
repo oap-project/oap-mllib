@@ -21,8 +21,6 @@ public class TableMetadata {
     }
 
     public Common.DataType getDataType(int index) throws Exception {
-        System.out.println("TableMetadata");
-        System.out.println(this.impl);
         return this.impl.getDataType(index);
     }
 }

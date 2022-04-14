@@ -5,9 +5,10 @@ import com.intel.oap.mllib.LibLoader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class SimpleMetadataImpl extends SerializableImpl implements TableMetadataImpl{
-    ArrayList dtypes;
-    ArrayList ftypes;
+public class SimpleMetadataImpl implements TableMetadataImpl{
+    private transient long cObject;
+    private ArrayList dtypes;
+    private ArrayList ftypes;
     static {
         try {
             LibLoader.loadLibraries();

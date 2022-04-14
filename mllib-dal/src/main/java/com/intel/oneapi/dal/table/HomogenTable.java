@@ -14,19 +14,19 @@ public class HomogenTable extends Table {
                         Class<? extends Number> cls){
         super();
         // default
-        Common.DataLayout dataLayout = Common.DataLayout.row_major;
+        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
         if (cls == Integer.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (int[])data,
-                    Common.DataType.int32, dataLayout);
+                    dataLayout);
         } else if (cls == Long.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
-                    Common.DataType.int64, dataLayout);
+                    dataLayout);
         } else if (cls == Float.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
-                    Common.DataType.float32, dataLayout);
+                    dataLayout);
         } else if (cls == Double.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
-                    Common.DataType.float64, dataLayout);
+                    dataLayout);
         }
     }
 
@@ -39,16 +39,16 @@ public class HomogenTable extends Table {
         Common.DataLayout dataLayout = Common.DataLayout.get(Layoutindex);
         if (cls == Integer.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (int[])data,
-                    Common.DataType.int32, dataLayout);
+                    dataLayout);
         } else if (cls == Long.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
-                    Common.DataType.int64, dataLayout);
+                    dataLayout);
         } else if (cls == Float.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
-                    Common.DataType.float32, dataLayout);
+                    dataLayout);
         } else if (cls == Double.class) {
             impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
-                    Common.DataType.float64, dataLayout);
+                    dataLayout);
         }
     }
 

@@ -4,7 +4,7 @@ import com.intel.oap.mllib.LibLoader;
 
 import java.io.IOException;
 
-public class HomogenTableImpl extends SerializableImpl implements HomogenTableTemplate {
+public class HomogenTableImpl implements HomogenTableIface {
     static {
         try {
             LibLoader.loadLibraries();
@@ -12,19 +12,20 @@ public class HomogenTableImpl extends SerializableImpl implements HomogenTableTe
             e.printStackTrace();
         }
     }
-
-    protected Object jData;
-    protected long rowCount;
-    protected long colCount;
-    protected Common.DataLayout dataLayout;
-    protected TableMetadata metadata;
+    private transient long cObject;
+    private Object jData;
+    private long rowCount;
+    private long colCount;
+    private Common.DataLayout dataLayout;
+    private TableMetadata metadata;
 
     protected HomogenTableImpl() {
         super();
+        this.cObject = 0L;
         this.rowCount = 0;
         this.colCount = 0;
         this.jData = null;
-        this.dataLayout = Common.DataLayout.unknown;
+        this.dataLayout = Common.DataLayout.UNKNOW;
     }
 
     public HomogenTableImpl(long cTable) {
@@ -32,42 +33,38 @@ public class HomogenTableImpl extends SerializableImpl implements HomogenTableTe
         this.rowCount = 0;
         this.colCount = 0;
         this.jData = null;
-        this.dataLayout = Common.DataLayout.unknown;
+        this.dataLayout = Common.DataLayout.UNKNOW;
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             int[] data,
-                            Common.DataType dataType,
                             Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, dataType, dataLayout);
+        initHomogenTable(rowCount, colCount, data, Common.DataType.INT32, dataLayout);
 
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             float[] data,
-                            Common.DataType dataType,
                             Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, dataType, dataLayout);
+        initHomogenTable(rowCount, colCount, data, Common.DataType.FLOAT32, dataLayout);
 
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             long[] data,
-                            Common.DataType dataType,
                             Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, dataType, dataLayout);
+        initHomogenTable(rowCount, colCount, data, Common.DataType.INT64, dataLayout);
 
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             double[] data,
-                            Common.DataType dataType,
                             Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, dataType, dataLayout);
+        initHomogenTable(rowCount, colCount, data, Common.DataType.FLOAT64, dataLayout);
 
     }
 
@@ -78,13 +75,13 @@ public class HomogenTableImpl extends SerializableImpl implements HomogenTableTe
                                           Common.DataLayout dataLayout) {
         System.out.println("initHomogenTable");
 
-        if (dataType.toString() == Common.DataType.int32.toString()) {
+        if (dataType.toString() == Common.DataType.INT32.toString()) {
             this.cObject = iInit(rowCount, colCount, (int[]) data , dataLayout.ordinal());
-        }else if (dataType.toString() == Common.DataType.float32.toString()) {
+        }else if (dataType.toString() == Common.DataType.FLOAT32.toString()) {
             this.cObject = fInit(rowCount, colCount, (float[]) data, dataLayout.ordinal());
-        }else if (dataType.toString() == Common.DataType.int64.toString()) {
+        }else if (dataType.toString() == Common.DataType.INT64.toString()) {
             this.cObject = lInit(rowCount, colCount, (long[]) data, dataLayout.ordinal());
-        }else if (dataType.toString() == Common.DataType.float64.toString()) {
+        }else if (dataType.toString() == Common.DataType.FLOAT64.toString()) {
             this.cObject = dInit(rowCount, colCount, (double[]) data, dataLayout.ordinal());
         }else {
             throw new IllegalArgumentException("type unsupported");
@@ -167,12 +164,13 @@ public class HomogenTableImpl extends SerializableImpl implements HomogenTableTe
         return 0;
     }
 
+    private native long cGetPullCSRBlockIface(long cObject);
+
     @Override
     public boolean hasData() {
         return this.getColumnCount() > 0 && this.getRowCount() > 0;
     }
 
-    private native long cGetPullCSRBlockIface(long cObject);
 
     @Override
     public int[] getIntData() {
@@ -187,13 +185,6 @@ public class HomogenTableImpl extends SerializableImpl implements HomogenTableTe
     }
 
     private native long[] cGetLongData(long cObject);
-
-    @Override
-    public long getAccessIfacehost() {
-        return 0;
-    }
-
-    private native long cGetAccessIfacehost(long cObject);
 
     @Override
     public float[] getFloatData() {

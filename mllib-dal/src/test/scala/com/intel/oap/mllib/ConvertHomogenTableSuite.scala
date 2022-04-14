@@ -1,8 +1,8 @@
 package com.intel.oap.mllib
 
 import com.intel.oneapi.dal.table.Common
-import com.intel.oneapi.dal.table.Common.DataLayout.row_major
-import com.intel.oneapi.dal.table.Common.DataType.float64
+import com.intel.oneapi.dal.table.Common.DataLayout.ROWMAJOR
+import com.intel.oneapi.dal.table.Common.DataType.FLOAT64
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.FunctionsSuite
 import org.apache.spark.ml.linalg.{Matrices, Vector, Vectors}
@@ -29,11 +29,11 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 10)
 
-    assert(table.getDataLayout == row_major)
+    assert(table.getDataLayout == ROWMAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
-      assert(metadata.getDataType(i) == float64)
-      assert(metadata.getFeatureType(i) == Common.FeatureType.ratio)
+      assert(metadata.getDataType(i) == FLOAT64)
+      assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
     }
 
     assert(table.getDoubleData === convertArray(data))
@@ -47,11 +47,11 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 1)
 
-    assert(table.getDataLayout == row_major)
+    assert(table.getDataLayout == ROWMAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
-      assert(metadata.getDataType(i) == float64)
-      assert(metadata.getFeatureType(i) == Common.FeatureType.ratio)
+      assert(metadata.getDataType(i) == FLOAT64)
+      assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
     }
     assert(table.getDoubleData === data)
 
@@ -76,11 +76,11 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 10)
 
-    assert(table.getDataLayout == row_major)
+    assert(table.getDataLayout == ROWMAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
-      assert(metadata.getDataType(i) == float64)
-      assert(metadata.getFeatureType(i) == Common.FeatureType.ratio)
+      assert(metadata.getDataType(i) == FLOAT64)
+      assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
     }
 
     assert(table.getDoubleData === convertArray(data))

@@ -1,7 +1,7 @@
 package com.intel.oneapi.dal.table;
 
 
-public interface TableIface extends AccessProviderIface{
+public interface TableIface {
    long getColumnCount();
    long getRowCount();
    long getKind();

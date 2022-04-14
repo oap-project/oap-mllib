@@ -47,14 +47,17 @@ fi
 export OAP_MLLIB_TESTING=true
 
 suiteArray=(
-  "clustering.MLlibKMeansSuite" \
-  "feature.MLlibPCASuite" \
-  "recommendation.MLlibALSSuite" \
-  "classification.MLlibNaiveBayesSuite" \
-  "regression.MLlibLinearRegressionSuite" \
-  "stat.MLlibCorrelationSuite" \
-  "stat.MultivariateOnlineSummarizerSuite" \
-  "oneDALSuite"
+#  "clustering.MLlibKMeansSuite" \
+#  "feature.MLlibPCASuite" \
+#  "recommendation.MLlibALSSuite" \
+#  "classification.MLlibNaiveBayesSuite" \
+#  "regression.MLlibLinearRegressionSuite" \
+#  "stat.MLlibCorrelationSuite" \
+#  "stat.MultivariateOnlineSummarizerSuite" \
+#  "oneDALSuite" \
+  "com.intel.oneapi.dal.table.HomogenTableSuite" \
+  "com.intel.oap.mllib.ConvertHomogenTableSuite"
+
 )
 
 MVN_NO_TRANSFER_PROGRESS=
@@ -84,6 +87,7 @@ done
 shift "$((OPTIND-1))"
 
 SUITE=$1
+MODULE=$2
 
 print_usage
 
@@ -121,9 +125,10 @@ if [[ -z $SUITE ]]; then
   echo Testing ALL suites...
   echo
   mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
-else
+elif
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
   echo
   mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
 fi
+
