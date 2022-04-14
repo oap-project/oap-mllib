@@ -119,15 +119,14 @@ echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 echo
 
-if [[ -z $SUITE ]]; then
+SUBSUITE=$(echo $SUITE | tr " " "\n")
+
+for suite in $SUBSUITE
+do
   echo
-  echo Testing ALL suites...
+  echo Testing $suite ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=$SUITE test
-else
-  echo
-  echo Testing org.apache.spark.ml.$SUITE ...
-  echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
-fi
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=$suite test
+done
+
 
