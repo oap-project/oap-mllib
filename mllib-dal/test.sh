@@ -127,7 +127,7 @@ elif [[ $MODULE == "java" ]]; then
   echo
   echo Testing com.intel.oneapi.dal.table.$SUITE ...
   echo
-  mvn -Dspark.version=$SPARK_VERSION -DwildcardSuites=com.intel.oneapi.dal.table.$SUITE test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DwildcardSuites=com.intel.oneapi.dal.table.$SUITE test
 else
   echo
   echo Testing org.apache.spark.ml.$SUITE ...
