@@ -126,7 +126,7 @@ do
   echo
   echo Testing $suite ...
   echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=$suite test
+  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DwildcardSuites=$suite test
 done
 
 
