@@ -86,7 +86,7 @@ done
 
 shift "$((OPTIND-1))"
 
-SUITE=$1
+SUITE=$*
 
 print_usage
 
@@ -119,8 +119,7 @@ echo Platform Profile: $PLATFORM_PROFILE
 echo ============================
 echo
 
-SUBSUITE=$(echo $SUITE | tr " " "\n")
-
+SUBSUITE=$(echo $SUITE | tr "," "\n")
 for suite in $SUBSUITE
 do
   echo
