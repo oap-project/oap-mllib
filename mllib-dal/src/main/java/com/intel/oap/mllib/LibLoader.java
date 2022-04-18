@@ -72,7 +72,6 @@ public final class LibLoader {
       loadFromJar(subDir, "libfabric.so.1");
       loadFromJar(subDir, "libsockets-fi.so");
     }
-    loadFromJar(subDir, "libze_loader.so.1");
     loadFromJar(subDir, "libmpi.so.12");
     loadFromJar(subDir, "libccl.so.1");
   }
