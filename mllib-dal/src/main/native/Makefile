@@ -30,16 +30,16 @@ $(info === Profile is $(PLATFORM_PROFILE) ===)
 $(info )
 
 CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
-                 -I$(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/ \
                  -I$(I_MPI_ROOT)/include \
                  -I$(DAALROOT)/include \
                  -I$(CMPLR_ROOT)/linux/include \
                  -I$(CMPLR_ROOT)/linux/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON)
+  CFLAGS := $(CFLAGS_COMMON) -I$(CCL_ROOT)/include/cpu/oneapi/
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON) -fsycl
+  CFLAGS := $(CFLAGS_COMMON) -fsycl  -I$(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/
+
 else
   $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
   exit 1
@@ -48,6 +48,7 @@ endif
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I $(CCL_ROOT)/include/cpu_gpu_dpcpp \
+        -I $(CCL_ROOT)/include/cpu \
         -I $(DAALROOT)/include \
         -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
         -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
@@ -55,8 +56,7 @@ INCS := -I $(JAVA_HOME)/include \
         -I ./
 
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
-        -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
+LIBS_COMMON :=-L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
         -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_dpc.a \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L/usr/local/lib64 -l:libstdc++.a \
@@ -64,9 +64,9 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
 
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  LIBS := $(LIBS_COMMON)
+  LIBS := $(LIBS_COMMON) -L$(CCL_ROOT)/lib/cpu -lccl \
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a
+  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl
 endif
 
 CPP_SRCS += \
