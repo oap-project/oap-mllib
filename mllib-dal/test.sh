@@ -57,7 +57,6 @@ suiteArray=(
 #  "oneDALSuite" \
   "com.intel.oneapi.dal.table.HomogenTableSuite" \
   "com.intel.oap.mllib.ConvertHomogenTableSuite"
-
 )
 
 MVN_NO_TRANSFER_PROGRESS=
@@ -120,23 +119,20 @@ echo ============================
 echo
 
 if [[ -z $SUITE ]]; then
-  for suite in $suiteArray
+  for suite in ${suiteArray[*]}
     do
       echo
       echo Testing $suite ...
       echo
-      mvn -Dspark.version=$SPARK_VERSION -DwildcardSuites=$suite test
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DwildcardSuites=$suite test
     done
 else
   SUBSUITE=$(echo $SUITE | tr "," "\n")
-  for suite in $SUBSUITE
+  for suite in ${SUBSUITE[*]}
   do
     echo
     echo Testing $suite ...
     echo
-    mvn -Dspark.version=$SPARK_VERSION -DwildcardSuites=$suite test
+    mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DwildcardSuites=$suite test
   done
 fi
-
-
-
