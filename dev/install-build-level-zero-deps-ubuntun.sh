@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 echo "Installing oneAPI components ..."
 wget https://github.com/oneapi-src/level-zero.git
 cd level-zero
