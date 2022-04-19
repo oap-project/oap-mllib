@@ -8,13 +8,8 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
 trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
-<<<<<<< HEAD
 # install level-zero
 $GITHUB_WORKSPACE/dev/install-level-zero-ubuntu.sh
-=======
-# install GPU Device
-apt-get install intel-opencl-icd
->>>>>>> update ci
 
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
