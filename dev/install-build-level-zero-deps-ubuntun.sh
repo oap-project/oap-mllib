@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 echo "Installing oneAPI components ..."
+cd /home/runner/work
 git clone https://github.com/oneapi-src/level-zero.git
 cd level-zero
 git checkout v1.7.15
