@@ -10,7 +10,9 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 # install GPU Device
 sudo apt-get install intel-opencl-icd
+sudo find / -name level-zero*
 
+#$GITHUB_WORKSPACE/dev/install-build-level-zero-deps-ubuntun.sh
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 

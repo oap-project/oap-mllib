@@ -65,7 +65,7 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
 }
 
 sycl::queue getQueue() {
-    auto device = sycl::gpu_selector{}.select_device();
-    sycl::queue q{ device };
+    auto device = sycl::cpu_selector{}.select_device();
+    sycl::queue q{device};
     return q;
 }
