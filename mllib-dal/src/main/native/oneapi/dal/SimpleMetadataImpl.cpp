@@ -21,8 +21,11 @@
 #include <string>
 #include <typeinfo>
 
+#ifdef CPU_GPU_PROFILE
+#include "GPU.h"
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
+#endif
 #endif
 
 #include "com_intel_oneapi_dal_table_SimpleMetadataImpl.h"

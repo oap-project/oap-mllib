@@ -22,6 +22,7 @@
 #include <typeinfo>
 #include <vector>
 
+#include "GPU.h"
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
@@ -61,10 +62,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     jint cLayout) {
     printf("HomogenTable int init \n");
     jint *fData = env->GetIntArrayElements(cData, NULL);
+    sycl::queue queue = getQueue();
 
-    homogen_table *h_table = new homogen_table(
+    homogen_table *h_table = new homogen_table(queue,
         fData, cRowCount, cColCount, detail::empty_delete<const int>(),
-        getDataLayout(cLayout));
+        {}, getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
     cVector.push_back(*tablePtr);
@@ -81,9 +83,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     jint cLayout) {
     printf("HomogenTable float init \n");
     jfloat *fData = env->GetFloatArrayElements(cData, NULL);
-    homogen_table *h_table = new homogen_table(
+    sycl::queue queue = getQueue();
+    homogen_table *h_table = new homogen_table(queue,
         fData, cRowCount, cColCount, detail::empty_delete<const float>(),
-        getDataLayout(cLayout));
+        {}, getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
     cVector.push_back(*tablePtr);
@@ -99,9 +102,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     jint cLayout) {
     printf("HomogenTable double init \n");
     jdouble *fData = env->GetDoubleArrayElements(cData, NULL);
-    homogen_table *h_table = new homogen_table(
+    sycl::queue queue = getQueue();
+
+
+    homogen_table *h_table = new homogen_table(queue,
         fData, cRowCount, cColCount, detail::empty_delete<const double>(),
-        getDataLayout(cLayout));
+        {}, getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
     cVector.push_back(*tablePtr);
@@ -118,9 +124,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     jint cLayout) {
     printf("HomogenTable long init \n");
     jlong *fData = env->GetLongArrayElements(cData, NULL);
-    homogen_table *h_table = new homogen_table(
+    sycl::queue queue = getQueue();
+    homogen_table *h_table = new homogen_table(queue,
         fData, cRowCount, cColCount, detail::empty_delete<const long>(),
-        getDataLayout(cLayout));
+        {}, getDataLayout(cLayout));
     std::shared_ptr<homogen_table> *tablePtr =
         new std::shared_ptr<homogen_table>(h_table);
     cVector.push_back(*tablePtr);
