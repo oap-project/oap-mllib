@@ -9,7 +9,7 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 # install GPU Device
-apt-get install intel-opencl-icd
+sudo apt-get install intel-opencl-icd
 
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
