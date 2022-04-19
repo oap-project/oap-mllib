@@ -11,6 +11,7 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 # install level-zero
 $GITHUB_WORKSPACE/dev/install-level-zero-ubuntu.sh
 
+#$GITHUB_WORKSPACE/dev/install-build-level-zero-deps-ubuntun.sh
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
