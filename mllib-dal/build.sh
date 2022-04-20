@@ -68,7 +68,7 @@ MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./build.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h]"
+  echo "Usage: ./build.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] [-t <CI test>]"
   echo
   echo "-p  Supported Platform Profiles:"
     echo "    CPU_ONLY_PROFILE"
@@ -76,11 +76,12 @@ print_usage() {
   echo
 }
 
-while getopts "p:qh" opt
+while getopts "p:qt:h" opt
 do
 case $opt in
   p) PLATFORM_OPT=$OPTARG ;;
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
+  t) TEST_OPT=$OPTARG ;;
   h | *)
      print_usage
      exit 1
@@ -120,6 +121,7 @@ elif [[ $PLATFORM_PROFILE == CPU_GPU_PROFILE ]]
 then
   check_gpu_libs
 fi
+export CI_TEST=${TEST_OPT:-$CI_TEST}
 
 echo
 echo === Building Environments ===
@@ -131,6 +133,7 @@ echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
 echo Clang Version: $(clang -dumpversion)
 echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
+echo Whether CI Test: $CI_TEST
 echo =============================
 echo
 

@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   local-test:
     name: Local Test for Units
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8

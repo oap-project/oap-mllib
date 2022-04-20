@@ -97,6 +97,10 @@ OBJS += \
 
 DEFINES=-D$(PLATFORM_PROFILE)
 
+ifeq ($(CI_TEST),CI_TEST)
+  DEFINES += -D$(CI_TEST)
+endif
+
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CPP_SRCS += ./GPU.cpp
   OBJS += ./GPU.o

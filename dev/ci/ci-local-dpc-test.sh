@@ -21,7 +21,7 @@ source /home/runner/work/level-zero/setvars.sh
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps-gpu.sh
-./build.sh -p CPU_GPU_PROFILE -q
+./build.sh -p CPU_GPU_PROFILE -t CI_TEST -q
 
 unset LD_LIBRARY_PATH
 ./test.sh -p CPU_GPU_PROFILE -q
