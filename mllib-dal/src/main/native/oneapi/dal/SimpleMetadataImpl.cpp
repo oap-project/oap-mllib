@@ -21,7 +21,6 @@
 #include <string>
 #include <typeinfo>
 
-
 #include "com_intel_oneapi_dal_table_SimpleMetadataImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
 

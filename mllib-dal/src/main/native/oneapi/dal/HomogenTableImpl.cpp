@@ -438,7 +438,6 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
 
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
-<<<<<<< HEAD
  * Method:    cEmptyTableInit
  * Signature: ()J
  */
