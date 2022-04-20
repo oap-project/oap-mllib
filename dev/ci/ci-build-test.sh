@@ -16,6 +16,7 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
+source /home/runner/work/level-zero/setvars.sh
 
 #
 # Build test for CPU
@@ -24,7 +25,6 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
 ./build.sh -p CPU_ONLY_PROFILE -q
 
-source $L0T_ROOT/setvars.sh
 #
 # Build test for GPU
 #
