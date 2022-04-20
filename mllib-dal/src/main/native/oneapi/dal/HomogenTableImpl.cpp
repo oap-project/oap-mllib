@@ -72,7 +72,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
         std::shared_ptr<homogen_table> *tableSyclPtr =
                 new std::shared_ptr<homogen_table>(h_sycl_table);
         cVector.push_back(*tableSyclPtr);
-        return (jlong)tablePtr;
+        return (jlong)tableSyclPtr;
     #endif
         homogen_table *h_table = new homogen_table(
             fData, cRowCount, cColCount, detail::empty_delete<const int>(),
@@ -101,7 +101,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
         std::shared_ptr<homogen_table> *tableSyclPtr =
                 new std::shared_ptr<homogen_table>(h_sycl_table);
         cVector.push_back(*tableSyclPtr);
-        return (jlong)tablePtr;
+        return (jlong)tableSyclPtr;
     #endif
         homogen_table *h_table = new homogen_table(
             fData, cRowCount, cColCount, detail::empty_delete<const float>(),
@@ -129,7 +129,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
         std::shared_ptr<homogen_table> *tableSyclPtr =
                 new std::shared_ptr<homogen_table>(h_sycl_table);
         cVector.push_back(*tableSyclPtr);
-        return (jlong)tablePtr;
+        return (jlong)tableSyclPtr;
     #endif
         homogen_table *h_table = new homogen_table(
             fData, cRowCount, cColCount, detail::empty_delete<const double>(),
@@ -158,7 +158,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
         std::shared_ptr<homogen_table> *tableSyclPtr =
                 new std::shared_ptr<homogen_table>(h_sycl_table);
         cVector.push_back(*tableSyclPtr);
-        return (jlong)tablePtr;
+        return (jlong)tableSyclPtr;
     #endif
         homogen_table *h_table = new homogen_table(
             fData, cRowCount, cColCount, detail::empty_delete<const long>(),
