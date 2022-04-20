@@ -16,7 +16,6 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
-source /home/runner/work/level-zero/setvars.sh
 
 #
 # Build test for CPU
