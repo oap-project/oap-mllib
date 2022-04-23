@@ -7,4 +7,4 @@ sudo apt-key add -
 'deb [arch=amd64] https://repositories.intel.com/graphics/ubuntu focal main'
 sudo apt-get install -y \
 intel-opencl-icd \
-intel-level-zero-gpu level-zero 
+intel-level-zero-gpu level-zero
