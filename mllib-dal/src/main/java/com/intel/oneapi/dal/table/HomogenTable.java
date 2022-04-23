@@ -10,46 +10,83 @@ public class HomogenTable extends Table {
 
     public HomogenTable(long rowCount,
                         long colCount,
-                        Object data,
-                        Class<? extends Number> cls){
+                        int[] data){
         super();
         // default
         Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
-        if (cls == Integer.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (int[])data,
-                    dataLayout);
-        } else if (cls == Long.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
-                    dataLayout);
-        } else if (cls == Float.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
-                    dataLayout);
-        } else if (cls == Double.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
-                    dataLayout);
-        }
+        impl = new HomogenTableImpl(rowCount, colCount, data,
+                dataLayout);
     }
 
     public HomogenTable(long rowCount,
                         long colCount,
-                        Object data,
-                        Class<? extends Number> cls,
+                        int[] data,
                         int Layoutindex){
         super();
         Common.DataLayout dataLayout = Common.DataLayout.get(Layoutindex);
-        if (cls == Integer.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (int[])data,
-                    dataLayout);
-        } else if (cls == Long.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
-                    dataLayout);
-        } else if (cls == Float.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
-                    dataLayout);
-        } else if (cls == Double.class) {
-            impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
-                    dataLayout);
-        }
+        impl = new HomogenTableImpl(rowCount, colCount, data,
+                dataLayout);
+
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        long[] data){
+        super();
+        // default
+        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
+                dataLayout);
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        long[] data,
+                        int Layoutindex){
+        super();
+        Common.DataLayout dataLayout = Common.DataLayout.get(Layoutindex);
+        impl = new HomogenTableImpl(rowCount, colCount, (long[])data,
+                dataLayout);
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        float[] data){
+        super();
+        // default
+        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
+                dataLayout);
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        float[] data,
+                        int Layoutindex){
+        super();
+        Common.DataLayout dataLayout = Common.DataLayout.get(Layoutindex);
+        impl = new HomogenTableImpl(rowCount, colCount, (float[])data,
+                dataLayout);
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        double[] data){
+        super();
+        // default
+        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
+                dataLayout);
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        double[] data,
+                        int Layoutindex){
+        super();
+        Common.DataLayout dataLayout = Common.DataLayout.get(Layoutindex);
+        impl = new HomogenTableImpl(rowCount, colCount, (double[])data,
+                dataLayout);
     }
 
     @Override

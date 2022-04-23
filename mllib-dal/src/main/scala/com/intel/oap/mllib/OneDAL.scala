@@ -257,7 +257,7 @@ object OneDAL {
 
   private[mllib] def doubleArrayToHomogenTable(points: Array[Double]): HomogenTable = {
 
-    val table = new HomogenTable(1, points.length, points, classOf[java.lang.Double])
+    val table = new HomogenTable(1, points.length, points)
 
     table
   }
@@ -275,8 +275,7 @@ object OneDAL {
         }
       }
     }
-    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
-      classOf[java.lang.Double])
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble)
 
     table
   }
@@ -294,8 +293,7 @@ object OneDAL {
         }
       }
     }
-    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
-      classOf[java.lang.Double])
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble)
 
     table
   }
