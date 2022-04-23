@@ -323,7 +323,6 @@ object OneDAL {
     }
     val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
       device)
-
     table
   }
 
