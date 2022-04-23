@@ -4,9 +4,9 @@ RM := rm -rf
 
 CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 -fsycl
 
-OUTPUT = check-gpu
+OUTPUT = check-gpu-cpu
 
-OBJS := check-gpu.o
+OBJS := check-gpu-cpu.o
 
 all: $(OUTPUT)
 

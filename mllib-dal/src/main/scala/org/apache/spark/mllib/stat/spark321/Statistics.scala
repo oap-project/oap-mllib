@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.mllib.stat.spark320
+package org.apache.spark.mllib.stat.spark321
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.stat.{SummarizerDALImpl, SummarizerShim}

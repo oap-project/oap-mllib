@@ -24,6 +24,30 @@ int check_gpu() {
     return gpu_found ? 0 : -1;
 }
 
+int check_cpu() {
+    bool cpu_found = false;
+
+    auto platforms = sycl::platform::get_platforms();
+    for (auto &platform : platforms) {
+        auto devices = platform.get_devices(sycl::info::device_type::cpu);
+        if (!devices.empty()) {
+            cpu_found = true;
+            std::cout << "Platform: "
+                      << platform.get_info<sycl::info::platform::name>()
+                      << std::endl;
+            for (auto &device : devices) {
+                std::cout << "-- CPU device: "
+                          << device.get_info<sycl::info::device::name>() << std::endl;
+            }
+        }
+    }
+
+    if (!cpu_found)
+        std::cout << "No CPU found!" << std::endl;
+
+    return cpu_found ? 0 : -1;
+}
+
 int main (int argc, char * argv[]) {
     return check_gpu();        
 }
