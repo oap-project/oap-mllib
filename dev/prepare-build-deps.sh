@@ -50,6 +50,7 @@ rm -f $TARGET_DIR/*.so*
 
 cp $CCL_ROOT/lib/cpu_gpu_dpcpp/libccl.so.1.0 $TARGET_DIR/libccl.so.1
 
+
 cp $I_MPI_ROOT/libfabric/lib/libfabric.so.1 $TARGET_DIR/libfabric.so.1
 cp $I_MPI_ROOT/libfabric/lib/prov/libsockets-fi.so $TARGET_DIR
 
@@ -61,7 +62,7 @@ cp $I_MPI_ROOT/lib/release_mt/libmpi.so.12.0.0 $TARGET_DIR/libmpi.so.12
 
 cp $DAALROOT/lib/intel64/libJavaAPI.so.1.1 $TARGET_DIR/libJavaAPI.so
 
-cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12.4 $TARGET_DIR/libtbb.so.12
-cp $TBBROOT/lib/intel64/gcc4.8/libtbbmalloc.so.2.4 $TARGET_DIR/libtbbmalloc.so.2
+cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12.5 $TARGET_DIR/libtbb.so.12
+cp $TBBROOT/lib/intel64/gcc4.8/libtbbmalloc.so.2.5 $TARGET_DIR/libtbbmalloc.so.2
 
 echo oneAPI Toolkit version: $(basename $CCL_ROOT) > $TARGET_DIR/VERSION

@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   local-test:
-    name: Local Test for Units
+    name: Local Test for Units (CPU)
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -20,7 +20,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2021.4.0
+          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2022.1.2
           restore-keys: |
             ${{ runner.os }}-
       - name: Local Test
@@ -28,7 +28,7 @@ jobs:
           ${{github.workspace}}/dev/ci/ci-local-dpc-test.sh
 
 #  cluster-test:
-#    name: Cluster Test for Examples
+#    name: Cluster Test for Examples (CPU)
 #    runs-on: ubuntu-18.04
 #    steps:
 #      - uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
 #            ~/.m2/repository
 #            /opt/intel/oneapi
 #            ~/opt
-#          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2021.4.0
+#          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2022.1.2
 #          restore-keys: |
 #            ${{ runner.os }}-
 #      - name: Cluster Test
