@@ -1,8 +1,10 @@
-CC := clang
-CXX := clang++
+CC := dpcpp
+CXX := dpcpp
 RM := rm -rf
 
 CFLAGS := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 -fsycl
+
+LIBS := -L/usr/local/lib64 -l:libstdc++.a
 
 OUTPUT = check-gpu-cpu
 

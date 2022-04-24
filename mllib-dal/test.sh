@@ -63,7 +63,7 @@ MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] <test suite name>"
+  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] [-t <CI test>] <test suite name>"
   echo
   echo "-p  Supported Platform Profiles:"
     echo "    CPU_ONLY_PROFILE"
@@ -71,11 +71,12 @@ print_usage() {
   echo
 }
 
-while getopts "p:qh" opt
+while getopts "p:qt:h" opt
 do
 case $opt in
   p) PLATFORM_OPT=$OPTARG ;;
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
+  t) TEST_OPT=$OPTARG ;;
   h | *)
      print_usage
      exit 1
@@ -108,6 +109,7 @@ source $OAP_MLLIB_ROOT/RELEASE
 
 export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
+export SPARK_CI_TEST=$TEST_OPT
 
 echo
 echo === Testing Environments ===
