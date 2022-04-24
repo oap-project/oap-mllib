@@ -23,14 +23,9 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 source /opt/intel/oneapi/setvars.sh
 #source /home/runner/work/level-zero/setvars.sh
 
-<<<<<<< HEAD
 cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 ./build.sh
 ./run.sh
-=======
-$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/build.sh
-$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/run.sh
->>>>>>> update
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-da
@@ -38,8 +33,4 @@ cd $GITHUB_WORKSPACE/mllib-da
 ./build.sh -p CPU_GPU_PROFILE
 
 unset LD_LIBRARY_PATH
-<<<<<<< HEAD
 ./test.sh -p CPU_GPU_PROFILE -q -d host
-=======
-./test.sh -p CPU_GPU_PROFILE -t cpu -q
->>>>>>> update ci
