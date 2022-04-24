@@ -28,7 +28,7 @@ cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 ./run.sh
 
 # Prepare lib resources
-cd $GITHUB_WORKSPACE/mllib-da
+cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps-gpu.sh
 ./build.sh -p CPU_ONLY_PROFILE
 
