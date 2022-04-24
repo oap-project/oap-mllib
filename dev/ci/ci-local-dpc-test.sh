@@ -23,9 +23,14 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 source /opt/intel/oneapi/setvars.sh
 #source /home/runner/work/level-zero/setvars.sh
 
+<<<<<<< HEAD
 cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 ./build.sh
 ./run.sh
+=======
+$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/build.sh
+$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/run.sh
+>>>>>>> update
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-da
