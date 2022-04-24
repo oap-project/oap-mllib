@@ -67,14 +67,14 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
 sycl::queue getQueue() {
     std::cout << "Selector Queue" << std::endl;
     char *str = getenv("SPARK_CI_TEST");
-    if(str!=NULL){
-        std::cout << "The SPARK_CI_TEST of value : "<< str << std::endl;
+    if (str != NULL) {
+        std::cout << "The SPARK_CI_TEST of value : " << str << std::endl;
         int length = strlen(str);
         for (int i = 0; i < length; i++) {
-             // convert str[i] to uppercase
+            // convert str[i] to uppercase
             str[i] = std::toupper(str[i]);
         }
-        if( strcmp(str, "CPU") == 0 ) {
+        if (strcmp(str, "CPU") == 0) {
             std::cout << "selector CPU" << std::endl;
             auto device_cpu = sycl::cpu_selector{}.select_device();
             sycl::queue q_cpu{device_cpu};
