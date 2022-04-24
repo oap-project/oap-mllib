@@ -9,8 +9,6 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 lscpu
-$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/build.sh
-$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/run.sh
 
 #$GITHUB_WORKSPACE/dev/install-build-level-zero-deps-ubuntun.sh
 $GITHUB_WORKSPACE/dev/install-level-zero-ubuntu.sh
@@ -21,6 +19,9 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
 #source /home/runner/work/level-zero/setvars.sh
+
+$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/build.sh
+$GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/run.sh
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-da
