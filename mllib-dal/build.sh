@@ -68,7 +68,7 @@ MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./build.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] [-t <CI test>]"
+  echo "Usage: ./build.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] "
   echo
   echo "-p  Supported Platform Profiles:"
     echo "    CPU_ONLY_PROFILE"
@@ -121,7 +121,6 @@ elif [[ $PLATFORM_PROFILE == CPU_GPU_PROFILE ]]
 then
   check_gpu_libs
 fi
-export CI_TEST=${TEST_OPT:-$CI_TEST}
 
 echo
 echo === Building Environments ===

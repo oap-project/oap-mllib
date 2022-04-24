@@ -47,7 +47,6 @@ fi
 export OAP_MLLIB_TESTING=true
 
 suiteArray=(
-<<<<<<< HEAD
   "HomogenTableTest" \
   "ColumnAccessorTest" \
   "RowAccessorTest" \
@@ -61,18 +60,6 @@ suiteArray=(
   "stat.MultivariateOnlineSummarizerSuite" \
   "oneDALSuite" \
   "HomogenTableSuite"
-=======
-#  "clustering.MLlibKMeansSuite" \
-#  "feature.MLlibPCASuite" \
-#  "recommendation.MLlibALSSuite" \
-#  "classification.MLlibNaiveBayesSuite" \
-#  "regression.MLlibLinearRegressionSuite" \
-#  "stat.MLlibCorrelationSuite" \
-#  "stat.MultivariateOnlineSummarizerSuite" \
-#  "oneDALSuite" \
-  "com.intel.oneapi.dal.table.HomogenTableSuite" \
-  "com.intel.oap.mllib.ConvertHomogenTableSuite"
->>>>>>> update test.sh
 )
 
 MVN_NO_TRANSFER_PROGRESS=
@@ -125,6 +112,7 @@ source $OAP_MLLIB_ROOT/RELEASE
 
 export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
+export SPARK_CI_TEST=$TEST_OPT
 
 echo "computeDevice : $DEVICE_OPT"
 

@@ -28,9 +28,13 @@ cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 ./run.sh
 
 # Prepare lib resources
-cd $GITHUB_WORKSPACE/mllib-dal
+cd $GITHUB_WORKSPACE/mllib-da
 ../dev/prepare-build-deps-gpu.sh
-./build.sh -p CPU_GPU_PROFILE -t CI_TEST -q
+./build.sh -p CPU_GPU_PROFILE
 
 unset LD_LIBRARY_PATH
+<<<<<<< HEAD
 ./test.sh -p CPU_GPU_PROFILE -q -d host
+=======
+./test.sh -p CPU_GPU_PROFILE -t cpu -q
+>>>>>>> update ci
