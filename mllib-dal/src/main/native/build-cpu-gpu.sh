@@ -15,6 +15,7 @@
 # limitations under the License.
 
 export PLATFORM_PROFILE=CPU_GPU_PROFILE
-export CI_TEST=CI_TEST
+export POLICY_PROFILE=DEFAULT_HOST_POLICY
+
 make clean
 make -j

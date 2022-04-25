@@ -21,9 +21,6 @@
 #include <string>
 #include <typeinfo>
 
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
 
 #include "com_intel_oneapi_dal_table_SimpleMetadataImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
