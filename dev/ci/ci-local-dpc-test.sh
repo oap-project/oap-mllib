@@ -27,7 +27,7 @@ cd  $GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-da
 ../dev/prepare-build-deps-gpu.sh
-./build.sh -p CPU_GPU_PROFILE
+./build.sh -p CPU_ONLY_PROFILE
 
 unset LD_LIBRARY_PATH
-./test.sh -p CPU_GPU_PROFILE -t cpu -q
+./test.sh -p CPU_ONLY_PROFILE -t cpu -q
