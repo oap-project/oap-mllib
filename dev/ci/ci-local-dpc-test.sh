@@ -30,4 +30,4 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ./build.sh -p CPU_GPU_PROFILE -q -t DEFAULT_HOST_POLICY
 
 unset LD_LIBRARY_PATH
-./test.sh -p CPU_GPU_PROFILE -t cpu -q
+./test.sh -p CPU_GPU_PROFILE -q

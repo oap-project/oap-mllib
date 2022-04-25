@@ -65,7 +65,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     printf("HomogenTable int init \n");
     jint *fData = env->GetIntArrayElements(cData, NULL);
     #ifdef CPU_GPU_PROFILE
-         #ifndef DEFAULT_HOST_POLICY
+         #ifdef DEFAULT_HOST_POLICY
               homogen_table *h_table = new homogen_table(
                   fData, cRowCount, cColCount, detail::empty_delete<const int>(),
                   getDataLayout(cLayout));
@@ -97,7 +97,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     printf("HomogenTable float init \n");
     jfloat *fData = env->GetFloatArrayElements(cData, NULL);
     #ifdef CPU_GPU_PROFILE
-             #ifndef DEFAULT_HOST_POLICY
+             #ifdef DEFAULT_HOST_POLICY
                 homogen_table *h_table = new homogen_table(
                     fData, cRowCount, cColCount, detail::empty_delete<const float>(),
                     getDataLayout(cLayout));
@@ -127,7 +127,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     printf("HomogenTable double init \n");
     jdouble *fData = env->GetDoubleArrayElements(cData, NULL);
     #ifdef CPU_GPU_PROFILE
-           #ifndef DEFAULT_HOST_POLICY
+           #ifdef DEFAULT_HOST_POLICY
                 homogen_table *h_table = new homogen_table(
                     fData, cRowCount, cColCount, detail::empty_delete<const double>(),
                     getDataLayout(cLayout));
@@ -136,7 +136,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
                 cVector.push_back(*tablePtr);
                 return (jlong)tablePtr;
            #endif
-
                 sycl::queue queue = getQueue();
                 homogen_table *h_sycl_table = new homogen_table(queue,
                     fData, cRowCount, cColCount, detail::empty_delete<const double>(),
@@ -159,7 +158,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     printf("HomogenTable long init \n");
     jlong *fData = env->GetLongArrayElements(cData, NULL);
     #ifdef CPU_GPU_PROFILE
-           #ifndef DEFAULT_HOST_POLICY
+           #ifdef DEFAULT_HOST_POLICY
                 homogen_table *h_table = new homogen_table(
                    fData, cRowCount, cColCount, detail::empty_delete<const long>(),
                    getDataLayout(cLayout));
