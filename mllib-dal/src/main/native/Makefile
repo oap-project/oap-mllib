@@ -14,8 +14,8 @@
 
 # Use gcc for CPU and dpcpp for GPU
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  CC := gcc
-  CXX := g++
+  CC := dpcpp
+  CXX := dpcpp
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CC := dpcpp
   CXX := dpcpp
