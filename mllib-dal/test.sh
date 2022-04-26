@@ -124,7 +124,6 @@ echo
 if [[ -z $SUITE ]]; then
   for suite in ${suiteArray[*]}
     do
-      echo $suite
       if [[ $suite == *"com.intel.oap.mllib"* ]]; then
         echo
         echo Testing $suite ...
@@ -145,12 +144,12 @@ else
         echo
         echo Testing $suite ...
         echo
-        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=$suite test
+        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
       else
         echo
-        echo Testing $suite ...
+        echo Testing java $suite ...
         echo
-        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=$suite test
+        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
       fi
   done
 fi

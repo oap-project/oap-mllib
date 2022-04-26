@@ -11,10 +11,10 @@ public class HomogenTableTest {
 
     private String getDevice(){
         String device = System.getProperty("computeDevice");
-        System.out.println("getDevice : " + device);
         if(device == null){
             device = "CPU";
         }
+        System.out.println("getDevice : " + device);
         return device;
     }
 
