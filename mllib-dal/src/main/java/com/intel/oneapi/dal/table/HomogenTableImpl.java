@@ -42,7 +42,6 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = fInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
-
     }
 
     public HomogenTableImpl(long rowCount,
@@ -52,7 +51,6 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = lInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
-
     }
 
     public HomogenTableImpl(long rowCount,

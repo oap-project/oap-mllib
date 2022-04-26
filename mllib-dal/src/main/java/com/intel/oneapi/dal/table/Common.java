@@ -21,7 +21,6 @@ public class Common {
         UINT16, UINT32, UINT64, FLOAT32, FLOAT64, BFLOAT16;
         private static final DataType[] values = values();
         public static DataType get(int ordinal) {
-
             return values[ordinal];
         }
     }

@@ -58,6 +58,8 @@ static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
        g_mtx.unlock();
 }
 
+enum class compute_device { host, cpu, gpu };
+
 static data_layout getDataLayout(jint cLayout) {
     data_layout layout;
     switch (cLayout) {
