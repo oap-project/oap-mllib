@@ -47,7 +47,6 @@ fi
 export OAP_MLLIB_TESTING=true
 
 suiteArray=(
-  "com.intel.oap.mllib.ConvertHomogenTableSuite" \
   "HomogenTableTest"
 )
 
