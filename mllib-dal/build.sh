@@ -142,7 +142,6 @@ fi
 
 echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
-echo Whether CI Test: $CI_TEST
 echo =============================
 echo
 
