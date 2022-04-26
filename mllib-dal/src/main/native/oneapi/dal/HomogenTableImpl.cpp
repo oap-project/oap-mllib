@@ -36,7 +36,6 @@ using namespace std;
 using namespace oneapi::dal;
 
 
-#ifdef CPU_GPU_PROFILE
 std::vector<std::shared_ptr<homogen_table>> cVector;
 
 enum class compute_device { host, cpu, gpu };
@@ -392,4 +391,3 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
     env->SetDoubleArrayRegion(newDoubleArray, 0, datasize, data);
     return newDoubleArray;
 }
-#endif
