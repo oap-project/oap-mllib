@@ -193,6 +193,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
         case _  => "Invalid Device"
       }
     }
+    System.out.println("getDevice : " + computeDevice)
     computeDevice
   }
 }
