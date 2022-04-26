@@ -21,8 +21,30 @@ public class Common {
         UINT16, UINT32, UINT64, FLOAT32, FLOAT64, BFLOAT16;
         private static final DataType[] values = values();
         public static DataType get(int ordinal) {
-
             return values[ordinal];
+        }
+    }
+    public enum ComputeDevice {
+        HOST, CPU, GPU;
+        private static final ComputeDevice[] values = values();
+        public static ComputeDevice get(int ordinal) {
+            return values[ordinal];
+        }
+        public static int getOrdinalByName(String key){
+            ComputeDevice device = null;
+            switch (key.toUpperCase()){
+                case "HOST":
+                    device = HOST;
+                    break;
+                case "CPU":
+                    device = CPU;
+                    break;
+
+                case "GPU":
+                    device = GPU;
+                    break;
+            }
+            return device.ordinal();
         }
     }
 }

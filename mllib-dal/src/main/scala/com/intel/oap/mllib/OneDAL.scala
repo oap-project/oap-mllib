@@ -255,14 +255,16 @@ object OneDAL {
     matrixLabel
   }
 
-  private[mllib] def doubleArrayToHomogenTable(points: Array[Double]): HomogenTable = {
+  private[mllib] def doubleArrayToHomogenTable(points: Array[Double],
+                                               device: Common.ComputeDevice): HomogenTable = {
 
-    val table = new HomogenTable(1, points.length, points)
+    val table = new HomogenTable(1, points.length, points, device.ordinal())
 
     table
   }
 
-  def makeHomogenTable(arrayVectors: Array[Vector]): HomogenTable = {
+  def makeHomogenTable(arrayVectors: Array[Vector],
+                       device: Common.ComputeDevice): HomogenTable = {
     val numCols = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
@@ -275,12 +277,14 @@ object OneDAL {
         }
       }
     }
-    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble)
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
+      device.ordinal())
 
     table
   }
 
-  def makeHomogenTable(arrayVectors: Array[OldVector]): HomogenTable = {
+  def makeHomogenTable(arrayVectors: Array[OldVector],
+                       device: Common.ComputeDevice): HomogenTable = {
     val numCols = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
@@ -293,7 +297,8 @@ object OneDAL {
         }
       }
     }
-    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble)
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
+      device.ordinal())
 
     table
   }

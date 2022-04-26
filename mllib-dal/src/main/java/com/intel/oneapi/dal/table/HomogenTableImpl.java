@@ -39,74 +39,63 @@ public class HomogenTableImpl implements HomogenTableIface {
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             int[] data,
-                            Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, Common.DataType.INT32, dataLayout);
+                            Common.DataLayout dataLayout,
+                            Common.ComputeDevice computeDevice) {
+        this.cObject = iInit(rowCount, colCount, data, dataLayout.ordinal(), computeDevice.ordinal());
 
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             float[] data,
-                            Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, Common.DataType.FLOAT32, dataLayout);
+                            Common.DataLayout dataLayout,
+                            Common.ComputeDevice computeDevice) {
+        this.cObject = fInit(rowCount, colCount, data, dataLayout.ordinal(), computeDevice.ordinal());
 
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             long[] data,
-                            Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, Common.DataType.INT64, dataLayout);
+                            Common.DataLayout dataLayout,
+                            Common.ComputeDevice computeDevice) {
+        this.cObject = lInit(rowCount, colCount, data, dataLayout.ordinal(), computeDevice.ordinal());
 
     }
 
     public HomogenTableImpl(long rowCount,
                             long colCount,
                             double[] data,
-                            Common.DataLayout dataLayout) {
-        initHomogenTable(rowCount, colCount, data, Common.DataType.FLOAT64, dataLayout);
+                            Common.DataLayout dataLayout,
+                            Common.ComputeDevice computeDevice) {
+        this.cObject = dInit(rowCount, colCount, data, dataLayout.ordinal(), computeDevice.ordinal());
 
     }
 
-    private void initHomogenTable( long rowCount,
-                                          long colCount,
-                                          Object data,
-                                          Common.DataType dataType,
-                                          Common.DataLayout dataLayout) {
-        System.out.println("initHomogenTable");
-
-        if (dataType.toString() == Common.DataType.INT32.toString()) {
-            this.cObject = iInit(rowCount, colCount, (int[]) data , dataLayout.ordinal());
-        }else if (dataType.toString() == Common.DataType.FLOAT32.toString()) {
-            this.cObject = fInit(rowCount, colCount, (float[]) data, dataLayout.ordinal());
-        }else if (dataType.toString() == Common.DataType.INT64.toString()) {
-            this.cObject = lInit(rowCount, colCount, (long[]) data, dataLayout.ordinal());
-        }else if (dataType.toString() == Common.DataType.FLOAT64.toString()) {
-            this.cObject = dInit(rowCount, colCount, (double[]) data, dataLayout.ordinal());
-        }else {
-            throw new IllegalArgumentException("type unsupported");
-        }
-    }
 
     private native long iInit(long rowCount,
                                 long colCount,
                                 int[] data,
-                                int  dataLayoutIndex);
+                                int  dataLayoutIndex,
+                                int computeDeviceIndex);
 
     private native long fInit(long rowCount,
                                 long colCount,
                                 float[] data,
-                                int dataLayoutIndex);
+                                int dataLayoutIndex,
+                                int computeDeviceIndex);
 
     private native long dInit(long rowCount,
                                 long colCount,
                                 double[] data,
-                                int dataLayoutIndex);
+                                int dataLayoutIndex,
+                                int computeDeviceIndex);
 
     private native long lInit(long rowCount,
                                 long colCount,
                                 long[] data,
-                                int dataLayoutIndex);
+                                int dataLayoutIndex,
+                                int computeDeviceIndex);
 
     @Override
     public long getColumnCount() {

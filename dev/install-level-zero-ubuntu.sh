@@ -8,5 +8,3 @@ sudo apt-key add -
 sudo apt-get install -y \
 intel-opencl-icd \
 intel-level-zero-gpu level-zero \
-intel-media-va-driver-non-free libmfx1
-
