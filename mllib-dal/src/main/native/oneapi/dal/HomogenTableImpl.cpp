@@ -171,6 +171,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     sycl::queue queue;
     switch(getComputeDevice(cComputeDevice)) {
          case compute_device::host:
+             printf("HomogenTable double init host \n");
              h_table = new homogen_table(
                              fData, cRowCount, cColCount, detail::empty_delete<const double>(),
                              getDataLayout(cLayout));
@@ -178,6 +179,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              cVector.push_back(*tablePtr);
              return (jlong)tablePtr;
          case compute_device::cpu:
+             printf("HomogenTable double init cpu \n");
              queue = getQueue(false);
              h_table = new homogen_table(queue,
                  fData, cRowCount, cColCount, detail::empty_delete<const double>(),
@@ -186,6 +188,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              cVector.push_back(*tablePtr);
              return (jlong)tablePtr;
          case compute_device::gpu:
+             printf("HomogenTable double init gpu \n");
              queue = getQueue(true);
              h_table = new homogen_table(queue,
                   fData, cRowCount, cColCount, detail::empty_delete<const double>(),
