@@ -41,6 +41,7 @@ using namespace oneapi::dal;
 
 typedef std::shared_ptr<table_metadata> TableMetadataPtr;
 
+<<<<<<< HEAD
 std::mutex g_mtx;
 std::vector<TableMetadataPtr> g_TableMetaDataVector;
 template <typename T> std::vector<std::shared_ptr<T>> g_SharedPtrVector;
@@ -57,6 +58,9 @@ static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
        g_SharedPtrVector<T>.push_back(ptr);
        g_mtx.unlock();
 }
+=======
+std::vector<std::shared_ptr<homogen_table>> cVector;
+>>>>>>> Update HomogenTableImpl.cpp
 
 enum class compute_device { host, cpu, gpu };
 
