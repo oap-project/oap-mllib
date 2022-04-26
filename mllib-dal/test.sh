@@ -47,15 +47,7 @@ fi
 export OAP_MLLIB_TESTING=true
 
 suiteArray=(
-#  "clustering.MLlibKMeansSuite" \
-#  "feature.MLlibPCASuite" \
-#  "recommendation.MLlibALSSuite" \
-#  "classification.MLlibNaiveBayesSuite" \
-#  "regression.MLlibLinearRegressionSuite" \
-#  "stat.MLlibCorrelationSuite" \
-#  "stat.MultivariateOnlineSummarizerSuite" \
-#  "oneDALSuite" \
-#  "com.intel.oap.mllib.ConvertHomogenTableSuite" \
+  "com.intel.oap.mllib.ConvertHomogenTableSuite" \
   "HomogenTableTest"
 )
 
