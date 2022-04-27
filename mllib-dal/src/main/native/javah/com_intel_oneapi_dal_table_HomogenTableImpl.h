@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    iInit
- * Signature: (JJ[II)J
+ * Signature: (JJ[III)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit
   (JNIEnv *, jobject, jlong, jlong, jintArray, jint, jint);
@@ -18,7 +18,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    fInit
- * Signature: (JJ[FI)J
+ * Signature: (JJ[FII)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit
   (JNIEnv *, jobject, jlong, jlong, jfloatArray, jint, jint);
@@ -26,7 +26,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    dInit
- * Signature: (JJ[DI)J
+ * Signature: (JJ[DII)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit
   (JNIEnv *, jobject, jlong, jlong, jdoubleArray, jint, jint);
@@ -34,7 +34,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    lInit
- * Signature: (JJ[JI)J
+ * Signature: (JJ[JII)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit
   (JNIEnv *, jobject, jlong, jlong, jlongArray, jint, jint);
@@ -117,14 +117,6 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGe
  * Signature: (J)[J
  */
 JNIEXPORT jlongArray JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetLongData
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
- * Method:    cGetAccessIfacehost
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetAccessIfacehost
   (JNIEnv *, jobject, jlong);
 
 /*

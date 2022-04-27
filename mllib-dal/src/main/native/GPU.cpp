@@ -5,6 +5,8 @@
 #include "GPU.h"
 #include "service.h"
 
+sycl::queue* queue;
+
 static std::vector<sycl::device> get_gpus() {
     auto platforms = sycl::platform::get_platforms();
     for (auto p : platforms) {
@@ -64,17 +66,21 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
     return rank_gpu;
 }
 
-sycl::queue getQueue(const bool is_gpu) {
+sycl::queue* getQueue(const bool is_gpu) {
     std::cout << "Get Queue" << std::endl;
     if (is_gpu) {
         std::cout << "selector GPU" << std::endl;
-        auto device_gpu = sycl::gpu_selector{}.select_device();
-        sycl::queue q_gpu{device_gpu};
-        return q_gpu;
+        if(queue == NULL) {
+             auto device_gpu = sycl::gpu_selector{}.select_device();
+             queue = new sycl::queue(device_gpu);
+        }
+        return queue;
     } else {
         std::cout << "selector CPU" << std::endl;
-        auto device_cpu = sycl::cpu_selector{}.select_device();
-        sycl::queue q_cpu{device_cpu};
-        return q_cpu;
+        if(queue == NULL) {
+            auto device_cpu = sycl::cpu_selector{}.select_device();
+            queue = new sycl::queue(device_cpu);
+        }
+        return queue;
     }
 }

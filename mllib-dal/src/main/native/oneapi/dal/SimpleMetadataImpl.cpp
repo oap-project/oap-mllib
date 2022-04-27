@@ -28,7 +28,6 @@
 using namespace std;
 using namespace oneapi::dal;
 
-#ifdef CPU_GPU_PROFILE
 /*
  * Class:     com_intel_oneapi_dal_table_SimpleMetadataImpl
  * Method:    cGetFeatureCount
@@ -70,4 +69,3 @@ Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType(
         ((std::shared_ptr<table_metadata> *)ctableAddr)->get();
     return (jint)mdata->get_data_type(cindex);
 }
-#endif

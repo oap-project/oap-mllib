@@ -13,27 +13,14 @@ public class HomogenTableImpl implements HomogenTableIface {
         }
     }
     private transient long cObject;
-    private Object jData;
-    private long rowCount;
-    private long colCount;
-    private Common.DataLayout dataLayout;
     private TableMetadata metadata;
 
     protected HomogenTableImpl() {
         super();
-        this.cObject = 0L;
-        this.rowCount = 0;
-        this.colCount = 0;
-        this.jData = null;
-        this.dataLayout = Common.DataLayout.UNKNOW;
     }
 
     public HomogenTableImpl(long cTable) {
         this.cObject = cTable;
-        this.rowCount = 0;
-        this.colCount = 0;
-        this.jData = null;
-        this.dataLayout = Common.DataLayout.UNKNOW;
     }
 
     public HomogenTableImpl(long rowCount,
@@ -42,6 +29,7 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.DataLayout dataLayout,
                             Common.ComputeDevice computeDevice) {
         this.cObject = iInit(rowCount, colCount, data, dataLayout.ordinal(), computeDevice.ordinal());
+        System.out.println(" HomogenTableImpl object : " + this.cObject);
 
     }
 
