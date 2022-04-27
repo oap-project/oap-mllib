@@ -189,7 +189,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
       device.toUpperCase match {
         case "HOST" =>  computeDevice = Common.ComputeDevice.HOST
         case "CPU"  => computeDevice = Common.ComputeDevice.CPU
-        case "CPU"  => computeDevice = Common.ComputeDevice.HOST
+        case "GPU"  => computeDevice = Common.ComputeDevice.GPU
         case _  => "Invalid Device"
       }
     }
