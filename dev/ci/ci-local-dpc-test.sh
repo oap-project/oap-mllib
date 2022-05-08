@@ -17,7 +17,7 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
 
-cd  $GITHUB_WORKSPACE/dev/tools/check-gpu-cpu/
+cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 ./build.sh
 ./run.sh
 
