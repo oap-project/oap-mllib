@@ -53,6 +53,11 @@ int check_cpu() {
 }
 
 int main (int argc, char * argv[]) {
+    char* device = argv[1];
+    if (*device ==NULL) {
+
+    } else if (*device == "CPU") {
+        return check_gpu();
     if (argc == 1) {
         std::cout << "This program is used to list the device of the server" << std::endl <<
               "Options:" << std::endl <<
