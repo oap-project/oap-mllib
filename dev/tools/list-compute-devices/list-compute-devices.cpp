@@ -53,8 +53,10 @@ int check_cpu() {
 }
 
 int main (int argc, char * argv[]) {
-    char* is_gpu = argv[1];
-    if (*is_gpu == true) {
+    char* device = argv[1];
+    if (*device ==NULL) {
+
+    } else if (*device == "CPU") {
         return check_gpu();
     } else {
         return check_cpu();

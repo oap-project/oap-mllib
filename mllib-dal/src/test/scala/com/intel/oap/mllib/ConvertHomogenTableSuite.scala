@@ -1,7 +1,7 @@
 package com.intel.oap.mllib
 
 import com.intel.oneapi.dal.table.Common
-import com.intel.oneapi.dal.table.Common.DataLayout.ROWMAJOR
+import com.intel.oneapi.dal.table.Common.DataLayout.ROW_MAJOR
 import com.intel.oneapi.dal.table.Common.DataType.FLOAT64
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.FunctionsSuite
@@ -29,7 +29,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 10)
 
-    assert(table.getDataLayout == ROWMAJOR)
+    assert(table.getDataLayout == ROW_MAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
       assert(metadata.getDataType(i) == FLOAT64)
@@ -47,7 +47,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 1)
 
-    assert(table.getDataLayout == ROWMAJOR)
+    assert(table.getDataLayout == ROW_MAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
       assert(metadata.getDataType(i) == FLOAT64)
@@ -76,7 +76,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assert(table.getColumnCount == 10)
     assert(table.getRowCount == 10)
 
-    assert(table.getDataLayout == ROWMAJOR)
+    assert(table.getDataLayout == ROW_MAJOR)
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
       assert(metadata.getDataType(i) == FLOAT64)

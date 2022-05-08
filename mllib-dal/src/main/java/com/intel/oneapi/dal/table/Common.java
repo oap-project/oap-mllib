@@ -9,7 +9,7 @@ public class Common {
         }
     }
     public enum DataLayout {
-        UNKNOW, ROWMAJOR, COLUMNMAJOR;
+        UNKNOWN, ROW_MAJOR, COLUMN_MAJOR;
         private static final DataLayout[] values = values();
         public static DataLayout get(int ordinal) {
             return values[ordinal];
@@ -39,7 +39,6 @@ public class Common {
                 case "CPU":
                     device = CPU;
                     break;
-
                 case "GPU":
                     device = GPU;
                     break;

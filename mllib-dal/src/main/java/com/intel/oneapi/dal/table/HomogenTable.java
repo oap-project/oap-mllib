@@ -14,7 +14,7 @@ public class HomogenTable extends Table {
                         int deviceIndex){
         super();
         // default
-        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        Common.DataLayout dataLayout = Common.DataLayout.ROW_MAJOR;
         Common.ComputeDevice device = Common.ComputeDevice.get(deviceIndex);
         impl = new HomogenTableImpl(rowCount, colCount, data,
                 dataLayout, device);
@@ -39,7 +39,7 @@ public class HomogenTable extends Table {
                         int deviceIndex){
         super();
         // default
-        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        Common.DataLayout dataLayout = Common.DataLayout.ROW_MAJOR;
         Common.ComputeDevice device = Common.ComputeDevice.get(deviceIndex);
         impl = new HomogenTableImpl(rowCount, colCount, data,
                 dataLayout, device);
@@ -63,7 +63,7 @@ public class HomogenTable extends Table {
                         int deviceIndex){
         super();
         // default
-        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        Common.DataLayout dataLayout = Common.DataLayout.ROW_MAJOR;
         Common.ComputeDevice device = Common.ComputeDevice.get(deviceIndex);
         impl = new HomogenTableImpl(rowCount, colCount, data,
                 dataLayout, device);
@@ -87,7 +87,7 @@ public class HomogenTable extends Table {
                         int deviceIndex){
         super();
         // default
-        Common.DataLayout dataLayout = Common.DataLayout.ROWMAJOR;
+        Common.DataLayout dataLayout = Common.DataLayout.ROW_MAJOR;
         Common.ComputeDevice device = Common.ComputeDevice.get(deviceIndex);
         impl = new HomogenTableImpl(rowCount, colCount, data,
                 dataLayout, device);

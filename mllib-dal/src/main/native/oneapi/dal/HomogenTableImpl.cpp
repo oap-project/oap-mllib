@@ -32,15 +32,13 @@
 
 #include "com_intel_oneapi_dal_table_HomogenTableImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
+#include "service.h"
 
 using namespace std;
 using namespace oneapi::dal;
 
 std::mutex mtx;
 std::vector<std::shared_ptr<homogen_table>> cVector;
-
-enum class compute_device { host, cpu, gpu };
-
 
 static void setVector(std::shared_ptr<homogen_table> *ptr) {
        mtx.lock();
@@ -62,22 +60,6 @@ static data_layout getDataLayout(jint cLayout) {
         break;
     }
     return layout;
-}
-
-static compute_device getComputeDevice(jint cComputeDevice) {
-    compute_device device;
-    switch (cComputeDevice) {
-    case 0:
-        device = compute_device::host;
-        break;
-    case 1:
-        device = compute_device::cpu;
-        break;
-    case 2:
-        device = compute_device::gpu;
-        break;
-    }
-    return device;
 }
 
 /*
@@ -103,7 +85,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
        }
 #ifdef CPU_GPU_PROFILE
        case compute_device::cpu:{
-             sycl::queue *cpu_queue = getQueue(false);
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
              h_table = new homogen_table(*cpu_queue,
                  fData, cRowCount, cColCount, detail::empty_delete<const int>(),
                  {}, getDataLayout(cLayout));
@@ -112,7 +94,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
              return (jlong)tablePtr;
        }
        case compute_device::gpu:{
-             sycl::queue *gpu_queue = getQueue(true);
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
              h_table = new homogen_table(*gpu_queue,
                 fData, cRowCount, cColCount, detail::empty_delete<const int>(),
                 {}, getDataLayout(cLayout));
@@ -150,7 +132,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
          }
 #ifdef CPU_GPU_PROFILE
          case compute_device::cpu:{
-             sycl::queue *cpu_queue = getQueue(false);
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
              h_table = new homogen_table(*cpu_queue,
                  fData, cRowCount, cColCount, detail::empty_delete<const float>(),
                  {}, getDataLayout(cLayout));
@@ -159,7 +141,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
              return (jlong)tablePtr;
          }
          case compute_device::gpu:{
-             sycl::queue *gpu_queue = getQueue(true);
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
              h_table = new homogen_table(*gpu_queue,
                   fData, cRowCount, cColCount, detail::empty_delete<const float>(),
                   {}, getDataLayout(cLayout));
@@ -197,7 +179,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
          }
 #ifdef CPU_GPU_PROFILE
          case compute_device::cpu:{
-             sycl::queue *cpu_queue = getQueue(false);
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
              h_table = new homogen_table(*cpu_queue,
                  fData, cRowCount, cColCount, detail::empty_delete<const double>(),
                  {}, getDataLayout(cLayout));
@@ -206,7 +188,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              return (jlong)tablePtr;
          }
          case compute_device::gpu:{
-             sycl::queue *gpu_queue = getQueue(true);
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
              h_table = new homogen_table(*gpu_queue,
                   fData, cRowCount, cColCount, detail::empty_delete<const double>(),
                   {}, getDataLayout(cLayout));
@@ -244,7 +226,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
          }
 #ifdef CPU_GPU_PROFILE
          case compute_device::cpu:{
-             sycl::queue *cpu_queue = getQueue(false);
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
              h_table = new homogen_table(*cpu_queue,
                  fData, cRowCount, cColCount, detail::empty_delete<const long>(),
                  {}, getDataLayout(cLayout));
@@ -253,7 +235,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
              return (jlong)tablePtr;
          }
          case compute_device::gpu:{
-             sycl::queue *gpu_queue = getQueue(true);
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
              h_table = new homogen_table(*gpu_queue,
                   fData, cRowCount, cColCount, detail::empty_delete<const long>(),
                   {}, getDataLayout(cLayout));
