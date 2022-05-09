@@ -76,7 +76,7 @@ print_usage() {
   echo
 }
 
-while getopts "p:qh" opt
+while getopts "p:qt:h" opt
 do
 case $opt in
   p) PLATFORM_OPT=$OPTARG ;;
@@ -112,6 +112,7 @@ OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
 
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
+
 
 if [[ $PLATFORM_PROFILE == CPU_ONLY_PROFILE ]]
 then

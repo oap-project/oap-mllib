@@ -44,6 +44,7 @@ using namespace daal::data_management;
 
 typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
+enum class compute_device { host, cpu, gpu };
 
 void printNumericTable(const NumericTablePtr &dataTable,
                        const char *message = "", size_t nPrintedRows = 0,
@@ -51,6 +52,7 @@ void printNumericTable(const NumericTablePtr &dataTable,
 size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
 CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
+compute_device getComputeDevice(size_t cComputeDevice);
 
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);

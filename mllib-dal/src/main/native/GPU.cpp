@@ -3,7 +3,15 @@
 #include <unistd.h>
 
 #include "GPU.h"
-#include "service.h"
+
+static std::mutex mtx;
+static std::vector<std::shared_ptr<sycl::queue>> cVector;
+sycl::queue *getQue() {
+    if (!cVector.empty()) {
+        return cVector[0].get();
+    }
+    return NULL;
+}
 
 static std::vector<sycl::device> get_gpus() {
     auto platforms = sycl::platform::get_platforms();
@@ -62,4 +70,37 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
     auto rank_gpu = gpus[gpu_selected % gpus.size()];
 
     return rank_gpu;
+}
+
+static void setVector(std::shared_ptr<sycl::queue> *ptr) {
+    mtx.lock();
+    cVector.push_back(*ptr);
+    mtx.unlock();
+}
+
+sycl::queue *getQueue(const compute_device device) {
+    std::cout << "Get Queue" << std::endl;
+    std::shared_ptr<sycl::queue> *queuePtr;
+    sycl::queue *queue;
+    switch (device) {
+    case compute_device::gpu: {
+        std::cout << "selector GPU" << std::endl;
+        auto device_gpu = sycl::gpu_selector{}.select_device();
+        queue = new sycl::queue(device_gpu);
+        queuePtr = new std::shared_ptr<sycl::queue>(queue);
+        setVector(queuePtr);
+        return getQue();
+    }
+    case compute_device::cpu: {
+        std::cout << "selector CPU" << std::endl;
+        auto device_cpu = sycl::cpu_selector{}.select_device();
+        queue = new sycl::queue(device_cpu);
+        queuePtr = new std::shared_ptr<sycl::queue>(queue);
+        setVector(queuePtr);
+        return getQue();
+    }
+    default: {
+        return getQue();
+    }
+    }
 }

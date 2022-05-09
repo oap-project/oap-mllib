@@ -759,6 +759,22 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
     return dataArch.getAsSharedPtr();
 }
 
+compute_device getComputeDevice(size_t cComputeDevice) {
+    compute_device device;
+    switch (cComputeDevice) {
+    case 0:
+        device = compute_device::host;
+        break;
+    case 1:
+        device = compute_device::cpu;
+        break;
+    case 2:
+        device = compute_device::gpu;
+        break;
+    }
+    return device;
+}
+
 #ifdef CPU_GPU_PRFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
     int nRows = ntHomogen->getNumberOfRows();

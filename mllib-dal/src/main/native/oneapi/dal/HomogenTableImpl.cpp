@@ -21,19 +21,30 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <mutex>
 
+#ifdef CPU_GPU_PROFILE
+#include "GPU.h"
+#endif
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
 
 #include "com_intel_oneapi_dal_table_HomogenTableImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
+#include "service.h"
 
 using namespace std;
 using namespace oneapi::dal;
 
-
+std::mutex mtx;
 std::vector<std::shared_ptr<homogen_table>> cVector;
+
+static void setVector(std::shared_ptr<homogen_table> *ptr) {
+       mtx.lock();
+       cVector.push_back(*ptr);
+       mtx.unlock();
+}
 
 static data_layout getDataLayout(jint cLayout) {
     data_layout layout;
@@ -58,17 +69,44 @@ static data_layout getDataLayout(jint cLayout) {
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jintArray cData,
-    jint cLayout) {
+    jint cLayout, jint cComputeDevice) {
     printf("HomogenTable int init \n");
     jint *fData = env->GetIntArrayElements(cData, NULL);
-
-    homogen_table *h_table = new homogen_table(
-        fData, cRowCount, cColCount, detail::empty_delete<const int>(),
-        getDataLayout(cLayout));
-    std::shared_ptr<homogen_table> *tablePtr =
-        new std::shared_ptr<homogen_table>(h_table);
-    cVector.push_back(*tablePtr);
-    return (jlong)tablePtr;
+    homogen_table *h_table ;
+    std::shared_ptr<homogen_table> *tablePtr ;
+    switch(getComputeDevice(cComputeDevice)) {
+       case compute_device::host:{
+             h_table = new homogen_table(
+                                     fData, cRowCount, cColCount, detail::empty_delete<const int>(),
+                                     getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+       }
+#ifdef CPU_GPU_PROFILE
+       case compute_device::cpu:{
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
+             h_table = new homogen_table(*cpu_queue,
+                 fData, cRowCount, cColCount, detail::empty_delete<const int>(),
+                 {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+       }
+       case compute_device::gpu:{
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
+             h_table = new homogen_table(*gpu_queue,
+                fData, cRowCount, cColCount, detail::empty_delete<const int>(),
+                {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+       }
+#endif
+       default: {
+             return 0;
+       }
+    }
 }
 
 /*
@@ -78,16 +116,44 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jfloatArray cData,
-    jint cLayout) {
+    jint cLayout, jint cComputeDevice) {
     printf("HomogenTable float init \n");
     jfloat *fData = env->GetFloatArrayElements(cData, NULL);
-    homogen_table *h_table = new homogen_table(
-        fData, cRowCount, cColCount, detail::empty_delete<const float>(),
-        getDataLayout(cLayout));
-    std::shared_ptr<homogen_table> *tablePtr =
-        new std::shared_ptr<homogen_table>(h_table);
-    cVector.push_back(*tablePtr);
-    return (jlong)tablePtr;
+    homogen_table *h_table ;
+    std::shared_ptr<homogen_table> *tablePtr ;
+    switch(getComputeDevice(cComputeDevice)) {
+         case compute_device::host:{
+             h_table = new homogen_table(
+                                 fData, cRowCount, cColCount, detail::empty_delete<const float>(),
+                                 getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+#ifdef CPU_GPU_PROFILE
+         case compute_device::cpu:{
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
+             h_table = new homogen_table(*cpu_queue,
+                 fData, cRowCount, cColCount, detail::empty_delete<const float>(),
+                 {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+         case compute_device::gpu:{
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
+             h_table = new homogen_table(*gpu_queue,
+                  fData, cRowCount, cColCount, detail::empty_delete<const float>(),
+                  {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+#endif
+         default: {
+             return 0;
+         }
+    }
 }
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
@@ -96,16 +162,45 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jdoubleArray cData,
-    jint cLayout) {
+    jint cLayout, jint cComputeDevice) {
     printf("HomogenTable double init \n");
     jdouble *fData = env->GetDoubleArrayElements(cData, NULL);
-    homogen_table *h_table = new homogen_table(
-        fData, cRowCount, cColCount, detail::empty_delete<const double>(),
-        getDataLayout(cLayout));
-    std::shared_ptr<homogen_table> *tablePtr =
-        new std::shared_ptr<homogen_table>(h_table);
-    cVector.push_back(*tablePtr);
-    return (jlong)tablePtr;
+    homogen_table *h_table ;
+    std::shared_ptr<homogen_table> *tablePtr ;
+    switch(getComputeDevice(cComputeDevice)) {
+         case compute_device::host:{
+             printf("HomogenTable double init host \n");
+             h_table = new homogen_table(
+                             fData, cRowCount, cColCount, detail::empty_delete<const double>(),
+                             getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+#ifdef CPU_GPU_PROFILE
+         case compute_device::cpu:{
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
+             h_table = new homogen_table(*cpu_queue,
+                 fData, cRowCount, cColCount, detail::empty_delete<const double>(),
+                 {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+         case compute_device::gpu:{
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
+             h_table = new homogen_table(*gpu_queue,
+                  fData, cRowCount, cColCount, detail::empty_delete<const double>(),
+                  {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+#endif
+         default: {
+             return 0;
+         }
+    }
 }
 
 /*
@@ -115,16 +210,44 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlongArray cData,
-    jint cLayout) {
+    jint cLayout, jint cComputeDevice) {
     printf("HomogenTable long init \n");
     jlong *fData = env->GetLongArrayElements(cData, NULL);
-    homogen_table *h_table = new homogen_table(
-        fData, cRowCount, cColCount, detail::empty_delete<const long>(),
-        getDataLayout(cLayout));
-    std::shared_ptr<homogen_table> *tablePtr =
-        new std::shared_ptr<homogen_table>(h_table);
-    cVector.push_back(*tablePtr);
-    return (jlong)tablePtr;
+    homogen_table *h_table ;
+    std::shared_ptr<homogen_table> *tablePtr ;
+    switch(getComputeDevice(cComputeDevice)) {
+         case compute_device::host:{
+             h_table = new homogen_table(
+                fData, cRowCount, cColCount, detail::empty_delete<const long>(),
+                getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+#ifdef CPU_GPU_PROFILE
+         case compute_device::cpu:{
+             sycl::queue *cpu_queue = getQueue(compute_device::cpu);
+             h_table = new homogen_table(*cpu_queue,
+                 fData, cRowCount, cColCount, detail::empty_delete<const long>(),
+                 {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+         case compute_device::gpu:{
+             sycl::queue *gpu_queue = getQueue(compute_device::gpu);
+             h_table = new homogen_table(*gpu_queue,
+                  fData, cRowCount, cColCount, detail::empty_delete<const long>(),
+                  {}, getDataLayout(cLayout));
+             tablePtr = new std::shared_ptr<homogen_table>(h_table);
+             setVector(tablePtr);
+             return (jlong)tablePtr;
+         }
+#endif
+         default: {
+             return 0;
+         }
+    }
 }
 
 /*
@@ -214,7 +337,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetIntData(JNIEnv *env,
         ((std::shared_ptr<homogen_table> *)ctableAddr)->get();
     const int *data = htable->get_data<int>();
     const int datasize = htable->get_column_count() * htable->get_row_count();
-    ;
+
     jintArray newIntArray = env->NewIntArray(datasize);
     env->SetIntArrayRegion(newIntArray, 0, datasize, data);
     return newIntArray;
@@ -233,7 +356,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetFloatData(
         ((std::shared_ptr<homogen_table> *)ctableAddr)->get();
     const float *data = htable->get_data<float>();
     const int datasize = htable->get_column_count() * htable->get_row_count();
-    ;
+
     jfloatArray newFloatArray = env->NewFloatArray(datasize);
     env->SetFloatArrayRegion(newFloatArray, 0, datasize, data);
     return newFloatArray;
@@ -252,7 +375,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetLongData(
         ((std::shared_ptr<homogen_table> *)ctableAddr)->get();
     const long *data = htable->get_data<long>();
     const int datasize = htable->get_column_count() * htable->get_row_count();
-    ;
+
     jlongArray newLongArray = env->NewLongArray(datasize);
     env->SetLongArrayRegion(newLongArray, 0, datasize, data);
     return newLongArray;
@@ -271,7 +394,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
         ((std::shared_ptr<homogen_table> *)ctableAddr)->get();
     const double *data = htable->get_data<double>();
     const int datasize = htable->get_column_count() * htable->get_row_count();
-    ;
+
     jdoubleArray newDoubleArray = env->NewDoubleArray(datasize);
     env->SetDoubleArrayRegion(newDoubleArray, 0, datasize, data);
     return newDoubleArray;
