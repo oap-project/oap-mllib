@@ -47,8 +47,10 @@ fi
 export OAP_MLLIB_TESTING=true
 
 suiteArray=(
-  "com.intel.oap.mllib.ConvertHomogenTableSuite" \
-  "HomogenTableTest"
+  "HomogenTableTest" \
+  "ColumnAccessorTest" \
+  "RowAccessorTest" \
+  "com.intel.oap.mllib.ConvertHomogenTableSuite"
 )
 
 MVN_NO_TRANSFER_PROGRESS=

@@ -35,11 +35,11 @@ using namespace oneapi::dal;
  */
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureCount(
-    JNIEnv *env, jobject, jlong ctableAddr) {
+    JNIEnv *env, jobject, jlong cTableAddr) {
     printf("SimpleMetadata getfeaturecount \n");
-    table_metadata *mdata =
-        ((std::shared_ptr<table_metadata> *)ctableAddr)->get();
-    return (jlong)mdata->get_feature_count();
+    table_metadata mdata =
+        *((table_metadata *)cTableAddr);
+    return (jlong)mdata.get_feature_count();
 }
 
 /*
@@ -49,11 +49,12 @@ Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureCount(
  */
 JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureType(
-    JNIEnv *env, jobject, jlong ctableAddr, jint cindex) {
+    JNIEnv *env, jobject, jlong cTableAddr, jint cindex) {
     printf("SimpleMetadata getfeaturetype \n");
-    table_metadata *mdata =
-        ((std::shared_ptr<table_metadata> *)ctableAddr)->get();
-    return (jint)mdata->get_feature_type(cindex);
+    table_metadata mdata =
+        *((table_metadata *)cTableAddr);
+
+    return (jint)mdata.get_feature_type(cindex);
 }
 
 /*
@@ -63,9 +64,9 @@ Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureType(
  */
 JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType(
-    JNIEnv *env, jobject, jlong ctableAddr, jint cindex) {
+    JNIEnv *env, jobject, jlong cTableAddr, jint cindex) {
     printf("SimpleMetadata getdatatype \n");
-    table_metadata *mdata =
-        ((std::shared_ptr<table_metadata> *)ctableAddr)->get();
-    return (jint)mdata->get_data_type(cindex);
+    table_metadata mdata =
+        *((table_metadata *)cTableAddr);
+    return (jint)mdata.get_data_type(cindex);
 }

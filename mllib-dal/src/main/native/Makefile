@@ -61,7 +61,6 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L$(I_MPI_ROOT)
 
-
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
@@ -78,7 +77,9 @@ CPP_SRCS += \
   ./CorrelationDALImpl.cpp \
   ./SummarizerDALImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
-  ./oneapi/dal/SimpleMetadataImpl.cpp
+  ./oneapi/dal/SimpleMetadataImpl.cpp \
+  ./oneapi/dal/ColumnAccessorImpl.cpp \
+  ./oneapi/dal/RowAccessorImpl.cpp
 
 
 OBJS += \
@@ -91,8 +92,9 @@ OBJS += \
   ./CorrelationDALImpl.o \
   ./SummarizerDALImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
-  ./oneapi/dal/SimpleMetadataImpl.o
-
+  ./oneapi/dal/SimpleMetadataImpl.o \
+  ./oneapi/dal/ColumnAccessorImpl.o  \
+  ./oneapi/dal/RowAccessorImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 

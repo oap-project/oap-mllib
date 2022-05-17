@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class SimpleMetadataImpl implements TableMetadataImpl{
-    private transient long cObject;
+    private long cObject;
     private ArrayList dtypes;
     private ArrayList ftypes;
     static {
@@ -33,14 +33,10 @@ public class SimpleMetadataImpl implements TableMetadataImpl{
         return cGetFeatureCount(this.cObject);
     }
 
-    private native long cGetFeatureCount(long cObject);
-
     @Override
     public Common.FeatureType getFeatureType(int index) {
         return Common.FeatureType.get(cGetFeatureType(this.cObject, index));
     }
-
-    private native int cGetFeatureType(long cObject, int index);
 
     @Override
     public Common.DataType getDataType(int index) throws Exception {
@@ -48,5 +44,6 @@ public class SimpleMetadataImpl implements TableMetadataImpl{
     }
 
     private native int cGetDataType(long cObject, int index);
-
+    private native long cGetFeatureCount(long cObject);
+    private native int cGetFeatureType(long cObject, int index);
 }

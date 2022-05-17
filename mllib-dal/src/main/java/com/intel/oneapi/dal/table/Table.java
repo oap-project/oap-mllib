@@ -2,7 +2,7 @@ package com.intel.oneapi.dal.table;
 
 import java.io.Serializable;
 
-public abstract class Table implements Serializable {
+public abstract class Table {
     public Table() {}
     protected abstract Long getColumnCount();
     protected abstract Long getRowCount();

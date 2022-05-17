@@ -28,7 +28,7 @@ import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
 
-import com.intel.oneapi.dal.table.{Common, HomogenTable}
+import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -57,6 +57,17 @@ object OneDAL {
     matrix
   }
 
+  def homogenTableToMatrix(table: HomogenTable): Matrix = {
+    val numRows = table.getRowCount.toInt
+    val numCols = table.getColumnCount.toInt
+
+    val arrayDouble = table.getDoubleData()
+    // Transpose as DAL numeric table is row-major and DenseMatrix is column major
+    val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
+
+    matrix
+  }
+
   def numericTableToOldMatrix(table: NumericTable): OldMatrix = {
     val numRows = table.getNumberOfRows.toInt
     val numCols = table.getNumberOfColumns.toInt
@@ -71,6 +82,17 @@ object OneDAL {
     val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = false)
 
     table.releaseBlockOfRows(0, numRows, dataDouble)
+
+    OldMatrix
+  }
+
+  def homogenTableToOldMatrix(table: HomogenTable): OldMatrix = {
+    val numRows = table.getRowCount.toInt
+    val numCols = table.getColumnCount.toInt
+
+    val arrayDouble = table.getDoubleData()
+    // Transpose as DAL numeric table is row-major and DenseMatrix is column major
+    val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
     OldMatrix
   }
@@ -95,11 +117,17 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
+  def homogenTableNx1ToVector(cTable: Long, device: Common.ComputeDevice ): Vector = {
+    val columnAcc = new ColumnAccessor(cTable, device)
+    val arrayDouble = columnAcc.pullDouble(0)
+    Vectors.dense(arrayDouble)
+  }
+
   def numericTable1xNToVector(table: NumericTable): Vector = {
     val numCols = table.getNumberOfColumns.toInt
 
     var dataDouble: DoubleBuffer = null
-    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    // returned DoubleBuffer is ByteBuffer, need to copy as double array
     dataDouble = table.getBlockOfRows(0, 1, dataDouble)
     val arrayDouble = new Array[Double](numCols.toInt)
     dataDouble.get(arrayDouble)
@@ -109,6 +137,11 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
+  def homogenTable1xNToVector(table: HomogenTable, device: Common.ComputeDevice): Vector = {
+    val rowAcc = new RowAccessor(table.getcObejct, device)
+    val arrayDouble = rowAcc.pullDouble(0, 1)
+    Vectors.dense(arrayDouble)
+  }
   // Convert DAL numeric table to array of vectors
   def numericTableToVectors(table: NumericTable): Array[Vector] = {
     val numRows = table.getNumberOfRows.toInt
@@ -127,6 +160,20 @@ object OneDAL {
     resArray
   }
 
+  def homogenTableToVectors(table: HomogenTable, device: Common.ComputeDevice): Array[Vector] = {
+    val numRows = table.getRowCount.toInt
+
+    val rowAcc = new RowAccessor(table.getcObejct(), device)
+
+    val resArray = new Array[Vector](numRows.toInt)
+
+    for (row <- 0 until numRows) {
+      val internArray = rowAcc.pullDouble( row, row + 1)
+      resArray(row) = Vectors.dense(internArray)
+    }
+
+    resArray
+  }
 
   def makeNumericTable(cData: Long): NumericTable = {
 
@@ -159,18 +206,6 @@ object OneDAL {
     val table = new HomogenTable(cData)
 
     table
-  }
-
-  def homogenTable1xNToVector(table: HomogenTable): Vector = {
-    val numCols = table.getColumnCount
-
-    var dataDouble: DoubleBuffer = null
-    // returned DoubleBuffer is ByteByffer, need to copy as double array
-    val arrayDouble = new Array[Double](numCols.toInt)
-    dataDouble.get(arrayDouble)
-
-
-    Vectors.dense(arrayDouble)
   }
 
   def rddDoubleToNumericTables(doubles: RDD[Double], executorNum: Int): RDD[Long] = {
@@ -258,7 +293,7 @@ object OneDAL {
   private[mllib] def doubleArrayToHomogenTable(points: Array[Double],
                                                device: Common.ComputeDevice): HomogenTable = {
 
-    val table = new HomogenTable(1, points.length, points, device.ordinal())
+    val table = new HomogenTable(1, points.length, points, device)
 
     table
   }
@@ -278,7 +313,7 @@ object OneDAL {
       }
     }
     val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
-      device.ordinal())
+      device)
 
     table
   }
@@ -298,7 +333,7 @@ object OneDAL {
       }
     }
     val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
-      device.ordinal())
+      device)
 
     table
   }

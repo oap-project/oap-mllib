@@ -30,7 +30,7 @@ public class Common {
         public static ComputeDevice get(int ordinal) {
             return values[ordinal];
         }
-        public static int getOrdinalByName(String key){
+        public static ComputeDevice getOrdinalByName(String key){
             ComputeDevice device = null;
             switch (key.toUpperCase()){
                 case "HOST":
@@ -43,7 +43,7 @@ public class Common {
                     device = GPU;
                     break;
             }
-            return device.ordinal();
+            return device;
         }
     }
 }

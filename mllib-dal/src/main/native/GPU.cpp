@@ -3,14 +3,28 @@
 #include <unistd.h>
 
 #include "GPU.h"
+typedef std::shared_ptr<sycl::queue> queuePtr;
 
 static std::mutex mtx;
-static std::vector<std::shared_ptr<sycl::queue>> cVector;
-sycl::queue *getQue() {
+static std::vector<sycl::queue> cVector;
+
+static void saveSyclQueue(const sycl::queue &queue) {
+    mtx.lock();
+    cVector.push_back(queue);
+    mtx.unlock();
+}
+
+static sycl::queue &getSyclQueue(const sycl::device device) {
+    mtx.lock();
     if (!cVector.empty()) {
-        return cVector[0].get();
+        mtx.unlock();
+        return cVector[0];
+    } else {
+        sycl::queue queue{device};
+        saveSyclQueue(queue);
+        mtx.unlock();
+        return cVector[0];
     }
-    return NULL;
 }
 
 static std::vector<sycl::device> get_gpus() {
@@ -72,35 +86,23 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
     return rank_gpu;
 }
 
-static void setVector(std::shared_ptr<sycl::queue> *ptr) {
-    mtx.lock();
-    cVector.push_back(*ptr);
-    mtx.unlock();
-}
-
-sycl::queue *getQueue(const compute_device device) {
+sycl::queue &getQueue(const compute_device device) {
     std::cout << "Get Queue" << std::endl;
-    std::shared_ptr<sycl::queue> *queuePtr;
-    sycl::queue *queue;
+
     switch (device) {
     case compute_device::gpu: {
         std::cout << "selector GPU" << std::endl;
         auto device_gpu = sycl::gpu_selector{}.select_device();
-        queue = new sycl::queue(device_gpu);
-        queuePtr = new std::shared_ptr<sycl::queue>(queue);
-        setVector(queuePtr);
-        return getQue();
+        return getSyclQueue(device_gpu);
     }
     case compute_device::cpu: {
         std::cout << "selector CPU" << std::endl;
         auto device_cpu = sycl::cpu_selector{}.select_device();
-        queue = new sycl::queue(device_cpu);
-        queuePtr = new std::shared_ptr<sycl::queue>(queue);
-        setVector(queuePtr);
-        return getQue();
+        return getSyclQueue(device_cpu);
     }
     default: {
-        return getQue();
+        std::cout << "No Device!" << std::endl;
+        exit(-1);
     }
     }
 }
