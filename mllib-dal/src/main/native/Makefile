@@ -101,7 +101,6 @@ OBJS += \
   ./oneapi/dal/ColumnAccessorImpl.o  \
   ./oneapi/dal/RowAccessorImpl.o
 
-
 DEFINES=-D$(PLATFORM_PROFILE)
 
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)

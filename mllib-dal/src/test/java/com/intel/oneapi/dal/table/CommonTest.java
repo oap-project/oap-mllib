@@ -1,4 +1,4 @@
-package com.intel.oneapi.dal.table;
+cd on   package com.intel.oneapi.dal.table;
 
 public class CommonTest {
     public static Common.ComputeDevice getComputeDevice(){

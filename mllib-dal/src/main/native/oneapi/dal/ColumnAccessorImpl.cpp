@@ -36,7 +36,7 @@
 #include "service.h"
 
 using namespace std;
-using namespace oneapi::dal;
+using namespace oneapi::da
 
 /*
  * Class:     com_intel_oneapi_dal_table_ColumnAccessor

@@ -1,7 +1,10 @@
 package com.intel.oap.mllib
 
+<<<<<<< HEAD
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
+=======
+>>>>>>> Convert homogentable to array/vector/matrix (#4)
 import com.intel.daal.data_management.data.{Matrix => DALMatrix, NumericTable}
 import com.intel.daal.services.DaalContext
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
@@ -180,10 +183,9 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     assertArrayEquals(TestCommon.convertArray(data), TestCommon.convertArray(array))
   }
 
-  private def getDevice = {
+  private def getDevice: Common.ComputeDevice = {
     val device = System.getProperty("computeDevice")
     var computeDevice: Common.ComputeDevice = Common.ComputeDevice.CPU
-    System.out.println("getDevice : " + device)
     if(device != null) {
       device.toUpperCase match {
         case "HOST" =>  computeDevice = Common.ComputeDevice.HOST

@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "GPU.h"
+typedef std::shared_ptr<sycl::queue> queuePtr;
 
 typedef std::shared_ptr<sycl::queue> queuePtr;
 
@@ -10,12 +11,25 @@ static std::mutex g_mtx;
 static std::vector<sycl::queue> g_queueVector;
 
 static std::mutex mtx;
-static std::vector<std::shared_ptr<sycl::queue>> cVector;
-sycl::queue *getQue() {
+static std::vector<sycl::queue> cVector;
+
+static void saveSyclQueue(const sycl::queue &queue) {
+    mtx.lock();
+    cVector.push_back(queue);
+    mtx.unlock();
+}
+
+static sycl::queue &getSyclQueue(const sycl::device device) {
+    mtx.lock();
     if (!cVector.empty()) {
-        return cVector[0].get();
+        mtx.unlock();
+        return cVector[0];
+    } else {
+        sycl::queue queue{device};
+        saveSyclQueue(queue);
+        mtx.unlock();
+        return cVector[0];
     }
-    return NULL;
 }
 
 static std::vector<sycl::device> get_gpus() {

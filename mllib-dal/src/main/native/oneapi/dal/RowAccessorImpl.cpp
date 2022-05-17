@@ -38,6 +38,7 @@
 using namespace std;
 using namespace oneapi::dal;
 
+
 /*
  * Class:     com_intel_oneapi_dal_table_RowAccessor
  * Method:    cPull

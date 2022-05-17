@@ -29,6 +29,7 @@ import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
 
 import com.intel.oneapi.dal.table.Common.ComputeDevice
+
 import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
 
 import scala.collection.mutable.ArrayBuffer
