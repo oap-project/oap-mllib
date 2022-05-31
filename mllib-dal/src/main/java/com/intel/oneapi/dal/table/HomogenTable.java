@@ -3,6 +3,11 @@ package com.intel.oneapi.dal.table;
 public class HomogenTable extends Table {
     HomogenTableImpl impl;
 
+    public HomogenTable(Common.ComputeDevice device){
+        super();
+        impl = new HomogenTableImpl(device);
+    }
+
     public HomogenTable(long cTable){
         super();
         impl = new HomogenTableImpl(cTable);
@@ -136,6 +141,10 @@ public class HomogenTable extends Table {
 
     public  double[] getDoubleData() {
         return  impl.getDoubleData();
+    }
+
+    public void addHomogenTable(long homogenTableAddr ) {
+        impl.addHomogenTable(homogenTableAddr);
     }
 
     public long getcObejct() {

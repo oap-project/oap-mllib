@@ -41,6 +41,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit
 
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
+ * Method:    cEmptyTableInit
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyTableInit
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    cGetColumnCount
  * Signature: (J)J
  */
@@ -134,6 +142,14 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_c
  */
 JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData
   (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
+ * Method:    cAddHomogenTable
+ * Signature: (Ljava/lang/Long;Ljava/lang/Long;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHomogenTable
+  (JNIEnv *, jobject, jlong, jlong, jint);
 
 #ifdef __cplusplus
 }

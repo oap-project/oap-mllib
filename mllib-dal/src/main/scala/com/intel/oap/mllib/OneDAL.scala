@@ -28,6 +28,7 @@ import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
 
+import com.intel.oneapi.dal.table.Common.ComputeDevice
 import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
 
 import scala.collection.mutable.ArrayBuffer
@@ -142,6 +143,7 @@ object OneDAL {
     val arrayDouble = rowAcc.pullDouble(0, 1)
     Vectors.dense(arrayDouble)
   }
+
   // Convert DAL numeric table to array of vectors
   def numericTableToVectors(table: NumericTable): Array[Vector] = {
     val numRows = table.getNumberOfRows.toInt
@@ -176,7 +178,6 @@ object OneDAL {
   }
 
   def makeNumericTable(cData: Long): NumericTable = {
-
     val context = new DaalContext()
     val table = new HomogenNumericTable(context, cData)
 
@@ -227,7 +228,6 @@ object OneDAL {
 
     doublesTables
   }
-
 
   def rddLabeledPointToSparseTables(labeledPoints: Dataset[_],
                                     labelCol: String,
@@ -292,9 +292,7 @@ object OneDAL {
 
   private[mllib] def doubleArrayToHomogenTable(points: Array[Double],
                                                device: Common.ComputeDevice): HomogenTable = {
-
     val table = new HomogenTable(1, points.length, points, device)
-
     table
   }
 
@@ -387,7 +385,6 @@ object OneDAL {
 
     table
   }
-
   def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
                                             labelCol: String,
                                             featuresCol: String,
@@ -426,6 +423,78 @@ object OneDAL {
     tables.count()
 
     tables
+  }
+
+  def rddLabeledPointToMergedHomogenTables(labeledPoints: Dataset[_],
+                                    labelCol: String,
+                                    featuresCol: String,
+                                    executorNum: Int,
+                                    device: Common.ComputeDevice): RDD[(Long, Long)] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+    printf(s"Processing partitions with $executorNum executors \n")
+
+    val spark = SparkSession.active
+    import spark.implicits._
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (labeledPoints.rdd.getNumPartitions < executorNum) {
+      labeledPoints.repartition(executorNum).cache()
+    } else {
+      labeledPoints
+    }
+    printf(s"rddLabeledPointToMergedHomogenTables \n")
+
+    val tables = dataForConversion.select(labelCol, featuresCol)
+      .toDF().mapPartitions { it: Iterator[Row] =>
+      val rows = it.toArray
+
+      val features = rows.map {
+        case Row(label: Double, features: Vector) => features
+      }
+
+      val labels = rows.map {
+        case Row(label: Double, features: Vector) => label
+      }
+
+      if (features.size == 0) {
+        Iterator()
+      } else {
+        val numColumns = features(0).size
+
+        val featuresTable: HomogenTable = vectorsToDenseHomogenTable(features.toIterator,
+          features.length, numColumns, device)
+
+        // TODO : After implementing CSRTable, will implement vectorsToSparseCSRTable function
+
+        val labelsTable = doubleArrayToHomogenTable(labels, device)
+
+        Iterator((featuresTable.getcObejct(), labelsTable.getcObejct()))
+      }
+    }.cache()
+
+    tables.count()
+    printf(s"rddLabeledPointToMergedHomogenTables 1\n")
+
+    // Coalesce partitions belonging to the same executor
+    val coalescedTables = tables.rdd.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+
+    val mergedTables = coalescedTables.mapPartitions { iter =>
+      val mergedFeatures = new HomogenTable(device)
+      val mergedLabels = new HomogenTable(device)
+
+      iter.foreach { case (featureAddr, labelAddr) =>
+        mergedFeatures.addHomogenTable(featureAddr)
+        mergedLabels.addHomogenTable(labelAddr)
+      }
+      Iterator((mergedFeatures.getcObejct(), mergedLabels.getcObejct()))
+    }.cache()
+
+    mergedTables.count()
+
+    mergedTables
   }
 
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],
@@ -520,6 +589,27 @@ object OneDAL {
     matrix
   }
 
+  private def vectorsToDenseHomogenTable(it: Iterator[Vector],
+                                         numRows: Int,
+                                         numCols: Int,
+                                         device: Common.ComputeDevice): HomogenTable = {
+    printf(s"vectorsToDenseHomogenTable numRows: $numRows numCols: $numCols \n")
+    val arrayDouble = new Array[Double](numRows * numCols)
+    var index = 0
+    it.foreach { curVector =>
+      val rowArray = curVector.toArray
+      for (i <- 0 until rowArray.length ) {
+        arrayDouble(index) = rowArray(i)
+        assert(index < (numCols * numRows),
+          "the size of arrayDouble should be less than or equal to numCols * numRows ")
+        index = index + 1
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble, device)
+    table
+  }
+
+
   def makeNumericTable(arrayVectors: Array[Vector]): NumericTable = {
 
     val numCols = arrayVectors.head.size
@@ -547,6 +637,8 @@ object OneDAL {
       Iterator(table)
     }
   }
+
+
 
   def rddVectorToMergedTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
@@ -604,6 +696,63 @@ object OneDAL {
       Iterator(mergedData.getCNumericTable)
     }.cache()
 
+    coalescedTables
+  }
+
+  def rddVectorToMergedHomogenTables(vectors: RDD[Vector], executorNum: Int,
+                                     device: Common.ComputeDevice): RDD[Long] = {
+
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (vectors.getNumPartitions < executorNum) {
+      vectors.repartition(executorNum).setName("Repartitioned for conversion").cache()
+    } else {
+      vectors
+    }
+
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(dataForConversion)
+
+    // Filter out empty partitions
+    val nonEmptyPartitions = dataForConversion.mapPartitionsWithIndex {
+      (index: Int, it: Iterator[Vector]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
+    }.filter {
+      _._1 > 0
+    }
+
+    // Convert to RDD[HomogenTable]
+    val homogenTables = nonEmptyPartitions.map { entry =>
+      val numRows = entry._1
+      val index = entry._2
+      val it = entry._3
+      val numCols = partitionDims(index)._2
+
+      logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+
+      val table = vectorsToDenseHomogenTable(it, numRows, numCols, device)
+      table.getcObejct()
+    }.setName("homogenTables").cache()
+
+    homogenTables.count()
+
+    // Unpersist instances RDD
+    if (vectors.getStorageLevel != StorageLevel.NONE) {
+      vectors.unpersist()
+    }
+   // Coalesce partitions belonging to the same executor
+    val coalescedRdd = homogenTables.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+
+    val coalescedTables = coalescedRdd.mapPartitions { iter =>
+        val mergedData = new HomogenTable(device)
+        iter.foreach { address =>
+          mergedData.addHomogenTable(address)
+        }
+        Iterator(mergedData.getcObejct())
+    }.cache()
     coalescedTables
   }
 

@@ -25,6 +25,7 @@
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
 #endif
+
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
@@ -38,6 +39,7 @@ using namespace std;
 using namespace oneapi::dal;
 typedef std::shared_ptr<homogen_table> homogenPtr;
 
+
 /*
  * Class:     com_intel_oneapi_dal_table_ColumnAccessor
  * Method:    cPull
@@ -47,7 +49,7 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cP
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cColumnIndex, jlong cRowStartIndex,
    jlong cRowEndIndex, jint cComputeDevice) {
   printf("ColumnAccessor PullDouble \n");
-  homogen_table htable = *((homogen_table *)cTableAddr);
+  homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
   column_accessor<const double> acc{ htable };
   oneapi::dal::array<double> col_values;
   jdoubleArray newDoubleArray;
@@ -86,7 +88,7 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cPu
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cColumnIndex, jlong cRowStartIndex,
    jlong cRowEndIndex, jint cComputeDevice) {
   printf("ColumnAccessor PullFloat \n");
-  homogen_table htable = *((homogen_table *)cTableAddr);
+  homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
   column_accessor<const float> acc{ htable };
   oneapi::dal::array<float> col_values;
   jfloatArray newFloatArray;
@@ -124,11 +126,11 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cPu
 JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cPullInt
 (JNIEnv *env, jobject, jlong cTableAddr, jlong cColumnIndex, jlong cRowStartIndex,
  jlong cRowEndIndex, jint cComputeDevice) {
-printf("ColumnAccessor PullInt \n");
-homogen_table htable = *((homogen_table *)cTableAddr);
-column_accessor<const int> acc { htable };
-oneapi::dal::array<int> col_values;
-jintArray newIntArray;
+    printf("ColumnAccessor PullInt \n");
+    homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
+    column_accessor<const int> acc { htable };
+    oneapi::dal::array<int> col_values;
+    jintArray newIntArray;
 switch(getComputeDevice(cComputeDevice)) {
      case compute_device::host:{
             col_values = acc.pull(cColumnIndex, {cRowStartIndex, cRowEndIndex});
@@ -149,7 +151,7 @@ switch(getComputeDevice(cComputeDevice)) {
      default: {
            return newIntArray;
      }
-  }
+}
     newIntArray = env->NewIntArray(col_values.get_count());
     env->SetIntArrayRegion(newIntArray, 0, col_values.get_count(), col_values.get_data());
     return newIntArray;

@@ -37,9 +37,9 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureCount(
     JNIEnv *env, jobject, jlong cTableAddr) {
     printf("SimpleMetadata getfeaturecount \n");
-    table_metadata mdata =
-        *((table_metadata *)cTableAddr);
+    table_metadata mdata = *reinterpret_cast<table_metadata *>(cTableAddr);
     return (jlong)mdata.get_feature_count();
+
 }
 
 /*
@@ -51,9 +51,7 @@ JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureType(
     JNIEnv *env, jobject, jlong cTableAddr, jint cindex) {
     printf("SimpleMetadata getfeaturetype \n");
-    table_metadata mdata =
-        *((table_metadata *)cTableAddr);
-
+    table_metadata mdata = *reinterpret_cast<table_metadata *>(cTableAddr);
     return (jint)mdata.get_feature_type(cindex);
 }
 
@@ -66,7 +64,7 @@ JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType(
     JNIEnv *env, jobject, jlong cTableAddr, jint cindex) {
     printf("SimpleMetadata getdatatype \n");
-    table_metadata mdata =
-        *((table_metadata *)cTableAddr);
+    table_metadata mdata = *reinterpret_cast<table_metadata *>(cTableAddr);
     return (jint)mdata.get_data_type(cindex);
+
 }

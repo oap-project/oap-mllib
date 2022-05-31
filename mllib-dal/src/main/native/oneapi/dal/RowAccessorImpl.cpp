@@ -25,6 +25,7 @@
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
 #endif
+
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
@@ -38,6 +39,7 @@ using namespace std;
 using namespace oneapi::dal;
 typedef std::shared_ptr<homogen_table> homogenPtr;
 
+
 /*
  * Class:     com_intel_oneapi_dal_table_RowAccessor
  * Method:    cPull
@@ -47,7 +49,7 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
    jint cComputeDevice){
   printf("RowAccessor PullDouble \n");
-  homogen_table htable = *((homogen_table *)cTableAddr);
+  homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const double> acc {htable};
   jdoubleArray newDoubleArray;
   oneapi::dal::array<double> row_values;
@@ -86,7 +88,7 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
    jint cComputeDevice){
   printf("RowAccessor PullFloat \n");
-  homogen_table htable = *((homogen_table *)cTableAddr);
+  homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const float> acc { htable };
   jfloatArray newFloatArray;
   oneapi::dal::array<float> row_values;
@@ -125,7 +127,7 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
    jint cComputeDevice){
   printf("RowAccessor PullInt \n");
-  homogen_table htable = *((homogen_table *)cTableAddr);
+  homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
   row_accessor<const int> acc { htable };
   jintArray newIntArray;
   oneapi::dal::array<int> row_values;

@@ -1,9 +1,19 @@
 package org.apache.spark.ml
 
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+
 import com.intel.oap.mllib.OneDAL
+import com.intel.oneapi.dal.table.{Common, HomogenTable}
+import com.intel.oneapi.dal.table.HomogenTable
+import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{Matrices, Vector, Vectors}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Row
+
+import scala.collection.mutable.ArrayBuffer
+import scala.util.Random
 
 class oneDALSuite extends FunctionsSuite with Logging {
 
@@ -35,6 +45,96 @@ class oneDALSuite extends FunctionsSuite with Logging {
     val resultMatrix = OneDAL.numericTableToMatrix(csr)
     val matrix = Matrices.fromVectors(data)
 
-    assert((resultMatrix.toArray sameElements matrix.toArray) === true)
+    assertArrayEquals(resultMatrix.toArray, matrix.toArray)
+  }
+
+  test("test rddLabeledPoint to merged HomogenTables") {
+    val data : RDD[LabeledPoint] = generateLabeledPointRDD(sc, 10, 2, 3)
+    val df = data.toDF("label", "features")
+    val expect = df.rdd.coalesce(1).mapPartitions {
+      it: Iterator[Row] =>
+          val featureArray = ArrayBuffer[Double]()
+          val labelArray = ArrayBuffer[Double]()
+          it.foreach { case Row(label: Double, features: Vector) =>
+            val featArray = features.toArray
+            for (i <- 0 until featArray.length ) {
+              featureArray.append(featArray(i))
+            }
+            labelArray.append(label)
+        }
+        Iterator(featureArray.toArray, labelArray.toArray)
+    }.collect()
+    df.show(10, false)
+
+    val mergedata = OneDAL.rddLabeledPointToMergedHomogenTables(df,
+      "label", "features",1 , getDevice)
+    val results = mergedata.collect()
+    val featureTable = new HomogenTable(results(0)._1)
+    val labelTable = new HomogenTable(results(0)._2)
+
+    val fData: Array[Double] = featureTable.getDoubleData()
+    val lData: Array[Double] = labelTable.getDoubleData()
+    assertArrayEquals(fData, expect(0))
+    assertArrayEquals(lData, expect(1))
+  }
+
+  test("test rddVector to merged homogenTable") {
+    val data = Array(
+      Vectors.dense(5.308206,9.869278,1.018934,4.292158,6.081011,6.585723,2.411094,4.767308,-3.256320,-6.029562),
+      Vectors.dense(7.279464,0.390664,-9.619284,3.435376,-4.769490,-4.873188,-0.118791,-5.117316,-0.418655,-0.475422),
+      Vectors.dense(-6.615791,-6.191542,0.402459,-9.743521,-9.990568,9.105346,1.691312,-2.605659,9.534952,-7.829027),
+    )
+    val expectData = Array(5.308206,9.869278,1.018934,4.292158,6.081011,6.585723,2.411094,4.767308,
+      -3.256320,-6.029562, 7.279464,0.390664,-9.619284,3.435376,-4.769490,-4.873188,-0.118791,-5.117316,
+      -0.418655,-0.475422,-6.615791,-6.191542,0.402459,-9.743521,-9.990568,9.105346,1.691312,-2.605659,
+      9.534952,-7.829027)
+    val df = spark.createDataFrame(data.map(Tuple1.apply)).toDF("features")
+    df.show(10 ,false)
+    val rddVectors = df.rdd.map {
+      case Row(v: Vector) => v
+    }.cache()
+    val result = OneDAL.rddVectorToMergedHomogenTables(rddVectors, 1, getDevice)
+
+    val tableAddr = result.collect()
+    val table = new HomogenTable(tableAddr(0))
+    val rData: Array[Double] = table.getDoubleData()
+    assertArrayEquals(rData, expectData)
+  }
+
+  def generateLabeledPointRDD(
+                           sc: SparkContext,
+                           nexamples: Int,
+                           nfeatures: Int,
+                           eps: Double,
+                           nparts: Int = 2,
+                           probOne: Double = 0.5): RDD[LabeledPoint] = {
+    val data = sc.parallelize(0 until nexamples, nparts).map { idx =>
+      val rnd = new Random(42 + idx)
+
+      val y = if (idx % 2 == 0) 0.0 else 1.0
+      val x = Array.fill[Double](nfeatures) {
+        rnd.nextGaussian() + (y * eps)
+      }
+      LabeledPoint(y, Vectors.dense(x))
+    }
+    data
+  }
+
+  private def getDevice: Common.ComputeDevice = {
+    val device = System.getProperty("computeDevice")
+    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
+    if(device != null) {
+      device.toUpperCase match {
+        case "HOST" => computeDevice = Common.ComputeDevice.HOST
+        case "CPU" => computeDevice = Common.ComputeDevice.CPU
+        case "GPU" => computeDevice = Common.ComputeDevice.GPU
+        case _ => "Invalid Device"
+      }
+    }
+    System.out.println("getDevice : " + computeDevice)
+    computeDevice
   }
 }
+
+
+

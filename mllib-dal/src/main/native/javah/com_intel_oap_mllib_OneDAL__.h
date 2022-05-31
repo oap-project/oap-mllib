@@ -7,13 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
- * Class:     com_intel_oap_mllib_OneDAL__
- * Method:    cAddNumericTable
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable
-  (JNIEnv *, jobject, jlong, jlong);
 
 /*
  * Class:     com_intel_oap_mllib_OneDAL__
@@ -62,6 +55,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTabl
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble
   (JNIEnv *, jobject, jdoubleArray, jlongArray, jlongArray, jlong, jlong);
+
 
 #ifdef __cplusplus
 }

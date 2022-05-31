@@ -8,22 +8,18 @@ typedef std::shared_ptr<sycl::queue> queuePtr;
 static std::mutex mtx;
 static std::vector<sycl::queue> cVector;
 
-static void saveSyclQueue(const sycl::queue &queue) {
-    mtx.lock();
-    cVector.push_back(queue);
-    mtx.unlock();
-}
-
-static sycl::queue &getSyclQueue(const sycl::device device) {
+static sycl::queue getSyclQueue(const sycl::device device) {
     mtx.lock();
     if (!cVector.empty()) {
+        auto device = cVector[0];
         mtx.unlock();
-        return cVector[0];
+        return device;
     } else {
         sycl::queue queue{device};
-        saveSyclQueue(queue);
+        cVector.push_back(queue);
+        auto device = cVector[0];
         mtx.unlock();
-        return cVector[0];
+        return device;
     }
 }
 
@@ -86,7 +82,7 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
     return rank_gpu;
 }
 
-sycl::queue &getQueue(const compute_device device) {
+sycl::queue getQueue(const compute_device device) {
     std::cout << "Get Queue" << std::endl;
 
     switch (device) {
