@@ -9,11 +9,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HomogenTableTest {
 
-public class HomogenTableSuite {
-
     @Test
     public void createEmptyTable() {
         HomogenTable table = new HomogenTable(CommonTest.getComputeDevice());
+        assertEquals(false, table.hasData());
+        assertEquals(new Long(0), table.getColumnCount());
+        assertEquals(new Long(0), table.getRowCount());
+        assertEquals(new Long(1), table.getKind());
+    }
+
+    @Test
+    public void createEmptyTable() {
+        HomogenTable table = new HomogenTable(CommonTest.getDevice());
         assertEquals(false, table.hasData());
         assertEquals(new Long(0), table.getColumnCount());
         assertEquals(new Long(0), table.getRowCount());
@@ -47,6 +54,7 @@ public class HomogenTableSuite {
         HomogenTable table = new HomogenTable(5, 2,
                 data, CommonTest.getComputeDevice());
 
+
         assertEquals(true, table.hasData());
         assertEquals(new Long(2), table.getColumnCount());
         assertEquals(new Long(5), table.getRowCount());
@@ -58,6 +66,7 @@ public class HomogenTableSuite {
             assertEquals(metadata.getFeatureType(i), Common.FeatureType.RATIO);
         }
         assertArrayEquals(data, table.getDoubleData());
+
     }
     @Test
     // can construct rowmajor long table 5x2
@@ -198,5 +207,4 @@ public class HomogenTableSuite {
         double[] result = table1.getDoubleData();
         assertArrayEquals(result, expect);
     }
-
 }

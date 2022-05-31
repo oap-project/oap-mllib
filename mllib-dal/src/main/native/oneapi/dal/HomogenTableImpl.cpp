@@ -67,6 +67,14 @@ static void saveShareMetaPtrVector(const metadataPtr &ptr) {
        mtx.unlock();
 }
 
+template <typename T>
+static void savePtrVector(const std::shared_ptr<T> &ptr) {
+       mtx.lock();
+       cVector<T>.push_back(ptr);
+       mtx.unlock();
+}
+
+
 static data_layout getDataLayout(jint cLayout) {
     data_layout layout;
     switch (cLayout) {
@@ -392,7 +400,6 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetIntData(JNIEnv *env,
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     const int *data = htable.get_data<int>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
-
     jintArray newIntArray = env->NewIntArray(datasize);
     env->SetIntArrayRegion(newIntArray, 0, datasize, data);
     return newIntArray;
@@ -448,7 +455,6 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
 
     const double *data = htable.get_data<double>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
-
     jdoubleArray newDoubleArray = env->NewDoubleArray(datasize);
     env->SetDoubleArrayRegion(newDoubleArray, 0, datasize, data);
     return newDoubleArray;
@@ -466,6 +472,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyT
       saveHomogenTablePtrToVector(tablePtr);
       return (jlong)tablePtr.get();
   }
+
 /*
 * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
 * Method:    cAddHomogenTable

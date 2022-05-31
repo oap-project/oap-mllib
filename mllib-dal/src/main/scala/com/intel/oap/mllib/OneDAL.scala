@@ -345,7 +345,6 @@ object OneDAL {
       device)
     table
   }
-
   def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
                                             labelCol: String,
                                             featuresCol: String,

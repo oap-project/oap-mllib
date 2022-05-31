@@ -38,4 +38,5 @@ public class RowAccessor {
                                       long cRowEndIndex, int computeDeviceIndex);
     private native int[] cPullInt(long cObject, long cRowStartIndex,
                                   long cRowEndIndex, int computeDeviceIndex);
+
 }

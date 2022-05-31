@@ -42,10 +42,6 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = fInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
-<<<<<<< HEAD
-=======
-
->>>>>>> Convert homogentable to array/vector/matrix (#4)
     }
 
     public HomogenTableImpl(long rowCount,
@@ -55,10 +51,6 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = lInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
-<<<<<<< HEAD
-=======
-
->>>>>>> Convert homogentable to array/vector/matrix (#4)
     }
 
     public HomogenTableImpl(long rowCount,
@@ -68,13 +60,7 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         this.cObject = dInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
-<<<<<<< HEAD
-    }
-=======
 
-    }
-
->>>>>>> Convert homogentable to array/vector/matrix (#4)
     @Override
     public long getColumnCount() {
         return cGetColumnCount(this.cObject);
@@ -85,10 +71,6 @@ public class HomogenTableImpl implements HomogenTableIface {
         return cGetRowCount(this.cObject);
     }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> Convert homogentable to array/vector/matrix (#4)
     @Override
     public long getKind() {
         return this.cGetKind(this.cObject);
@@ -112,17 +94,10 @@ public class HomogenTableImpl implements HomogenTableIface {
         return 0;
     }
 
-<<<<<<< HEAD
     @Override
     public ColumnAccessor getPullColumnIface() {
         ColumnAccessor accessor = new ColumnAccessor(
                 cGetPullColumnIface(this.cObject), this.device);
-=======
-
-    @Override
-    public ColumnAccessor getPullColumnIface() {
-        ColumnAccessor accessor = new ColumnAccessor(cGetPullColumnIface(this.cObject), this.device);
->>>>>>> Convert homogentable to array/vector/matrix (#4)
         return accessor;
     }
 

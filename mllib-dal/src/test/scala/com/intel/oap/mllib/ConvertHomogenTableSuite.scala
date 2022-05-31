@@ -1,10 +1,7 @@
 package com.intel.oap.mllib
 
-<<<<<<< HEAD
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
-=======
->>>>>>> Convert homogentable to array/vector/matrix (#4)
 import com.intel.daal.data_management.data.{Matrix => DALMatrix, NumericTable}
 import com.intel.daal.services.DaalContext
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
@@ -15,7 +12,6 @@ import org.apache.spark.ml.FunctionsSuite
 import org.apache.spark.ml.linalg.{DenseMatrix, Matrices, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
-
 
 class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
 
@@ -185,10 +181,10 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
 
   private def getDevice: Common.ComputeDevice = {
     val device = System.getProperty("computeDevice")
-    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.CPU
+    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
     if(device != null) {
       device.toUpperCase match {
-        case "HOST" =>  computeDevice = Common.ComputeDevice.HOST
+        case "HOST" => computeDevice = Common.ComputeDevice.HOST
         case "CPU"  => computeDevice = Common.ComputeDevice.CPU
         case "GPU"  => computeDevice = Common.ComputeDevice.GPU
         case _  => "Invalid Device"
