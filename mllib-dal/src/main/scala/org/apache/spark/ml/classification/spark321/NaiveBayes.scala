@@ -21,6 +21,7 @@ package org.apache.spark.ml.classification.spark321
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{NaiveBayesDALImpl, NaiveBayesShim}
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification._
 import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
