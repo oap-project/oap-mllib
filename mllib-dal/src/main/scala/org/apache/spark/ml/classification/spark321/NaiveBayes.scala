@@ -140,7 +140,6 @@ class NaiveBayes @Since("1.5.0") (
       "of preprocessing may affect performance, so you can cache the " +
       "training data after preprocessing.")
 
-
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
 
