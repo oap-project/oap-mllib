@@ -22,6 +22,7 @@ object TestCommon {
 
   def convertArray(arrayVectors: Array[Array[Double]]): Array[Double] = {
     val numCols: Int = arrayVectors.head.size
+
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -38,6 +39,7 @@ object TestCommon {
 
   def convertArray(arrayVectors: Array[Vector]): Array[Double] = {
     val numCols: Int = arrayVectors.head.size
+
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0

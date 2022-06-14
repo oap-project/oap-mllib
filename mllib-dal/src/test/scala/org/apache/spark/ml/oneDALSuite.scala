@@ -135,6 +135,3 @@ class oneDALSuite extends FunctionsSuite with Logging {
     computeDevice
   }
 }
-
-
-

@@ -19,7 +19,6 @@
 #include <set>
 
 #include "com_intel_oap_mllib_OneDAL__.h"
-
 #include "service.h"
 
 using namespace daal;

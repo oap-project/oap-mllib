@@ -65,7 +65,6 @@ ONEDAL_LIBS := -lonedal_dpc \
                -lonedal_core \
 	       -lonedal_thread
 
-
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)

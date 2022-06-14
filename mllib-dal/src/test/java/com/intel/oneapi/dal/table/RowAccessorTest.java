@@ -44,7 +44,6 @@ public class RowAccessorTest {
     @Test
     public void readIntTableDataFromRowAccessor() {
         int[] data = {5, 8, 40, 10, 90, 3, 53, 33, 85, 15};
-
         HomogenTable table = new HomogenTable(5, 2,
                 data, CommonTest.getComputeDevice());
 

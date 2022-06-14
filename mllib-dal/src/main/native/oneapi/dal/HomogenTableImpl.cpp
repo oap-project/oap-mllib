@@ -472,7 +472,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyT
       saveHomogenTablePtrToVector(tablePtr);
       return (jlong)tablePtr.get();
   }
-
 /*
 * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
 * Method:    cAddHomogenTable
