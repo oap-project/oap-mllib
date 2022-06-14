@@ -6,6 +6,7 @@ import com.intel.daal.data_management.data.{Matrix => DALMatrix, NumericTable}
 import com.intel.daal.services.DaalContext
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
 import com.intel.oneapi.dal.table.Common.DataLayout.ROW_MAJOR
+
 import com.intel.oneapi.dal.table.Common.DataType.FLOAT64
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.FunctionsSuite
@@ -42,7 +43,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
       assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
     }
 
-    assertArrayEquals(table.getDoubleData, convertArray(data))
+    assertArrayEquals(table.getDoubleData, TestCommon.convertArray(data))
   }
 
   test("test convert doublearray to homogentable") {
@@ -88,7 +89,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
       assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
     }
 
-    assertArrayEquals(table.getDoubleData, convertArray(data))
+    assertArrayEquals(table.getDoubleData, TestCommon.convertArray(data))
   }
 
   test("test convert homogentable 1xN to vector "){
@@ -97,7 +98,6 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     val expectData = Array(5.308206,9.869278)
     val table = new HomogenTable(5, 2, data, getDevice)
     val vector = OneDAL.homogenTable1xNToVector(table, getDevice)
-
 
     assertArrayEquals(expectData, vector.toArray)
   }
@@ -175,43 +175,12 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
       Vectors.dense(2.204855,7.839522,7.381886,1.618749,-6.566877,7.584285,-8.355983,-5.501410,-8.191205,-2.608499),
       Vectors.dense(-9.948613,-8.941953,-8.106389,4.863542,5.852806,-1.659259,6.342504,-8.190106,-3.110330,-7.484658),
     )
-    val arrayData = convertArray(data)
+
+    val arrayData = TestCommon.convertArray(data)
     val table = new HomogenTable(10, 10, arrayData, getDevice)
     val array = OneDAL.homogenTableToVectors(table, getDevice)
 
-    assertArrayEquals(convertArray(data), convertArray(array))
-  }
-
-  def convertArray(arrayVectors: Array[Vector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
-    val numRows: Int = arrayVectors.size
-    val arrayDouble = new Array[Double](numRows * numCols)
-    var index = 0
-    for( vector: Vector <- arrayVectors) {
-      for (i <- 0 until vector.toArray.length ) {
-        arrayDouble(index) = vector(i)
-        if (index < (numRows * numCols)) {
-          index = index + 1
-        }
-      }
-    }
-    arrayDouble
-  }
-
-  def convertArray(arrayVectors: Array[OldVector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
-    val numRows: Int = arrayVectors.size
-    val arrayDouble = new Array[Double](numRows * numCols)
-    var index = 0
-    for( vector: OldVector <- arrayVectors) {
-      for (i <- 0 until vector.toArray.length ) {
-        arrayDouble(index) = vector(i)
-        if (index < (numRows * numCols)) {
-          index = index + 1
-        }
-      }
-    }
-    arrayDouble
+    assertArrayEquals(TestCommon.convertArray(data), TestCommon.convertArray(array))
   }
 
   private def getDevice: Common.ComputeDevice = {

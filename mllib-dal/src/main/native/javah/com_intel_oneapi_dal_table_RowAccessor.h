@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     com_intel_oneapi_dal_table_RowAccessor
  * Method:    cPullDouble
- * Signature: (JJJ)[D
+ * Signature: (JJJI)[D
  */
 JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullDouble
   (JNIEnv *, jobject, jlong, jlong, jlong, jint);
@@ -18,15 +18,16 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
 /*
  * Class:     com_intel_oneapi_dal_table_RowAccessor
  * Method:    cPullFloat
- * Signature: (JJJ)[F
+ * Signature: (JJJI)[F
  */
 JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullFloat
   (JNIEnv *, jobject, jlong, jlong, jlong, jint);
 
+
 /*
  * Class:     com_intel_oneapi_dal_table_RowAccessor
  * Method:    cPullInt
- * Signature: (JJJ)[I
+ * Signature: (JJJI)[I
  */
 JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   (JNIEnv *, jobject, jlong, jlong, jlong, jint);

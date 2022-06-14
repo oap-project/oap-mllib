@@ -170,10 +170,9 @@ object OneDAL {
     val resArray = new Array[Vector](numRows.toInt)
 
     for (row <- 0 until numRows) {
-      val internArray = rowAcc.pullDouble( row, row + 1)
+      val internArray = rowAcc.pullDouble(row, row + 1)
       resArray(row) = Vectors.dense(internArray)
     }
-
     resArray
   }
 
@@ -332,7 +331,6 @@ object OneDAL {
     }
     val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
       device)
-
     table
   }
 
@@ -638,8 +636,6 @@ object OneDAL {
     }
   }
 
-
-
   def rddVectorToMergedTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {
     require(executorNum > 0)
 
@@ -774,4 +770,5 @@ object OneDAL {
   @native def cNewCSRNumericTableDouble(data: Array[Double],
                                         colIndices: Array[Long], rowOffsets: Array[Long],
                                         nFeatures: Long, nVectors: Long): Long
+
 }

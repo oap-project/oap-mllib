@@ -61,15 +61,19 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L$(I_MPI_ROOT)
 
+ONEDAL_LIBS := -lonedal_dpc \
+               -lonedal_core \
+               -lonedal_thread
+
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  LIBS := $(LIBS_COMMON)
+  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a
+  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS) -l:libonedal_sycl.a
 endif
 
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
-  ./KMeansDALImpl.cpp \
+  ./KMeansOneAPIImpl.cpp \
   ./PCADALImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
@@ -84,7 +88,7 @@ CPP_SRCS += \
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
-  ./KMeansDALImpl.o \
+  ./KMeansOneAPIImpl.o \
   ./PCADALImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \

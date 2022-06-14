@@ -53,20 +53,17 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
   row_accessor<const double> acc {htable};
   jdoubleArray newDoubleArray;
   oneapi::dal::array<double> row_values;
-  switch(getComputeDevice(cComputeDevice)) {
+  compute_device device = getComputeDevice(cComputeDevice);
+  switch(device) {
          case compute_device::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:{
-                sycl::queue cpu_queue = getQueue(compute_device::cpu);
-                row_values = acc.pull(cpu_queue, {cRowStartIndex, cRowEndIndex});
-                break;
-         }
+         case compute_device::cpu:
          case compute_device::gpu:{
-                sycl::queue gpu_queue = getQueue(compute_device::gpu);
-                row_values = acc.pull(gpu_queue, {cRowStartIndex, cRowEndIndex});
+                auto queue = getQueue(device);
+                row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
          }
 #endif
@@ -92,20 +89,17 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
   row_accessor<const float> acc { htable };
   jfloatArray newFloatArray;
   oneapi::dal::array<float> row_values;
-  switch(getComputeDevice(cComputeDevice)) {
+  compute_device device = getComputeDevice(cComputeDevice);
+  switch(device) {
          case compute_device::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:{
-                sycl::queue cpu_queue = getQueue(compute_device::cpu);
-                row_values = acc.pull(cpu_queue, {cRowStartIndex, cRowEndIndex});
-                break;
-         }
+         case compute_device::cpu:
          case compute_device::gpu:{
-                sycl::queue gpu_queue = getQueue(compute_device::gpu);
-                row_values = acc.pull(gpu_queue, {cRowStartIndex, cRowEndIndex});
+                auto queue = getQueue(device);
+                row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
          }
 #endif
@@ -131,20 +125,17 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   row_accessor<const int> acc { htable };
   jintArray newIntArray;
   oneapi::dal::array<int> row_values;
-  switch(getComputeDevice(cComputeDevice)) {
+  compute_device device = getComputeDevice(cComputeDevice);
+  switch(device) {
          case compute_device::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:{
-                sycl::queue cpu_queue = getQueue(compute_device::cpu);
-                row_values = acc.pull(cpu_queue, {cRowStartIndex, cRowEndIndex});
-                break;
-         }
+         case compute_device::cpu:
          case compute_device::gpu:{
-                sycl::queue gpu_queue = getQueue(compute_device::gpu);
-                row_values = acc.pull(gpu_queue, {cRowStartIndex, cRowEndIndex});
+                auto queue = getQueue(device);
+                row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
          }
 #endif

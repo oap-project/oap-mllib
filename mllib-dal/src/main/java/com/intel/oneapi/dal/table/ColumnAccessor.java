@@ -39,5 +39,4 @@ public class ColumnAccessor {
                                   long cRowEndIndex, int computeDeviceIndex);
     private native float[] cPullFloat(long cObject, long cColumnIndex, long cRowStartIndex,
                                       long cRowEndIndex, int computeDeviceIndex);
-
 }
