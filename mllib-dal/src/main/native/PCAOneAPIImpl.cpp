@@ -22,6 +22,9 @@
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
 
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
@@ -76,6 +79,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                           (jlong)eigenvalues.get());
     }
 }
+#endif
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
