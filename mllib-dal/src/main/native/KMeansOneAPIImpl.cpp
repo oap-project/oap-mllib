@@ -51,7 +51,6 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
     const auto kmeans_desc = kmeans::descriptor<>()
-<<<<<<< HEAD
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);

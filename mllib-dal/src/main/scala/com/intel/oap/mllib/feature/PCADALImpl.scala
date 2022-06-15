@@ -31,6 +31,8 @@ import org.apache.spark.rdd.RDD
 import java.util.Arrays
 import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 
+import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
+
 class PCADALModel private[mllib] (
   val k: Int,
   val pc: OldDenseMatrix,
@@ -49,7 +51,6 @@ class PCADALImpl(val k: Int,
     val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
       computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
-
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
       OneCCL.initDpcpp()

@@ -55,12 +55,6 @@ static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
        g_mtx.unlock();
 }
 
-static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
-       mtx.lock();
-       cHomogenVector.push_back(ptr);
-       mtx.unlock();
-}
-
 static void saveShareMetaPtrVector(const metadataPtr &ptr) {
        mtx.lock();
        cMetaVector.push_back(ptr);

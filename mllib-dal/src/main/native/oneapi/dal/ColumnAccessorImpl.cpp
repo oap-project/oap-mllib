@@ -36,7 +36,7 @@
 #include "service.h"
 
 using namespace std;
-using namespace oneapi::da
+using namespace oneapi::dal;
 
 
 /*
