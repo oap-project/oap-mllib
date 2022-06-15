@@ -35,11 +35,11 @@ using namespace daal::data_management;
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "error_handling.h"
 #include "oneapi/dal/table/homogen.hpp"
