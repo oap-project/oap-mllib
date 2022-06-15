@@ -17,7 +17,6 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include <mutex>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"

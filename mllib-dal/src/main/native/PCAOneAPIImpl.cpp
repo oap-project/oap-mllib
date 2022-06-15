@@ -20,6 +20,9 @@
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
 #endif
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
 
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
@@ -67,7 +70,6 @@ static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jint k,
         homogenPtr eigenvalues =
             std::make_shared<homogen_table>(result_train.get_eigenvalues());
         saveShareHomogenPtrVector(eigenvalues);
-        printf("eigenvalues.get() %ld \n ", eigenvalues.get());
         env->SetLongField(resultObj, pcNumericTableField,
                           (jlong)eigenvectors.get());
         env->SetLongField(resultObj, explainedVarianceNumericTableField,
@@ -75,6 +77,7 @@ static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jint k,
     }
 }
 
+#ifdef CPU_GPU_PROFILE
 static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jint k,
                                        jlong pNumTabData, jint executor_num,
                                        const ccl::string &ipPort,
@@ -119,6 +122,7 @@ static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jint k,
                           (jlong)eigenvalues.get());
     }
 }
+#endif
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
