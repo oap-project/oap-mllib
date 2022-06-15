@@ -38,19 +38,11 @@
 using namespace std;
 using namespace oneapi::dal;
 
-typedef std::shared_ptr<homogen_table> homogenPtr;
 typedef std::shared_ptr<table_metadata> metadataPtr;
 
 std::mutex mtx;
-std::vector<homogenPtr> cHomogenVector;
 std::vector<metadataPtr> cMetaVector;
 template <typename T> std::vector<std::shared_ptr<T>> cVector;
-
-static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
-       mtx.lock();
-       cHomogenVector.push_back(ptr);
-       mtx.unlock();
-}
 
 static void saveShareMetaPtrVector(const metadataPtr &ptr) {
        mtx.lock();

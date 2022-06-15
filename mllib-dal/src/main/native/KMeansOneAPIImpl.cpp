@@ -36,16 +36,6 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-typedef std::shared_ptr<homogen_table> homogenPtr;
-
-std::mutex kmtx;
-std::vector<homogenPtr> cVector;
-
-static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
-    kmtx.lock();
-    cVector.push_back(ptr);
-    kmtx.unlock();
-}
 static jlong doKMeansHostOneAPICompute(JNIEnv *env, jint rankId,
                                        jlong pNumTabData, jlong pNumTabCenters,
                                        jint cluster_num, jdouble tolerance,
@@ -98,8 +88,8 @@ static jlong doKMeansGPUOrCPUOneAPICompute(
     JNIEnv *env, jint rankId, jlong pNumTabData, jlong pNumTabCenters,
     jint cluster_num, jdouble tolerance, jint iteration_num, jint executor_num,
     const ccl::string &ipPort, cl::sycl::queue &queue, jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid %ld " << rankId
-              << std::endl;
+    std::cout << "oneDAL (native): GPU/CPU compute start , rankid %ld "
+              << rankId << std::endl;
     const bool isRoot = (rankId == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);

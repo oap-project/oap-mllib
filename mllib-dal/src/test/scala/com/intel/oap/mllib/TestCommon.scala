@@ -1,7 +1,7 @@
 package com.intel.oap.mllib
 
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.mllib.linalg.{ Vector => OldVector}
+import org.apache.spark.mllib.linalg.{Vector => OldVector}
 
 import scala.io.Source
 
@@ -19,7 +19,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[Array[Double]]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -35,7 +35,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[Vector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -51,7 +51,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[OldVector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0

@@ -37,7 +37,6 @@
 
 using namespace std;
 using namespace oneapi::dal;
-typedef std::shared_ptr<homogen_table> homogenPtr;
 
 
 /*
