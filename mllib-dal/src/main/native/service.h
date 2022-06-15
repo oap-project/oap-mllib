@@ -40,7 +40,6 @@ using namespace daal::data_management;
 #include <sstream>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "error_handling.h"
 #include "oneapi/dal/table/homogen.hpp"
