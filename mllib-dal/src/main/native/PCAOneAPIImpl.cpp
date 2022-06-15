@@ -24,6 +24,7 @@
 #define ONEDAL_DATA_PARALLEL
 #endif
 
+
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
@@ -35,8 +36,9 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                                   jint executor_num, const ccl::string &ipPort,
+static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jint k,
+                                   jlong pNumTabData, jint executor_num,
+                                   const ccl::string &ipPort,
                                    jobject resultObj) {
     std::cout << "oneDAL (native): HOST compute start , rankid %ld " << rankId
               << std::endl;
@@ -44,7 +46,9 @@ static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto pca_desc = pca::descriptor{};
+    const auto pca_desc =
+        pca::descriptor{}.set_component_count(k).set_deterministic(true);
+
     auto result_train = train(pca_desc, htable);
     if (isRoot) {
         std::cout << "Eigenvectors:\n"
@@ -67,6 +71,7 @@ static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         homogenPtr eigenvalues =
             std::make_shared<homogen_table>(result_train.get_eigenvalues());
         saveShareHomogenPtrVector(eigenvalues);
+
         env->SetLongField(resultObj, pcNumericTableField,
                           (jlong)eigenvectors.get());
         env->SetLongField(resultObj, explainedVarianceNumericTableField,
@@ -75,7 +80,7 @@ static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 }
 
 #ifdef CPU_GPU_PROFILE
-static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId,
+static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jint k,
                                        jlong pNumTabData, jint executor_num,
                                        const ccl::string &ipPort,
                                        cl::sycl::queue &queue,
@@ -86,11 +91,12 @@ static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId,
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto pca_desc = pca::descriptor{};
+    const auto pca_desc =
+        pca::descriptor{}.set_component_count(k).set_deterministic(true);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executor_num, rankId, ipPort);
-    pca::train_input local_input{htable};
-    const auto result_train = preview::train(comm, pca_desc, local_input);
+    auto result_train = preview::train(comm, pca_desc, htable);
+
     if (isRoot) {
         std::cout << "Eigenvectors:\n"
                   << result_train.get_eigenvectors() << std::endl;
@@ -121,9 +127,9 @@ static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId,
 }
 #endif
 
-JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
+
     jint cComputeDevice, jint rankId, jstring ip_port, jobject resultObj) {
     std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
     const char *ipport = env->GetStringUTFChars(ip_port, 0);
@@ -133,8 +139,8 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     switch (device) {
     case compute_device::host: {
         printf("oneDAL (native):  PCATrainDAL host \n");
-        doPCAHOSTOneAPICompute(env, rankId, pNumTabData, executor_num, ipPort,
-                               resultObj);
+        doPCAHOSTOneAPICompute(env, rankId, k, pNumTabData, executor_num,
+                               ipPort, resultObj);
         break;
     }
 #ifdef CPU_GPU_PROFILE
@@ -142,7 +148,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     case compute_device::gpu: {
         cout << "oneDAL (native): use DPCPP GPU/CPU kernels" << endl;
         auto queue = getQueue(device);
-        doPCACPUorGPUOneAPICompute(env, rankId, pNumTabData, executor_num,
+        doPCACPUorGPUOneAPICompute(env, rankId, k, pNumTabData, executor_num,
                                    ipPort, queue, resultObj);
         break;
     }
