@@ -26,11 +26,11 @@
 #define ONEDAL_DATA_PARALLEL
 #endif
 
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
 #include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/table/homogen.hpp"
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
 #include "service.h"
 
 using namespace std;
