@@ -51,6 +51,7 @@ class PCADALImpl(val k: Int,
     val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
       computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
       OneCCL.initDpcpp()

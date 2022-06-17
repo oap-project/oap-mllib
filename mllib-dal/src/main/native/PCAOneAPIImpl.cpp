@@ -23,11 +23,11 @@
 #define ONEDAL_DATA_PARALLEL
 #endif
 
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
 #include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/table/homogen.hpp"
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
 #include "service.h"
 
 using namespace std;
@@ -50,6 +50,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
+
     pca::train_input local_input{htable};
     const auto result_train = preview::train(comm, pca_desc, local_input);
     if (isRoot) {
