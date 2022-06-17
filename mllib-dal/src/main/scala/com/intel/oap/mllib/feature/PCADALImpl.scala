@@ -65,7 +65,7 @@ class PCADALImpl(val k: Int,
         result
       )
 
-      val ret = if (OneCCL.isRoot()) {
+      val ret = if (rank == 0) {
         val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
           result.explainedVarianceNumericTable)
