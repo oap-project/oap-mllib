@@ -24,11 +24,11 @@
 #define ONEDAL_DATA_PARALLEL
 #endif
 
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
 #include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/table/homogen.hpp"
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
 #include "service.h"
 
 using namespace std;
@@ -89,11 +89,13 @@ static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jint k,
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto pca_desc =
-        pca::descriptor{}.set_component_count(k).set_deterministic(true);
+    const auto pca_desc = pca::descriptor<>()
+                              .set_component_count(k)
+                              .set_deterministic(true);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executor_num, rankId, ipPort);
-    auto result_train = preview::train(comm, pca_desc, htable);
+    pca::train_input local_input{htable};
+    const auto result_train = preview::train(comm, pca_desc, local_input);
     if (isRoot) {
         std::cout << "Eigenvectors:\n"
                   << result_train.get_eigenvectors() << std::endl;

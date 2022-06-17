@@ -43,14 +43,12 @@ class PCADALImpl(val k: Int,
   extends Serializable with Logging {
 
   def train(data: RDD[Vector]): PCADALModel = {
-
-    val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
-
-    val kvsIPPort = getOneCCLIPPort(coalescedTables)
-
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", "GPU")
     val computeDevice = Common.ComputeDevice.getOrdinalByName(useDevice)
+    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
+
+    val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
