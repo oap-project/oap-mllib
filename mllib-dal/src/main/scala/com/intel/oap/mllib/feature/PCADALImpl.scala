@@ -78,8 +78,6 @@ class PCADALImpl(val k: Int,
         Iterator.empty
       }
 
-      OneCCL.cleanup()
-
       ret
     }.collect()
 
