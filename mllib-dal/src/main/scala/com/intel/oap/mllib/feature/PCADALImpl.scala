@@ -19,7 +19,11 @@ package com.intel.oap.mllib.feature
 import java.nio.DoubleBuffer
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+<<<<<<< HEAD
 import com.intel.oap.mllib.{OneCCL, OneDAL, Service, Utils}
+=======
+import com.intel.oap.mllib.{OneCCL, OneDAL, Service}
+>>>>>>> normalize data
 import org.apache.spark.TaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -50,6 +54,7 @@ class PCADALImpl(val k: Int,
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
       computeDevice)
+
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
