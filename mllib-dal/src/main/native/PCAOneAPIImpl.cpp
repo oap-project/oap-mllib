@@ -35,9 +35,8 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId,
-                                   jlong pNumTabData, jint executor_num,
-                                   const ccl::string &ipPort,
+static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+                                   jint executor_num, const ccl::string &ipPort,
                                    jobject resultObj) {
     std::cout << "oneDAL (native): HOST compute start , rankid %ld " << rankId
               << std::endl;
@@ -134,8 +133,8 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     switch (device) {
     case compute_device::host: {
         printf("oneDAL (native):  PCATrainDAL host \n");
-        doPCAHOSTOneAPICompute(env, rankId, pNumTabData, executor_num,
-                               ipPort, resultObj);
+        doPCAHOSTOneAPICompute(env, rankId, pNumTabData, executor_num, ipPort,
+                               resultObj);
         break;
     }
 #ifdef CPU_GPU_PROFILE
