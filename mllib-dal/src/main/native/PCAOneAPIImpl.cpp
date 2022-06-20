@@ -38,11 +38,11 @@ const int ccl_root = 0;
 static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                jint executorNum, const ccl::string &ipPort,
                                jint computeDeviceOrdinal, jobject resultObj) {
+    std::cout << "oneDAL (native): GPU/CPU compute start , rankid = " << rankId
+                  << "; device = " << computeDeviceOrdinal << "(0:HOST;1:CPU;2:GPU)"
+                  << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-    std::cout << "oneDAL (native): GPU/CPU compute start , rankid = " << rankId
-              << "; device = " << computeDeviceOrdinal << "(0:HOST;1:GPU;2:CPU)"
-              << std::endl;
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
