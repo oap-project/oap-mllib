@@ -20,7 +20,7 @@ import java.nio.DoubleBuffer
 
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Service}
 import org.apache.spark.TaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -43,11 +43,11 @@ class PCADALImpl(val k: Int,
   extends Serializable with Logging {
 
   def train(data: RDD[Vector]): PCADALModel = {
-    val sparkContext = data.sparkContext
+    val normalizedData = normalizeData(data)
+    val sparkContext = normalizedData.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", "GPU")
     val computeDevice = Common.ComputeDevice.getOrdinalByName(useDevice)
-    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
-
+    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum, computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -92,6 +92,14 @@ class PCADALImpl(val k: Int,
     )
 
     parentModel
+  }
+
+  // Normalize data before training
+  private def normalizeData(input: RDD[Vector]): RDD[Vector] = {
+    val vectors = input.map(OldVectors.fromML(_))
+    val scaler = new MLlibStandardScaler(withMean = true, withStd = false).fit(vectors)
+    val res = scaler.transform(vectors)
+    res.map(_.asML)
   }
 
   private[mllib] def getPrincipleComponentsFromDAL(table: HomogenTable,
