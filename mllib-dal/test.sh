@@ -52,6 +52,7 @@ suiteArray=(
   "RowAccessorTest" \
   "com.intel.oap.mllib.KmeansHomegenTableSuite" \
   "com.intel.oap.mllib.PCAHomegenTableSuite" \
+  "com.intel.oap.mllib.CorrelationHomogenTableSuite" \
   "com.intel.oap.mllib.ConvertHomogenTableSuite"
 )
 

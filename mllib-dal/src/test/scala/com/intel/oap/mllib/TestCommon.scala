@@ -1,6 +1,7 @@
 package com.intel.oap.mllib
 
-import org.apache.spark.ml.linalg.Vector
+import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
+import org.apache.spark.ml.linalg.{DenseMatrix, Vector}
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
 
 import scala.io.Source
@@ -64,5 +65,18 @@ object TestCommon {
       }
     }
     arrayDouble
+  }
+  def getMatrixFromTable(table: HomogenTable,
+                                  device: Common.ComputeDevice): DenseMatrix = {
+    val numRows = table.getRowCount.toInt
+    val numCols = table.getColumnCount.toInt
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
+    // Transpose as DAL numeric table is row-major and DenseMatrix is column major
+    val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
+
+    matrix
   }
 }
