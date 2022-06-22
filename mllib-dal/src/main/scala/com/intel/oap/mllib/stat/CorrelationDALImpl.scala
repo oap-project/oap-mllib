@@ -61,7 +61,8 @@ class CorrelationDALImpl(
 
       val ret = if (rank == 0) {
         val convResultStartTime = System.nanoTime()
-        val correlationNumericTable = OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.correlationNumericTable))
+        val correlationNumericTable = OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.correlationNumericTable),
+             computeDevice)
 
         val convResultEndTime = System.nanoTime()
 

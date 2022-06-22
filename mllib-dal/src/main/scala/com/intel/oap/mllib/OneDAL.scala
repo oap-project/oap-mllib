@@ -58,11 +58,13 @@ object OneDAL {
     matrix
   }
 
-  def homogenTableToMatrix(table: HomogenTable): Matrix = {
+  def homogenTableToMatrix(table: HomogenTable, device: Common.ComputeDevice): Matrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
-    val arrayDouble = table.getDoubleData()
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
     val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
@@ -87,11 +89,12 @@ object OneDAL {
     OldMatrix
   }
 
-  def homogenTableToOldMatrix(table: HomogenTable): OldMatrix = {
+  def homogenTableToOldMatrix(table: HomogenTable, device: Common.ComputeDevice): OldMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
-    val arrayDouble = table.getDoubleData()
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
     val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
@@ -537,6 +540,7 @@ object OneDAL {
         }
 
         val labelsTable = doubleArrayToNumericTable(labels)
+        Service.printNumericTable("" ,labelsTable)
 
         Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
       }
@@ -747,6 +751,7 @@ object OneDAL {
         iter.foreach { address =>
           mergedData.addHomogenTable(address)
         }
+
         Iterator(mergedData.getcObejct())
     }.cache()
     coalescedTables
