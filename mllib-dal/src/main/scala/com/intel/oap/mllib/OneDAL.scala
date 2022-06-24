@@ -123,7 +123,6 @@ object OneDAL {
 
     val accessor = new RowAccessor(table.getcObejct(), device)
     val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
-
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
     val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 

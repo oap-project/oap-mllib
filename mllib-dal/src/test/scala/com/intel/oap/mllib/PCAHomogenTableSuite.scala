@@ -1,7 +1,6 @@
 package com.intel.oap.mllib
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
-
 import com.intel.oap.mllib.feature.{PCADALImpl, PCAResult}
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
 import org.apache.spark.internal.Logging
