@@ -18,8 +18,8 @@ package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.{OneCCL, OneDAL}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import org.apache.spark.TaskContext
 
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}

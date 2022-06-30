@@ -25,8 +25,8 @@ import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import org.apache.spark.Partitioner
 
+import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.rdd.RDD

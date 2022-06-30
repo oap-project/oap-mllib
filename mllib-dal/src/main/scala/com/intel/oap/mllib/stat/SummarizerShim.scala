@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.Utils
-import org.apache.spark.{SPARK_VERSION, SparkException}
 
+import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.stat.MultivariateStatisticalSummary

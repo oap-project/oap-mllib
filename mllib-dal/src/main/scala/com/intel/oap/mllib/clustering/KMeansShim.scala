@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils
-import org.apache.spark.{SPARK_VERSION, SparkException}
 
+import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.clustering.KMeansModel
 import org.apache.spark.ml.clustering.spark321.{KMeans => KMeansSpark321}

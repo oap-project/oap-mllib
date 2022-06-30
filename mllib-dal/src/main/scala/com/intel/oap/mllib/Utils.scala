@@ -19,7 +19,6 @@ package com.intel.oap.mllib
 import java.net.InetAddress
 
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
-
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession

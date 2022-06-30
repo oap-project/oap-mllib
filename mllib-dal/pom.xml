@@ -206,6 +206,7 @@
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <sourceDirectories>
                         <directory>${basedir}/src/main/java</directory>
+                        <directory>${basedir}/src/main/scala</directory>
                     </sourceDirectories>
                     <testSourceDirectories>
                         <directory>${basedir}/src/test/java</directory>
@@ -240,7 +241,7 @@
                     <failOnViolation>true</failOnViolation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <failOnWarning>false</failOnWarning>
-                    <sourceDirectory>${basedir}/src/main/scala/org/apache/spark</sourceDirectory>
+                    <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
                     <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
                     <configLocation>scalastyle-config.xml</configLocation>
                     <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
