@@ -16,25 +16,26 @@
 
 package com.intel.oap.mllib.clustering
 
-import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.TaskContext
+
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
 
-class KMeansDALImpl(var nClusters: Int,
-                    var maxIterations: Int,
-                    var tolerance: Double,
-                    val distanceMeasure: String,
-                    val centers: Array[OldVector],
-                    val executorNum: Int,
-                    val executorCores: Int
-                   ) extends Serializable with Logging {
+class KMeansDALImpl(
+    var nClusters: Int,
+    var maxIterations: Int,
+    var tolerance: Double,
+    val distanceMeasure: String,
+    val centers: Array[OldVector],
+    val executorNum: Int,
+    val executorCores: Int)
+    extends Serializable
+    with Logging {
 
   def train(data: RDD[Vector]): MLlibKMeansModel = {
     val sparkContext = data.sparkContext
@@ -42,35 +43,36 @@ class KMeansDALImpl(var nClusters: Int,
     val computeDevice = Common.ComputeDevice.getOrdinalByName(useDevice)
     val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      var cCentroids = 0L
-      val result = new KMeansResult()
-      val tableArr = table.next()
-      OneCCL.initDpcpp()
-      val initCentroids = OneDAL.makeHomogenTable(centers, computeDevice)
-      cCentroids = cKMeansOneapiComputeWithInitCenters(
-        tableArr,
-        initCentroids.getcObejct(),
-        nClusters,
-        tolerance,
-        maxIterations,
-        executorNum,
-        computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
-        result
-      )
+    val results = coalescedTables
+      .mapPartitionsWithIndex { (rank, table) =>
+        var cCentroids = 0L
+        val result = new KMeansResult()
+        val tableArr = table.next()
+        OneCCL.initDpcpp()
+        val initCentroids = OneDAL.makeHomogenTable(centers, computeDevice)
+        cCentroids = cKMeansOneapiComputeWithInitCenters(
+          tableArr,
+          initCentroids.getcObejct(),
+          nClusters,
+          tolerance,
+          maxIterations,
+          executorNum,
+          computeDevice.ordinal(),
+          rank,
+          kvsIPPort,
+          result)
 
-      val ret = if (rank == 0) {
+        val ret = if (rank == 0) {
           assert(cCentroids != 0)
-          val centerVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
-            computeDevice)
+          val centerVectors =
+            OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids), computeDevice)
           Iterator((centerVectors, result.totalCost, result.iterationNum))
         } else {
           Iterator.empty
         }
-      ret
-    }.collect()
+        ret
+      }
+      .collect()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
@@ -90,18 +92,22 @@ class KMeansDALImpl(var nClusters: Int,
 
     val parentModel = new MLlibKMeansModel(
       centerVectors.map(OldVectors.fromML(_)),
-      distanceMeasure, totalCost, iterationNum)
+      distanceMeasure,
+      totalCost,
+      iterationNum)
 
     parentModel
   }
 
-  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long, centers: Long,
-                                                       cluster_num: Int,
-                                                       tolerance: Double,
-                                                       iteration_num: Int,
-                                                       executor_num: Int,
-                                                       compute_device: Int,
-                                                       rank_id: Int,
-                                                       ip_port: String,
-                                                       result: KMeansResult): Long
+  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(
+      data: Long,
+      centers: Long,
+      cluster_num: Int,
+      tolerance: Double,
+      iteration_num: Int,
+      executor_num: Int,
+      compute_device: Int,
+      rank_id: Int,
+      ip_port: String,
+      result: KMeansResult): Long
 }

@@ -33,9 +33,10 @@ import org.apache.spark.sql.types.StructType
  * principal components.
  */
 @Since("1.5.0")
-class PCA @Since("1.5.0") (
-    @Since("1.5.0") override val uid: String)
-  extends Estimator[PCAModel] with PCAParams with DefaultParamsWritable {
+class PCA @Since("1.5.0")(@Since("1.5.0") override val uid: String)
+    extends Estimator[PCAModel]
+    with PCAParams
+    with DefaultParamsWritable {
 
   @Since("1.5.0")
   def this() = this(Identifiable.randomUID("pca"))

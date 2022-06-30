@@ -17,17 +17,21 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.{OneCCL, OneDAL}
-import org.apache.spark.TaskContext
-import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.{Vector}
-import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
-import org.apache.spark.mllib.stat.{MultivariateStatisticalDALSummary, MultivariateStatisticalSummary => Summary}
-import org.apache.spark.rdd.RDD
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import org.apache.spark.TaskContext
 
-class SummarizerDALImpl(val executorNum: Int,
-                        val executorCores: Int)
-  extends Serializable with Logging {
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
+import org.apache.spark.mllib.stat.{
+  MultivariateStatisticalDALSummary,
+  MultivariateStatisticalSummary => Summary
+}
+import org.apache.spark.rdd.RDD
+
+class SummarizerDALImpl(val executorNum: Int, val executorCores: Int)
+    extends Serializable
+    with Logging {
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
     val kvsIPPort = getOneCCLIPPort(data)
@@ -37,59 +41,57 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables
+      .mapPartitionsWithIndex { (rank, table) =>
+        val gpuIndices = if (useGPU) {
+          val resources = TaskContext.get().resources()
+          resources("gpu").addresses.map(_.toInt)
+        } else {
+          null
+        }
 
-      val gpuIndices = if (useGPU) {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
+        val tableArr = table.next()
+        OneCCL.init(executorNum, rank, kvsIPPort)
+
+        val computeStartTime = System.nanoTime()
+
+        val result = new SummarizerResult()
+        cSummarizerTrainDAL(tableArr, executorNum, executorCores, useGPU, gpuIndices, result)
+
+        val computeEndTime = System.nanoTime()
+
+        val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
+
+        logInfo(s"SummarizerDAL compute took ${durationCompute} secs")
+
+        val ret = if (OneCCL.isRoot()) {
+
+          val convResultStartTime = System.nanoTime()
+          val meanVector =
+            OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.meanNumericTable))
+          val varianceVector =
+            OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.varianceNumericTable))
+          val maxVector =
+            OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.maximumNumericTable))
+          val minVector =
+            OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.minimumNumericTable))
+
+          val convResultEndTime = System.nanoTime()
+
+          val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
+
+          logInfo(s"SummarizerDAL result conversion took ${durationCovResult} secs")
+
+          Iterator((meanVector, varianceVector, maxVector, minVector))
+        } else {
+          Iterator.empty
+        }
+
+        OneCCL.cleanup()
+
+        ret
       }
-
-      val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
-
-      val computeStartTime = System.nanoTime()
-
-      val result = new SummarizerResult()
-      cSummarizerTrainDAL(
-        tableArr,
-        executorNum,
-        executorCores,
-        useGPU,
-        gpuIndices,
-        result
-      )
-
-      val computeEndTime = System.nanoTime()
-
-      val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
-
-      logInfo(s"SummarizerDAL compute took ${durationCompute} secs")
-
-      val ret = if (OneCCL.isRoot()) {
-
-        val convResultStartTime = System.nanoTime()
-        val meanVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.meanNumericTable))
-        val varianceVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.varianceNumericTable))
-        val maxVector= OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.maximumNumericTable))
-        val minVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.minimumNumericTable))
-
-        val convResultEndTime = System.nanoTime()
-
-        val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
-
-        logInfo(s"SummarizerDAL result conversion took ${durationCovResult} secs")
-
-        Iterator((meanVector, varianceVector, maxVector, minVector))
-      } else {
-        Iterator.empty
-      }
-
-      OneCCL.cleanup()
-
-      ret
-    }.collect()
+      .collect()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
@@ -99,15 +101,20 @@ class SummarizerDALImpl(val executorNum: Int,
     val maxVector = results(0)._3
     val minVector = results(0)._4
 
-    val summary = new MultivariateStatisticalDALSummary(OldVectors.fromML(meanVector), OldVectors.fromML(varianceVector), OldVectors.fromML(maxVector), OldVectors.fromML(minVector))
+    val summary = new MultivariateStatisticalDALSummary(
+      OldVectors.fromML(meanVector),
+      OldVectors.fromML(varianceVector),
+      OldVectors.fromML(maxVector),
+      OldVectors.fromML(minVector))
 
     summary
   }
 
-  @native private def cSummarizerTrainDAL(data: Long,
-                                          executor_num: Int,
-                                          executor_cores: Int,
-                                          useGPU: Boolean,
-                                          gpuIndices: Array[Int],
-                                          result: SummarizerResult): Long
+  @native private def cSummarizerTrainDAL(
+      data: Long,
+      executor_num: Int,
+      executor_cores: Int,
+      useGPU: Boolean,
+      gpuIndices: Array[Int],
+      result: SummarizerResult): Long
 }

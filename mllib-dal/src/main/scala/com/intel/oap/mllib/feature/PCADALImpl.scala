@@ -17,28 +17,30 @@
 package com.intel.oap.mllib.feature
 
 import java.nio.DoubleBuffer
-
-import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
-import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
-import org.apache.spark.TaskContext
-import org.apache.spark.annotation.Since
-import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg._
-import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
-import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, DenseVector => OldDenseVector, Vectors => OldVectors}
-import org.apache.spark.rdd.RDD
 import java.util.Arrays
 
-class PCADALModel private[mllib] (
-  val k: Int,
-  val pc: OldDenseMatrix,
-  val explainedVariance: OldDenseVector)
+import com.intel.daal.data_management.data.NumericTable
+import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import org.apache.spark.TaskContext
 
-class PCADALImpl(val k: Int,
-                 val executorNum: Int,
-                 val executorCores: Int)
-  extends Serializable with Logging {
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.linalg._
+import org.apache.spark.mllib.linalg.{
+  DenseMatrix => OldDenseMatrix,
+  DenseVector => OldDenseVector,
+  Vectors => OldVectors
+}
+import org.apache.spark.rdd.RDD
+
+class PCADALModel private[mllib] (
+    val k: Int,
+    val pc: OldDenseMatrix,
+    val explainedVariance: OldDenseVector)
+
+class PCADALImpl(val k: Int, val executorNum: Int, val executorCores: Int)
+    extends Serializable
+    with Logging {
 
   def train(data: RDD[Vector]): PCADALModel = {
 
@@ -49,54 +51,46 @@ class PCADALImpl(val k: Int,
     val sparkContext = data.sparkContext
     val useGPU = sparkContext.getConf.getBoolean("spark.oap.mllib.useGPU", false)
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      val gpuIndices = if (useGPU) {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
+    val results = coalescedTables
+      .mapPartitionsWithIndex { (rank, table) =>
+        val gpuIndices = if (useGPU) {
+          val resources = TaskContext.get().resources()
+          resources("gpu").addresses.map(_.toInt)
+        } else {
+          null
+        }
+
+        val tableArr = table.next()
+        OneCCL.init(executorNum, rank, kvsIPPort)
+
+        val result = new PCAResult()
+        cPCATrainDAL(tableArr, k, executorNum, executorCores, useGPU, gpuIndices, result)
+
+        val ret = if (OneCCL.isRoot()) {
+          val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
+          val explainedVarianceNumericTable =
+            OneDAL.makeNumericTable(result.explainedVarianceNumericTable)
+          val principleComponents = getPrincipleComponentsFromDAL(pcNumericTable, k)
+          val explainedVariance = getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
+
+          Iterator((principleComponents, explainedVariance))
+        } else {
+          Iterator.empty
+        }
+
+        OneCCL.cleanup()
+
+        ret
       }
-
-      val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
-
-      val result = new PCAResult()
-      cPCATrainDAL(
-        tableArr,
-        k,
-        executorNum,
-        executorCores,
-        useGPU,
-        gpuIndices,
-        result
-      )
-
-      val ret = if (OneCCL.isRoot()) {
-        val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
-        val explainedVarianceNumericTable = OneDAL.makeNumericTable(
-          result.explainedVarianceNumericTable)
-        val principleComponents = getPrincipleComponentsFromDAL(pcNumericTable, k)
-        val explainedVariance = getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
-
-        Iterator((principleComponents, explainedVariance))
-      } else {
-        Iterator.empty
-      }
-
-      OneCCL.cleanup()
-
-      ret
-    }.collect()
+      .collect()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
     val pc = results(0)._1
     val explainedVariance = results(0)._2
-    val parentModel = new PCADALModel(k,
-      OldDenseMatrix.fromML(pc),
-      OldVectors.fromML(explainedVariance).toDense
-    )
+    val parentModel =
+      new PCADALModel(k, OldDenseMatrix.fromML(pc), OldVectors.fromML(explainedVariance).toDense)
 
     parentModel
   }
@@ -124,9 +118,10 @@ class PCADALImpl(val k: Int,
 
   // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
   // so use table.getBlockOfRows instead of it.
-  private def getDoubleBufferDataFromDAL(table: NumericTable,
-                                         numRows: Int,
-                                         numCols: Int): Array[Double] = {
+  private def getDoubleBufferDataFromDAL(
+      table: NumericTable,
+      numRows: Int,
+      numCols: Int): Array[Double] = {
     var dataDouble: DoubleBuffer = null
 
     // returned DoubleBuffer is ByteByffer, need to copy as double array
@@ -138,12 +133,13 @@ class PCADALImpl(val k: Int,
   }
 
   // Single entry to call Correlation PCA DAL backend with parameter K
-  @native private def cPCATrainDAL(data: Long,
-                                   k: Int,
-                                   executor_num: Int,
-                                   executor_cores: Int,
-                                   useGPU: Boolean,
-                                   gpuIndices: Array[Int],
-                                   result: PCAResult): Long
+  @native private def cPCATrainDAL(
+      data: Long,
+      k: Int,
+      executor_num: Int,
+      executor_cores: Int,
+      useGPU: Boolean,
+      gpuIndices: Array[Int],
+      result: PCAResult): Long
 
 }

@@ -17,6 +17,7 @@
 package com.intel.oap.mllib.regression
 
 import com.intel.oap.mllib.Utils
+import org.apache.spark.{SPARK_VERSION, SparkException}
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.param.ParamMap
@@ -24,7 +25,6 @@ import org.apache.spark.ml.regression.LinearRegressionModel
 import org.apache.spark.ml.regression.spark313.{LinearRegression => LinearRegressionSpark313}
 import org.apache.spark.ml.regression.spark321.{LinearRegression => LinearRegressionSpark321}
 import org.apache.spark.sql.Dataset
-import org.apache.spark.{SPARK_VERSION, SparkException}
 
 trait LinearRegressionShim extends Serializable with Logging {
   def initShim(params: ParamMap): Unit

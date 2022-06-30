@@ -34,9 +34,10 @@ import org.apache.spark.sql.types.StructType
  * @see <a href="https://doi.org/10.14778/2180912.2180915">Bahmani et al., Scalable k-means++.</a>
  */
 @Since("1.5.0")
-class KMeans @Since("1.5.0") (
-    @Since("1.5.0") override val uid: String)
-  extends Estimator[KMeansModel] with KMeansParams with DefaultParamsWritable {
+class KMeans @Since("1.5.0")(@Since("1.5.0") override val uid: String)
+    extends Estimator[KMeansModel]
+    with KMeansParams
+    with DefaultParamsWritable {
 
   @Since("1.5.0")
   override def copy(extra: ParamMap): KMeans = defaultCopy(extra)
