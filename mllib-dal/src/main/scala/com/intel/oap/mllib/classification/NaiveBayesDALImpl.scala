@@ -16,30 +16,30 @@
 
 package com.intel.oap.mllib.classification
 
-import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
-import org.apache.spark.annotation.Since
+import com.intel.oap.mllib.Utils.getOneCCLIPPort
+
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.classification.NaiveBayesModel
 import org.apache.spark.ml.linalg.{Matrices, Matrix, Vector}
-import org.apache.spark.ml.util.Instrumentation
 import org.apache.spark.sql.Dataset
 
 class NaiveBayesDALModel private[mllib] (
     val uid: String,
     val pi: Vector,
     val theta: Matrix,
-    val sigma: Matrix
-)
+    val sigma: Matrix)
 
-class NaiveBayesDALImpl(val uid: String,
-                        val classNum: Int,
-                        val executorNum: Int,
-                        val executorCores: Int
-                       ) extends Serializable with Logging {
-  def train(labeledPoints: Dataset[_],
-            labelCol: String,
-            featuresCol: String): NaiveBayesDALModel = {
+class NaiveBayesDALImpl(
+    val uid: String,
+    val classNum: Int,
+    val executorNum: Int,
+    val executorCores: Int)
+    extends Serializable
+    with Logging {
+  def train(
+      labeledPoints: Dataset[_],
+      labelCol: String,
+      featuresCol: String): NaiveBayesDALModel = {
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
@@ -49,60 +49,68 @@ class NaiveBayesDALImpl(val uid: String,
       OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
     }
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
-      case (rank: Int, tables: Iterator[(Long, Long)]) =>
-        val (featureTabAddr, lableTabAddr) = tables.next()
+    val results = labeledPointsTables
+      .mapPartitionsWithIndex {
+        case (rank: Int, tables: Iterator[(Long, Long)]) =>
+          val (featureTabAddr, lableTabAddr) = tables.next()
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
+          OneCCL.init(executorNum, rank, kvsIPPort)
 
-        val computeStartTime = System.nanoTime()
+          val computeStartTime = System.nanoTime()
 
-        val result = new NaiveBayesResult
-        cNaiveBayesDALCompute(featureTabAddr, lableTabAddr,
-          classNum, executorNum, executorCores, result)
+          val result = new NaiveBayesResult
+          cNaiveBayesDALCompute(
+            featureTabAddr,
+            lableTabAddr,
+            classNum,
+            executorNum,
+            executorCores,
+            result)
 
-        val computeEndTime = System.nanoTime()
+          val computeEndTime = System.nanoTime()
 
-        val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
+          val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
 
-        println(s"NaiveBayesDAL compute took ${durationCompute} secs")
+          println(s"NaiveBayesDAL compute took ${durationCompute} secs")
 
-        val ret = if (OneCCL.isRoot()) {
-          val convResultStartTime = System.nanoTime()
+          val ret = if (OneCCL.isRoot()) {
+            val convResultStartTime = System.nanoTime()
 
-          val pi = OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable))
-          val theta = OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable))
+            val pi =
+              OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable))
+            val theta =
+              OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable))
 
-          val convResultEndTime = System.nanoTime()
+            val convResultEndTime = System.nanoTime()
 
-          val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
+            val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
 
-          println(s"NaiveBayesDAL result conversion took ${durationCovResult} secs")
+            println(s"NaiveBayesDAL result conversion took ${durationCovResult} secs")
 
-          Iterator((pi, theta))
+            Iterator((pi, theta))
 
-        } else {
-          Iterator.empty
-        }
+          } else {
+            Iterator.empty
+          }
 
-        OneCCL.cleanup()
-        ret
-    }.collect()
+          OneCCL.cleanup()
+          ret
+      }
+      .collect()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
     val result = results(0)
 
-    val model = new NaiveBayesDALModel(uid,
-      result._1,
-      result._2,
-      Matrices.zeros(0, 0))
+    val model = new NaiveBayesDALModel(uid, result._1, result._2, Matrices.zeros(0, 0))
     model
   }
 
-  @native private def cNaiveBayesDALCompute(features: Long, labels: Long,
-                                            class_num: Int,
-                                            executor_num: Int,
-                                            executor_cores: Int,
-                                            result: NaiveBayesResult): Unit
+  @native private def cNaiveBayesDALCompute(
+      features: Long,
+      labels: Long,
+      class_num: Int,
+      executor_num: Int,
+      executor_cores: Int,
+      result: NaiveBayesResult): Unit
 }

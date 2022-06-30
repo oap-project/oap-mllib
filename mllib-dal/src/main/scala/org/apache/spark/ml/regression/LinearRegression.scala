@@ -86,9 +86,11 @@ import org.apache.spark.sql.Dataset
  * Note: Fitting with huber loss only supports none and L2 regularization.
  */
 @Since("1.3.0")
-class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String)
-  extends Regressor[Vector, LinearRegression, LinearRegressionModel]
-  with LinearRegressionParams with DefaultParamsWritable with Logging {
+class LinearRegression @Since("1.3.0")(@Since("1.3.0") override val uid: String)
+    extends Regressor[Vector, LinearRegression, LinearRegressionModel]
+    with LinearRegressionParams
+    with DefaultParamsWritable
+    with Logging {
 
   @Since("1.4.0")
   def this() = this(Identifiable.randomUID("linReg"))
@@ -226,22 +228,18 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
   @Since("3.1.0")
   def setMaxBlockSizeInMB(value: Double): this.type = set(maxBlockSizeInMB, value)
 
-  override protected def train(
-      dataset: Dataset[_]): LinearRegressionModel = {
+  @Since("1.4.0")
+  override def copy(extra: ParamMap): LinearRegression = defaultCopy(extra)
+
+  override protected def train(dataset: Dataset[_]): LinearRegressionModel = {
     val shim = LinearRegressionShim.create(uid)
     shim.initShim(extractParamMap())
     shim.train(dataset)
   }
-
-  @Since("1.4.0")
-  override def copy(extra: ParamMap): LinearRegression = defaultCopy(extra)
 }
 
 @Since("1.6.0")
 object LinearRegression extends DefaultParamsReadable[LinearRegression] {
-
-  @Since("1.6.0")
-  override def load(path: String): LinearRegression = super.load(path)
 
   /**
    * When using `LinearRegression.solver` == "normal", the solver must limit the number of
@@ -271,4 +269,7 @@ object LinearRegression extends DefaultParamsReadable[LinearRegression] {
 
   /** Set of loss function names that LinearRegression supports. */
   private[regression] val supportedLosses = Array(SquaredError, Huber)
+
+  @Since("1.6.0")
+  override def load(path: String): LinearRegression = super.load(path)
 }

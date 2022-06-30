@@ -24,15 +24,6 @@ object OneCCL extends Logging {
 
   var cclParam = new CCLParam()
 
-  // Run on Executor
-  def setExecutorEnv(): Unit = {
-    setEnv("CCL_ATL_TRANSPORT", "ofi")
-    // Set CCL_ROOT to workaround CCL_ROOT env read bug, should remove when upstream fix this
-    setEnv("CCL_ROOT", "/opt/intel/oneapi/ccl/latest")
-    // Uncomment this if you whant to debug oneCCL
-    // setEnv("CCL_LOG_LEVEL", "debug")
-  }
-
   def init(executor_num: Int, rank: Int, ip_port: String): Unit = {
 
     setExecutorEnv()
@@ -45,8 +36,9 @@ object OneCCL extends Logging {
     // executor number should equal to oneCCL world size
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
 
-    logInfo(s"Initialized with executorNum: $executor_num, " +
-      s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
+    logInfo(
+      s"Initialized with executorNum: $executor_num, " +
+        s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
   }
 
   def initDpcpp(): Unit = {
@@ -54,6 +46,15 @@ object OneCCL extends Logging {
     logInfo(s"oneccl init")
     // cclParam is output from native code
     c_initDpcpp()
+  }
+
+  // Run on Executor
+  def setExecutorEnv(): Unit = {
+    setEnv("CCL_ATL_TRANSPORT", "ofi")
+    // Set CCL_ROOT to workaround CCL_ROOT env read bug, should remove when upstream fix this
+    setEnv("CCL_ROOT", "/opt/intel/oneapi/ccl/latest")
+    // Uncomment this if you whant to debug oneCCL
+    // setEnv("CCL_LOG_LEVEL", "debug")
   }
 
   // Run on Executor
@@ -65,12 +66,6 @@ object OneCCL extends Logging {
     c_getAvailPort(localIP)
   }
 
-  @native private def c_init(size: Int, rank: Int, ip_port: String, param: CCLParam): Int
-
-  @native private def c_initDpcpp(): Int
-
-  @native private def c_cleanup(): Unit
-
   @native def isRoot(): Boolean
 
   @native def rankID(): Int
@@ -78,4 +73,10 @@ object OneCCL extends Logging {
   @native def setEnv(key: String, value: String, overwrite: Boolean = true): Int
 
   @native def c_getAvailPort(localIP: String): Int
+
+  @native private def c_init(size: Int, rank: Int, ip_port: String, param: CCLParam): Int
+
+  @native private def c_initDpcpp(): Int
+
+  @native private def c_cleanup(): Unit
 }

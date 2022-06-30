@@ -19,9 +19,10 @@
 
 package org.apache.spark.ml.stat.spark321
 
+import scala.collection.JavaConverters._
+
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
-import scala.collection.JavaConverters._
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg.{SQLDataTypes, Vector}
@@ -39,6 +40,14 @@ import org.apache.spark.storage.StorageLevel
  */
 @Since("2.2.0")
 class Correlation extends CorrelationShim {
+
+  /**
+   * Compute the Pearson correlation matrix for the input Dataset of Vectors.
+   */
+  @Since("2.2.0")
+  def corr(dataset: Dataset[_], column: String): DataFrame = {
+    corr(dataset, column, "pearson")
+  }
 
   /**
    * Compute the correlation matrix for the input Dataset of Vectors using the specified method.
@@ -70,8 +79,8 @@ class Correlation extends CorrelationShim {
    */
   @Since("2.2.0")
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame = {
-    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
-      dataset.sparkSession.sparkContext)
+    val isPlatformSupported =
+      Utils.checkClusterPlatformCompatibility(dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
       val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
       if (handlePersistence) {
@@ -100,13 +109,5 @@ class Correlation extends CorrelationShim {
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
       dataset.sparkSession.createDataFrame(Seq(Row(oldM.asML)).asJava, schema)
     }
-  }
-
-  /**
-   * Compute the Pearson correlation matrix for the input Dataset of Vectors.
-   */
-  @Since("2.2.0")
-  def corr(dataset: Dataset[_], column: String): DataFrame = {
-    corr(dataset, column, "pearson")
   }
 }

@@ -17,13 +17,13 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils
+import org.apache.spark.{SPARK_VERSION, SparkException}
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.clustering.{KMeans, KMeansModel}
+import org.apache.spark.ml.clustering.KMeansModel
 import org.apache.spark.ml.clustering.spark321.{KMeans => KMeansSpark321}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.sql.Dataset
-import org.apache.spark.{SPARK_VERSION, SparkException}
 
 trait KMeansShim extends Logging {
   def initShim(params: ParamMap): Unit

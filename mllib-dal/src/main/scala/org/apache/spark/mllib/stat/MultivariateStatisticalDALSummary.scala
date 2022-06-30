@@ -18,12 +18,13 @@ package org.apache.spark.mllib.stat
 
 import org.apache.spark.mllib.linalg.Vector
 
-class MultivariateStatisticalDALSummary (
-              val meanVector: Vector,
-              val varianceVector: Vector,
-              val maxVector: Vector,
-              val minVector: Vector)
-  extends MultivariateStatisticalSummary with Serializable {
+class MultivariateStatisticalDALSummary(
+    val meanVector: Vector,
+    val varianceVector: Vector,
+    val maxVector: Vector,
+    val minVector: Vector)
+    extends MultivariateStatisticalSummary
+    with Serializable {
 
   /*
    * Sample mean vector.

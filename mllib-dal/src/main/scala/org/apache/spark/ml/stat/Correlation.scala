@@ -19,17 +19,10 @@
 
 package org.apache.spark.ml.stat
 
-import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
-import scala.collection.JavaConverters._
+import com.intel.oap.mllib.stat.CorrelationShim
 
-import org.apache.spark.annotation.{Experimental, Since}
-import org.apache.spark.ml.linalg.{SQLDataTypes, Vector}
-import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
-import org.apache.spark.mllib.stat.{Statistics => OldStatistics}
-import org.apache.spark.sql.{DataFrame, Dataset, Row}
-import org.apache.spark.sql.types.{StructField, StructType}
-import org.apache.spark.storage.StorageLevel
+import org.apache.spark.annotation.Since
+import org.apache.spark.sql.{DataFrame, Dataset}
 
 /**
  * API for correlation functions in MLlib, compatible with DataFrames and Datasets.
@@ -39,6 +32,14 @@ import org.apache.spark.storage.StorageLevel
  */
 @Since("2.2.0")
 object Correlation {
+
+  /**
+   * Compute the Pearson correlation matrix for the input Dataset of Vectors.
+   */
+  @Since("2.2.0")
+  def corr(dataset: Dataset[_], column: String): DataFrame = {
+    corr(dataset, column, "pearson")
+  }
 
   /**
    * Compute the correlation matrix for the input Dataset of Vectors using the specified method.
@@ -72,13 +73,5 @@ object Correlation {
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame = {
     val shim = CorrelationShim.create()
     shim.corr(dataset, column, method)
-  }
-
-  /**
-   * Compute the Pearson correlation matrix for the input Dataset of Vectors.
-   */
-  @Since("2.2.0")
-  def corr(dataset: Dataset[_], column: String): DataFrame = {
-    corr(dataset, column, "pearson")
   }
 }

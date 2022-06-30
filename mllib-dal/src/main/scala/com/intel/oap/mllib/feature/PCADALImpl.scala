@@ -17,30 +17,32 @@
 package com.intel.oap.mllib.feature
 
 import java.nio.DoubleBuffer
+import java.util.Arrays
 
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Service}
 import org.apache.spark.TaskContext
-import org.apache.spark.annotation.Since
+
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
-import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
-import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, DenseVector => OldDenseVector, Vectors => OldVectors}
+import org.apache.spark.mllib.linalg.{
+  DenseMatrix => OldDenseMatrix,
+  DenseVector => OldDenseVector,
+  Vectors => OldVectors
+}
 import org.apache.spark.rdd.RDD
-import java.util.Arrays
 
 import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 
 class PCADALModel private[mllib] (
-  val k: Int,
-  val pc: OldDenseMatrix,
-  val explainedVariance: OldDenseVector)
+    val k: Int,
+    val pc: OldDenseMatrix,
+    val explainedVariance: OldDenseVector)
 
-class PCADALImpl(val k: Int,
-                 val executorNum: Int,
-                 val executorCores: Int)
-  extends Serializable with Logging {
+class PCADALImpl(val k: Int, val executorNum: Int, val executorCores: Int)
+    extends Serializable
+    with Logging {
 
   def train(data: RDD[Vector]): PCADALModel = {
     val normalizedData = normalizeData(data)
@@ -85,10 +87,8 @@ class PCADALImpl(val k: Int,
 
     val pc = results(0)._1
     val explainedVariance = results(0)._2
-    val parentModel = new PCADALModel(k,
-      OldDenseMatrix.fromML(pc),
-      OldVectors.fromML(explainedVariance).toDense
-    )
+    val parentModel =
+      new PCADALModel(k, OldDenseMatrix.fromML(pc), OldVectors.fromML(explainedVariance).toDense)
 
     parentModel
   }

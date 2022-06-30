@@ -19,14 +19,14 @@
 
 package org.apache.spark.mllib.stat
 
-import com.intel.oap.mllib.stat.{SummarizerShim}
 import scala.annotation.varargs
+
+import com.intel.oap.mllib.stat.SummarizerShim
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.api.java.{JavaDoubleRDD, JavaRDD}
 import org.apache.spark.ml.stat._
 import org.apache.spark.mllib.linalg.{Matrix, Vector}
-import org.apache.spark.mllib.linalg.distributed.RowMatrix
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.stat.correlation.Correlations
 import org.apache.spark.mllib.stat.test.{
@@ -125,7 +125,8 @@ object Statistics {
    * elements in each partition.
    */
   @Since("1.1.0")
-  def corr(x: RDD[Double], y: RDD[Double], method: String): Double = Correlations.corr(x, y, method)
+  def corr(x: RDD[Double], y: RDD[Double], method: String): Double =
+    Correlations.corr(x, y, method)
 
   /*
    * Conduct Pearson's chi-squared goodness of fit test of the observed data against the
@@ -206,8 +207,9 @@ object Statistics {
    *          test statistic, p-value, and null hypothesis.
    */
   @Since("1.5.0")
-  def kolmogorovSmirnovTest(data: RDD[Double], cdf: Double => Double)
-  : KolmogorovSmirnovTestResult = {
+  def kolmogorovSmirnovTest(
+      data: RDD[Double],
+      cdf: Double => Double): KolmogorovSmirnovTestResult = {
     KolmogorovSmirnovTest.testOneSample(data, cdf)
   }
 
@@ -216,9 +218,10 @@ object Statistics {
    */
   @Since("1.5.0")
   @varargs
-  def kolmogorovSmirnovTest( data: JavaDoubleRDD,
-                             distName: String,
-                             params: Double*): KolmogorovSmirnovTestResult = {
+  def kolmogorovSmirnovTest(
+      data: JavaDoubleRDD,
+      distName: String,
+      params: Double*): KolmogorovSmirnovTestResult = {
     kolmogorovSmirnovTest(data.rdd.asInstanceOf[RDD[Double]], distName, params: _*)
   }
 
@@ -235,8 +238,10 @@ object Statistics {
    */
   @Since("1.5.0")
   @varargs
-  def kolmogorovSmirnovTest(data: RDD[Double], distName: String, params: Double*)
-  : KolmogorovSmirnovTestResult = {
+  def kolmogorovSmirnovTest(
+      data: RDD[Double],
+      distName: String,
+      params: Double*): KolmogorovSmirnovTestResult = {
     KolmogorovSmirnovTest.testOneSample(data, distName, params: _*)
   }
 
@@ -248,10 +253,8 @@ object Statistics {
    * @return [[SummarizerBuffer]] object containing column-wise summary statistics.
    */
   private[mllib] def colStats(X: RDD[(Vector, Double)], requested: Seq[String]) = {
-    X.treeAggregate(Summarizer.createSummarizerBuffer(requested: _*))(
-      seqOp = { case (c, (v, w)) => c.add(v.nonZeroIterator, v.size, w) },
-      combOp = { case (c1, c2) => c1.merge(c2) },
-      depth = 2
-    )
+    X.treeAggregate(Summarizer.createSummarizerBuffer(requested: _*))(seqOp = {
+      case (c, (v, w)) => c.add(v.nonZeroIterator, v.size, w)
+    }, combOp = { case (c1, c2) => c1.merge(c2) }, depth = 2)
   }
 }

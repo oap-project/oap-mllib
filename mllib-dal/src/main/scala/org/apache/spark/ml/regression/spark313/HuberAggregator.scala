@@ -74,15 +74,14 @@ private[ml] class HuberAggregator(
     fitIntercept: Boolean,
     epsilon: Double,
     bcFeaturesStd: Broadcast[Array[Double]])(bcParameters: Broadcast[Vector])
-  extends DifferentiableLossAggregator[Instance, HuberAggregator] {
+    extends DifferentiableLossAggregator[Instance, HuberAggregator] {
 
+  // make transient so we do not serialize between aggregation stages
+  @transient private lazy val coefficients = bcParameters.value.toArray.take(numFeatures)
   protected override val dim: Int = bcParameters.value.size
   private val numFeatures = if (fitIntercept) dim - 2 else dim - 1
   private val sigma = bcParameters.value(dim - 1)
   private val intercept = if (fitIntercept) bcParameters.value(dim - 2) else 0.0
-
-  // make transient so we do not serialize between aggregation stages
-  @transient private lazy val coefficients = bcParameters.value.toArray.take(numFeatures)
 
   /**
    * Add a new training instance to this HuberAggregator, and update the loss and gradient
@@ -92,65 +91,69 @@ private[ml] class HuberAggregator(
    * @return This HuberAggregator object.
    */
   def add(instance: Instance): HuberAggregator = {
-    instance match { case Instance(label, weight, features) =>
-      require(numFeatures == features.size, s"Dimensions mismatch when adding new sample." +
-        s" Expecting $numFeatures but got ${features.size}.")
-      require(weight >= 0.0, s"instance weight, $weight has to be >= 0.0")
+    instance match {
+      case Instance(label, weight, features) =>
+        require(
+          numFeatures == features.size,
+          s"Dimensions mismatch when adding new sample." +
+            s" Expecting $numFeatures but got ${features.size}.")
+        require(weight >= 0.0, s"instance weight, $weight has to be >= 0.0")
 
-      if (weight == 0.0) return this
-      val localFeaturesStd = bcFeaturesStd.value
-      val localCoefficients = coefficients
-      val localGradientSumArray = gradientSumArray
+        if (weight == 0.0) return this
+        val localFeaturesStd = bcFeaturesStd.value
+        val localCoefficients = coefficients
+        val localGradientSumArray = gradientSumArray
 
-      val margin = {
-        var sum = 0.0
-        features.foreachNonZero { (index, value) =>
-          if (localFeaturesStd(index) != 0.0) {
-            sum += localCoefficients(index) * (value / localFeaturesStd(index))
+        val margin = {
+          var sum = 0.0
+          features.foreachNonZero { (index, value) =>
+            if (localFeaturesStd(index) != 0.0) {
+              sum += localCoefficients(index) * (value / localFeaturesStd(index))
+            }
           }
+          if (fitIntercept) sum += intercept
+          sum
         }
-        if (fitIntercept) sum += intercept
-        sum
-      }
-      val linearLoss = label - margin
+        val linearLoss = label - margin
 
-      if (math.abs(linearLoss) <= sigma * epsilon) {
-        lossSum += 0.5 * weight * (sigma + math.pow(linearLoss, 2.0) / sigma)
-        val linearLossDivSigma = linearLoss / sigma
+        if (math.abs(linearLoss) <= sigma * epsilon) {
+          lossSum += 0.5 * weight * (sigma + math.pow(linearLoss, 2.0) / sigma)
+          val linearLossDivSigma = linearLoss / sigma
 
-        features.foreachNonZero { (index, value) =>
-          if (localFeaturesStd(index) != 0.0) {
-            localGradientSumArray(index) +=
-              -1.0 * weight * linearLossDivSigma * (value / localFeaturesStd(index))
+          features.foreachNonZero { (index, value) =>
+            if (localFeaturesStd(index) != 0.0) {
+              localGradientSumArray(index) +=
+                -1.0 * weight * linearLossDivSigma * (value / localFeaturesStd(index))
+            }
           }
-        }
-        if (fitIntercept) {
-          localGradientSumArray(dim - 2) += -1.0 * weight * linearLossDivSigma
-        }
-        localGradientSumArray(dim - 1) += 0.5 * weight * (1.0 - math.pow(linearLossDivSigma, 2.0))
-      } else {
-        val sign = if (linearLoss >= 0) -1.0 else 1.0
-        lossSum += 0.5 * weight *
-          (sigma + 2.0 * epsilon * math.abs(linearLoss) - sigma * epsilon * epsilon)
-
-        features.foreachNonZero { (index, value) =>
-          if (localFeaturesStd(index) != 0.0) {
-            localGradientSumArray(index) +=
-              weight * sign * epsilon * (value / localFeaturesStd(index))
+          if (fitIntercept) {
+            localGradientSumArray(dim - 2) += -1.0 * weight * linearLossDivSigma
           }
-        }
-        if (fitIntercept) {
-          localGradientSumArray(dim - 2) += weight * sign * epsilon
-        }
-        localGradientSumArray(dim - 1) += 0.5 * weight * (1.0 - epsilon * epsilon)
-      }
+          localGradientSumArray(dim - 1) += 0.5 * weight * (1.0 - math.pow(
+            linearLossDivSigma,
+            2.0))
+        } else {
+          val sign = if (linearLoss >= 0) -1.0 else 1.0
+          lossSum += 0.5 * weight *
+            (sigma + 2.0 * epsilon * math.abs(linearLoss) - sigma * epsilon * epsilon)
 
-      weightSum += weight
-      this
+          features.foreachNonZero { (index, value) =>
+            if (localFeaturesStd(index) != 0.0) {
+              localGradientSumArray(index) +=
+                weight * sign * epsilon * (value / localFeaturesStd(index))
+            }
+          }
+          if (fitIntercept) {
+            localGradientSumArray(dim - 2) += weight * sign * epsilon
+          }
+          localGradientSumArray(dim - 1) += 0.5 * weight * (1.0 - epsilon * epsilon)
+        }
+
+        weightSum += weight
+        this
     }
   }
 }
-
 
 /**
  * BlockHuberAggregator computes the gradient and loss for Huber loss function
@@ -163,16 +166,15 @@ private[ml] class HuberAggregator(
  *
  * @param fitIntercept Whether to fit an intercept term.
  */
-private[ml] class BlockHuberAggregator(
-    fitIntercept: Boolean,
-    epsilon: Double)(bcParameters: Broadcast[Vector])
-  extends DifferentiableLossAggregator[InstanceBlock, BlockHuberAggregator] {
+private[ml] class BlockHuberAggregator(fitIntercept: Boolean, epsilon: Double)(
+    bcParameters: Broadcast[Vector])
+    extends DifferentiableLossAggregator[InstanceBlock, BlockHuberAggregator] {
 
+  // make transient so we do not serialize between aggregation stages
+  @transient private lazy val linear = Vectors.dense(bcParameters.value.toArray.take(numFeatures))
   protected override val dim: Int = bcParameters.value.size
   private val numFeatures = if (fitIntercept) dim - 2 else dim - 1
   private val intercept = if (fitIntercept) bcParameters.value(dim - 2) else 0.0
-  // make transient so we do not serialize between aggregation stages
-  @transient private lazy val linear = Vectors.dense(bcParameters.value.toArray.take(numFeatures))
 
   /**
    * Add a new training instance block to this BlockHuberAggregator, and update the loss and
@@ -183,9 +185,12 @@ private[ml] class BlockHuberAggregator(
    */
   def add(block: InstanceBlock): BlockHuberAggregator = {
     require(block.matrix.isTransposed)
-    require(numFeatures == block.numFeatures, s"Dimensions mismatch when adding new " +
-      s"instance. Expecting $numFeatures but got ${block.numFeatures}.")
-    require(block.weightIter.forall(_ >= 0),
+    require(
+      numFeatures == block.numFeatures,
+      s"Dimensions mismatch when adding new " +
+        s"instance. Expecting $numFeatures but got ${block.numFeatures}.")
+    require(
+      block.weightIter.forall(_ >= 0),
       s"instance weights ${block.weightIter.mkString("[", ",", "]")} has to be >= 0.0")
 
     if (block.weightIter.forall(_ == 0)) return this
@@ -235,14 +240,25 @@ private[ml] class BlockHuberAggregator(
 
     block.matrix match {
       case dm: DenseMatrix =>
-        BLAS.nativeBLAS.dgemv("N", dm.numCols, dm.numRows, 1.0, dm.values, dm.numCols,
-          vec.values, 1, 1.0, gradientSumArray, 1)
+        BLAS.nativeBLAS.dgemv(
+          "N",
+          dm.numCols,
+          dm.numRows,
+          1.0,
+          dm.values,
+          dm.numCols,
+          vec.values,
+          1,
+          1.0,
+          gradientSumArray,
+          1)
 
       case sm: SparseMatrix =>
         val linearGradSumVec = Vectors.zeros(numFeatures).toDense
         BLAS.gemv(1.0, sm.transpose, vec, 0.0, linearGradSumVec)
-        BLAS.getBLAS(numFeatures).daxpy(numFeatures, 1.0, linearGradSumVec.values, 1,
-          gradientSumArray, 1)
+        BLAS
+          .getBLAS(numFeatures)
+          .daxpy(numFeatures, 1.0, linearGradSumVec.values, 1, gradientSumArray, 1)
     }
 
     gradientSumArray(dim - 1) += sigmaGradSum
