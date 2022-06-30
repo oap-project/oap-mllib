@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.classification
 
 import com.intel.oap.mllib.Utils
-import org.apache.spark.{SPARK_VERSION, SparkException}
 
+import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.NaiveBayesModel
 import org.apache.spark.ml.classification.spark321.{NaiveBayes => NaiveBayesSpark321}

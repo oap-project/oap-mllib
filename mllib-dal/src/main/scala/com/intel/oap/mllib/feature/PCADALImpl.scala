@@ -22,8 +22,8 @@ import java.util.Arrays
 import com.intel.daal.data_management.data.NumericTable
 import com.intel.oap.mllib.{OneCCL, OneDAL}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import org.apache.spark.TaskContext
 
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
 import org.apache.spark.mllib.linalg.{

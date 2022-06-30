@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.feature
 
 import com.intel.oap.mllib.Utils
-import org.apache.spark.{SPARK_VERSION, SparkException}
 
+import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.PCAModel
 import org.apache.spark.ml.feature.spark321.{PCA => PCASpark321}

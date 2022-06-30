@@ -16,6 +16,7 @@
 
 package com.intel.oap.mllib
 
+import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
 
@@ -24,13 +25,12 @@ import scala.collection.mutable.ArrayBuffer
 import com.intel.daal.data_management.data.{
   CSRNumericTable,
   HomogenNumericTable,
+  Matrix => DALMatrix,
   NumericTable,
-  RowMergedNumericTable,
-  Matrix => DALMatrix
+  RowMergedNumericTable
 }
 import com.intel.daal.services.DaalContext
 import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
-import java.lang
 
 import org.apache.spark.ml.linalg.{
   DenseMatrix,
