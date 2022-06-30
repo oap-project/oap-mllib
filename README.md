@@ -24,7 +24,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ### Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.3.1/oap-1.3.1-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-x.x.x-bin-spark-x.x.x/jars`.
+Use a pre-built OAP MLlib JAR to get started, you can download OAP MLlib JAR from [Release Page](https://github.com/oap-project/oap-mllib/releases/download/v1.4.0/oap-mllib-1.4.0.jar).
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -56,7 +56,7 @@ OAP MLlib's latest version supports multiple Spark versions as below.
 * Java JRE 8.0+ Runtime
 * Apache Spark 3.1.1, 3.1.2, 3.1.3, 3.2.0 or 3.2.1
 
-Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [here](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
+Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [Intel® oneAPI Base Toolkit System Requirements](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
 
 Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.
 
@@ -117,7 +117,7 @@ Edit related variables in "`Minimun Settings`" of `env.sh`
 
 ### PySpark Support
 
-As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. Examples can be found in the [Examples](#examples) section.
+As PySpark-based applications call their Scala counterparts, they shall be supported out-of-box. Examples can be found in the [Examples](#examples) section.
 
 ## Building
 
