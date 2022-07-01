@@ -15,8 +15,9 @@ public class RowAccessorTest {
                 data, CommonTest.getDevice());
 
         RowAccessor accessor = new RowAccessor(table.getcObejct(), CommonTest.getDevice());
-        double[] rowData = accessor.pullDouble( 0 , table.getRowCount());
-        assertEquals(new Long(rowData.length), new Long(table.getColumnCount() * table.getRowCount()));
+        double[] rowData = accessor.pullDouble(0, table.getRowCount());
+        assertEquals(new Long(rowData.length),
+                new Long(table.getColumnCount() * table.getRowCount()));
         assertArrayEquals(rowData, data);
         for (int i = 0; i < rowData.length; i++) {
             assertEquals(rowData[i], data[i]);
@@ -31,22 +32,26 @@ public class RowAccessorTest {
                 data, CommonTest.getDevice());
 
         RowAccessor accessor = new RowAccessor(table.getcObejct(), CommonTest.getDevice());
-        float[] rowData = accessor.pullFloat( 0 , table.getRowCount());
-        assertEquals(new Long(rowData.length), new Long(table.getColumnCount() * table.getRowCount()));
+        float[] rowData = accessor.pullFloat(0, table.getRowCount());
+        assertEquals(new Long(rowData.length),
+                new Long(table.getColumnCount() * table.getRowCount()));
         assertArrayEquals(rowData, data);
         for (int i = 0; i < rowData.length; i++) {
             assertEquals(rowData[i], data[i]);
         }
     }
+
     @Test
     public void readIntTableDataFromRowAccessor() {
         int[] data = {5, 8, 40, 10, 90, 3, 53, 33, 85, 15};
         HomogenTable table = new HomogenTable(5, 2,
                 data, CommonTest.getDevice());
 
-        RowAccessor accessor = new RowAccessor(table.getcObejct(), CommonTest.getDevice());
-        int[] rowData = accessor.pullInt( 0 , table.getRowCount());
-        assertEquals(new Long(rowData.length), new Long(table.getColumnCount() * table.getRowCount()));
+        RowAccessor accessor = new RowAccessor(table.getcObejct(),
+                CommonTest.getDevice());
+        int[] rowData = accessor.pullInt(0, table.getRowCount());
+        assertEquals(new Long(rowData.length),
+                new Long(table.getColumnCount() * table.getRowCount()));
         assertArrayEquals(rowData, data);
         for (int i = 0; i < rowData.length; i++) {
             assertEquals(rowData[i], data[i]);

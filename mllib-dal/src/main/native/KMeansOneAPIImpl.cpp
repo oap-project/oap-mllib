@@ -68,11 +68,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     switch (device) {
     case compute_device::host: {
         cout << "oneDAL (native): use DPCPP Host kernels" << endl;
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                executor_num, rankId, ipPort);
-        result_train = preview::train(comm, kmeans_desc, htable, centroids);
-        //            result_train = train(kmeans_desc, htable, centroids);
+        result_train = train(kmeans_desc, htable, centroids);
         break;
     }
 #ifdef CPU_GPU_PROFILE

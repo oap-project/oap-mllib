@@ -2,7 +2,6 @@ package com.intel.oneapi.dal.table;
 
 import org.junit.jupiter.api.Test;
 
-import static com.intel.oneapi.dal.table.Common.DataLayout.ROW_MAJOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
