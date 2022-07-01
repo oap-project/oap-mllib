@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HomogenTableTest {
-    
     @Test
     public void createEmptyTable() {
         HomogenTable table = new HomogenTable(CommonTest.getDevice());
