@@ -76,7 +76,7 @@ print_usage() {
   echo
 }
 
-while getopts "p:q:h" opt
+while getopts "p:qh" opt
 do
 case $opt in
   p) PLATFORM_OPT=$OPTARG ;;
