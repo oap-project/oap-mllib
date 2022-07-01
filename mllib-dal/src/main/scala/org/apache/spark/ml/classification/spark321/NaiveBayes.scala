@@ -63,7 +63,7 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     extends SparkNaiveBayes
     with NaiveBayesShim {
 
-  import NaiveBayes._
+  import SparkNaiveBayes._
 
   @Since("1.5.0")
   def this() = this(Identifiable.randomUID("nb"))
@@ -137,6 +137,7 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
 
   private def trainNaiveBayesDAL(dataset: Dataset[_], instr: Instrumentation): NaiveBayesModel = {
     val spark = dataset.sparkSession
+    import spark.implicits._
 
     val sc = spark.sparkContext
 
