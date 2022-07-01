@@ -16,7 +16,6 @@
 
 #include <cstring>
 #include <iostream>
-#include <set>
 
 #include "com_intel_oap_mllib_OneDAL__.h"
 #include "service.h"
