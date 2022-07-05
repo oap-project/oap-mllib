@@ -9,7 +9,7 @@
   
   
   <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>OAP Developer Guide - OAP MLlib - latest</title>
+  <title>OAP Installation Guide - OAP MLlib - 1.4.0</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../css/theme.css" />
@@ -18,8 +18,8 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "OAP Developer Guide";
-    var mkdocs_page_input_path = "OAP-Developer-Guide.md";
+    var mkdocs_page_name = "OAP Installation Guide";
+    var mkdocs_page_input_path = "OAP-Installation-Guide.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -38,7 +38,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href=".." class="icon icon-home"> OAP MLlib - latest</a>
+        <a href=".." class="icon icon-home"> OAP MLlib - 1.4.0</a>
         <div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
@@ -51,28 +51,24 @@
                     <li class="toctree-l1"><a class="reference internal" href="..">User Guide</a>
                     </li>
                 </ul>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../OAP-Installation-Guide/">OAP Installation Guide</a>
-                    </li>
-                </ul>
                 <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">OAP Developer Guide</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">OAP Installation Guide</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#building-oap">Building OAP</a>
+    <li class="toctree-l2"><a class="reference internal" href="#contents">Contents</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#building">Building</a>
-        <ul>
-    <li class="toctree-l4"><a class="reference internal" href="#building-oap_1">Building OAP</a>
+    <li class="toctree-l3"><a class="reference internal" href="#installing-oap">Installing OAP</a>
     </li>
-    <li class="toctree-l4"><a class="reference internal" href="#building-oap-specific-module">Building OAP specific module</a>
-    </li>
-        </ul>
+    <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a>
     </li>
         </ul>
     </li>
     </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../OAP-Developer-Guide/">OAP Developer Guide</a>
                     </li>
                 </ul>
                 <ul>
@@ -88,7 +84,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="..">OAP MLlib - latest</a>
+        <a href="..">OAP MLlib - 1.4.0</a>
       </nav>
 
       
@@ -100,7 +96,7 @@
     
       
     
-    <li>OAP Developer Guide</li>
+    <li>OAP Installation Guide</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -111,42 +107,47 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="oap-developer-guide">OAP Developer Guide</h1>
-<p>This document contains the instructions &amp; scripts on installing necessary dependencies and building OAP modules. 
-You can get more detailed information from OAP each module below.</p>
+                <h1 id="oap-installation-guide">OAP Installation Guide</h1>
+<p>This document introduces how to install OAP and its dependencies on your cluster nodes by <strong><em>Conda</em></strong>. 
+Follow steps below on <strong><em>every node</em></strong> of your cluster to set right environment for each machine.</p>
+<h2 id="contents">Contents</h2>
 <ul>
-<li><a href="https://github.com/oap-project/oap-mllib/tree/v1.4.0">OAP MLlib</a></li>
-<li><a href="https://github.com/oap-project/gazelle_plugin/tree/v1.4.0">Gazelle Plugin</a></li>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#installing-oap">Installing OAP</a></li>
+<li><a href="#configuration">Configuration</a></li>
 </ul>
-<h2 id="building-oap">Building OAP</h2>
 <h3 id="prerequisites">Prerequisites</h3>
-<p>We provide scripts to help automatically install dependencies required, please change to <strong>root</strong> user and run:</p>
-<pre><code># git clone -b &lt;tag-version&gt; https://github.com/oap-project/oap-tools.git
-# cd oap-tools
-# sh dev/install-compile-time-dependencies.sh
-</code></pre>
-<p><em>Note</em>: oap-tools tag version <code>v1.4.0</code> corresponds to  all OAP modules' tag version <code>v1.4.0</code>.</p>
-<p>Then the dependencies below will be installed:</p>
 <ul>
-<li><a href="https://cmake.org/install/">Cmake</a></li>
-<li><a href="https://gcc.gnu.org/wiki/InstallingGCC">GCC &gt; 9</a></li>
-<li><a href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">OneAPI</a></li>
-<li><a href="https://github.com/oap-project/arrow/tree/v4.0.0-oap-1.4.0">Arrow</a></li>
-<li><a href="https://llvm.org/">LLVM</a> </li>
+<li>
+<p><strong>OS Requirements</strong><br />
+We have tested OAP on Fedora 29, CentOS 7.6 (kernel 4.18.16) and Ubuntu 20.04 (kernel 5.4.0-65-generic).  </p>
+</li>
+<li>
+<p><strong>Conda Requirements</strong> <br />
+Install Conda on your cluster nodes with below commands and follow the prompts on the installer screens.:</p>
+</li>
 </ul>
-<h3 id="building">Building</h3>
-<h4 id="building-oap_1">Building OAP</h4>
-<p>OAP is built with <a href="http://maven.apache.org/">Apache Maven</a> and Oracle Java 8.</p>
-<p>To build OAP package, run command below then you can find a tarball named <code>oap-$VERSION-*.tar.gz</code> under directory <code>$OAP_TOOLS_HOME/dev/release-package</code>, which contains all OAP module jars.
-Change to <code>root</code> user, run</p>
-<pre><code># cd oap-tools
-# sh dev/compile-oap.sh
+<pre><code class="language-bash">$ wget -c https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+$ chmod +x Miniconda2-latest-Linux-x86_64.sh 
+$ bash Miniconda2-latest-Linux-x86_64.sh 
 </code></pre>
-<h4 id="building-oap-specific-module">Building OAP specific module</h4>
-<p>If you just want to build a specific OAP Module, such as <code>gazelle_plugin</code>, change to <code>root</code> user, then run:</p>
-<pre><code># cd oap-tools
-# sh dev/compile-oap.sh --component=gazelle_plugin
+<p>For changes to take effect, <strong><em>close and re-open</em></strong> your current shell. 
+To test your installation,  run the command <code>conda list</code> in your terminal window. A list of installed packages appears if it has been installed correctly.</p>
+<h3 id="installing-oap">Installing OAP</h3>
+<p>Create a Conda environment and install OAP Conda package.</p>
+<pre><code class="language-bash">$ conda create -n oapenv -c conda-forge -c intel -y oap=1.4.0.spark32
 </code></pre>
+<p>Once finished steps above, you have completed OAP dependencies installation and OAP building, and will find built OAP jars under <code>$HOME/miniconda2/envs/oapenv/oap_jars</code></p>
+<h3 id="configuration">Configuration</h3>
+<p>Once finished steps above, make sure libraries installed by Conda can be linked by Spark, please add the following configuration settings to <code>$SPARK_HOME/conf/spark-defaults.conf</code>.</p>
+<pre><code>spark.executorEnv.LD_LIBRARY_PATH   $HOME/miniconda2/envs/oapenv/lib
+spark.executor.extraLibraryPath     $HOME/miniconda2/envs/oapenv/lib
+spark.driver.extraLibraryPath       $HOME/miniconda2/envs/oapenv/lib
+spark.executorEnv.CC                $HOME/miniconda2/envs/oapenv/bin/gcc
+spark.executor.extraClassPath       $HOME/miniconda2/envs/oapenv/oap_jars/$OAP_FEATURE.jar
+spark.driver.extraClassPath         $HOME/miniconda2/envs/oapenv/oap_jars/$OAP_FEATURE.jar
+</code></pre>
+<p>Then you can follow the corresponding feature documents for more details to use them.</p>
               
             </div>
           </div>
@@ -154,8 +155,10 @@ Change to <code>root</code> user, run</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="../OAP-Developer-Guide/" class="btn btn-neutral float-right" title="OAP Developer Guide">Next <span class="icon icon-circle-arrow-right"></span></a>
       
-        <a href="../OAP-Installation-Guide/" class="btn btn-neutral" title="OAP Installation Guide"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+        <a href=".." class="btn btn-neutral" title="User Guide"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -181,8 +184,10 @@ Change to <code>root</code> user, run</p>
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../OAP-Installation-Guide/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
       
+      
+        <span style="margin-left: 15px"><a href="../OAP-Developer-Guide/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
