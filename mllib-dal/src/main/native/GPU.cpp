@@ -87,16 +87,19 @@ sycl::queue getQueue(const compute_device device) {
     std::cout << "Get Queue" << std::endl;
 
     switch (device) {
+    case compute_device::host:
+    case compute_device::cpu: {
+        std::cout
+            << "Not implemented for HOST/CPU device, Please run on GPU device."
+            << std::endl;
+        exit(-1);
+    }
     case compute_device::gpu: {
         std::cout << "selector GPU" << std::endl;
         auto device_gpu = sycl::gpu_selector{}.select_device();
         return getSyclQueue(device_gpu);
     }
-    case compute_device::cpu: {
-        std::cout << "selector CPU" << std::endl;
-        auto device_cpu = sycl::cpu_selector{}.select_device();
-        return getSyclQueue(device_cpu);
-    }
+
     default: {
         std::cout << "No Device!" << std::endl;
         exit(-1);

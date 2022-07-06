@@ -51,9 +51,22 @@ class KMeans private (
     extends Serializable
     with Logging {
 
-  // Initial cluster centers can be provided as a KMeansModel object rather than using the
-  // random or k-means|| initializationMode
-  private var initialModel: Option[KMeansModel] = None
+  @Since("0.8.0")
+  private def this(
+      k: Int,
+      maxIterations: Int,
+      initializationMode: String,
+      initializationSteps: Int,
+      epsilon: Double,
+      seed: Long) =
+    this(
+      k,
+      maxIterations,
+      initializationMode,
+      initializationSteps,
+      epsilon,
+      seed,
+      DistanceMeasure.EUCLIDEAN)
 
   /**
    * Constructs a KMeans instance with default parameters: {k: 2, maxIterations: 20,
@@ -195,6 +208,10 @@ class KMeans private (
     this.distanceMeasure = distanceMeasure
     this
   }
+
+  // Initial cluster centers can be provided as a KMeansModel object rather than using the
+  // random or k-means|| initializationMode
+  private var initialModel: Option[KMeansModel] = None
 
   /**
    * Set the initial starting point, bypassing the random initialization or k-means||
@@ -454,23 +471,6 @@ class KMeans private (
       LocalKMeans.kMeansPlusPlus(0, distinctCenters, myWeights, k, 30)
     }
   }
-
-  @Since("0.8.0")
-  private def this(
-      k: Int,
-      maxIterations: Int,
-      initializationMode: String,
-      initializationSteps: Int,
-      epsilon: Double,
-      seed: Long) =
-    this(
-      k,
-      maxIterations,
-      initializationMode,
-      initializationSteps,
-      epsilon,
-      seed,
-      DistanceMeasure.EUCLIDEAN)
 }
 
 /**

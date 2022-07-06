@@ -19,8 +19,6 @@
 
 package org.apache.spark.ml.regression.spark321
 
-import scala.collection.mutable
-
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{
   CachedDiffFunction,
@@ -30,12 +28,15 @@ import breeze.optimize.{
   LBFGSB => BreezeLBFGSB,
   OWLQN => BreezeOWLQN
 }
+import breeze.stats.distributions.StudentsT
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim}
 import org.apache.hadoop.fs.Path
+import scala.collection.mutable
 
 import org.apache.spark.SparkException
 import org.apache.spark.annotation.Since
+import org.apache.spark.internal.Logging
 import org.apache.spark.ml.{PipelineStage, PredictorParams}
 import org.apache.spark.ml.feature._
 import org.apache.spark.ml.linalg.{BLAS, Vector, Vectors}
@@ -48,12 +49,14 @@ import org.apache.spark.ml.regression.{LinearRegression => SparkLinearRegression
 import org.apache.spark.ml.stat._
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
+import org.apache.spark.mllib.evaluation.RegressionMetrics
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.mllib.regression.{LinearRegressionModel => OldLinearRegressionModel}
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.types.{DataType, StructType}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{DataType, DoubleType, StructType}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.VersionUtils.majorMinorVersion
 
@@ -103,8 +106,7 @@ private[regression] trait LinearRegressionParams
     this,
     "loss",
     "The loss function to" +
-      s" be optimized. Supported options: ${supportedLosses.mkString(", ")}. " +
-      s" (Default squaredError)",
+      s" be optimized. Supported options: ${supportedLosses.mkString(", ")}. (Default squaredError)",
     ParamValidators.inArray[String](supportedLosses))
 
   /**
@@ -511,6 +513,10 @@ class LinearRegression @Since("1.3.0")(@Since("1.3.0") override val uid: String)
     model.setSummary(Some(trainingSummary))
   }
 
+  override def initShim(params: ParamMap): Unit = {
+    params.toSeq.foreach { paramMap.put(_) }
+  }
+
   private def trainWithNormal(
       dataset: Dataset[_],
       instr: Instrumentation): LinearRegressionModel = {
@@ -780,16 +786,15 @@ class LinearRegression @Since("1.3.0")(@Since("1.3.0") override val uid: String)
     copyValues(new LinearRegressionModel(uid, coefficients, intercept, scale))
   }
 
-  override def initShim(params: ParamMap): Unit = {
-    params.toSeq.foreach { paramMap.put(_) }
-  }
-
   @Since("1.4.0")
   override def copy(extra: ParamMap): LinearRegression = defaultCopy(extra)
 }
 
 @Since("1.6.0")
 object LinearRegression extends DefaultParamsReadable[LinearRegression] {
+
+  @Since("1.6.0")
+  override def load(path: String): LinearRegression = super.load(path)
 
   /**
    * When using `LinearRegression.solver` == "normal", the solver must limit the number of
@@ -819,9 +824,6 @@ object LinearRegression extends DefaultParamsReadable[LinearRegression] {
 
   /** Set of loss function names that LinearRegression supports. */
   private[regression] val supportedLosses = Array(SquaredError, Huber)
-
-  @Since("1.6.0")
-  override def load(path: String): LinearRegression = super.load(path)
 }
 
 /** A writer for LinearRegression that handles the "internal" (or default) format */
@@ -829,6 +831,8 @@ private class InternalLinearRegressionModelWriter extends MLWriterFormat with ML
 
   override def format(): String = "internal"
   override def stageName(): String = "org.apache.spark.ml.regression.LinearRegressionModel"
+
+  private case class Data(intercept: Double, coefficients: Vector, scale: Double)
 
   override def write(
       path: String,
@@ -844,8 +848,6 @@ private class InternalLinearRegressionModelWriter extends MLWriterFormat with ML
     val dataPath = new Path(path, "data").toString
     sparkSession.createDataFrame(Seq(data)).repartition(1).write.parquet(dataPath)
   }
-
-  private case class Data(intercept: Double, coefficients: Vector, scale: Double)
 }
 
 /** A writer for LinearRegression that handles the "pmml" format */
@@ -854,6 +856,8 @@ private class PMMLLinearRegressionModelWriter extends MLWriterFormat with MLForm
   override def format(): String = "pmml"
 
   override def stageName(): String = "org.apache.spark.ml.regression.LinearRegressionModel"
+
+  private case class Data(intercept: Double, coefficients: Vector)
 
   override def write(
       path: String,
@@ -867,8 +871,6 @@ private class PMMLLinearRegressionModelWriter extends MLWriterFormat with MLForm
     // Save PMML
     oldModel.toPMML(sc, path)
   }
-
-  private case class Data(intercept: Double, coefficients: Vector)
 }
 
 @Since("1.6.0")

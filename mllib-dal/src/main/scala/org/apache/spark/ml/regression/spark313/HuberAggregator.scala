@@ -76,12 +76,13 @@ private[ml] class HuberAggregator(
     bcFeaturesStd: Broadcast[Array[Double]])(bcParameters: Broadcast[Vector])
     extends DifferentiableLossAggregator[Instance, HuberAggregator] {
 
-  // make transient so we do not serialize between aggregation stages
-  @transient private lazy val coefficients = bcParameters.value.toArray.take(numFeatures)
   protected override val dim: Int = bcParameters.value.size
   private val numFeatures = if (fitIntercept) dim - 2 else dim - 1
   private val sigma = bcParameters.value(dim - 1)
   private val intercept = if (fitIntercept) bcParameters.value(dim - 2) else 0.0
+
+  // make transient so we do not serialize between aggregation stages
+  @transient private lazy val coefficients = bcParameters.value.toArray.take(numFeatures)
 
   /**
    * Add a new training instance to this HuberAggregator, and update the loss and gradient
@@ -170,11 +171,11 @@ private[ml] class BlockHuberAggregator(fitIntercept: Boolean, epsilon: Double)(
     bcParameters: Broadcast[Vector])
     extends DifferentiableLossAggregator[InstanceBlock, BlockHuberAggregator] {
 
-  // make transient so we do not serialize between aggregation stages
-  @transient private lazy val linear = Vectors.dense(bcParameters.value.toArray.take(numFeatures))
   protected override val dim: Int = bcParameters.value.size
   private val numFeatures = if (fitIntercept) dim - 2 else dim - 1
   private val intercept = if (fitIntercept) bcParameters.value(dim - 2) else 0.0
+  // make transient so we do not serialize between aggregation stages
+  @transient private lazy val linear = Vectors.dense(bcParameters.value.toArray.take(numFeatures))
 
   /**
    * Add a new training instance block to this BlockHuberAggregator, and update the loss and

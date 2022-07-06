@@ -168,6 +168,8 @@ private[ml] class LeastSquaresAggregator(
     s"${this.getClass.getName} requires the label standard " +
       s"deviation to be positive.")
 
+  private val numFeatures = bcFeaturesStd.value.length
+  protected override val dim: Int = numFeatures
   // make transient so we do not serialize between aggregation stages
   @transient private lazy val featuresStd = bcFeaturesStd.value
   @transient private lazy val effectiveCoefAndOffset = {
@@ -191,8 +193,6 @@ private[ml] class LeastSquaresAggregator(
   // do not use tuple assignment above because it will circumvent the @transient tag
   @transient private lazy val effectiveCoefficientsVector = effectiveCoefAndOffset._1
   @transient private lazy val offset = effectiveCoefAndOffset._2
-  protected override val dim: Int = numFeatures
-  private val numFeatures = bcFeaturesStd.value.length
 
   /**
    * Add a new training instance to this LeastSquaresAggregator, and update the loss and gradient
@@ -255,6 +255,8 @@ private[ml] class BlockLeastSquaresAggregator(
     s"${this.getClass.getName} requires the label standard " +
       s"deviation to be positive.")
 
+  private val numFeatures = bcFeaturesStd.value.length
+  protected override val dim: Int = numFeatures
   // make transient so we do not serialize between aggregation stages
   @transient private lazy val effectiveCoefAndOffset = {
     val coefficientsArray = bcCoefficients.value.toArray.clone()
@@ -274,8 +276,6 @@ private[ml] class BlockLeastSquaresAggregator(
     val offset = if (fitIntercept) labelMean / labelStd - sum else 0.0
     (Vectors.dense(coefficientsArray), offset)
   }
-  protected override val dim: Int = numFeatures
-  private val numFeatures = bcFeaturesStd.value.length
 
   /**
    * Add a new training instance block to this BlockLeastSquaresAggregator, and update the loss

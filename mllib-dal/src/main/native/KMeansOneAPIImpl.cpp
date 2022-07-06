@@ -60,31 +60,16 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
-    kmeans::train_result result_train;
     const auto kmeans_desc = kmeans::descriptor<>()
                                  .set_cluster_count(cluster_num)
                                  .set_max_iteration_count(iteration_num)
                                  .set_accuracy_threshold(tolerance);
-    switch (device) {
-    case compute_device::host: {
-        cout << "oneDAL (native): use DPCPP Host kernels" << endl;
-        result_train = train(kmeans_desc, htable, centroids);
-        break;
-    }
-#ifdef CPU_GPU_PROFILE
-    case compute_device::cpu:
-    case compute_device::gpu: {
-        cout << "oneDAL (native): use DPCPP CPU/GPU kernels" << endl;
-        auto queue = getQueue(device);
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, executor_num, rankId, ipPort);
-        kmeans::train_input local_input{htable, centroids};
-        result_train = preview::train(comm, kmeans_desc, local_input);
-        break;
-    }
-#endif
-    }
+    kmeans::train_input local_input{htable, centroids};
+    auto queue = getQueue(device);
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executor_num, rankId, ipPort);
+    kmeans::train_result result_train =
+        preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
         std::cout << "iteration_num: " << iteration_num << std::endl;
         std::cout << "Iteration count: " << result_train.get_iteration_count()

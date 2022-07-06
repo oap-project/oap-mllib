@@ -90,14 +90,14 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
   @Since("2.1.0")
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
-  @Since("1.5.0")
-  override def copy(extra: ParamMap): NaiveBayes = defaultCopy(extra)
-
   override protected def train(dataset: Dataset[_]): NaiveBayesModel = {
     val shim = NaiveBayesShim.create(uid)
     shim.initShim(extractParamMap())
     shim.train(dataset)
   }
+
+  @Since("1.5.0")
+  override def copy(extra: ParamMap): NaiveBayes = defaultCopy(extra)
 }
 
 @Since("1.6.0")
@@ -119,9 +119,6 @@ object NaiveBayes extends DefaultParamsReadable[NaiveBayes] {
   private[classification] val supportedModelTypes =
     Set(Multinomial, Bernoulli, Gaussian, Complement)
 
-  @Since("1.6.0")
-  override def load(path: String): NaiveBayes = super.load(path)
-
   private[ml] def requireNonnegativeValues(v: Vector): Unit = {
     require(
       v.nonZeroIterator.forall(_._2 > 0.0),
@@ -133,4 +130,7 @@ object NaiveBayes extends DefaultParamsReadable[NaiveBayes] {
       v.nonZeroIterator.forall(_._2 == 1.0),
       s"Bernoulli naive Bayes requires 0 or 1 feature values but found $v.")
   }
+
+  @Since("1.6.0")
+  override def load(path: String): NaiveBayes = super.load(path)
 }

@@ -18,11 +18,22 @@ package org.apache.spark.mllib.stat.spark321
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.stat.{SummarizerDALImpl, SummarizerShim}
+import scala.annotation.varargs
 
 import org.apache.spark.annotation.Since
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.api.java.{JavaDoubleRDD, JavaRDD}
+import org.apache.spark.ml.stat._
+import org.apache.spark.mllib.linalg.{Matrix, Vector}
 import org.apache.spark.mllib.linalg.distributed.RowMatrix
+import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.stat.MultivariateStatisticalSummary
+import org.apache.spark.mllib.stat.correlation.Correlations
+import org.apache.spark.mllib.stat.test.{
+  ChiSqTest,
+  ChiSqTestResult,
+  KolmogorovSmirnovTest,
+  KolmogorovSmirnovTestResult
+}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
