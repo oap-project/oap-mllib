@@ -23,7 +23,8 @@ import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{NaiveBayesDALImpl, NaiveBayesShim}
 
 import org.apache.spark.annotation.Since
-import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes, _}
+import org.apache.spark.ml.classification._
+import org.apache.spark.ml.classification.{NaiveBayes => SparkNaiveBayes}
 import org.apache.spark.ml.functions.checkNonNegativeWeight
 import org.apache.spark.ml.linalg._
 import org.apache.spark.ml.param.ParamMap
@@ -65,6 +66,7 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     with NaiveBayesShim {
 
   import SparkNaiveBayes._
+  import NaiveBayes._
 
   @Since("1.5.0")
   def this() = this(Identifiable.randomUID("nb"))
