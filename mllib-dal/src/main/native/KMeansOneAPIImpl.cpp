@@ -45,11 +45,12 @@ static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
     kmtx.unlock();
 }
 
-static jlong doKMeansGPUOrCPUOneAPICompute(
-    JNIEnv *env, jint rankId, jlong pNumTabData, jlong pNumTabCenters,
-    jint cluster_num, jdouble tolerance, jint iteration_num, jint executor_num,
-    const ccl::string &ipPort, cl::sycl::queue &queue, jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid %ld " << rankId
+static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+                                   jlong pNumTabCenters, jint cluster_num,
+                                   jdouble tolerance, jint iteration_num,
+                                   jint executor_num, const ccl::string &ipPort,
+                                   jint cComputeDevice, jobject resultObj) {
+    std::cout << "oneDAL (native): OneAPI compute start , rankid %ld " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     compute_device device = getComputeDevice(cComputeDevice);
