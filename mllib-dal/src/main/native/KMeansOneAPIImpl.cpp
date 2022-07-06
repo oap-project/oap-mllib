@@ -20,7 +20,6 @@
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
-#endif
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
@@ -46,12 +45,11 @@ static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
     kmtx.unlock();
 }
 
-static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                                   jlong pNumTabCenters, jint cluster_num,
-                                   jdouble tolerance, jint iteration_num,
-                                   jint executor_num, const ccl::string &ipPort,
-                                   jint cComputeDevice, jobject resultObj) {
-    std::cout << "oneDAL (native): OneAPI compute start , rankid %ld " << rankId
+static jlong doKMeansGPUOrCPUOneAPICompute(
+    JNIEnv *env, jint rankId, jlong pNumTabData, jlong pNumTabCenters,
+    jint cluster_num, jdouble tolerance, jint iteration_num, jint executor_num,
+    const ccl::string &ipPort, cl::sycl::queue &queue, jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start , rankid %ld " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     compute_device device = getComputeDevice(cComputeDevice);
@@ -116,7 +114,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     ret = doKMeansOneAPICompute(
         env, rankId, pNumTabData, pNumTabCenters, cluster_num, tolerance,
         iteration_num, executor_num, ipPort, cComputeDevice, resultObj);
-
     env->ReleaseStringUTFChars(ip_port, ipport);
     return ret;
 }
+#endif
