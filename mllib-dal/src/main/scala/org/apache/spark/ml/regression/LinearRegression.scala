@@ -86,11 +86,9 @@ import org.apache.spark.sql.Dataset
  * Note: Fitting with huber loss only supports none and L2 regularization.
  */
 @Since("1.3.0")
-class LinearRegression @Since("1.3.0")(@Since("1.3.0") override val uid: String)
-    extends Regressor[Vector, LinearRegression, LinearRegressionModel]
-    with LinearRegressionParams
-    with DefaultParamsWritable
-    with Logging {
+class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String)
+  extends Regressor[Vector, LinearRegression, LinearRegressionModel]
+  with LinearRegressionParams with DefaultParamsWritable with Logging {
 
   @Since("1.4.0")
   def this() = this(Identifiable.randomUID("linReg"))
@@ -228,7 +226,8 @@ class LinearRegression @Since("1.3.0")(@Since("1.3.0") override val uid: String)
   @Since("3.1.0")
   def setMaxBlockSizeInMB(value: Double): this.type = set(maxBlockSizeInMB, value)
 
-  override protected def train(dataset: Dataset[_]): LinearRegressionModel = {
+  override protected def train(
+      dataset: Dataset[_]): LinearRegressionModel = {
     val shim = LinearRegressionShim.create(uid)
     shim.initShim(extractParamMap())
     shim.train(dataset)

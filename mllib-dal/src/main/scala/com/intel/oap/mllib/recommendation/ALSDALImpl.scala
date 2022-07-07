@@ -16,22 +16,21 @@
 
 package com.intel.oap.mllib.recommendation
 
-import java.nio.{ByteBuffer, ByteOrder, FloatBuffer}
-
-import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
-
 import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-
+import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.rdd.RDD
 
-class ALSDataPartitioner(blocks: Int, itemsInBlock: Long) extends Partitioner {
+import java.nio.{ByteBuffer, ByteOrder, FloatBuffer}
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
+
+class ALSDataPartitioner(blocks: Int, itemsInBlock: Long)
+  extends Partitioner {
   def numPartitions: Int = blocks
 
   def getPartition(key: Any): Int = {
@@ -44,15 +43,13 @@ class ALSDataPartitioner(blocks: Int, itemsInBlock: Long) extends Partitioner {
   }
 }
 
-class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
-    data: RDD[Rating[ID]],
-    nFactors: Int,
-    maxIter: Int,
-    regParam: Double,
-    alpha: Double,
-    seed: Long)
-    extends Serializable
-    with Logging {
+class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
+                                                        nFactors: Int,
+                                                        maxIter: Int,
+                                                        regParam: Double,
+                                                        alpha: Double,
+                                                        seed: Long
+                                                      ) extends Serializable with Logging {
 
   // Rating struct size is size of Long+Long+Float
   val RATING_SIZE = 8 + 8 + 4
@@ -61,39 +58,28 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
     val executorNum = Utils.sparkExecutorNum(data.sparkContext)
     val executorCores = Utils.sparkExecutorCores()
 
-    val nFeatures = data
-      .max()(new Ordering[Rating[ID]]() {
-        override def compare(x: Rating[ID], y: Rating[ID]): Int =
-          Ordering[Long].compare(x.item.toString.toLong, y.item.toString.toLong)
-      })
-      .item
-      .toString
-      .toLong + 1
+    val nFeatures = data.max()(new Ordering[Rating[ID]]() {
+      override def compare(x: Rating[ID], y: Rating[ID]): Int =
+        Ordering[Long].compare(x.item.toString.toLong, y.item.toString.toLong)
+    }).item.toString.toLong + 1
 
-    val nVectors = data
-      .max()(new Ordering[Rating[ID]]() {
-        override def compare(x: Rating[ID], y: Rating[ID]): Int =
-          Ordering[Long].compare(x.user.toString.toLong, y.user.toString.toLong)
-      })
-      .user
-      .toString
-      .toLong + 1
+    val nVectors = data.max()(new Ordering[Rating[ID]]() {
+      override def compare(x: Rating[ID], y: Rating[ID]): Int =
+        Ordering[Long].compare(x.user.toString.toLong, y.user.toString.toLong)
+    }).user.toString.toLong + 1
 
     val nBlocks = executorNum
 
-    logInfo(
-      s"ALSDAL fit using $executorNum Executors " +
-        s"for $nVectors vectors and $nFeatures features")
+    logInfo(s"ALSDAL fit using $executorNum Executors " +
+      s"for $nVectors vectors and $nFeatures features")
 
-    val numericTables = data
-      .repartition(executorNum)
-      .setName("Repartitioned for conversion")
-      .cache()
+    val numericTables = data.repartition(executorNum)
+      .setName("Repartitioned for conversion").cache()
 
     val kvsIPPort = getOneCCLIPPort(numericTables)
 
     val results = numericTables
-    // Transpose the dataset
+      // Transpose the dataset
       .map { p =>
         Rating(p.item, p.user, p.rating)
       }
@@ -107,29 +93,20 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
         val bufferInfo = new ALSPartitionInfo
         val shuffledBuffer = cShuffleData(buffer, nFeatures.toInt, nBlocks, bufferInfo)
 
-        val table = bufferToCSRNumericTable(
-          shuffledBuffer,
-          bufferInfo,
-          nVectors.toInt,
-          nFeatures.toInt,
-          nBlocks,
-          rankId)
+        val table = bufferToCSRNumericTable(shuffledBuffer, bufferInfo,
+          nVectors.toInt, nFeatures.toInt, nBlocks, rankId)
 
         val result = new ALSResult()
         cDALImplictALS(
-          table.getCNumericTable,
-          nUsers = nVectors,
-          nFactors,
-          maxIter,
-          regParam,
-          alpha,
+          table.getCNumericTable, nUsers = nVectors,
+          nFactors, maxIter, regParam, alpha,
           executorNum,
           executorCores,
           rankId,
-          result)
+          result
+        )
         Iterator(result)
-      }
-      .cache()
+      }.cache()
 
     val usersFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
@@ -150,9 +127,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
           }.toIterator
         }
         ret
-      }
-      .setName("userFactors")
-      .cache()
+      }.setName("userFactors").cache()
 
     val itemsFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
@@ -173,9 +148,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
           }.toIterator
         }
         ret
-      }
-      .setName("itemFactors")
-      .cache()
+      }.setName("itemFactors").cache()
 
     usersFactorsRDD.count()
     itemsFactorsRDD.count()
@@ -195,13 +168,9 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
     buffer
   }
 
-  private def bufferToCSRNumericTable(
-      buffer: ByteBuffer,
-      info: ALSPartitionInfo,
-      nVectors: Int,
-      nFeatures: Int,
-      nBlocks: Int,
-      rankId: Int): CSRNumericTable = {
+  private def bufferToCSRNumericTable(buffer: ByteBuffer, info: ALSPartitionInfo,
+                                      nVectors: Int, nFeatures: Int,
+                                      nBlocks: Int, rankId: Int): CSRNumericTable = {
     // Use little endian
     buffer.order(ByteOrder.LITTLE_ENDIAN)
 
@@ -243,23 +212,16 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
     rowOffsets += index + 1
 
     // check CSR encoding
-    assert(
-      values.length == ratingsNum,
+    assert(values.length == ratingsNum,
       "the length of values should be equal to the number of non-zero elements")
-    assert(
-      columnIndices.length == ratingsNum,
+    assert(columnIndices.length == ratingsNum,
       "the length of columnIndices should be equal to the number of non-zero elements")
-    assert(
-      rowOffsets.size == (csrRowNum + 1),
+    assert(rowOffsets.size == (csrRowNum + 1),
       "the size of rowOffsets should be equal to the number of rows + 1")
 
     val contextLocal = new DaalContext()
-    val cTable = OneDAL.cNewCSRNumericTableFloat(
-      values,
-      columnIndices,
-      rowOffsets.toArray,
-      nVectors,
-      csrRowNum)
+    val cTable = OneDAL.cNewCSRNumericTableFloat(values, columnIndices, rowOffsets.toArray,
+      nVectors, csrRowNum)
     val table = new CSRNumericTable(contextLocal, cTable)
 
     table
@@ -273,15 +235,14 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
 
   // Return Map partitionId -> (ratingsNum, csrRowNum, rowOffset)
   private def getRatingsPartitionInfo(data: RDD[Rating[ID]]): Map[Int, (Int, Int, Int)] = {
-    val collectd = data.mapPartitionsWithIndex {
-      case (index: Int, it: Iterator[Rating[ID]]) =>
-        var ratingsNum = 0
-        var s = Set[ID]()
-        it.foreach { v =>
-          s += v.user
-          ratingsNum += 1
-        }
-        Iterator((index, (ratingsNum, s.count(_ => true))))
+    val collectd = data.mapPartitionsWithIndex { case (index: Int, it: Iterator[Rating[ID]]) =>
+      var ratingsNum = 0
+      var s = Set[ID]()
+      it.foreach { v =>
+        s += v.user
+        ratingsNum += 1
+      }
+      Iterator((index, (ratingsNum, s.count(_ => true))))
     }.collect
 
     var ret = Map[Int, (Int, Int, Int)]()
@@ -298,21 +259,19 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag](
   }
 
   // Single entry to call Implict ALS DAL backend
-  @native private def cDALImplictALS(
-      data: Long,
-      nUsers: Long,
-      nFactors: Int,
-      maxIter: Int,
-      regParam: Double,
-      alpha: Double,
-      executor_num: Int,
-      executor_cores: Int,
-      rankId: Int,
-      result: ALSResult): Long
+  @native private def cDALImplictALS(data: Long,
+                                     nUsers: Long,
+                                     nFactors: Int,
+                                     maxIter: Int,
+                                     regParam: Double,
+                                     alpha: Double,
+                                     executor_num: Int,
+                                     executor_cores: Int,
+                                     rankId: Int,
+                                     result: ALSResult): Long
 
-  @native private def cShuffleData(
-      data: ByteBuffer,
-      nTotalKeys: Int,
-      nBlocks: Int,
-      info: ALSPartitionInfo): ByteBuffer
+  @native private def cShuffleData(data: ByteBuffer,
+                                   nTotalKeys: Int,
+                                   nBlocks: Int,
+                                   info: ALSPartitionInfo): ByteBuffer
 }
