@@ -61,9 +61,9 @@ import org.apache.spark.storage.StorageLevel
  */
 // scalastyle:on line.size.limit
 @Since("1.5.0")
-class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
-    extends SparkNaiveBayes
-    with NaiveBayesShim {
+class NaiveBayes @Since("1.5.0") (
+    @Since("1.5.0") override val uid: String)
+  extends SparkNaiveBayes with NaiveBayesShim {
 
   import SparkNaiveBayes._
   import NaiveBayes._
@@ -89,34 +89,23 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
       positiveLabel: Boolean): NaiveBayesModel = instrumented { instr =>
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
-    instr.logParams(
-      this,
-      labelCol,
-      featuresCol,
-      weightCol,
-      predictionCol,
-      rawPredictionCol,
-      probabilityCol,
-      modelType,
-      smoothing,
-      thresholds)
+    instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, rawPredictionCol,
+      probabilityCol, modelType, smoothing, thresholds)
 
     if (positiveLabel && isDefined(thresholds)) {
       val numClasses = getNumClasses(dataset)
       instr.logNumClasses(numClasses)
-      require(
-        $(thresholds).length == numClasses,
-        this.getClass.getSimpleName +
-          ".train() called with non-matching numClasses and thresholds.length." +
-          s" numClasses=$numClasses, but thresholds has length ${$(thresholds).length}")
+      require($(thresholds).length == numClasses, this.getClass.getSimpleName +
+        ".train() called with non-matching numClasses and thresholds.length." +
+        s" numClasses=$numClasses, but thresholds has length ${$(thresholds).length}")
     }
 
     $(modelType) match {
       case Multinomial =>
         val sc = dataset.sparkSession.sparkContext
         val model = if (Utils.isOAPEnabled()) {
-          val isPlatformSupported =
-            Utils.checkClusterPlatformCompatibility(dataset.sparkSession.sparkContext)
+          val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+            dataset.sparkSession.sparkContext)
           val handleWeight = (isDefined(weightCol) && $(weightCol).nonEmpty)
           val handleSmoothing = ($(smoothing) != 1.0)
           if (isPlatformSupported && !handleWeight && !handleSmoothing) {
@@ -138,7 +127,8 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     }
   }
 
-  private def trainNaiveBayesDAL(dataset: Dataset[_], instr: Instrumentation): NaiveBayesModel = {
+  private def trainNaiveBayesDAL(dataset: Dataset[_],
+      instr: Instrumentation): NaiveBayesModel = {
     val spark = dataset.sparkSession
     import spark.implicits._
 
@@ -171,11 +161,11 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     val labeledPointsDS = naiveBayesData
       .select(col(getLabelCol), DatasetUtils.columnToVector(dataset, getFeaturesCol))
 
-    val dalModel = new NaiveBayesDALImpl(uid, numClasses, executorNum, executorCores)
-      .train(labeledPointsDS, $ { labelCol }, $ { featuresCol })
+    val dalModel = new NaiveBayesDALImpl(uid, numClasses,
+      executorNum, executorCores).train(labeledPointsDS, ${labelCol}, ${featuresCol})
 
-    val model = copyValues(
-      new NaiveBayesModel(dalModel.uid, dalModel.pi, dalModel.theta, dalModel.sigma))
+    val model = copyValues(new NaiveBayesModel(
+      dalModel.uid, dalModel.pi, dalModel.theta, dalModel.sigma))
 
     // Set labels to be compatible with old mllib model
     val labels = (0 until numClasses).map(_.toDouble).toArray
@@ -184,19 +174,17 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     model
   }
 
-  private def trainDiscreteImpl(dataset: Dataset[_], instr: Instrumentation): NaiveBayesModel = {
+  private def trainDiscreteImpl(
+      dataset: Dataset[_],
+      instr: Instrumentation): NaiveBayesModel = {
     val spark = dataset.sparkSession
     import spark.implicits._
 
     val validateUDF = $(modelType) match {
       case Multinomial | Complement =>
-        udf { vector: Vector =>
-          requireNonnegativeValues(vector); vector
-        }
+        udf { vector: Vector => requireNonnegativeValues(vector); vector }
       case Bernoulli =>
-        udf { vector: Vector =>
-          requireZeroOneBernoulliValues(vector); vector
-        }
+        udf { vector: Vector => requireZeroOneBernoulliValues(vector); vector }
     }
 
     val w = if (isDefined(weightCol) && $(weightCol).nonEmpty) {
@@ -206,18 +194,12 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     }
 
     // Aggregates term frequencies per label.
-    val aggregated = dataset
-      .groupBy(col($(labelCol)))
-      .agg(
-        sum(w).as("weightSum"),
-        Summarizer
-          .metrics("sum", "count")
-          .summary(validateUDF(col($(featuresCol))), w)
-          .as("summary"))
+    val aggregated = dataset.groupBy(col($(labelCol)))
+      .agg(sum(w).as("weightSum"), Summarizer.metrics("sum", "count")
+        .summary(validateUDF(col($(featuresCol))), w).as("summary"))
       .select($(labelCol), "weightSum", "summary.sum", "summary.count")
       .as[(Double, Double, Vector, Long)]
-      .collect()
-      .sortBy(_._1)
+      .collect().sortBy(_._1)
 
     val numFeatures = aggregated.head._3.size
     instr.logNumFeatures(numFeatures)
@@ -236,37 +218,34 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
       case Multinomial | Bernoulli => aggregated.iterator
       case Complement =>
         val featureSum = Vectors.zeros(numFeatures)
-        aggregated.foreach {
-          case (_, _, sumTermFreqs, _) =>
-            BLAS.axpy(1.0, sumTermFreqs, featureSum)
+        aggregated.foreach { case (_, _, sumTermFreqs, _) =>
+          BLAS.axpy(1.0, sumTermFreqs, featureSum)
         }
-        aggregated.iterator.map {
-          case (label, n, sumTermFreqs, count) =>
-            val comp = featureSum.copy
-            BLAS.axpy(-1.0, sumTermFreqs, comp)
-            (label, n, comp, count)
+        aggregated.iterator.map { case (label, n, sumTermFreqs, count) =>
+          val comp = featureSum.copy
+          BLAS.axpy(-1.0, sumTermFreqs, comp)
+          (label, n, comp, count)
         }
     }
 
     val lambda = $(smoothing)
     val piLogDenom = math.log(numDocuments + numLabels * lambda)
     var i = 0
-    aggIter.foreach {
-      case (label, n, sumTermFreqs, _) =>
-        labelArray(i) = label
-        piArray(i) = math.log(n + lambda) - piLogDenom
-        val thetaLogDenom = $(modelType) match {
-          case Multinomial | Complement =>
-            math.log(sumTermFreqs.toArray.sum + numFeatures * lambda)
-          case Bernoulli => math.log(n + 2.0 * lambda)
-        }
-        var j = 0
-        val offset = i * numFeatures
-        while (j < numFeatures) {
-          thetaArray(offset + j) = math.log(sumTermFreqs(j) + lambda) - thetaLogDenom
-          j += 1
-        }
-        i += 1
+    aggIter.foreach { case (label, n, sumTermFreqs, _) =>
+      labelArray(i) = label
+      piArray(i) = math.log(n + lambda) - piLogDenom
+      val thetaLogDenom = $(modelType) match {
+        case Multinomial | Complement =>
+          math.log(sumTermFreqs.toArray.sum + numFeatures * lambda)
+        case Bernoulli => math.log(n + 2.0 * lambda)
+      }
+      var j = 0
+      val offset = i * numFeatures
+      while (j < numFeatures) {
+        thetaArray(offset + j) = math.log(sumTermFreqs(j) + lambda) - thetaLogDenom
+        j += 1
+      }
+      i += 1
     }
 
     val pi = Vectors.dense(piArray)
@@ -282,7 +261,9 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     }
   }
 
-  private def trainGaussianImpl(dataset: Dataset[_], instr: Instrumentation): NaiveBayesModel = {
+  private def trainGaussianImpl(
+      dataset: Dataset[_],
+      instr: Instrumentation): NaiveBayesModel = {
     val spark = dataset.sparkSession
     import spark.implicits._
 
@@ -293,22 +274,14 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     }
 
     // Aggregates mean vector and square-sum vector per label.
-    val aggregated = dataset
-      .groupBy(col($(labelCol)))
-      .agg(
-        sum(w).as("weightSum"),
-        Summarizer
-          .metrics("mean", "normL2")
-          .summary(col($(featuresCol)), w)
-          .as("summary"))
+    val aggregated = dataset.groupBy(col($(labelCol)))
+      .agg(sum(w).as("weightSum"), Summarizer.metrics("mean", "normL2")
+        .summary(col($(featuresCol)), w).as("summary"))
       .select($(labelCol), "weightSum", "summary.mean", "summary.normL2")
       .as[(Double, Double, Vector, Vector)]
-      .map {
-        case (label, weightSum, mean, normL2) =>
-          (label, weightSum, mean, Vectors.dense(normL2.toArray.map(v => v * v)))
-      }
-      .collect()
-      .sortBy(_._1)
+      .map { case (label, weightSum, mean, normL2) =>
+        (label, weightSum, mean, Vectors.dense(normL2.toArray.map(v => v * v)))
+      }.collect().sortBy(_._1)
 
     val numFeatures = aggregated.head._3.size
     instr.logNumFeatures(numFeatures)
@@ -326,20 +299,16 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     // Refer to scikit-learn's implementation
     // [https://github.com/scikit-learn/scikit-learn/blob/0.21.X/sklearn/naive_bayes.py#L348]
     // and discussion [https://github.com/scikit-learn/scikit-learn/pull/5349] for detail.
-    val epsilon = Iterator
-      .range(0, numFeatures)
-      .map { j =>
-        var globalSum = 0.0
-        var globalSqrSum = 0.0
-        aggregated.foreach {
-          case (_, weightSum, mean, squareSum) =>
-            globalSum += mean(j) * weightSum
-            globalSqrSum += squareSum(j)
-        }
-        globalSqrSum / numInstances -
-          globalSum * globalSum / numInstances / numInstances
+    val epsilon = Iterator.range(0, numFeatures).map { j =>
+      var globalSum = 0.0
+      var globalSqrSum = 0.0
+      aggregated.foreach { case (_, weightSum, mean, squareSum) =>
+        globalSum += mean(j) * weightSum
+        globalSqrSum += squareSum(j)
       }
-      .max * 1e-9
+      globalSqrSum / numInstances -
+        globalSum * globalSum / numInstances / numInstances
+    }.max * 1e-9
 
     val piArray = new Array[Double](numLabels)
 
@@ -351,18 +320,17 @@ class NaiveBayes @Since("1.5.0")(@Since("1.5.0") override val uid: String)
 
     var i = 0
     val logNumInstances = math.log(numInstances)
-    aggregated.foreach {
-      case (_, weightSum, mean, squareSum) =>
-        piArray(i) = math.log(weightSum) - logNumInstances
-        var j = 0
-        val offset = i * numFeatures
-        while (j < numFeatures) {
-          val m = mean(j)
-          thetaArray(offset + j) = m
-          sigmaArray(offset + j) = epsilon + squareSum(j) / weightSum - m * m
-          j += 1
-        }
-        i += 1
+    aggregated.foreach { case (_, weightSum, mean, squareSum) =>
+      piArray(i) = math.log(weightSum) - logNumInstances
+      var j = 0
+      val offset = i * numFeatures
+      while (j < numFeatures) {
+        val m = mean(j)
+        thetaArray(offset + j) = m
+        sigmaArray(offset + j) = epsilon + squareSum(j) / weightSum - m * m
+        j += 1
+      }
+      i += 1
     }
 
     val pi = Vectors.dense(piArray)

@@ -16,33 +16,33 @@
 
 package com.intel.oap.mllib.recommendation
 
-import scala.reflect.ClassTag
-
 import com.intel.oap.mllib.Utils
 
-import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.ml.recommendation.spark313.{ALS => ALSSpark313}
 import org.apache.spark.ml.recommendation.spark321.{ALS => ALSSpark321}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.{SPARK_VERSION, SparkException}
+
+import scala.reflect.ClassTag
 
 trait ALSShim extends Serializable with Logging {
   def train[ID: ClassTag]( // scalastyle:ignore
-      ratings: RDD[Rating[ID]],
-      rank: Int,
-      numUserBlocks: Int,
-      numItemBlocks: Int,
-      maxIter: Int,
-      regParam: Double,
-      implicitPrefs: Boolean,
-      alpha: Double,
-      nonnegative: Boolean,
-      intermediateRDDStorageLevel: StorageLevel,
-      finalRDDStorageLevel: StorageLevel,
-      checkpointInterval: Int,
-      seed: Long)(implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])])
+    ratings: RDD[Rating[ID]],
+    rank: Int,
+    numUserBlocks: Int,
+    numItemBlocks: Int,
+    maxIter: Int,
+    regParam: Double,
+    implicitPrefs: Boolean,
+    alpha: Double,
+    nonnegative: Boolean,
+    intermediateRDDStorageLevel: StorageLevel,
+    finalRDDStorageLevel: StorageLevel,
+    checkpointInterval: Int,
+    seed: Long)(implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])])
 }
 
 object ALSShim extends Logging {

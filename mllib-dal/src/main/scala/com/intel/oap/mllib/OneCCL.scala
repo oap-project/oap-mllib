@@ -36,9 +36,8 @@ object OneCCL extends Logging {
     // executor number should equal to oneCCL world size
     assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
 
-    logInfo(
-      s"Initialized with executorNum: $executor_num, " +
-        s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
+    logInfo(s"Initialized with executorNum: $executor_num, " +
+      s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
   }
 
   def initDpcpp(): Unit = {

@@ -16,12 +16,11 @@
 
 package com.intel.oap.mllib
 
-import java.net.InetAddress
-
-import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
+import java.net.InetAddress
 
 object Utils {
 
@@ -39,30 +38,15 @@ object Utils {
 
   def getOneCCLIPPort(data: RDD[_]): String = {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
-    val kvsIP = data.sparkContext.getConf.get("spark.oap.mllib.oneccl.kvs.ip", executorIPAddress)
+    val kvsIP = data.sparkContext.getConf.get("spark.oap.mllib.oneccl.kvs.ip",
+      executorIPAddress)
     //  TODO: right now we use a configured port, will optimize auto port detection
     //  val kvsPortDetected = Utils.checkExecutorAvailPort(data, kvsIP)
     val kvsPortDetected = 3000
-    val kvsPort =
-      data.sparkContext.getConf.getInt("spark.oap.mllib.oneccl.kvs.port", kvsPortDetected)
+    val kvsPort = data.sparkContext.getConf.getInt("spark.oap.mllib.oneccl.kvs.port",
+      kvsPortDetected)
 
     kvsIP + "_" + kvsPort
-  }
-
-  def sparkFirstExecutorIP(sc: SparkContext): String = {
-    // Create empty partitions to start executors
-    sc.parallelize(Seq[Int]()).count()
-
-    val info = sc.statusTracker.getExecutorInfos
-    // get first executor, info(0) is driver
-
-    val host = if (sc.master.startsWith("local")) {
-      info(0).host()
-    } else {
-      info(1).host()
-    }
-    val ip = InetAddress.getByName(host).getHostAddress
-    ip
   }
 
   // Return index -> (rows, cols) map
@@ -98,26 +82,39 @@ object Utils {
     executorCores
   }
 
+  def sparkFirstExecutorIP(sc: SparkContext): String = {
+    // Create empty partitions to start executors
+    sc.parallelize(Seq[Int]()).count()
+
+    val info = sc.statusTracker.getExecutorInfos
+    // get first executor, info(0) is driver
+
+    val host = if (sc.master.startsWith("local")) {
+      info(0).host()
+    } else {
+      info(1).host()
+    }
+    val ip = InetAddress.getByName(host).getHostAddress
+    ip
+  }
+
   def checkExecutorAvailPort(data: RDD[_], localIP: String): Int = {
 
     if (localIP == "127.0.0.1" || localIP == "127.0.1.1") {
-      println(
-        s"\nOneCCL: Error: doesn't support loopback IP ${localIP}, " +
-          s"please assign IP address to your host.\n")
+      println(s"\nOneCCL: Error: doesn't support loopback IP ${localIP}, " +
+        s"please assign IP address to your host.\n")
       System.exit(-1)
     }
 
     val sc = data.sparkContext
-    val result = data
-      .mapPartitions { p =>
-        val port = OneCCL.getAvailPort(localIP)
-        if (port != -1) {
-          Iterator(port)
-        } else {
-          Iterator()
-        }
+    val result = data.mapPartitions { p =>
+      val port = OneCCL.getAvailPort(localIP)
+      if (port != -1) {
+        Iterator(port)
+      } else {
+        Iterator()
       }
-      .collect()
+    }.collect()
 
     result(0)
   }
@@ -135,11 +132,9 @@ object Utils {
     // check workers' platform compatibility
     val executor_num = Utils.sparkExecutorNum(sc)
     val data = sc.parallelize(1 to executor_num, executor_num)
-    val result = data
-      .mapPartitions { p =>
-        Iterator(OneDAL.cCheckPlatformCompatibility())
-      }
-      .collect()
+    val result = data.mapPartitions { p =>
+      Iterator(OneDAL.cCheckPlatformCompatibility())
+    }.collect()
 
     result.forall(_ == true)
   }

@@ -22,7 +22,8 @@ import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.{Partition, SparkException}
 import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 
-class ExecutorInProcessCoalescePartitioner extends PartitionCoalescer with Serializable {
+class ExecutorInProcessCoalescePartitioner
+  extends PartitionCoalescer with Serializable {
 
   def coalesce(maxPartitions: Int, prev: RDD[_]): Array[PartitionGroup] = {
     val map = new mutable.HashMap[String, mutable.HashSet[Partition]]()
@@ -30,12 +31,12 @@ class ExecutorInProcessCoalescePartitioner extends PartitionCoalescer with Seria
     prev.partitions.foreach(p => {
       val loc = prev.context.getPreferredLocs(prev, p.index)
       loc.foreach {
-        case location: ExecutorCacheTaskLocation =>
+        case location : ExecutorCacheTaskLocation =>
           val execLoc = "executor_" + location.host + "_" + location.executorId
           val partValue = map.getOrElse(execLoc, new mutable.HashSet[Partition]())
           partValue.add(p)
           map.put(execLoc, partValue)
-        case _: TaskLocation =>
+        case _ : TaskLocation =>
           throw new SparkException("ExecutorInProcessCoalescePartitioner: Invalid task location!")
       }
     })

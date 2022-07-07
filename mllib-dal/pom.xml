@@ -240,7 +240,7 @@
                     <failOnViolation>true</failOnViolation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <failOnWarning>false</failOnWarning>
-                    <sourceDirectory>${basedir}/src/main/scala/com//intel/oap/mllib</sourceDirectory>
+                    <sourceDirectory>${basedir}/src/main/scala/org/apache/spark</sourceDirectory>
                     <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
                     <configLocation>scalastyle-config.xml</configLocation>
                     <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
