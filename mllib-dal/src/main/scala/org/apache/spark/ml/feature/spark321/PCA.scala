@@ -36,9 +36,9 @@ import org.apache.spark.sql._
  * principal components.
  */
 @Since("1.5.0")
-class PCA @Since("1.5.0")(@Since("1.5.0") override val uid: String)
-    extends SparkPCA
-    with PCAShim {
+class PCA @Since("1.5.0") (
+    @Since("1.5.0") override val uid: String)
+  extends SparkPCA with PCAShim {
 
   override def initShim(params: ParamMap): Unit = {
     params.toSeq.foreach { paramMap.put(_) }
@@ -56,10 +56,11 @@ class PCA @Since("1.5.0")(@Since("1.5.0") override val uid: String)
     }
 
     val numFeatures = inputVectors.first().size
-    require($(k) <= numFeatures, s"source vector size $numFeatures must be no less than k=$k")
+    require($(k) <= numFeatures,
+      s"source vector size $numFeatures must be no less than k=$k")
 
-    val isPlatformSupported =
-      Utils.checkClusterPlatformCompatibility(dataset.sparkSession.sparkContext)
+    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+      dataset.sparkSession.sparkContext)
 
     // Call oneDAL Correlation PCA implementation when numFeatures < 65535 and fall back otherwise
     val parentModel = if (numFeatures < 65535 && Utils.isOAPEnabled() && isPlatformSupported) {
@@ -76,8 +77,7 @@ class PCA @Since("1.5.0")(@Since("1.5.0") override val uid: String)
       val pcaModel = pca.fit(inputOldVectors)
       pcaModel
     }
-    copyValues(
-      new PCAModel(uid, parentModel.pc.asML, parentModel.explainedVariance.asML)
-        .setParent(this))
+    copyValues(new PCAModel(uid, parentModel.pc.asML, parentModel.explainedVariance.asML)
+      .setParent(this))
   }
 }

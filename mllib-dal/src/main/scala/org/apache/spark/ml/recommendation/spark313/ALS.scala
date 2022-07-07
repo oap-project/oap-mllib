@@ -67,7 +67,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
 
   /** Trait for least squares solvers applied to the normal equation. */
   private[recommendation] trait LeastSquaresNESolver extends Serializable {
-
     /** Solves a least squares problem with regularization (possibly with other constraints). */
     def solve(ne: NormalEquation, lambda: Double): Array[Float]
   }
@@ -179,10 +178,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
 
     /** Number of entries in the upper triangular part of a k-by-k matrix. */
     val triK = k * (k + 1) / 2
-
     /** A^T^ * A */
     val ata = new Array[Double](triK)
-
     /** A^T^ * b */
     val atb = new Array[Double](k)
 
@@ -225,20 +222,20 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
   }
 
   def train[ID: ClassTag]( // scalastyle:ignore
-      ratings: RDD[Rating[ID]],
-      rank: Int = 10,
-      numUserBlocks: Int = 10,
-      numItemBlocks: Int = 10,
-      maxIter: Int = 10,
-      regParam: Double = 0.1,
-      implicitPrefs: Boolean = false,
-      alpha: Double = 1.0,
-      nonnegative: Boolean = false,
-      intermediateRDDStorageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK,
-      finalRDDStorageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK,
-      checkpointInterval: Int = 10,
-      seed: Long = 0L)(
-      implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
+    ratings: RDD[Rating[ID]],
+    rank: Int = 10,
+    numUserBlocks: Int = 10,
+    numItemBlocks: Int = 10,
+    maxIter: Int = 10,
+    regParam: Double = 0.1,
+    implicitPrefs: Boolean = false,
+    alpha: Double = 1.0,
+    nonnegative: Boolean = false,
+    intermediateRDDStorageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK,
+    finalRDDStorageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK,
+    checkpointInterval: Int = 10,
+    seed: Long = 0L)(
+    implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
 
     val isPlatformSupported = DALUtils.checkClusterPlatformCompatibility(ratings.sparkContext)
 
@@ -246,20 +243,9 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       if (implicitPrefs && DALUtils.isOAPEnabled() && isPlatformSupported) {
         new ALSDALImpl(ratings, rank, maxIter, regParam, alpha, seed).train()
       } else {
-        trainMLlib(
-          ratings,
-          rank,
-          numUserBlocks,
-          numItemBlocks,
-          maxIter,
-          regParam,
-          implicitPrefs,
-          alpha,
-          nonnegative,
-          intermediateRDDStorageLevel,
-          finalRDDStorageLevel,
-          checkpointInterval,
-          seed)
+        trainMLlib(ratings, rank, numUserBlocks, numItemBlocks, maxIter, regParam, implicitPrefs,
+          alpha, nonnegative, intermediateRDDStorageLevel, finalRDDStorageLevel,
+          checkpointInterval, seed)
       }
 
     (userIdAndFactors, itemIdAndFactors)
@@ -307,8 +293,7 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       implicit ord: Ordering[ID]): (RDD[(ID, Array[Float])], RDD[(ID, Array[Float])]) = {
 
     require(!ratings.isEmpty(), s"No ratings available from $ratings")
-    require(
-      intermediateRDDStorageLevel != StorageLevel.NONE,
+    require(intermediateRDDStorageLevel != StorageLevel.NONE,
       "ALS is not designed to run without persisting intermediate RDDs.")
 
     val sc = ratings.sparkContext
@@ -320,14 +305,14 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       .persist(intermediateRDDStorageLevel)
     val (userInBlocks, userOutBlocks) =
       makeBlocks("user", blockRatings, userPart, itemPart, intermediateRDDStorageLevel)
-    userOutBlocks.count() // materialize blockRatings and user blocks
+    userOutBlocks.count()    // materialize blockRatings and user blocks
     val swappedBlockRatings = blockRatings.map {
       case ((userBlockId, itemBlockId), RatingBlock(userIds, itemIds, localRatings)) =>
         ((itemBlockId, userBlockId), RatingBlock(itemIds, userIds, localRatings))
     }
     val (itemInBlocks, itemOutBlocks) =
       makeBlocks("item", swappedBlockRatings, itemPart, userPart, intermediateRDDStorageLevel)
-    itemOutBlocks.count() // materialize item blocks
+    itemOutBlocks.count()    // materialize item blocks
 
     // Encoders for storing each user/item's partition ID and index within its partition using a
     // single integer; used as an optimization
@@ -355,22 +340,14 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
           case e: IOException =>
             logWarning(s"Cannot delete checkpoint file $file:", e)
         }
-    }
+      }
 
     if (implicitPrefs) {
       for (iter <- 1 to maxIter) {
         userFactors.setName(s"userFactors-$iter").persist(intermediateRDDStorageLevel)
         val previousItemFactors = itemFactors
-        itemFactors = computeFactors(
-          userFactors,
-          userOutBlocks,
-          itemInBlocks,
-          rank,
-          regParam,
-          userLocalIndexEncoder,
-          implicitPrefs,
-          alpha,
-          solver)
+        itemFactors = computeFactors(userFactors, userOutBlocks, itemInBlocks, rank, regParam,
+          userLocalIndexEncoder, implicitPrefs, alpha, solver)
         previousItemFactors.unpersist()
         itemFactors.setName(s"itemFactors-$iter").persist(intermediateRDDStorageLevel)
         // TODO: Generalize PeriodicGraphCheckpointer and use it here.
@@ -378,16 +355,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
           itemFactors.checkpoint() // itemFactors gets materialized in computeFactors
         }
         val previousUserFactors = userFactors
-        userFactors = computeFactors(
-          itemFactors,
-          itemOutBlocks,
-          userInBlocks,
-          rank,
-          regParam,
-          itemLocalIndexEncoder,
-          implicitPrefs,
-          alpha,
-          solver)
+        userFactors = computeFactors(itemFactors, itemOutBlocks, userInBlocks, rank, regParam,
+          itemLocalIndexEncoder, implicitPrefs, alpha, solver)
         if (shouldCheckpoint(iter)) {
           itemFactors.cleanShuffleDependencies()
           deletePreviousCheckpointFile()
@@ -398,14 +367,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
     } else {
       var previousCachedItemFactors: Option[RDD[(Int, FactorBlock)]] = None
       for (iter <- 0 until maxIter) {
-        itemFactors = computeFactors(
-          userFactors,
-          userOutBlocks,
-          itemInBlocks,
-          rank,
-          regParam,
-          userLocalIndexEncoder,
-          solver = solver)
+        itemFactors = computeFactors(userFactors, userOutBlocks, itemInBlocks, rank, regParam,
+          userLocalIndexEncoder, solver = solver)
         if (shouldCheckpoint(iter)) {
           itemFactors.setName(s"itemFactors-$iter").persist(intermediateRDDStorageLevel)
           itemFactors.checkpoint()
@@ -417,38 +380,28 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
           previousCheckpointFile = itemFactors.getCheckpointFile
           previousCachedItemFactors = Option(itemFactors)
         }
-        userFactors = computeFactors(
-          itemFactors,
-          itemOutBlocks,
-          userInBlocks,
-          rank,
-          regParam,
-          itemLocalIndexEncoder,
-          solver = solver)
+        userFactors = computeFactors(itemFactors, itemOutBlocks, userInBlocks, rank, regParam,
+          itemLocalIndexEncoder, solver = solver)
       }
     }
     val userIdAndFactors = userInBlocks
       .mapValues(_.srcIds)
       .join(userFactors)
-      .mapPartitions(
-        { items =>
-          items.flatMap {
-            case (_, (ids, factors)) =>
-              ids.iterator.zip(factors.iterator)
-          }
-        // Preserve the partitioning because IDs are consistent with the partitioners in userInBlocks
-        // and userFactors.
-        },
-        preservesPartitioning = true)
+      .mapPartitions({ items =>
+        items.flatMap { case (_, (ids, factors)) =>
+          ids.iterator.zip(factors.iterator)
+        }
+      // Preserve the partitioning because IDs are consistent with the partitioners in userInBlocks
+      // and userFactors.
+      }, preservesPartitioning = true)
       .setName("userFactors")
       .persist(finalRDDStorageLevel)
     val itemIdAndFactors = itemInBlocks
       .mapValues(_.srcIds)
       .join(itemFactors)
       .mapPartitions({ items =>
-        items.flatMap {
-          case (_, (ids, factors)) =>
-            ids.iterator.zip(factors.iterator)
+        items.flatMap { case (_, (ids, factors)) =>
+          ids.iterator.zip(factors.iterator)
         }
       }, preservesPartitioning = true)
       .setName("itemFactors")
@@ -633,7 +586,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       dstPtrs: Array[Int],
       dstEncodedIndices: Array[Int],
       ratings: Array[Float]) {
-
     /** Size of the block. */
     def size: Int = ratings.length
     require(dstEncodedIndices.length == size)
@@ -656,21 +608,19 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
     // elements distributed as Normal(0,1) and taking the absolute value, and then normalizing.
     // This appears to create factorizations that have a slightly better reconstruction
     // (<1%) compared picking elements uniformly at random in [0,1].
-    inBlocks.mapPartitions(
-      { iter =>
-        iter.map {
-          case (srcBlockId, inBlock) =>
-            val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
-            val factors = Array.fill(inBlock.srcIds.length) {
-              val factor = Array.fill(rank)(random.nextGaussian().toFloat)
-              val nrm = blas.snrm2(rank, factor, 1)
-              blas.sscal(rank, 1.0f / nrm, factor, 1)
-              factor
-            }
-            (srcBlockId, factors)
-        }
-      },
-      preservesPartitioning = true)
+    inBlocks.mapPartitions({ iter =>
+      iter.map {
+        case (srcBlockId, inBlock) =>
+          val random = new XORShiftRandom(byteswap64(seed ^ srcBlockId))
+          val factors = Array.fill(inBlock.srcIds.length) {
+            val factor = Array.fill(rank)(random.nextGaussian().toFloat)
+            val nrm = blas.snrm2(rank, factor, 1)
+            blas.sscal(rank, 1.0f / nrm, factor, 1)
+            factor
+          }
+          (srcBlockId, factors)
+      }
+    }, preservesPartitioning = true)
   }
 
   /**
@@ -680,7 +630,6 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       srcIds: Array[ID],
       dstIds: Array[ID],
       ratings: Array[Float]) {
-
     /** Size of the block. */
     def size: Int = srcIds.length
     require(dstIds.length == srcIds.length)
@@ -691,7 +640,7 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
    * Builder for [[RatingBlock]]. `mutable.ArrayBuilder` is used to avoid boxing/unboxing.
    */
   private[recommendation] class RatingBlockBuilder[@specialized(Int, Long) ID: ClassTag]
-      extends Serializable {
+    extends Serializable {
 
     private val srcIds = mutable.ArrayBuilder.make[ID]
     private val dstIds = mutable.ArrayBuilder.make[ID]
@@ -752,37 +701,32 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       srcPart: Partitioner,
       dstPart: Partitioner): RDD[((Int, Int), RatingBlock[ID])] = {
     val numPartitions = srcPart.numPartitions * dstPart.numPartitions
-    ratings
-      .mapPartitions { iter =>
-        val builders = Array.fill(numPartitions)(new RatingBlockBuilder[ID])
-        iter.flatMap { r =>
-          val srcBlockId = srcPart.getPartition(r.user)
-          val dstBlockId = dstPart.getPartition(r.item)
-          val idx = srcBlockId + srcPart.numPartitions * dstBlockId
-          val builder = builders(idx)
-          builder.add(r)
-          if (builder.size >= 2048) { // 2048 * (3 * 4) = 24k
-            builders(idx) = new RatingBlockBuilder
-            Iterator.single(((srcBlockId, dstBlockId), builder.build()))
-          } else {
-            Iterator.empty
-          }
-        } ++ {
-          builders.iterator.zipWithIndex.filter(_._1.size > 0).map {
-            case (block, idx) =>
-              val srcBlockId = idx % srcPart.numPartitions
-              val dstBlockId = idx / srcPart.numPartitions
-              ((srcBlockId, dstBlockId), block.build())
-          }
+    ratings.mapPartitions { iter =>
+      val builders = Array.fill(numPartitions)(new RatingBlockBuilder[ID])
+      iter.flatMap { r =>
+        val srcBlockId = srcPart.getPartition(r.user)
+        val dstBlockId = dstPart.getPartition(r.item)
+        val idx = srcBlockId + srcPart.numPartitions * dstBlockId
+        val builder = builders(idx)
+        builder.add(r)
+        if (builder.size >= 2048) { // 2048 * (3 * 4) = 24k
+          builders(idx) = new RatingBlockBuilder
+          Iterator.single(((srcBlockId, dstBlockId), builder.build()))
+        } else {
+          Iterator.empty
+        }
+      } ++ {
+        builders.iterator.zipWithIndex.filter(_._1.size > 0).map { case (block, idx) =>
+          val srcBlockId = idx % srcPart.numPartitions
+          val dstBlockId = idx / srcPart.numPartitions
+          ((srcBlockId, dstBlockId), block.build())
         }
       }
-      .groupByKey()
-      .mapValues { blocks =>
-        val builder = new RatingBlockBuilder[ID]
-        blocks.foreach(builder.merge)
-        builder.build()
-      }
-      .setName("ratingBlocks")
+    }.groupByKey().mapValues { blocks =>
+      val builder = new RatingBlockBuilder[ID]
+      blocks.foreach(builder.merge)
+      builder.build()
+    }.setName("ratingBlocks")
   }
 
   /**
@@ -791,7 +735,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
    * @param encoder encoder for dst indices
    */
   private[recommendation] class UncompressedInBlockBuilder[@specialized(Int, Long) ID: ClassTag](
-      encoder: LocalIndexEncoder)(implicit ord: Ordering[ID]) {
+      encoder: LocalIndexEncoder)(
+      implicit ord: Ordering[ID]) {
 
     private val srcIds = mutable.ArrayBuilder.make[ID]
     private val dstEncodedIndices = mutable.ArrayBuilder.make[Int]
@@ -835,7 +780,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
   private[recommendation] class UncompressedInBlock[@specialized(Int, Long) ID: ClassTag](
       val srcIds: Array[ID],
       val dstEncodedIndices: Array[Int],
-      val ratings: Array[Float])(implicit ord: Ordering[ID]) {
+      val ratings: Array[Float])(
+      implicit ord: Ordering[ID]) {
 
     /** Size the of block. */
     def length: Int = srcIds.length
@@ -899,8 +845,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
    *
    * @see [[UncompressedInBlockSort]]
    */
-  private class KeyWrapper[@specialized(Int, Long) ID: ClassTag](implicit ord: Ordering[ID])
-      extends Ordered[KeyWrapper[ID]] {
+  private class KeyWrapper[@specialized(Int, Long) ID: ClassTag](
+      implicit ord: Ordering[ID]) extends Ordered[KeyWrapper[ID]] {
 
     var key: ID = _
 
@@ -919,7 +865,7 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
    */
   private class UncompressedInBlockSort[@specialized(Int, Long) ID: ClassTag](
       implicit ord: Ordering[ID])
-      extends SortDataFormat[KeyWrapper[ID], UncompressedInBlock[ID]] {
+    extends SortDataFormat[KeyWrapper[ID], UncompressedInBlock[ID]] {
 
     override def newKey(): KeyWrapper[ID] = new KeyWrapper()
 
@@ -934,7 +880,9 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       }
     }
 
-    override def getKey(data: UncompressedInBlock[ID], pos: Int): KeyWrapper[ID] = {
+    override def getKey(
+        data: UncompressedInBlock[ID],
+        pos: Int): KeyWrapper[ID] = {
       getKey(data, pos, null)
     }
 
@@ -966,9 +914,7 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
 
     override def allocate(length: Int): UncompressedInBlock[ID] = {
       new UncompressedInBlock(
-        new Array[ID](length),
-        new Array[Int](length),
-        new Array[Float](length))
+        new Array[ID](length), new Array[Int](length), new Array[Float](length))
     }
 
     override def copyElement(
@@ -998,72 +944,65 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
       dstPart: Partitioner,
       storageLevel: StorageLevel)(
       implicit srcOrd: Ordering[ID]): (RDD[(Int, InBlock[ID])], RDD[(Int, OutBlock)]) = {
-    val inBlocks = ratingBlocks
-      .map {
-        case ((srcBlockId, dstBlockId), RatingBlock(srcIds, dstIds, ratings)) =>
-          // The implementation is a faster version of
-          // val dstIdToLocalIndex = dstIds.toSet.toSeq.sorted.zipWithIndex.toMap
-          val start = System.nanoTime()
-          val dstIdSet = new OpenHashSet[ID](1 << 20)
-          dstIds.foreach(dstIdSet.add)
-          val sortedDstIds = new Array[ID](dstIdSet.size)
-          var i = 0
-          var pos = dstIdSet.nextPos(0)
-          while (pos != -1) {
-            sortedDstIds(i) = dstIdSet.getValue(pos)
-            pos = dstIdSet.nextPos(pos + 1)
-            i += 1
-          }
-          assert(i == dstIdSet.size)
-          Sorting.quickSort(sortedDstIds)
-          val dstIdToLocalIndex = new OpenHashMap[ID, Int](sortedDstIds.length)
-          i = 0
-          while (i < sortedDstIds.length) {
-            dstIdToLocalIndex.update(sortedDstIds(i), i)
-            i += 1
-          }
-          logDebug(
-            "Converting to local indices took " + (System.nanoTime() - start) / 1e9 + " seconds.")
-          val dstLocalIndices = dstIds.map(dstIdToLocalIndex.apply)
-          (srcBlockId, (dstBlockId, srcIds, dstLocalIndices, ratings))
-      }
-      .groupByKey(new ALSPartitioner(srcPart.numPartitions))
+    val inBlocks = ratingBlocks.map {
+      case ((srcBlockId, dstBlockId), RatingBlock(srcIds, dstIds, ratings)) =>
+        // The implementation is a faster version of
+        // val dstIdToLocalIndex = dstIds.toSet.toSeq.sorted.zipWithIndex.toMap
+        val start = System.nanoTime()
+        val dstIdSet = new OpenHashSet[ID](1 << 20)
+        dstIds.foreach(dstIdSet.add)
+        val sortedDstIds = new Array[ID](dstIdSet.size)
+        var i = 0
+        var pos = dstIdSet.nextPos(0)
+        while (pos != -1) {
+          sortedDstIds(i) = dstIdSet.getValue(pos)
+          pos = dstIdSet.nextPos(pos + 1)
+          i += 1
+        }
+        assert(i == dstIdSet.size)
+        Sorting.quickSort(sortedDstIds)
+        val dstIdToLocalIndex = new OpenHashMap[ID, Int](sortedDstIds.length)
+        i = 0
+        while (i < sortedDstIds.length) {
+          dstIdToLocalIndex.update(sortedDstIds(i), i)
+          i += 1
+        }
+        logDebug(
+          "Converting to local indices took " + (System.nanoTime() - start) / 1e9 + " seconds.")
+        val dstLocalIndices = dstIds.map(dstIdToLocalIndex.apply)
+        (srcBlockId, (dstBlockId, srcIds, dstLocalIndices, ratings))
+    }.groupByKey(new ALSPartitioner(srcPart.numPartitions))
       .mapValues { iter =>
         val builder =
           new UncompressedInBlockBuilder[ID](new LocalIndexEncoder(dstPart.numPartitions))
-        iter.foreach {
-          case (dstBlockId, srcIds, dstLocalIndices, ratings) =>
-            builder.add(dstBlockId, srcIds, dstLocalIndices, ratings)
+        iter.foreach { case (dstBlockId, srcIds, dstLocalIndices, ratings) =>
+          builder.add(dstBlockId, srcIds, dstLocalIndices, ratings)
         }
         builder.build().compress()
-      }
-      .setName(prefix + "InBlocks")
+      }.setName(prefix + "InBlocks")
       .persist(storageLevel)
-    val outBlocks = inBlocks
-      .mapValues {
-        case InBlock(srcIds, dstPtrs, dstEncodedIndices, _) =>
-          val encoder = new LocalIndexEncoder(dstPart.numPartitions)
-          val activeIds = Array.fill(dstPart.numPartitions)(mutable.ArrayBuilder.make[Int])
-          var i = 0
-          val seen = new Array[Boolean](dstPart.numPartitions)
-          while (i < srcIds.length) {
-            var j = dstPtrs(i)
-            ju.Arrays.fill(seen, false)
-            while (j < dstPtrs(i + 1)) {
-              val dstBlockId = encoder.blockId(dstEncodedIndices(j))
-              if (!seen(dstBlockId)) {
-                activeIds(dstBlockId) += i // add the local index in this out-block
-                seen(dstBlockId) = true
-              }
-              j += 1
-            }
-            i += 1
+    val outBlocks = inBlocks.mapValues { case InBlock(srcIds, dstPtrs, dstEncodedIndices, _) =>
+      val encoder = new LocalIndexEncoder(dstPart.numPartitions)
+      val activeIds = Array.fill(dstPart.numPartitions)(mutable.ArrayBuilder.make[Int])
+      var i = 0
+      val seen = new Array[Boolean](dstPart.numPartitions)
+      while (i < srcIds.length) {
+        var j = dstPtrs(i)
+        ju.Arrays.fill(seen, false)
+        while (j < dstPtrs(i + 1)) {
+          val dstBlockId = encoder.blockId(dstEncodedIndices(j))
+          if (!seen(dstBlockId)) {
+            activeIds(dstBlockId) += i // add the local index in this out-block
+            seen(dstBlockId) = true
           }
-          activeIds.map { x =>
-            x.result()
-          }
+          j += 1
+        }
+        i += 1
       }
-      .setName(prefix + "OutBlocks")
+      activeIds.map { x =>
+        x.result()
+      }
+    }.setName(prefix + "OutBlocks")
       .persist(storageLevel)
     (inBlocks, outBlocks)
   }
@@ -1096,9 +1035,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
     val YtY = if (implicitPrefs) Some(computeYtY(srcFactorBlocks, rank)) else None
     val srcOut = srcOutBlocks.join(srcFactorBlocks).flatMap {
       case (srcBlockId, (srcOutBlock, srcFactors)) =>
-        srcOutBlock.iterator.zipWithIndex.map {
-          case (activeIndices, dstBlockId) =>
-            (dstBlockId, (srcBlockId, activeIndices.map(idx => srcFactors(idx))))
+        srcOutBlock.iterator.zipWithIndex.map { case (activeIndices, dstBlockId) =>
+          (dstBlockId, (srcBlockId, activeIndices.map(idx => srcFactors(idx))))
         }
     }
     val merged = srcOut.groupByKey(new ALSPartitioner(dstInBlocks.partitions.length))
@@ -1112,9 +1050,8 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
     dstInBlocks.join(merged).mapValues {
       case (InBlock(dstIds, srcPtrs, srcEncodedIndices, ratings), srcFactors) =>
         val sortedSrcFactors = new Array[FactorBlock](numSrcBlocks)
-        srcFactors.foreach {
-          case (srcBlockId, factors) =>
-            sortedSrcFactors(srcBlockId) = factors
+        srcFactors.foreach { case (srcBlockId, factors) =>
+          sortedSrcFactors(srcBlockId) = factors
         }
         val dstFactors = new Array[Array[Float]](dstIds.length)
         var j = 0
@@ -1173,10 +1110,12 @@ class ALS extends DefaultParamsReadable[ALS] with Logging with ALSShim {
    * Caching of the input factors is handled in [[ALS#train]].
    */
   private def computeYtY(factorBlocks: RDD[(Int, FactorBlock)], rank: Int): NormalEquation = {
-    factorBlocks.values.aggregate(new NormalEquation(rank))(seqOp = (ne, factors) => {
-      factors.foreach(ne.add(_, 0.0))
-      ne
-    }, combOp = (ne1, ne2) => ne1.merge(ne2))
+    factorBlocks.values.aggregate(new NormalEquation(rank))(
+      seqOp = (ne, factors) => {
+        factors.foreach(ne.add(_, 0.0))
+        ne
+      },
+      combOp = (ne1, ne2) => ne1.merge(ne2))
   }
 
   /**
