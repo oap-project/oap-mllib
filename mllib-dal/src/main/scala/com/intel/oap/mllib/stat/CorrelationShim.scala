@@ -26,7 +26,6 @@ import org.apache.spark.storage.StorageLevel
 
 import scala.reflect.ClassTag
 import org.apache.spark.ml.stat.spark321.{Correlation => CorrelationSpark321}
-import org.apache.spark.sql.{DataFrame, Dataset}
 
 trait CorrelationShim extends Serializable with Logging {
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame
