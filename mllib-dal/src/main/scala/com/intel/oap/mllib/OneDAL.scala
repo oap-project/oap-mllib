@@ -303,6 +303,26 @@ object OneDAL {
     tables
   }
 
+  def makeHomogenTable(arrayVectors: Array[Vector],
+                       device: Common.ComputeDevice): HomogenTable = {
+    val numCols = arrayVectors.head.size
+    val numRows: Int = arrayVectors.size
+    val arrayDouble = new Array[Double](numRows * numCols)
+    var index = 0
+    for( vector: Vector <- arrayVectors) {
+      for (i <- 0 until vector.toArray.length ) {
+        arrayDouble(index) = vector(i)
+        if (index < (numRows * numCols)) {
+          index = index + 1
+        }
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble,
+      device)
+
+    table
+  }
+
   def makeHomogenTable(arrayVectors: Array[OldVector],
                        device: Common.ComputeDevice): HomogenTable = {
     val numCols = arrayVectors.head.size
@@ -363,10 +383,10 @@ object OneDAL {
   }
 
   def rddLabeledPointToMergedHomogenTables(labeledPoints: Dataset[_],
-                                          labelCol: String,
-                                          featuresCol: String,
-                                          executorNum: Int,
-                                          device: Common.ComputeDevice): RDD[(Long, Long)] = {
+                                           labelCol: String,
+                                           featuresCol: String,
+                                           executorNum: Int,
+                                           device: Common.ComputeDevice): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
