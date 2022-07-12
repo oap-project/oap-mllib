@@ -456,10 +456,39 @@ object OneDAL {
     mergedTables
   }
 
+  private[mllib] def doubleArrayToHomogenTable(
+      points: Array[Double],
+      device: Common.ComputeDevice): HomogenTable = {
+    val table = new HomogenTable(1, points.length, points, device)
+    table
+  }
+
+  private def vectorsToDenseHomogenTable(
+      it: Iterator[Vector],
+      numRows: Int,
+      numCols: Int,
+      device: Common.ComputeDevice): HomogenTable = {
+    printf(s"vectorsToDenseHomogenTable numRows: $numRows numCols: $numCols \n")
+    val arrayDouble = new Array[Double](numRows * numCols)
+    var index = 0
+    it.foreach { curVector =>
+      val rowArray = curVector.toArray
+      for (i <- 0 until rowArray.length) {
+        arrayDouble(index) = rowArray(i)
+        assert(
+          index < (numCols * numRows),
+          "the size of arrayDouble should be less than or equal to numCols * numRows ")
+        index = index + 1
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble, device)
+    table
+  }
+
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],
-                                    labelCol: String,
-                                    featuresCol: String,
-                                    executorNum: Int): RDD[(Long, Long)] = {
+                                      labelCol: String,
+                                      featuresCol: String,
+                                      executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -605,9 +634,9 @@ object OneDAL {
   }
 
   private def vectorsToDenseNumericTable(
-      it: Iterator[Vector],
-      numRows: Int,
-      numCols: Int): NumericTable = {
+                                          it: Iterator[Vector],
+                                          numRows: Int,
+                                          numCols: Int): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
     val context = new DaalContext()
     val matrix = new DALMatrix(
