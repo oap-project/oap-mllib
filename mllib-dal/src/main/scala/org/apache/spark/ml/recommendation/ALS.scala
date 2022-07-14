@@ -19,15 +19,13 @@
 
 package org.apache.spark.ml.recommendation
 
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.intel.oap.mllib.recommendation.ALSShim
 import java.{util => ju}
-
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.Sorting
 import scala.util.hashing.byteswap64
-
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.intel.oap.mllib.recommendation.ALSShim
 
 import org.apache.spark.{Dependency, Partitioner, ShuffleDependency, SparkContext, SparkException}
 import org.apache.spark.annotation.Since
