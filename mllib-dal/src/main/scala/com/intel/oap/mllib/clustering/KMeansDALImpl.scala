@@ -17,7 +17,11 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+<<<<<<< HEAD
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+=======
+import com.intel.oap.mllib.{OneCCL, OneDAL}
+>>>>>>> Migrate KMeans  daal to DPC++ (#209)
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
