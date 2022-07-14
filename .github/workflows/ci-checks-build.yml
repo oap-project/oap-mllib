@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   code-checks-scala:
     name: Code Checks for Scala
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -19,7 +19,7 @@ jobs:
 
   code-checks-java:
     name: Code Checks for Java
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -33,7 +33,7 @@ jobs:
 
   code-checks-cpp:
     name: Code Checks for C++
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Install clang-format
@@ -47,7 +47,7 @@ jobs:
 
   code-build:
     name: Code Build
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8

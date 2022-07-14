@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-make
+make clean
+make -j
