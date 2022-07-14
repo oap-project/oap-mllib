@@ -47,6 +47,6 @@ jobs:
           key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2022.1.2
           restore-keys: |
             ${{ runner.os }}-
-      - name: Cluster Test
+      - name: Cluster Test (Disabled for GPU)
         run: |
-          ${{github.workspace}}/dev/ci/ci-cluster-test.sh
+          # ${{github.workspace}}/dev/ci/ci-cluster-test.sh
