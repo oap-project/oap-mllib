@@ -23,7 +23,6 @@ import org.apache.spark.ml.FunctionsSuite
 import org.apache.spark.ml.linalg.Vectors
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
-
 class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
 
     test("test compute Kmeans HomogenTable") {
