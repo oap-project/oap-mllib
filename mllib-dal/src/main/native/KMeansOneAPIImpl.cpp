@@ -35,17 +35,6 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-typedef std::shared_ptr<homogen_table> homogenPtr;
-
-std::mutex kmtx;
-std::vector<homogenPtr> cVector;
-
-static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
-    kmtx.lock();
-    cVector.push_back(ptr);
-    kmtx.unlock();
-}
-
 static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jlong pNumTabCenters, jint cluster_num,
                                    jdouble tolerance, jint iteration_num,

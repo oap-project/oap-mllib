@@ -33,10 +33,9 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jint k,
-                               jlong pNumTabData, jint executor_num,
-                               const ccl::string &ipPort, jint cComputeDevice,
-                               jobject resultObj) {
+static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+                               jint executor_num, const ccl::string &ipPort,
+                               jint cComputeDevice, jobject resultObj) {
     std::cout << "oneDAL (native): GPU/CPU compute start , rankid %ld "
               << rankId << std::endl;
     const bool isRoot = (rankId == ccl_root);
@@ -44,13 +43,12 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jint k,
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto pca_desc =
-        pca::descriptor{}.set_component_count(k).set_deterministic(true);
+    const auto pca_desc = pca::descriptor{};
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executor_num, rankId, ipPort);
-    auto result_train = preview::train(comm, pca_desc, htable);
-
+    pca::train_input local_input{htable};
+    const auto result_train = preview::train(comm, pca_desc, local_input);
     if (isRoot) {
         std::cout << "Eigenvectors:\n"
                   << result_train.get_eigenvectors() << std::endl;
@@ -80,14 +78,15 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jint k,
     }
 }
 
+JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
     jint cComputeDevice, jint rankId, jstring ip_port, jobject resultObj) {
     std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
     const char *ipport = env->GetStringUTFChars(ip_port, 0);
     std::string ipPort = std::string(ipport);
     printf("oneDAL (native):  PCATrainDAL %d \n", cComputeDevice);
-    doPCAOneAPICompute(env, rankId, k, pNumTabData, executor_num, ipPort,
+    doPCAOneAPICompute(env, rankId, pNumTabData, executor_num, ipPort,
                        cComputeDevice, resultObj);
     env->ReleaseStringUTFChars(ip_port, ipport);
     return 0;
