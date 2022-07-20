@@ -61,7 +61,6 @@ CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 compute_device getComputeDevice(size_t cComputeDevice);
 void saveShareHomogenPtrVector(const homogenPtr &ptr);
 
-
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
 #endif
