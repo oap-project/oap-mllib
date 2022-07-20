@@ -49,6 +49,7 @@ using namespace oneapi::dal;
 typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
 typedef std::shared_ptr<homogen_table> homogenPtr;
+
 enum class compute_device { host, cpu, gpu };
 
 void printNumericTable(const NumericTablePtr &dataTable,
@@ -59,6 +60,7 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
 CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 compute_device getComputeDevice(size_t cComputeDevice);
 void saveShareHomogenPtrVector(const homogenPtr &ptr);
+
 
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
