@@ -1,7 +1,8 @@
 package com.intel.oap.mllib
 
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.mllib.linalg.{ Vector => OldVector}
+import org.apache.spark.mllib.linalg.{Vector => OldVector}
+import com.intel.oneapi.dal.table.{Common, HomogenTable}
 
 import scala.io.Source
 
@@ -19,7 +20,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[Array[Double]]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -35,7 +36,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[Vector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -51,7 +52,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[OldVector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -64,5 +65,20 @@ object TestCommon {
       }
     }
     arrayDouble
+  }
+
+  def getDevice: Common.ComputeDevice = {
+    val device = System.getProperty("computeDevice")
+    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
+    if(device != null) {
+      device.toUpperCase match {
+        case "HOST" => computeDevice = Common.ComputeDevice.HOST
+        case "CPU"  => computeDevice = Common.ComputeDevice.CPU
+        case "GPU"  => computeDevice = Common.ComputeDevice.GPU
+        case _  => "Invalid Device"
+      }
+    }
+    System.out.println("getDevice : " + computeDevice)
+    computeDevice
   }
 }

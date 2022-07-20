@@ -5,6 +5,9 @@ using namespace daal;
 using namespace daal::data_management;
 using namespace daal::services;
 
+std::mutex kmtx;
+std::vector<homogenPtr> cVector;
+
 size_t readTextFile(const std::string &datasetFileName, daal::byte **data) {
     std::ifstream file(datasetFileName.c_str(),
                        std::ios::binary | std::ios::ate);
@@ -773,6 +776,12 @@ compute_device getComputeDevice(size_t cComputeDevice) {
         break;
     }
     return device;
+}
+
+void saveShareHomogenPtrVector(const homogenPtr &ptr) {
+    kmtx.lock();
+    cVector.push_back(ptr);
+    kmtx.unlock();
 }
 
 #ifdef CPU_GPU_PRFILE

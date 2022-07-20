@@ -74,7 +74,7 @@ endif
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
   ./KMeansOneAPIImpl.cpp \
-  ./PCADALImpl.cpp \
+  ./PCAOneAPIImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
@@ -89,7 +89,7 @@ CPP_SRCS += \
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
   ./KMeansOneAPIImpl.o \
-  ./PCADALImpl.o \
+  ./PCAOneAPIImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \

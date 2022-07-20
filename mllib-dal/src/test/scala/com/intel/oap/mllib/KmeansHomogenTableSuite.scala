@@ -1,12 +1,11 @@
 package com.intel.oap.mllib
 
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-
-import org.apache.spark.internal.Logging
-import org.apache.spark.ml.FunctionsSuite
-import org.apache.spark.ml.linalg.{Vector, Vectors}
 import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansResult}
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
+import org.apache.spark.internal.Logging
+import org.apache.spark.ml.FunctionsSuite
+import org.apache.spark.ml.linalg.Vectors
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 
 class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
 
