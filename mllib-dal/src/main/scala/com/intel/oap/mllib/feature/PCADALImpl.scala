@@ -76,9 +76,7 @@ class PCADALImpl(val k: Int,
       } else {
         Iterator.empty
       }
-
-      OneCCL.cleanup()
-        ret
+      ret
     }.collect()
 
     // Make sure there is only one result from rank 0
