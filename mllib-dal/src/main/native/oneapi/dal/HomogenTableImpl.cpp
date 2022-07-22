@@ -38,28 +38,35 @@
 using namespace std;
 using namespace oneapi::dal;
 
-typedef std::shared_ptr<homogen_table> homogenPtr;
-typedef std::shared_ptr<table_metadata> metadataPtr;
+typedef shared_ptr<homogen_table> homogenPtr;
+typedef shared_ptr<table_metadata> metadataPtr;
 
-std::mutex mtx;
-std::vector<homogenPtr> cHomogenVector;
-std::vector<metadataPtr> cMetaVector;
-template <typename T> std::vector<std::shared_ptr<T>> cVector;
+mutex mtx;
+unordered_map<long, homogenPtr> cHomogenMap;
+unordered_map<long, metadataPtr> cMetaMap;
 
-static void saveShareHomogenPtrVector(const homogenPtr &ptr) {
+template <typename T> vector<shared_ptr<T>> cVector;
+
+static void saveShareHomogenPtrMap(const long &lg, const homogenPtr &ptr) {
        mtx.lock();
-       cHomogenVector.push_back(ptr);
+       cHomogenMap[lg] = ptr;
        mtx.unlock();
 }
 
-static void saveShareMetaPtrVector(const metadataPtr &ptr) {
+static void saveShareMetaPtrMap(const long &lg, const metadataPtr &ptr) {
        mtx.lock();
-       cMetaVector.push_back(ptr);
+       cMetaMap[lg] = ptr;
+       mtx.unlock();
+}
+
+static void eraseShareHomogenPtrMap(const long &lg) {
+       mtx.lock();
+       cHomogenMap.erase(lg);
        mtx.unlock();
 }
 
 template <typename T>
-static void savePtrVector(const std::shared_ptr<T> &ptr) {
+static void savePtrVector(const shared_ptr<T> &ptr) {
        mtx.lock();
        cVector<T>.push_back(ptr);
        mtx.unlock();
@@ -130,8 +137,9 @@ template <typename T>
             return 0;
         }
    }
-  saveShareHomogenPtrVector(resultTablePtr);
-  return (jlong)resultTablePtr.get();
+  jlong add = reinterpret_cast<jlong>(resultTablePtr.get());
+  saveShareHomogenPtrMap(add, resultTablePtr);
+  return add;
  }
 
 /*
@@ -172,9 +180,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
              return 0;
        }
     }
-    saveShareHomogenPtrVector(tablePtr);
+    jlong add = reinterpret_cast<jlong>(tablePtr.get());
+    saveShareHomogenPtrMap(add, tablePtr);
     env->ReleaseIntArrayElements(cData, fData, 1);
-    return (jlong)tablePtr.get();
+    return add;
 }
 
 /*
@@ -215,9 +224,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
              return 0;
          }
     }
-    saveShareHomogenPtrVector(tablePtr);
+    jlong add = reinterpret_cast<jlong>(tablePtr.get());
+    saveShareHomogenPtrMap(add, tablePtr);
     env->ReleaseFloatArrayElements(cData, fData, 1);
-    return (jlong)tablePtr.get();
+    return add;
 }
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
@@ -257,9 +267,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              return 0;
          }
     }
-     saveShareHomogenPtrVector(tablePtr);
-     env->ReleaseDoubleArrayElements(cData, fData, 1);
-     return (jlong)tablePtr.get();
+    jlong add = reinterpret_cast<jlong>(tablePtr.get());
+    saveShareHomogenPtrMap(add, tablePtr);
+    env->ReleaseDoubleArrayElements(cData, fData, 1);
+    return add;
 }
 
 /*
@@ -300,9 +311,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
              return 0;
          }
     }
-     saveShareHomogenPtrVector(tablePtr);
-     env->ReleaseLongArrayElements(cData, fData, 1);
-     return (jlong)tablePtr.get();
+    jlong add = reinterpret_cast<jlong>(tablePtr.get());
+    saveShareHomogenPtrMap(add, tablePtr);
+    env->ReleaseLongArrayElements(cData, fData, 1);
+    return add;
 }
 
 /*
@@ -369,8 +381,9 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetMetaData(
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const table_metadata *mdata = reinterpret_cast<const table_metadata *>(&htable.get_metadata());
     metadataPtr metaPtr = std::make_shared<table_metadata>(*mdata);
-    saveShareMetaPtrVector(metaPtr);
-    return (jlong)metaPtr.get();
+    jlong add = reinterpret_cast<jlong>(metaPtr.get());
+    saveShareMetaPtrMap(add, metaPtr);
+    return add;
 }
 
 /*
@@ -453,8 +466,9 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyT
   (JNIEnv *env, jobject) {
       printf(" init empty HomogenTable \n");
       homogenPtr tablePtr = std::make_shared<homogen_table>();
-      saveShareHomogenPtrVector(tablePtr);
-      return (jlong)tablePtr.get();
+      jlong add = reinterpret_cast<jlong>(tablePtr.get());
+      saveShareHomogenPtrMap(add, tablePtr);
+      return add;
   }
 /*
 * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
@@ -471,22 +485,27 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHom
        if(targetTable.has_data()){
           const auto targetDataType = targetMetaData.get_data_type(0);
           const auto sourceDataType = sourceMetaData.get_data_type(0);
+          long ret = 0;
           if( targetDataType != sourceDataType ) {
              std::cout << "different data type" << std::endl;
              exit(-1);
           } else {
              switch(targetDataType){
                 case data_type::int32:{
-                     return MergeHomogenTable<int>(targetTable, sourceTable, cComputeDevice);
+                     ret = MergeHomogenTable<int>(targetTable, sourceTable, cComputeDevice);
+                     break;
                 }
                 case data_type::int64:{
-                     return MergeHomogenTable<long>(targetTable, sourceTable, cComputeDevice);
+                     ret = MergeHomogenTable<long>(targetTable, sourceTable, cComputeDevice);
+                     break;
                 }
                 case data_type::float32:{
-                     return MergeHomogenTable<float>(targetTable, sourceTable, cComputeDevice);
+                     ret = MergeHomogenTable<float>(targetTable, sourceTable, cComputeDevice);
+                     break;
                 }
                 case data_type::float64:{
-                    return MergeHomogenTable<double>(targetTable, sourceTable, cComputeDevice);
+                     ret = MergeHomogenTable<double>(targetTable, sourceTable, cComputeDevice);
+                     break;
                 }
                 default: {
                     std::cout << "no base type" << std::endl;
@@ -494,7 +513,17 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHom
                 }
              }
           }
-       } else {
+          eraseShareHomogenPtrMap(targetTablePtr);
+          eraseShareHomogenPtrMap(sourceTablePtr);
+          return ret;
+       } else if (!targetTable.has_data() && sourceTable.has_data()){
+           eraseShareHomogenPtrMap(targetTablePtr);
            return (jlong)sourceTablePtr;
+       }else if (targetTable.has_data() && !sourceTable.has_data()){
+           eraseShareHomogenPtrMap(sourceTablePtr);
+           return (jlong)targetTablePtr;
+       }else {
+           std::cout << "Both of tables have not data, please check it" << std::endl;
+           exit(-1);
        }
  }
