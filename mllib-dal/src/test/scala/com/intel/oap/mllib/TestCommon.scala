@@ -67,7 +67,7 @@ object TestCommon {
     arrayDouble
   }
 
-  def getDevice: Common.ComputeDevice = {
+  def getComputeDevice: Common.ComputeDevice = {
     val device = System.getProperty("computeDevice")
     var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
     if(device != null) {

@@ -26,16 +26,16 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val expectExplainedVariance = Array(3.492693, 1.677875, 1.529460, 1.147213, 0.769543, 0.731955, 0.507616, 0.075259, 0.047056, 0.021329)
         val sourceData = TestCommon.readCSV("src/test/scala/data/pca_normalized.csv")
 
-        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
+        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
 
         val pcaDAL = new PCADALImpl(5, 1, 1)
         val result = new PCAResult()
-        pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1, Common.ComputeDevice.HOST.ordinal(), 0, "127.0.0.1_3000", result);
+        pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000", result);
         val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
             result.explainedVarianceNumericTable)
-        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, Common.ComputeDevice.HOST)
-        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, Common.ComputeDevice.HOST)
+        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, TestCommon.getComputeDevice)
+        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, TestCommon.getComputeDevice)
 
         assertArrayEquals(expectExplainedVariance , explainedVariance.toArray, 0.000001)
         assertArrayEquals(TestCommon.convertArray(expectPC), principleComponents.toDense.values, 0.000001)
@@ -57,16 +57,16 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val expectExplainedVariance = Array(1.304369, 1.252785, 1.120113, 1.114487, 1.083063, 0.942371, 0.909094, 0.825540, 0.746623, 0.701554)
         val sourceData = TestCommon.readCSV("src/test/scala/data/pca_no_normalized.csv")
 
-        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
+        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
 
         val pcaDAL = new PCADALImpl(5, 1, 1)
         val result = new PCAResult()
-        pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1, Common.ComputeDevice.HOST.ordinal(), 0, "127.0.0.1_3000", result);
+        pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000", result);
         val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
             result.explainedVarianceNumericTable)
-        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, Common.ComputeDevice.HOST)
-        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, Common.ComputeDevice.HOST)
+        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, TestCommon.getComputeDevice)
+        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, TestCommon.getComputeDevice)
 
         assertArrayEquals(expectExplainedVariance , explainedVariance.toArray, 0.000001)
         assertArrayEquals(TestCommon.convertArray(expectPC), principleComponents.toDense.values, 0.000001)
