@@ -70,7 +70,7 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
 
 static sycl::queue getSyclQueue(const sycl::device device) {
     g_mtx.lock();
-    if (!cVector.empty()) {
+    if (!g_queueVector.empty()) {
         const auto device = g_queueVector[0];
         g_mtx.unlock();
         return device;
