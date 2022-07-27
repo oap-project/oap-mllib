@@ -51,7 +51,7 @@ static void stayTableMetaPtrToVector(const TableMetadataPtr &ptr) {
 }
 
 template <typename T>
-static void staySharePtrPtrToVector(const std::shared_ptr<T> &ptr) {
+static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
        g_mtx.lock();
        g_SharedPtrVector<T>.push_back(ptr);
        g_mtx.unlock();
@@ -100,7 +100,7 @@ template <typename T>
        compute_device device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
        switch(device) {
         case compute_device::host:{
-            staySharePtrPtrToVector<T>(p);
+            staySharePtrToVector<T>(p);
             resultTablePtr = std::make_shared<homogen_table>(p.get(), cRowCount, cColCount,
                                                        detail::make_default_delete<const T>(detail::default_host_policy{}),
                                                        targetTable.get_data_layout());
