@@ -76,7 +76,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
         HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
             result_train.get_model().get_centroids());
-        stayHomogenTablePtrToVector(centroidsPtr);
+        saveHomogenTablePtrToVector(centroidsPtr);
         return (jlong)centroidsPtr.get();
     } else {
         return (jlong)0;

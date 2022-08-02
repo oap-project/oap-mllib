@@ -44,7 +44,7 @@ std::mutex g_mtx;
 std::vector<TableMetadataPtr> g_TableMetaDataVector;
 template <typename T> std::vector<std::shared_ptr<T>> g_SharedPtrVector;
 
-static void stayTableMetaPtrToVector(const TableMetadataPtr &ptr) {
+static void saveTableMetaPtrToVector(const TableMetadataPtr &ptr) {
        g_mtx.lock();
        g_TableMetaDataVector.push_back(ptr);
        g_mtx.unlock();
@@ -122,7 +122,7 @@ template <typename T>
             return 0;
         }
    }
-  stayHomogenTablePtrToVector(resultTablePtr);
+  saveHomogenTablePtrToVector(resultTablePtr);
   return (jlong)resultTablePtr.get();
  }
 
@@ -164,7 +164,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
              return 0;
        }
     }
-    stayHomogenTablePtrToVector(tablePtr);
+    saveHomogenTablePtrToVector(tablePtr);
     env->ReleaseIntArrayElements(cData, fData, 1);
     return (jlong)tablePtr.get();
 }
@@ -207,7 +207,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
              return 0;
          }
     }
-    stayHomogenTablePtrToVector(tablePtr);
+    saveHomogenTablePtrToVector(tablePtr);
     env->ReleaseFloatArrayElements(cData, fData, 1);
     return (jlong)tablePtr.get();
 }
@@ -249,7 +249,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              return 0;
          }
     }
-     stayHomogenTablePtrToVector(tablePtr);
+     saveHomogenTablePtrToVector(tablePtr);
      env->ReleaseDoubleArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
 }
@@ -292,7 +292,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
              return 0;
          }
     }
-     stayHomogenTablePtrToVector(tablePtr);
+     saveHomogenTablePtrToVector(tablePtr);
      env->ReleaseLongArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
 }
@@ -361,7 +361,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetMetaData(
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const table_metadata *mdata = reinterpret_cast<const table_metadata *>(&htable.get_metadata());
     TableMetadataPtr metaPtr = std::make_shared<table_metadata>(*mdata);
-    stayTableMetaPtrToVector(metaPtr);
+    saveTableMetaPtrToVector(metaPtr);
     return (jlong)metaPtr.get();
 }
 
@@ -445,7 +445,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyT
   (JNIEnv *env, jobject) {
       printf(" init empty HomogenTable \n");
       HomogenTablePtr tablePtr = std::make_shared<homogen_table>();
-      stayHomogenTablePtrToVector(tablePtr);
+      saveHomogenTablePtrToVector(tablePtr);
       return (jlong)tablePtr.get();
   }
 /*

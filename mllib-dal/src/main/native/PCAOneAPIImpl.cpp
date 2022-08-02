@@ -51,10 +51,6 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     pca::train_input local_input{htable};
     const auto result_train = preview::train(comm, pca_desc, local_input);
     if (isRoot) {
-        std::cout << "Eigenvectors:\n"
-                  << result_train.get_eigenvectors() << std::endl;
-        std::cout << "Eigenvalues:\n"
-                  << result_train.get_eigenvalues() << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -66,11 +62,11 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
         HomogenTablePtr eigenvectors =
             std::make_shared<homogen_table>(result_train.get_eigenvectors());
-        stayHomogenTablePtrToVector(eigenvectors);
+        saveHomogenTablePtrToVector(eigenvectors);
 
         HomogenTablePtr eigenvalues =
             std::make_shared<homogen_table>(result_train.get_eigenvalues());
-        stayHomogenTablePtrToVector(eigenvalues);
+        saveHomogenTablePtrToVector(eigenvalues);
 
         env->SetLongField(resultObj, pcNumericTableField,
                           (jlong)eigenvectors.get());

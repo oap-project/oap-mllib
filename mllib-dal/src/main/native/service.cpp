@@ -778,7 +778,7 @@ compute_device getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
     return device;
 }
 
-void stayHomogenTablePtrToVector(const HomogenTablePtr &ptr) {
+void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr) {
     g_kmtx.lock();
     g_HomogenTablePtrVector.push_back(ptr);
     g_kmtx.unlock();
