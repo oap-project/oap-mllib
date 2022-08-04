@@ -33,6 +33,7 @@
 
 #include "com_intel_oneapi_dal_table_HomogenTableImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
+#include "oneapi/dal/table/detail/table_builder.hpp"
 #include "service.h"
 
 using namespace std;
@@ -104,12 +105,10 @@ template <typename T>
        std::shared_ptr<T> p(new T[targetDatasize + sourceDatasize], [](T* p){
             delete[] p;
         });
-       for (std::int64_t i = 0; i < targetDatasize; i++) {
-           p.get()[i] = targetData[i];
-       }
-       for (std::int64_t i = 0; i < sourceDatasize; i++) {
-           p.get()[targetDatasize + i] = sourceData[i];
-       }
+
+       std::copy(targetData, targetData+targetDatasize, p.get());
+       std::copy(sourceData, sourceData+sourceDatasize, p.get()+targetDatasize);
+
        const std::vector<sycl::event> dependencies = {};
        homogenPtr resultTablePtr;
        compute_device device = getComputeDevice(cComputeDevice);
@@ -137,6 +136,7 @@ template <typename T>
             return 0;
         }
    }
+
   jlong add = reinterpret_cast<jlong>(resultTablePtr.get());
   saveShareHomogenPtrMap(add, resultTablePtr);
   return add;
