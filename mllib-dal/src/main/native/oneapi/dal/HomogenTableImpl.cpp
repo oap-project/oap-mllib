@@ -126,6 +126,7 @@ template <typename T>
             auto queue = getQueue(device);
             auto data = sycl::malloc_shared<T>(cRowCount * cColCount, queue);
             queue.memcpy(data, p.get(), sizeof(T) * cRowCount * cColCount).wait();
+            printf("merge homegentable size =  %ld \n", sizeof(T) * cRowCount * cColCount );
             resultTablePtr = std::make_shared<homogen_table>(queue, data, cRowCount, cColCount,
                                                        detail::make_default_delete<const T>(queue),
                                                        dependencies, targetTable.get_data_layout());
@@ -256,6 +257,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              auto queue = getQueue(device);
              auto data = sycl::malloc_shared<double>(cRowCount * cColCount, queue);
              queue.memcpy(data, fData, sizeof(double) * cRowCount * cColCount).wait();
+             printf("Homegentable double malloc memory =  %ld \n", sizeof(double) * cRowCount * cColCount );
              tablePtr = std::make_shared<homogen_table>(queue, data, cRowCount, cColCount,
                                                         detail::make_default_delete<const double>(queue),
                                                         dependencies, getDataLayout(cLayout));
