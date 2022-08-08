@@ -37,7 +37,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                jint executorNum, const ccl::string &ipPort,
                                jint computeDeviceOrdinal, jobject resultObj) {
     const bool isRoot = (rankId == ccl_root);
-    compute_device device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     std::cout << "oneDAL (native): GPU/CPU compute start , rankid = " << rankId
               << "; device = " << computeDeviceOrdinal << "(0:HOST;1:GPU;2:CPU)"
               << std::endl;

@@ -762,17 +762,17 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
     return dataArch.getAsSharedPtr();
 }
 
-compute_device getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
-    compute_device device;
+ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
+    ComputeDevice device;
     switch (computeDeviceOrdinal) {
     case 0:
-        device = compute_device::host;
+        device = ComputeDevice::host;
         break;
     case 1:
-        device = compute_device::cpu;
+        device = ComputeDevice::cpu;
         break;
     case 2:
-        device = compute_device::gpu;
+        device = ComputeDevice::gpu;
         break;
     }
     return device;

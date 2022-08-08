@@ -45,7 +45,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
               << "; device = " << computeDeviceOrdinal << "(0:HOST;1:GPU;2:CPU)"
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
-    compute_device device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =

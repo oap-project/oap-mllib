@@ -51,15 +51,15 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
   row_accessor<const double> acc {htable};
   jdoubleArray newDoubleArray;
   oneapi::dal::array<double> row_values;
-  compute_device device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
@@ -87,15 +87,15 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
   row_accessor<const float> acc { htable };
   jfloatArray newFloatArray;
   oneapi::dal::array<float> row_values;
-  compute_device device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
@@ -123,15 +123,15 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   row_accessor<const int> acc { htable };
   jintArray newIntArray;
   oneapi::dal::array<int> row_values;
-  compute_device device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
