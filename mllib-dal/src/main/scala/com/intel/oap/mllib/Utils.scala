@@ -24,6 +24,7 @@ import java.net.InetAddress
 
 object Utils {
 
+  val DefaultComputeDevice = "GPU"
   def isOAPEnabled(): Boolean = {
     val sc = SparkSession.active.sparkContext
     val isDynamicAllication = sc.getConf.getBoolean("spark.dynamicAllocation.enabled", false)
