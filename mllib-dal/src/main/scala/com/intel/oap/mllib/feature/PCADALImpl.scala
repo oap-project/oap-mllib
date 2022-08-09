@@ -31,8 +31,6 @@ import org.apache.spark.rdd.RDD
 import java.util.Arrays
 import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 
-import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
-
 class PCADALModel private[mllib] (
   val k: Int,
   val pc: OldDenseMatrix,
