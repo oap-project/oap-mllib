@@ -31,7 +31,6 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val pcaDAL = new PCADALImpl(5, 1, 1)
         val result = new PCAResult()
         pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000", result);
-
         val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
             result.explainedVarianceNumericTable)

@@ -15,6 +15,7 @@
  *******************************************************************************/
 
 #include <chrono>
+#include <iostream>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
@@ -32,7 +33,6 @@
 using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
-
 
 static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                jint executorNum, const ccl::string &ipPort,
@@ -79,7 +79,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-<<<<<<< HEAD
+
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
     std::cout << "oneDAL (native): use GPU DPC++ kernels " << std::endl;
@@ -88,34 +88,6 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
                        computeDeviceOrdinal, resultObj);
     env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-=======
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
-    jint cComputeDevice, jint rankId, jstring ip_port, jobject resultObj) {
-    std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
-    const char *ipport = env->GetStringUTFChars(ip_port, 0);
-    std::string ipPort = std::string(ipport);
-    printf("oneDAL (native):  PCATrainDAL %d \n", cComputeDevice);
-    compute_device device = getComputeDevice(cComputeDevice);
-    switch (device) {
-    case compute_device::host: {
-        printf("oneDAL (native):  PCATrainDAL host \n");
-        doPCAHOSTOneAPICompute(env, rankId, pNumTabData, executor_num, ipPort,
-                               resultObj);
-        break;
-    }
-#ifdef CPU_GPU_PROFILE
-    case compute_device::cpu:
-    case compute_device::gpu: {
-        cout << "oneDAL (native): use DPCPP GPU/CPU kernels" << endl;
-        auto queue = getQueue(device);
-        doPCACPUorGPUOneAPICompute(env, rankId, pNumTabData, executor_num,
-                                   ipPort, queue, resultObj);
-        break;
-    }
-#endif
-    }
-    env->ReleaseStringUTFChars(ip_port, ipport);
->>>>>>> update
     return 0;
 }
 #endif
