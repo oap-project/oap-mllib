@@ -22,10 +22,7 @@
 #include "oneapi/dal/table/row_accessor.hpp"
 #include "oneapi/dal/table/common.hpp"
 
-inline std::ostream &operator<<(std::ostream &stream, const oneapi::dal::table &table) {
-    if (!table.has_data())
-        return stream;
-
+std::ostream &operator<<(std::ostream &stream, const oneapi::dal::table &table) {
     auto arr = oneapi::dal::row_accessor<const float>(table).pull();
     const auto x = arr.get_data();
 

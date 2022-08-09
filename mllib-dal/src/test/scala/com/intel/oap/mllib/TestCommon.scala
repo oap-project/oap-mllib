@@ -1,8 +1,8 @@
 package com.intel.oap.mllib
 
-import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
-import org.apache.spark.ml.linalg.{DenseMatrix, Vector}
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.mllib.linalg.{Vector => OldVector}
+import com.intel.oneapi.dal.table.{Common, HomogenTable}
 
 import scala.io.Source
 
@@ -78,5 +78,19 @@ object TestCommon {
     val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
     matrix
+
+  def getComputeDevice: Common.ComputeDevice = {
+    val device = System.getProperty("computeDevice")
+    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
+    if(device != null) {
+      device.toUpperCase match {
+        case "HOST" => computeDevice = Common.ComputeDevice.HOST
+        case "CPU"  => computeDevice = Common.ComputeDevice.CPU
+        case "GPU"  => computeDevice = Common.ComputeDevice.GPU
+        case _  => "Invalid Device"
+      }
+    }
+    System.out.println("getDevice : " + computeDevice)
+    computeDevice
   }
 }

@@ -15,10 +15,10 @@
  *******************************************************************************/
 
 #include <chrono>
+#include <iostream>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
-#endif
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
 #endif
@@ -34,67 +34,25 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doPCAHOSTOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                                   jint executor_num, const ccl::string &ipPort,
-                                   jobject resultObj) {
-    std::cout << "oneDAL (native): HOST compute start , rankid %ld " << rankId
+
+static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+                               jint executorNum, const ccl::string &ipPort,
+                               jint computeDeviceOrdinal, jobject resultObj) {
+    const bool isRoot = (rankId == ccl_root);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    std::cout << "oneDAL (native): GPU/CPU compute start , rankid = " << rankId
+              << "; device = " << computeDeviceOrdinal << "(0:HOST;1:GPU;2:CPU)"
               << std::endl;
-    const bool isRoot = (rankId == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto pca_desc = pca::descriptor{};
-    auto result_train = train(pca_desc, htable);
-    if (isRoot) {
-        std::cout << "Eigenvectors:\n"
-                  << result_train.get_eigenvectors() << std::endl;
-        std::cout << "Eigenvalues:\n"
-                  << result_train.get_eigenvalues() << std::endl;
-        // Return all eigenvalues & eigenvectors
-        // Get the class of the input object
-        jclass clazz = env->GetObjectClass(resultObj);
-        // Get Field references
-        jfieldID pcNumericTableField =
-            env->GetFieldID(clazz, "pcNumericTable", "J");
-        jfieldID explainedVarianceNumericTableField =
-            env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
-
-        homogenPtr eigenvectors =
-            std::make_shared<homogen_table>(result_train.get_eigenvectors());
-        saveShareHomogenPtrVector(eigenvectors);
-
-        homogenPtr eigenvalues =
-            std::make_shared<homogen_table>(result_train.get_eigenvalues());
-        saveShareHomogenPtrVector(eigenvalues);
-        env->SetLongField(resultObj, pcNumericTableField,
-                          (jlong)eigenvectors.get());
-        env->SetLongField(resultObj, explainedVarianceNumericTableField,
-                          (jlong)eigenvalues.get());
-    }
-}
-
-#ifdef CPU_GPU_PROFILE
-static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId,
-                                       jlong pNumTabData, jint executor_num,
-                                       const ccl::string &ipPort,
-                                       cl::sycl::queue &queue,
-                                       jobject resultObj) {
-    std::cout << "oneDAL (native): GPU/CPU compute start , rankid %ld "
-              << rankId << std::endl;
-    const bool isRoot = (rankId == ccl_root);
-    homogen_table htable =
-        *reinterpret_cast<const homogen_table *>(pNumTabData);
-
-    const auto pca_desc = pca::descriptor{};
+    auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executor_num, rankId, ipPort);
+        queue, executorNum, rankId, ipPort);
     pca::train_input local_input{htable};
     const auto result_train = preview::train(comm, pca_desc, local_input);
     if (isRoot) {
-        std::cout << "Eigenvectors:\n"
-                  << result_train.get_eigenvectors() << std::endl;
-        std::cout << "Eigenvalues:\n"
-                  << result_train.get_eigenvalues() << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -104,13 +62,13 @@ static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId,
         jfieldID explainedVarianceNumericTableField =
             env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
 
-        homogenPtr eigenvectors =
+        HomogenTablePtr eigenvectors =
             std::make_shared<homogen_table>(result_train.get_eigenvectors());
-        saveShareHomogenPtrVector(eigenvectors);
+        saveHomogenTablePtrToVector(eigenvectors);
 
-        homogenPtr eigenvalues =
+        HomogenTablePtr eigenvalues =
             std::make_shared<homogen_table>(result_train.get_eigenvalues());
-        saveShareHomogenPtrVector(eigenvalues);
+        saveHomogenTablePtrToVector(eigenvalues);
 
         env->SetLongField(resultObj, pcNumericTableField,
                           (jlong)eigenvectors.get());
@@ -118,35 +76,17 @@ static void doPCACPUorGPUOneAPICompute(JNIEnv *env, jint rankId,
                           (jlong)eigenvalues.get());
     }
 }
-#endif
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
-    jint cComputeDevice, jint rankId, jstring ip_port, jobject resultObj) {
-    std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
-    const char *ipport = env->GetStringUTFChars(ip_port, 0);
-    std::string ipPort = std::string(ipport);
-    printf("oneDAL (native):  PCATrainDAL %d \n", cComputeDevice);
-    compute_device device = getComputeDevice(cComputeDevice);
-    switch (device) {
-    case compute_device::host: {
-        printf("oneDAL (native):  PCATrainDAL host \n");
-        doPCAHOSTOneAPICompute(env, rankId, pNumTabData, executor_num, ipPort,
-                               resultObj);
-        break;
-    }
-#ifdef CPU_GPU_PROFILE
-    case compute_device::cpu:
-    case compute_device::gpu: {
-        cout << "oneDAL (native): use DPCPP GPU/CPU kernels" << endl;
-        auto queue = getQueue(device);
-        doPCACPUorGPUOneAPICompute(env, rankId, pNumTabData, executor_num,
-                                   ipPort, queue, resultObj);
-        break;
-    }
-#endif
-    }
-    env->ReleaseStringUTFChars(ip_port, ipport);
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
+    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
+    std::cout << "oneDAL (native): use GPU DPC++ kernels " << std::endl;
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+    doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
+                       computeDeviceOrdinal, resultObj);
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }
+#endif

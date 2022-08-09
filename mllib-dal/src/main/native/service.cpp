@@ -5,8 +5,8 @@ using namespace daal;
 using namespace daal::data_management;
 using namespace daal::services;
 
-std::mutex kmtx;
-std::vector<homogenPtr> cVector;
+std::mutex g_kmtx;
+std::vector<HomogenTablePtr> g_HomogenTablePtrVector;
 
 size_t readTextFile(const std::string &datasetFileName, daal::byte **data) {
     std::ifstream file(datasetFileName.c_str(),
@@ -762,26 +762,26 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
     return dataArch.getAsSharedPtr();
 }
 
-compute_device getComputeDevice(size_t cComputeDevice) {
-    compute_device device;
-    switch (cComputeDevice) {
+ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
+    ComputeDevice device;
+    switch (computeDeviceOrdinal) {
     case 0:
-        device = compute_device::host;
+        device = ComputeDevice::host;
         break;
     case 1:
-        device = compute_device::cpu;
+        device = ComputeDevice::cpu;
         break;
     case 2:
-        device = compute_device::gpu;
+        device = ComputeDevice::gpu;
         break;
     }
     return device;
 }
 
-void saveShareHomogenPtrVector(const homogenPtr &ptr) {
-    kmtx.lock();
-    cVector.push_back(ptr);
-    kmtx.unlock();
+void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr) {
+    g_kmtx.lock();
+    g_HomogenTablePtrVector.push_back(ptr);
+    g_kmtx.unlock();
 }
 
 #ifdef CPU_GPU_PRFILE

@@ -38,23 +38,23 @@
 using namespace std;
 using namespace oneapi::dal;
 
-typedef std::shared_ptr<table_metadata> metadataPtr;
+typedef std::shared_ptr<table_metadata> TableMetadataPtr;
 
-std::mutex mtx;
-std::vector<metadataPtr> cMetaVector;
-template <typename T> std::vector<std::shared_ptr<T>> cVector;
+std::mutex g_mtx;
+std::vector<TableMetadataPtr> g_TableMetaDataVector;
+template <typename T> std::vector<std::shared_ptr<T>> g_SharedPtrVector;
 
-static void saveShareMetaPtrVector(const metadataPtr &ptr) {
-       mtx.lock();
-       cMetaVector.push_back(ptr);
-       mtx.unlock();
+static void saveTableMetaPtrToVector(const TableMetadataPtr &ptr) {
+       g_mtx.lock();
+       g_TableMetaDataVector.push_back(ptr);
+       g_mtx.unlock();
 }
 
 template <typename T>
-static void savePtrVector(const std::shared_ptr<T> &ptr) {
-       mtx.lock();
-       cVector<T>.push_back(ptr);
-       mtx.unlock();
+static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
+       g_mtx.lock();
+       g_SharedPtrVector<T>.push_back(ptr);
+       g_mtx.unlock();
 }
 
 
@@ -75,7 +75,7 @@ static data_layout getDataLayout(jint cLayout) {
 }
 
 template <typename T>
- inline jlong MergeHomogenTable(homogen_table &targetTable, homogen_table &sourceTable, const jint cComputeDevice)
+ inline jlong MergeHomogenTable(homogen_table &targetTable, homogen_table &sourceTable, const jint computeDeviceOrdinal)
  {
        printf("oneDal merge HomogenTable \n");
        const T *targetData = targetTable.get_data<T>();
@@ -96,19 +96,19 @@ template <typename T>
            p.get()[targetDatasize + i] = sourceData[i];
        }
        const std::vector<sycl::event> dependencies = {};
-       homogenPtr resultTablePtr;
-       compute_device device = getComputeDevice(cComputeDevice);
+       HomogenTablePtr resultTablePtr;
+       ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
        switch(device) {
-        case compute_device::host:{
-            savePtrVector<T>(p);
+        case ComputeDevice::host:{
+            staySharePtrToVector<T>(p);
             resultTablePtr = std::make_shared<homogen_table>(p.get(), cRowCount, cColCount,
                                                        detail::make_default_delete<const T>(detail::default_host_policy{}),
                                                        targetTable.get_data_layout());
             break;
         }
 #ifdef CPU_GPU_PROFILE
-        case compute_device::cpu:
-        case compute_device::gpu:{
+        case ComputeDevice::cpu:
+        case ComputeDevice::gpu:{
             auto queue = getQueue(device);
             auto data = sycl::malloc_shared<T>(cRowCount * cColCount, queue);
             queue.memcpy(data, p.get(), sizeof(T) * cRowCount * cColCount).wait();
@@ -122,7 +122,7 @@ template <typename T>
             return 0;
         }
    }
-  saveShareHomogenPtrVector(resultTablePtr);
+  saveHomogenTablePtrToVector(resultTablePtr);
   return (jlong)resultTablePtr.get();
  }
 
@@ -133,23 +133,23 @@ template <typename T>
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jintArray cData,
-    jint cLayout, jint cComputeDevice) {
+    jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable int init \n");
     jboolean isCopy = true;
     jint *fData = env->GetIntArrayElements(cData, &isCopy);
     const std::vector<sycl::event> dependencies = {};
-    homogenPtr tablePtr;
-    compute_device device = getComputeDevice(cComputeDevice);
+    HomogenTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch(device) {
-       case compute_device::host:{
+       case ComputeDevice::host:{
              tablePtr = std::make_shared<homogen_table>(fData, cRowCount,
                                                         cColCount, detail::empty_delete<const int>(),
                                                         getDataLayout(cLayout));
              break;
        }
 #ifdef CPU_GPU_PROFILE
-       case compute_device::cpu:
-       case compute_device::gpu:{
+       case ComputeDevice::cpu:
+       case ComputeDevice::gpu:{
              auto queue = getQueue(device);
              auto data = sycl::malloc_shared<int>(cRowCount * cColCount, queue);
              queue.memcpy(data, fData, sizeof(int) * cRowCount * cColCount).wait();
@@ -164,7 +164,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
              return 0;
        }
     }
-    saveShareHomogenPtrVector(tablePtr);
+    saveHomogenTablePtrToVector(tablePtr);
     env->ReleaseIntArrayElements(cData, fData, 1);
     return (jlong)tablePtr.get();
 }
@@ -176,23 +176,23 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jfloatArray cData,
-    jint cLayout, jint cComputeDevice) {
+    jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable float init \n");
     jboolean isCopy = true;
     jfloat *fData = env->GetFloatArrayElements(cData, &isCopy);
     const std::vector<sycl::event> dependencies = {};
-    homogenPtr tablePtr;
-    compute_device device = getComputeDevice(cComputeDevice);
+    HomogenTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
              tablePtr = std::make_shared<homogen_table>(fData, cRowCount, cColCount,
                                                         detail::empty_delete<const float>(),
                                                         getDataLayout(cLayout));
              break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
              auto queue = getQueue(device);
              auto data = sycl::malloc_shared<float>(cRowCount * cColCount, queue);
              queue.memcpy(data, fData, sizeof(float) * cRowCount * cColCount).wait();
@@ -207,7 +207,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
              return 0;
          }
     }
-    saveShareHomogenPtrVector(tablePtr);
+    saveHomogenTablePtrToVector(tablePtr);
     env->ReleaseFloatArrayElements(cData, fData, 1);
     return (jlong)tablePtr.get();
 }
@@ -218,23 +218,23 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jdoubleArray cData,
-    jint cLayout, jint cComputeDevice) {
+    jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable double init \n");
     jboolean isCopy = true;
     jdouble *fData = env->GetDoubleArrayElements(cData, &isCopy);
     const std::vector<sycl::event> dependencies = {};
-    homogenPtr tablePtr;
-    compute_device device = getComputeDevice(cComputeDevice);
+    HomogenTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
              tablePtr = std::make_shared<homogen_table>(fData, cRowCount, cColCount,
                                                         detail::empty_delete<const double>(),
                                                         getDataLayout(cLayout));
              break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
              auto queue = getQueue(device);
              auto data = sycl::malloc_shared<double>(cRowCount * cColCount, queue);
              queue.memcpy(data, fData, sizeof(double) * cRowCount * cColCount).wait();
@@ -249,7 +249,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              return 0;
          }
     }
-     saveShareHomogenPtrVector(tablePtr);
+     saveHomogenTablePtrToVector(tablePtr);
      env->ReleaseDoubleArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
 }
@@ -261,23 +261,23 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlongArray cData,
-    jint cLayout, jint cComputeDevice) {
+    jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable long init \n");
     jboolean isCopy = true;
     jlong *fData = env->GetLongArrayElements(cData, &isCopy);
     const std::vector<sycl::event> dependencies = {};
-    homogenPtr tablePtr;
-    compute_device device = getComputeDevice(cComputeDevice);
+    HomogenTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
              tablePtr = std::make_shared<homogen_table>(fData, cRowCount, cColCount,
                                                         detail::empty_delete<const long>(),
                                                         getDataLayout(cLayout));
              break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
              auto queue = getQueue(device);
              auto data = sycl::malloc_shared<long>(cRowCount * cColCount, queue);
              queue.memcpy(data, fData, sizeof(long) * cRowCount * cColCount).wait();
@@ -292,7 +292,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
              return 0;
          }
     }
-     saveShareHomogenPtrVector(tablePtr);
+     saveHomogenTablePtrToVector(tablePtr);
      env->ReleaseLongArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
 }
@@ -360,8 +360,8 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetMetaData(
     printf("HomogenTable getMetaData \n");
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const table_metadata *mdata = reinterpret_cast<const table_metadata *>(&htable.get_metadata());
-    metadataPtr metaPtr = std::make_shared<table_metadata>(*mdata);
-    saveShareMetaPtrVector(metaPtr);
+    TableMetadataPtr metaPtr = std::make_shared<table_metadata>(*mdata);
+    saveTableMetaPtrToVector(metaPtr);
     return (jlong)metaPtr.get();
 }
 
@@ -444,8 +444,8 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyTableInit
   (JNIEnv *env, jobject) {
       printf(" init empty HomogenTable \n");
-      homogenPtr tablePtr = std::make_shared<homogen_table>();
-      saveShareHomogenPtrVector(tablePtr);
+      HomogenTablePtr tablePtr = std::make_shared<homogen_table>();
+      saveHomogenTablePtrToVector(tablePtr);
       return (jlong)tablePtr.get();
   }
 /*

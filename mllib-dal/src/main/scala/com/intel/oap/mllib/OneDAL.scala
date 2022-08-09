@@ -33,6 +33,33 @@ import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAcce
 
 import scala.collection.mutable.ArrayBuffer
 
+import com.intel.daal.data_management.data.{
+  CSRNumericTable,
+  HomogenNumericTable,
+  Matrix => DALMatrix,
+  NumericTable,
+  RowMergedNumericTable
+}
+import com.intel.daal.services.DaalContext
+import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
+
+import org.apache.spark.ml.linalg.{
+  DenseMatrix,
+  DenseVector,
+  Matrix,
+  SparseVector,
+  Vector,
+  Vectors
+}
+import org.apache.spark.mllib.linalg.{
+  DenseMatrix => OldDenseMatrix,
+  Matrix => OldMatrix,
+  Vector => OldVector
+}
+import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.storage.StorageLevel
+
 object OneDAL {
 
   LibLoader.loadLibraries()
@@ -95,6 +122,7 @@ object OneDAL {
 
     val accessor = new RowAccessor(table.getcObejct(), device)
     val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
     val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
@@ -279,25 +307,6 @@ object OneDAL {
     tables
   }
 
-  private[mllib] def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
-    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
-    val context = new DaalContext()
-    val matrixLabel = new DALMatrix(context, classOf[lang.Double],
-      1, points.length, NumericTable.AllocationFlag.DoAllocate)
-
-    points.zipWithIndex.foreach { case (point: Double, index: Int) =>
-      cSetDouble(matrixLabel.getCNumericTable, index, 0, point)
-    }
-
-    matrixLabel
-  }
-
-  private[mllib] def doubleArrayToHomogenTable(points: Array[Double],
-                                               device: Common.ComputeDevice): HomogenTable = {
-    val table = new HomogenTable(1, points.length, points, device)
-    table
-  }
-
   def makeHomogenTable(arrayVectors: Array[Vector],
                        device: Common.ComputeDevice): HomogenTable = {
     val numCols = arrayVectors.head.size
@@ -337,55 +346,6 @@ object OneDAL {
     table
   }
 
-  def vectorsToSparseNumericTable(vectors: Array[Vector],
-                                  nFeatures: Long): CSRNumericTable = {
-    require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
-
-    println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
-
-    val ratingsNum = vectors.map(_.numActives).sum
-    val csrRowNum = vectors.length
-    val values = Array.fill(ratingsNum) {
-      0.0
-    }
-    val columnIndices = Array.fill(ratingsNum) {
-      0L
-    }
-    // First row index is 1
-    val rowOffsets = ArrayBuffer[Long](1L)
-
-    var indexValues = 0
-
-    // Converted to one CSRNumericTable
-    for (row <- 0 until vectors.length) {
-      val rowVector = vectors(row)
-      rowVector.foreachActive { (column, value) =>
-        values(indexValues) = value
-        // one-based indexValues
-        columnIndices(indexValues) = column + 1
-
-        indexValues = indexValues + 1
-      }
-      // one-based row indexValues
-      rowOffsets += indexValues + 1
-    }
-
-    val contextLocal = new DaalContext()
-
-    // check CSR encoding
-    assert(values.length == ratingsNum,
-      "the length of values should be equal to the number of non-zero elements")
-    assert(columnIndices.length == ratingsNum,
-      "the length of columnIndices should be equal to the number of non-zero elements")
-    assert(rowOffsets.size == (csrRowNum + 1),
-      "the size of rowOffsets should be equal to the number of rows + 1")
-
-    val cTable = OneDAL.cNewCSRNumericTableDouble(values, columnIndices, rowOffsets.toArray,
-      nFeatures, csrRowNum)
-    val table = new CSRNumericTable(contextLocal, cTable)
-
-    table
-  }
   def rddLabeledPointToSparseTables_shuffle(labeledPoints: Dataset[_],
                                             labelCol: String,
                                             featuresCol: String,
@@ -427,10 +387,10 @@ object OneDAL {
   }
 
   def rddLabeledPointToMergedHomogenTables(labeledPoints: Dataset[_],
-                                    labelCol: String,
-                                    featuresCol: String,
-                                    executorNum: Int,
-                                    device: Common.ComputeDevice): RDD[(Long, Long)] = {
+                                           labelCol: String,
+                                           featuresCol: String,
+                                           executorNum: Int,
+                                           device: Common.ComputeDevice): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -498,10 +458,39 @@ object OneDAL {
     mergedTables
   }
 
+  private[mllib] def doubleArrayToHomogenTable(
+      points: Array[Double],
+      device: Common.ComputeDevice): HomogenTable = {
+    val table = new HomogenTable(1, points.length, points, device)
+    table
+  }
+
+  private def vectorsToDenseHomogenTable(
+      it: Iterator[Vector],
+      numRows: Int,
+      numCols: Int,
+      device: Common.ComputeDevice): HomogenTable = {
+    printf(s"vectorsToDenseHomogenTable numRows: $numRows numCols: $numCols \n")
+    val arrayDouble = new Array[Double](numRows * numCols)
+    var index = 0
+    it.foreach { curVector =>
+      val rowArray = curVector.toArray
+      for (i <- 0 until rowArray.length) {
+        arrayDouble(index) = rowArray(i)
+        assert(
+          index < (numCols * numRows),
+          "the size of arrayDouble should be less than or equal to numCols * numRows ")
+        index = index + 1
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble, device)
+    table
+  }
+
   def rddLabeledPointToMergedTables(labeledPoints: Dataset[_],
-                                    labelCol: String,
-                                    featuresCol: String,
-                                    executorNum: Int): RDD[(Long, Long)] = {
+                                      labelCol: String,
+                                      featuresCol: String,
+                                      executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -573,12 +562,92 @@ object OneDAL {
     mergedTables
   }
 
-  private def vectorsToDenseNumericTable(it: Iterator[Vector],
-                                         numRows: Int, numCols: Int): NumericTable = {
+  private[mllib] def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
     val context = new DaalContext()
-    val matrix = new DALMatrix(context, classOf[lang.Double],
-      numCols.toLong, numRows.toLong, NumericTable.AllocationFlag.DoAllocate)
+    val matrixLabel = new DALMatrix(
+      context,
+      classOf[lang.Double],
+      1,
+      points.length,
+      NumericTable.AllocationFlag.DoAllocate)
+
+    points.zipWithIndex.foreach {
+      case (point: Double, index: Int) =>
+        cSetDouble(matrixLabel.getCNumericTable, index, 0, point)
+    }
+
+    matrixLabel
+  }
+
+  def vectorsToSparseNumericTable(vectors: Array[Vector], nFeatures: Long): CSRNumericTable = {
+    require(vectors(0).isInstanceOf[SparseVector], "vectors should be sparse")
+
+    println(s"Features row x column: ${vectors.length} x ${vectors(0).size}")
+
+    val ratingsNum = vectors.map(_.numActives).sum
+    val csrRowNum = vectors.length
+    val values = Array.fill(ratingsNum) {
+      0.0
+    }
+    val columnIndices = Array.fill(ratingsNum) {
+      0L
+    }
+    // First row index is 1
+    val rowOffsets = ArrayBuffer[Long](1L)
+
+    var indexValues = 0
+
+    // Converted to one CSRNumericTable
+    for (row <- 0 until vectors.length) {
+      val rowVector = vectors(row)
+      rowVector.foreachActive { (column, value) =>
+        values(indexValues) = value
+        // one-based indexValues
+        columnIndices(indexValues) = column + 1
+
+        indexValues = indexValues + 1
+      }
+      // one-based row indexValues
+      rowOffsets += indexValues + 1
+    }
+
+    val contextLocal = new DaalContext()
+
+    // check CSR encoding
+    assert(
+      values.length == ratingsNum,
+      "the length of values should be equal to the number of non-zero elements")
+    assert(
+      columnIndices.length == ratingsNum,
+      "the length of columnIndices should be equal to the number of non-zero elements")
+    assert(
+      rowOffsets.size == (csrRowNum + 1),
+      "the size of rowOffsets should be equal to the number of rows + 1")
+
+    val cTable = OneDAL.cNewCSRNumericTableDouble(
+      values,
+      columnIndices,
+      rowOffsets.toArray,
+      nFeatures,
+      csrRowNum)
+    val table = new CSRNumericTable(contextLocal, cTable)
+
+    table
+  }
+
+  private def vectorsToDenseNumericTable(
+                                          it: Iterator[Vector],
+                                          numRows: Int,
+                                          numCols: Int): NumericTable = {
+    // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
+    val context = new DaalContext()
+    val matrix = new DALMatrix(
+      context,
+      classOf[lang.Double],
+      numCols.toLong,
+      numRows.toLong,
+      NumericTable.AllocationFlag.DoAllocate)
 
     var dalRow = 0
 
@@ -591,26 +660,17 @@ object OneDAL {
     matrix
   }
 
-  private def vectorsToDenseHomogenTable(it: Iterator[Vector],
-                                         numRows: Int,
-                                         numCols: Int,
-                                         device: Common.ComputeDevice): HomogenTable = {
-    printf(s"vectorsToDenseHomogenTable numRows: $numRows numCols: $numCols \n")
-    val arrayDouble = new Array[Double](numRows * numCols)
-    var index = 0
-    it.foreach { curVector =>
-      val rowArray = curVector.toArray
-      for (i <- 0 until rowArray.length ) {
-        arrayDouble(index) = rowArray(i)
-        assert(index < (numCols * numRows),
-          "the size of arrayDouble should be less than or equal to numCols * numRows ")
-        index = index + 1
-      }
-    }
-    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayDouble, device)
-    table
-  }
+  def partitionsToNumericTables(partitions: RDD[Vector], executorNum: Int): RDD[NumericTable] = {
+    val dataForConversion = partitions
+      .repartition(executorNum)
+      .setName("Repartitioned for conversion")
+      .cache()
 
+    dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+      val table = makeNumericTable(it.toArray)
+      Iterator(table)
+    }
+  }
 
   def makeNumericTable(arrayVectors: Array[Vector]): NumericTable = {
 
@@ -628,16 +688,6 @@ object OneDAL {
     }
 
     matrix
-  }
-
-  def partitionsToNumericTables(partitions: RDD[Vector], executorNum: Int): RDD[NumericTable] = {
-    val dataForConversion = partitions.repartition(executorNum)
-      .setName("Repartitioned for conversion").cache()
-
-    dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-      val table = makeNumericTable(it.toArray)
-      Iterator(table)
-    }
   }
 
   def rddVectorToMergedTables(vectors: RDD[Vector], executorNum: Int): RDD[Long] = {

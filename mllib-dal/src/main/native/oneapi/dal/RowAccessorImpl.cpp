@@ -45,21 +45,21 @@ using namespace oneapi::dal;
  */
 JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullDouble
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
-   jint cComputeDevice){
+   jint computeDeviceOrdinal){
   printf("RowAccessor PullDouble \n");
   homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const double> acc {htable};
   jdoubleArray newDoubleArray;
   oneapi::dal::array<double> row_values;
-  compute_device device = getComputeDevice(cComputeDevice);
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
@@ -81,21 +81,21 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
  */
 JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullFloat
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
-   jint cComputeDevice){
+   jint computeDeviceOrdinal){
   printf("RowAccessor PullFloat \n");
   homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const float> acc { htable };
   jfloatArray newFloatArray;
   oneapi::dal::array<float> row_values;
-  compute_device device = getComputeDevice(cComputeDevice);
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
@@ -117,21 +117,21 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
  */
 JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
-   jint cComputeDevice){
+   jint computeDeviceOrdinal){
   printf("RowAccessor PullInt \n");
   homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
   row_accessor<const int> acc { htable };
   jintArray newIntArray;
   oneapi::dal::array<int> row_values;
-  compute_device device = getComputeDevice(cComputeDevice);
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
-         case compute_device::host:{
+         case ComputeDevice::host:{
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
-         case compute_device::cpu:
-         case compute_device::gpu:{
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;

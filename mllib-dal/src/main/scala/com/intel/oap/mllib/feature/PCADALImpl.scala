@@ -17,10 +17,9 @@
 package com.intel.oap.mllib.feature
 
 import java.nio.DoubleBuffer
-
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Service}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Service, Utils}
 import org.apache.spark.TaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -28,7 +27,9 @@ import org.apache.spark.ml.linalg._
 import org.apache.spark.mllib.feature.{PCAModel => MLlibPCAModel, StandardScaler => MLlibStandardScaler}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, DenseVector => OldDenseVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
+
 import java.util.Arrays
+import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 
 import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 
@@ -45,9 +46,10 @@ class PCADALImpl(val k: Int,
   def train(data: RDD[Vector]): PCADALModel = {
     val normalizedData = normalizeData(data)
     val sparkContext = normalizedData.sparkContext
-    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", "GPU")
-    val computeDevice = Common.ComputeDevice.getOrdinalByName(useDevice)
-    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum, computeDevice)
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
+      computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -76,7 +78,6 @@ class PCADALImpl(val k: Int,
       } else {
         Iterator.empty
       }
-
       ret
     }.collect()
 
@@ -139,9 +140,9 @@ class PCADALImpl(val k: Int,
 
   // Single entry to call Correlation PCA DAL backend with parameter K
   @native private[mllib] def cPCATrainDAL(data: Long,
-                                   executor_num: Int,
-                                   compute_device: Int,
-                                   rank_id: Int,
-                                   ip_port: String,
+                                   executorNum: Int,
+                                   computeDeviceOrdinal: Int,
+                                   rankId: Int,
+                                   ipPort: String,
                                    result: PCAResult): Long
 }

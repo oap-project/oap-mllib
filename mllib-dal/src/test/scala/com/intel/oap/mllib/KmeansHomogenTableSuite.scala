@@ -25,15 +25,15 @@ class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
         val sourceData = TestCommon.readCSV("src/test/scala/data/kmeans_dense_train_data.csv")
         val centroidData = TestCommon.readCSV("src/test/scala/data/kmeans_dense_train_centroids.csv")
 
-        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
-        val centroidsTable = new HomogenTable(centroidData.length, centroidData(0).length, TestCommon.convertArray(centroidData), Common.ComputeDevice.HOST);
+        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
+        val centroidsTable = new HomogenTable(centroidData.length, centroidData(0).length, TestCommon.convertArray(centroidData), TestCommon.getComputeDevice);
 
         val kmeansDAL = new KMeansDALImpl(0, 0, 0,
             null, null, 0, 0);
         val result = new KMeansResult();
         val centroids = kmeansDAL.cKMeansOneapiComputeWithInitCenters(dataTable.getcObejct(), centroidsTable.getcObejct(),10, 0.001,
-            5, 1, Common.ComputeDevice.HOST.ordinal(), 0, "127.0.0.1_3000" , result);
-        val resultVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(centroids), Common.ComputeDevice.HOST);
+            5, 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000" , result);
+        val resultVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(centroids), TestCommon.getComputeDevice);
         assertArrayEquals(TestCommon.convertArray(expectCentroids), TestCommon.convertArray(resultVectors), 0.000001)
     }
 }
