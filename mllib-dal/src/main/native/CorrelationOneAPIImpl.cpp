@@ -34,55 +34,25 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doCorrelationHOSTOneAPICompute(JNIEnv *env, jint rankId,
-                                           jlong pNumTabData, jint executor_num,
-                                           const ccl::string &ipPort,
-                                           jobject resultObj) {
-    std::cout << "oneDAL (native): HOST compute start , rankid %ld " << rankId
-              << std::endl;
+static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
+                                       jlong pNumTabData, jint executorNum,
+                                       const ccl::string &ipPort,
+                                       jint computeDeviceOrdinal,
+                                       jobject resultObj) {
+    std::cout << "oneDAL (native): GPU/CPU compute start , rankid = %ld "
+              << rankId << "; device = " << computeDeviceOrdinal
+              << "(0:HOST;1:GPU;2:CPU)" << std::endl;
     const bool isRoot = (rankId == ccl_root);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cor_desc = covariance::descriptor{}.set_result_options(
         covariance::result_options::cor_matrix |
         covariance::result_options::means);
-    const auto result_train = compute(cor_desc, htable);
-    if (isRoot) {
-        std::cout << "Mean:\n" << result_train.get_means() << std::endl;
-        std::cout << "Correlation:\n"
-                  << result_train.get_cor_matrix() << std::endl;
-        // Return all covariance & mean
-        jclass clazz = env->GetObjectClass(resultObj);
-
-        // Get Field references
-        jfieldID correlationNumericTableField =
-            env->GetFieldID(clazz, "correlationNumericTable", "J");
-
-        homogenPtr correlation =
-            std::make_shared<homogen_table>(result_train.get_cor_matrix());
-        saveShareHomogenPtrVector(correlation);
-
-        env->SetLongField(resultObj, correlationNumericTableField,
-                          (jlong)correlation.get());
-    }
-}
-
-static void
-doCorrelationCPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                                   jint executor_num, const ccl::string &ipPort,
-                                   cl::sycl::queue &queue, jobject resultObj) {
-    std::cout << "oneDAL (native): GPU/CPU compute start , rankid %ld "
-              << rankId << std::endl;
-    const bool isRoot = (rankId == ccl_root);
-    homogen_table htable =
-        *reinterpret_cast<const homogen_table *>(pNumTabData);
-
-    const auto cor_desc = covariance::descriptor{}.set_result_options(
-        covariance::result_options::cor_matrix |
-        covariance::result_options::means);
+    auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executor_num, rankId, ipPort);
+        queue, executorNum, rankId, ipPort);
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
@@ -95,9 +65,9 @@ doCorrelationCPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         jfieldID correlationNumericTableField =
             env->GetFieldID(clazz, "correlationNumericTable", "J");
 
-        homogenPtr correlation =
+        HomogenTablePtr correlation =
             std::make_shared<homogen_table>(result_train.get_cor_matrix());
-        saveShareHomogenPtrVector(correlation);
+        saveHomogenTablePtrToVector(correlation);
 
         env->SetLongField(resultObj, correlationNumericTableField,
                           (jlong)correlation.get());
@@ -106,31 +76,15 @@ doCorrelationCPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
-    jint cComputeDevice, jint rankId, jstring ip_port, jobject resultObj) {
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
+    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
     std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
-    const char *ipport = env->GetStringUTFChars(ip_port, 0);
-    std::string ipPort = std::string(ipport);
-    printf("oneDAL (native):  CorrelationTrainDAL %d \n", cComputeDevice);
-    compute_device device = getComputeDevice(cComputeDevice);
-    switch (device) {
-    case compute_device::host: {
-        printf("oneDAL (native):  CorrelationTrainDAL host \n");
-        doCorrelationHOSTOneAPICompute(env, rankId, pNumTabData, executor_num,
-                                       ipPort, resultObj);
-        break;
-    }
-#ifdef CPU_GPU_PROFILE
-    case compute_device::cpu:
-    case compute_device::gpu: {
-        cout << "oneDAL (native): use DPCPP GPU/CPU kernels" << endl;
-        auto queue = getQueue(device);
-        doCorrelationCPUorGPUOneAPICompute(
-            env, rankId, pNumTabData, executor_num, ipPort, queue, resultObj);
-        break;
-    }
-#endif
-    }
-    env->ReleaseStringUTFChars(ip_port, ipport);
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+    printf("oneDAL (native):  CorrelationTrainDAL %d \n", computeDeviceOrdinal);
+    doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
+                               computeDeviceOrdinal, resultObj);
+
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }

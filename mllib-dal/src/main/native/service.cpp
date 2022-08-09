@@ -5,13 +5,8 @@ using namespace daal;
 using namespace daal::data_management;
 using namespace daal::services;
 
-<<<<<<< HEAD
 std::mutex g_kmtx;
 std::vector<HomogenTablePtr> g_HomogenTablePtrVector;
-=======
-std::mutex kmtx;
-std::vector<homogenPtr> cVector;
->>>>>>> 1. migrate pca to DPC++
 
 size_t readTextFile(const std::string &datasetFileName, daal::byte **data) {
     std::ifstream file(datasetFileName.c_str(),

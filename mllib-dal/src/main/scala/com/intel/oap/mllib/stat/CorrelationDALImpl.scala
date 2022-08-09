@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -31,8 +31,8 @@ class CorrelationDALImpl(
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
     val sparkContext = data.sparkContext
-    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", "GPU")
-    val computeDevice = Common.ComputeDevice.getOrdinalByName(useDevice)
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
@@ -88,9 +88,9 @@ class CorrelationDALImpl(
 
 
   @native private[mllib] def cCorrelationTrainDAL(data: Long,
-                                           executor_num: Int,
-                                           compute_device: Int,
-                                           rank_id: Int,
-                                           ip_port: String,
+                                           executorNum: Int,
+                                           computeDevice: Int,
+                                           rankId: Int,
+                                           ipPort: String,
                                            result: CorrelationResult): Long
 }
