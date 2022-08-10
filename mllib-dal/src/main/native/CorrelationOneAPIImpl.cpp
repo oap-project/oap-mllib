@@ -40,7 +40,7 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
                                        jobject resultObj) {
     std::cout << "oneDAL (native): GPU/CPU compute start , rankid = %ld "
               << rankId << "; device = " << computeDeviceOrdinal
-              << "(0:HOST;1:GPU;2:CPU)" << std::endl;
+              << "(0:HOST;1:CPU;2:GPU)" << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
