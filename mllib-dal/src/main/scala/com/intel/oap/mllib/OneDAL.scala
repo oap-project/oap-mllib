@@ -394,7 +394,6 @@ object OneDAL {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
-    printf(s"Processing partitions with $executorNum executors \n")
 
     val spark = SparkSession.active
     import spark.implicits._
@@ -405,7 +404,6 @@ object OneDAL {
     } else {
       labeledPoints
     }
-    printf(s"rddLabeledPointToMergedHomogenTables \n")
 
     val tables = dataForConversion.select(labelCol, featuresCol)
       .toDF().mapPartitions { it: Iterator[Row] =>
@@ -436,7 +434,6 @@ object OneDAL {
     }.cache()
 
     tables.count()
-    printf(s"rddLabeledPointToMergedHomogenTables 1\n")
 
     // Coalesce partitions belonging to the same executor
     val coalescedTables = tables.rdd.coalesce(executorNum,
@@ -529,7 +526,6 @@ object OneDAL {
         }
 
         val labelsTable = doubleArrayToNumericTable(labels)
-        Service.printNumericTable("" ,labelsTable)
 
         Iterator((featuresTable.getCNumericTable, labelsTable.getCNumericTable))
       }
@@ -804,6 +800,7 @@ object OneDAL {
 
         Iterator(mergedData.getcObejct())
     }.cache()
+
     coalescedTables
   }
 
