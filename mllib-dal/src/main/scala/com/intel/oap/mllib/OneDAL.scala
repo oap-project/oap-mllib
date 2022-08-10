@@ -797,10 +797,8 @@ object OneDAL {
         iter.foreach { address =>
           mergedData.addHomogenTable(address)
         }
-
         Iterator(mergedData.getcObejct())
     }.cache()
-
     coalescedTables
   }
 
