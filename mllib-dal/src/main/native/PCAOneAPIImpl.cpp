@@ -15,6 +15,7 @@
  *******************************************************************************/
 
 #include <chrono>
+#include <iostream>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
