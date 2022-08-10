@@ -61,12 +61,9 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L$(I_MPI_ROOT)
 
-# ONEDAL_LIBS := -lonedal_dpc \
-#                -lonedal_core \
-#                -lonedal_thread
-ONEDAL_LIBS := "$(DAALROOT)"/lib/intel64/libonedal_dpc.a \
-               "$(DAALROOT)"/lib/intel64/libonedal_core.a \
-               "$(DAALROOT)"/lib/intel64/libonedal_thread.a
+ONEDAL_LIBS := -lonedal_dpc \
+               -lonedal_core \
+	       -lonedal_thread
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
