@@ -769,7 +769,14 @@ object OneDAL {
     }
 
     val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
-      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner())).cache()
+
+    coalescedRdd.count()
+
+    // Unpersist instances RDD
+    if (vectors.getStorageLevel != StorageLevel.NONE) {
+      vectors.unpersist()
+    }
 
     // Convert to RDD[HomogenTable]
     val coalescedTables = coalescedRdd.map { entry =>
