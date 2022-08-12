@@ -751,12 +751,9 @@ object OneDAL {
 
     logger.info(s"Processing partitions with $executorNum executors")
 
-    // Repartition to executorNum if not enough partitions
-    val dataForConversion = if (vectors.getNumPartitions < executorNum) {
-      vectors.repartition(executorNum).setName("Repartitioned for conversion").cache()
-    } else {
-      vectors
-    }
+    // Repartition to executorNum
+    val dataForConversion = vectors.repartition(executorNum)
+      .setName("Repartitioned for conversion")
 
     // Get dimensions for each partition
     val partitionDims = Utils.getPartitionDims(dataForConversion)
@@ -768,10 +765,8 @@ object OneDAL {
       _._1 > 0
     }
 
-    val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
-      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner())).cache()
-
-    coalescedRdd.count()
+    nonEmptyPartitions.cache()
+    nonEmptyPartitions.count()
 
     // Unpersist instances RDD
     if (vectors.getStorageLevel != StorageLevel.NONE) {
@@ -779,7 +774,7 @@ object OneDAL {
     }
 
     // Convert to RDD[HomogenTable]
-    val coalescedTables = coalescedRdd.map { entry =>
+    val coalescedTables = nonEmptyPartitions.map { entry =>
       val numRows = entry._1
       val index = entry._2
       val it = entry._3
