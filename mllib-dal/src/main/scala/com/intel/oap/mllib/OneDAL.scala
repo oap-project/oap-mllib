@@ -768,8 +768,11 @@ object OneDAL {
       _._1 > 0
     }
 
+    val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+
     // Convert to RDD[HomogenTable]
-    val homogenTables = nonEmptyPartitions.map { entry =>
+    val coalescedTables = coalescedRdd.map { entry =>
       val numRows = entry._1
       val index = entry._2
       val it = entry._3
@@ -781,23 +784,6 @@ object OneDAL {
       table.getcObejct()
     }.setName("homogenTables").cache()
 
-    homogenTables.count()
-
-    // Unpersist instances RDD
-    if (vectors.getStorageLevel != StorageLevel.NONE) {
-      vectors.unpersist()
-    }
-   // Coalesce partitions belonging to the same executor
-    val coalescedRdd = homogenTables.coalesce(executorNum,
-      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-
-    val coalescedTables = coalescedRdd.mapPartitions { iter =>
-        val mergedData = new HomogenTable(device)
-        iter.foreach { address =>
-          mergedData.addHomogenTable(address)
-        }
-        Iterator(mergedData.getcObejct())
-    }.cache()
     coalescedTables
   }
 
