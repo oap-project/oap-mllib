@@ -254,10 +254,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
 #ifdef CPU_GPU_PROFILE
          case compute_device::cpu:
          case compute_device::gpu:{
-             printf("getQueue =  %ld \n", device);
+             printf("getQueue = %ld \n", device);
              auto queue = getQueue(device);
-             printf("Homegentable double malloc memory =  %ld \n", sizeof(double) * cRowCount * cColCount );
+             printf("getQueue = %ld end \n", device);
              auto data = sycl::malloc_shared<double>(cRowCount * cColCount, queue);
+             printf("HomegenTable double malloc memory =  %ld \n", sizeof(double) * cRowCount * cColCount );
              queue.memcpy(data, fData, sizeof(double) * cRowCount * cColCount).wait();
              tablePtr = std::make_shared<homogen_table>(queue, data, cRowCount, cColCount,
                                                         detail::make_default_delete<const double>(queue),

@@ -784,7 +784,8 @@ object OneDAL {
 
       val table = vectorsToDenseHomogenTable(it, numRows, numCols, device)
       table.getcObejct()
-    }.setName("homogenTables").cache()
+    }.setName("HomogenTables").cache()
+
     coalescedTables.collect()
     coalescedTables
   }
