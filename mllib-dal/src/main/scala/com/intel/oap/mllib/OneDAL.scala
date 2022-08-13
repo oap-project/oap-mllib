@@ -667,6 +667,20 @@ object OneDAL {
     }
   }
 
+  def partitionsToHomogenTables(partitions: RDD[Vector], executorNum: Int ,
+                                device: Common.ComputeDevice): RDD[Long] = {
+    val dataForConversion = partitions
+      .repartition(executorNum)
+      .setName("Repartitioned for conversion")
+      .cache()
+
+    println(s"partitionsToHomogenTables Partition Size: ${dataForConversion.getNumPartitions} ")
+    dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+      val table = makeHomogenTable(it.toArray, device)
+      Iterator(table.getcObejct())
+    }
+  }
+
   def makeNumericTable(arrayVectors: Array[Vector]): NumericTable = {
 
     val numCols = arrayVectors.head.size
@@ -772,6 +786,7 @@ object OneDAL {
     }
 
     // Convert to RDD[HomogenTable]
+    println(s"nonEmptyPartitions Partition Size: ${nonEmptyPartitions.getNumPartitions} ")
     val coalescedTables = nonEmptyPartitions.map { entry =>
       val numRows = entry._1
       val index = entry._2
