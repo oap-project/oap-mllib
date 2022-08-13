@@ -753,7 +753,7 @@ object OneDAL {
 
     // Repartition to executorNum
     val dataForConversion = vectors.repartition(executorNum)
-      .setName("Repartitioned for conversion")
+      .setName("Repartitioned for conversion").cache()
 
     // Get dimensions for each partition
     val partitionDims = Utils.getPartitionDims(dataForConversion)
@@ -763,8 +763,7 @@ object OneDAL {
       (index: Int, it: Iterator[Vector]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
     }.filter {
       _._1 > 0
-    }
-    nonEmptyPartitions.cache()
+    }.cache()
     nonEmptyPartitions.collect()
 
     // Unpersist instances RDD
@@ -783,7 +782,7 @@ object OneDAL {
 
       val table = vectorsToDenseHomogenTable(it, numRows, numCols, device)
 
-      Iterator(table.getcObejct())
+      table.getcObejct()
     }.setName("HomogenTables").cache()
 
     coalescedTables
