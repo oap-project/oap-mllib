@@ -765,9 +765,6 @@ object OneDAL {
       _._1 > 0
     }
 
-    nonEmptyPartitions.cache()
-    nonEmptyPartitions.count()
-
     // Unpersist instances RDD
     if (vectors.getStorageLevel != StorageLevel.NONE) {
       vectors.unpersist()
@@ -783,8 +780,10 @@ object OneDAL {
       logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
 
       val table = vectorsToDenseHomogenTable(it, numRows, numCols, device)
-      table.getcObejct()
+
+      Iterator(table.getcObejct())
     }.setName("HomogenTables").cache()
+
     coalescedTables
   }
 
