@@ -764,6 +764,8 @@ object OneDAL {
     }.filter {
       _._1 > 0
     }
+    nonEmptyPartitions.cache()
+    nonEmptyPartitions.collect()
 
     // Unpersist instances RDD
     if (vectors.getStorageLevel != StorageLevel.NONE) {
