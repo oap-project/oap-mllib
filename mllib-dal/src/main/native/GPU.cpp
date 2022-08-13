@@ -98,7 +98,7 @@ sycl::queue getQueue(const compute_device device) {
         std::cout << "selector GPU" << std::endl;
         auto device_gpu = sycl::gpu_selector{}.select_device();
         auto queue = getSyclQueue(device_gpu);
-        std::cout << "selector GPU end" << queue << std::endl;
+        std::cout << "selector GPU end" << std::endl;
         return queue;
     }
 
