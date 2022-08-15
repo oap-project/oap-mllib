@@ -70,13 +70,13 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto t1 = std::chrono::high_resolution_clock::now();
     kmeans::train_result result_train =
             preview::train(comm, kmeans_desc, local_input);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "KMeans (native) spend training times : " << duration
-                  << " secs" << std::endl;
 
     if (isRoot) {
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+                std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+        std::cout << "KMeans (native) spend training times : " << duration
+                      << " secs" << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
