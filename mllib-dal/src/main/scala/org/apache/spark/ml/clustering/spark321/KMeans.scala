@@ -102,6 +102,10 @@ class KMeans @Since("1.5.0") (
   private def trainWithDAL(instances: RDD[(Vector, Double)],
                            handlePersistence: Boolean): KMeansModel = instrumented { instr =>
 
+    if (handlePersistence) {
+      instances.persist(StorageLevel.MEMORY_AND_DISK)
+    }
+
     val sc = instances.sparkContext
 
     val executor_num = Utils.sparkExecutorNum(sc)
@@ -123,16 +127,12 @@ class KMeans @Since("1.5.0") (
       .setEpsilon($(tol))
       .setDistanceMeasure($(distanceMeasure))
 
-    if (handlePersistence) {
-      instances.persist(StorageLevel.MEMORY_AND_DISK)
-    }
-
     val dataWithNorm = instances.map {
       case (point: Vector, weight: Double) => new VectorWithNorm(point)
     }
 
-//    // Cache for init
-//    dataWithNorm.persist(StorageLevel.MEMORY_AND_DISK)
+    // Cache for init
+    dataWithNorm.persist(StorageLevel.MEMORY_AND_DISK)
 
     val centersWithNorm = if ($(initMode) == "random") {
       mllibKMeans.initRandom(dataWithNorm)
@@ -140,7 +140,7 @@ class KMeans @Since("1.5.0") (
       mllibKMeans.initKMeansParallel(dataWithNorm, distanceMeasureInstance)
     }
 
-//    dataWithNorm.unpersist()
+    dataWithNorm.unpersist()
 
     val centers = centersWithNorm.map(_.vector)
 
@@ -151,13 +151,10 @@ class KMeans @Since("1.5.0") (
 
     val inputData = instances.map {
       case (point: Vector, weight: Double) => point
-    }.cache()
-
-    inputData.collect()
-
-    if (handlePersistence) {
-      instances.unpersist()
     }
+
+    // Cache for input data
+    inputData.persist(StorageLevel.MEMORY_AND_DISK)
 
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
       DistanceMeasure.EUCLIDEAN, centers, executor_num, executor_cores)
@@ -165,6 +162,10 @@ class KMeans @Since("1.5.0") (
     val parentModel = kmeansDAL.train(inputData)
 
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
+
+    if (handlePersistence) {
+      instances.unpersist()
+    }
 
     model
   }
