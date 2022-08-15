@@ -667,26 +667,27 @@ object OneDAL {
     }
   }
 
-  def partitionsToHomogenTables(partitions: RDD[Vector], executorNum: Int,
+  def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
     // Coalesce partitions belonging to the same executor
-    val coalescedRdd = partitions
+    val coalescedRdd = data
       .coalesce(executorNum,
         partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
       .setName("Repartitioned for conversion")
       .cache()
 
     // Unpersist instances RDD
-    if (partitions.getStorageLevel != StorageLevel.NONE) {
-      partitions.unpersist()
+    if (data.getStorageLevel != StorageLevel.NONE) {
+      data.unpersist()
     }
 
     // convert RDD to HomogenTable
     println(s"partitionsToHomogenTables Partition Size: ${coalescedRdd.getNumPartitions} ")
-    coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
       val table = makeHomogenTable(it.toArray, device)
       Iterator(table.getcObejct())
-    }
+    }.cache()
+    coalescedTables
   }
 
   def makeNumericTable(arrayVectors: Array[Vector]): NumericTable = {
