@@ -667,13 +667,12 @@ object OneDAL {
     }
   }
 
-  def partitionsToHomogenTables(partitions: RDD[Vector], executorNum: Int ,
+  def partitionsToHomogenTables(partitions: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
     val dataForConversion = partitions
-      .repartition(executorNum)
+      .coalesce(executorNum)
       .setName("Repartitioned for conversion")
       .cache()
-    dataForConversion.collect()
 
     // Unpersist instances RDD
     if (partitions.getStorageLevel != StorageLevel.NONE) {
@@ -771,9 +770,12 @@ object OneDAL {
 
     logger.info(s"Processing partitions with $executorNum executors")
 
-    // Repartition to executorNum
-    val dataForConversion = vectors.repartition(executorNum)
-      .setName("Repartitioned for conversion").cache()
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (vectors.getNumPartitions < executorNum) {
+      vectors.repartition(executorNum).setName("Repartitioned for conversion").cache()
+    } else {
+      vectors
+    }
 
     // Get dimensions for each partition
     val partitionDims = Utils.getPartitionDims(dataForConversion)
@@ -783,17 +785,10 @@ object OneDAL {
       (index: Int, it: Iterator[Vector]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
     }.filter {
       _._1 > 0
-    }.cache()
-    nonEmptyPartitions.collect()
-
-    // Unpersist instances RDD
-    if (vectors.getStorageLevel != StorageLevel.NONE) {
-      vectors.unpersist()
     }
 
     // Convert to RDD[HomogenTable]
-    println(s"nonEmptyPartitions Partition Size: ${nonEmptyPartitions.getNumPartitions} ")
-    val coalescedTables = nonEmptyPartitions.map { entry =>
+    val homogenTables = nonEmptyPartitions.map { entry =>
       val numRows = entry._1
       val index = entry._2
       val it = entry._3
@@ -802,10 +797,26 @@ object OneDAL {
       logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
 
       val table = vectorsToDenseHomogenTable(it, numRows, numCols, device)
-
       table.getcObejct()
-    }.setName("HomogenTables").cache()
+    }.setName("homogenTables").cache()
 
+    homogenTables.count()
+
+    // Unpersist instances RDD
+    if (vectors.getStorageLevel != StorageLevel.NONE) {
+      vectors.unpersist()
+    }
+   // Coalesce partitions belonging to the same executor
+    val coalescedRdd = homogenTables.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+
+    val coalescedTables = coalescedRdd.mapPartitions { iter =>
+        val mergedData = new HomogenTable(device)
+        iter.foreach { address =>
+          mergedData.addHomogenTable(address)
+        }
+        Iterator(mergedData.getcObejct())
+    }.cache()
     coalescedTables
   }
 
