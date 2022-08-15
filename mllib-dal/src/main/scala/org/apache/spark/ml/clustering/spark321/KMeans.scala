@@ -19,9 +19,9 @@
 
 package org.apache.spark.ml.clustering.spark321
 
+import au.com.bytecode.opencsv.CSVWriter
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansShim}
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.clustering.{KMeans => SparkKMeans, _}
 import org.apache.spark.ml.functions.checkNonNegativeWeight
@@ -29,14 +29,16 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
-import org.apache.spark.mllib.clustering.{DistanceMeasure, KMeans => MLlibKMeans, VectorWithNorm}
-import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
+import org.apache.spark.mllib.clustering.{DistanceMeasure, VectorWithNorm, KMeans => MLlibKMeans}
+import org.apache.spark.mllib.linalg.{Vectors => OldVectors, Vector => OldVector}
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.storage.StorageLevel
+
+import java.io.{BufferedWriter, FileWriter}
 
 /**
  * K-means clustering with support for k-means|| initialization proposed by Bahmani et al.
@@ -121,12 +123,16 @@ class KMeans @Since("1.5.0") (
       .setEpsilon($(tol))
       .setDistanceMeasure($(distanceMeasure))
 
+    if (handlePersistence) {
+      instances.persist(StorageLevel.MEMORY_AND_DISK)
+    }
+
     val dataWithNorm = instances.map {
       case (point: Vector, weight: Double) => new VectorWithNorm(point)
     }
 
-    // Cache for init
-    dataWithNorm.persist(StorageLevel.MEMORY_AND_DISK)
+//    // Cache for init
+//    dataWithNorm.persist(StorageLevel.MEMORY_AND_DISK)
 
     val centersWithNorm = if ($(initMode) == "random") {
       mllibKMeans.initRandom(dataWithNorm)
@@ -134,7 +140,7 @@ class KMeans @Since("1.5.0") (
       mllibKMeans.initKMeansParallel(dataWithNorm, distanceMeasureInstance)
     }
 
-    dataWithNorm.unpersist()
+//    dataWithNorm.unpersist()
 
     val centers = centersWithNorm.map(_.vector)
 
@@ -143,12 +149,14 @@ class KMeans @Since("1.5.0") (
     val strInitMode = $(initMode)
     logInfo(f"Initialization with $strInitMode took $initTimeInSeconds%.3f seconds.")
 
-    if (handlePersistence) {
-      instances.persist(StorageLevel.MEMORY_AND_DISK)
-    }
-
     val inputData = instances.map {
       case (point: Vector, weight: Double) => point
+    }.cache()
+
+    inputData.collect()
+
+    if (handlePersistence) {
+      instances.unpersist()
     }
 
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
@@ -157,10 +165,6 @@ class KMeans @Since("1.5.0") (
     val parentModel = kmeansDAL.train(inputData)
 
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
-
-    if (handlePersistence) {
-      instances.unpersist()
-    }
 
     model
   }

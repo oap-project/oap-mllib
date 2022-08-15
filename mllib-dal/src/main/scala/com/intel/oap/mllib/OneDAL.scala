@@ -673,6 +673,12 @@ object OneDAL {
       .repartition(executorNum)
       .setName("Repartitioned for conversion")
       .cache()
+    dataForConversion.collect()
+
+    // Unpersist instances RDD
+    if (partitions.getStorageLevel != StorageLevel.NONE) {
+      partitions.unpersist()
+    }
 
     println(s"partitionsToHomogenTables Partition Size: ${dataForConversion.getNumPartitions} ")
     dataForConversion.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
