@@ -26,6 +26,7 @@
 #endif
 
 #include "Communicator.hpp"
+#include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_clustering_KMeansDALImpl.h"
 #include "oneapi/dal/algo/kmeans.hpp"
 #include "oneapi/dal/table/homogen.hpp"
@@ -85,6 +86,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         std::cout << "iteration_num: " << iteration_num << std::endl;
         std::cout << "Iteration count: " << result_train.get_iteration_count()
                   << std::endl;
+        std::cout << "Centroids:\n" << result_train.get_model().get_centroids() << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
