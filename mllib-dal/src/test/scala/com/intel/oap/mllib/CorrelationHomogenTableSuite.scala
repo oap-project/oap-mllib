@@ -22,7 +22,7 @@ class CorrelationHomogenTableSuite extends FunctionsSuite with Logging {
             Vectors.dense(-0.087823,-0.092420,0.024892,-0.077831,0.037525,0.052274,-0.076685,1.000000,-0.020806,0.157492),
             Vectors.dense(-0.038801,-0.044481,-0.006728,0.039770,0.014982,0.100059,-0.061039,-0.020806,1.000000,-0.058518),
             Vectors.dense(0.010893,-0.076968,0.023333,0.021695,0.041524,0.082077,0.053211,0.157492,-0.058518,1.000000))
-        val sourceData = TestCommon.readCSV("src/test/scala/data/covcormoments_dense.csv")
+        val sourceData = TestCommon.readCSV("src/test/resources/data/covcormoments_dense.csv")
 
         val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
 

@@ -89,7 +89,7 @@ class CorrelationDALImpl(
 
   @native private[mllib] def cCorrelationTrainDAL(data: Long,
                                            executorNum: Int,
-                                           computeDevice: Int,
+                                           computeDeviceOrdinal: Int,
                                            rankId: Int,
                                            ipPort: String,
                                            result: CorrelationResult): Long

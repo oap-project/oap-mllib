@@ -51,6 +51,7 @@ typedef std::vector<daal::byte> ByteBuffer;
 typedef std::shared_ptr<homogen_table> HomogenTablePtr;
 
 enum class ComputeDevice { host, cpu, gpu };
+const std::string convert_enum[] = {"HOST", "CPU", "GPU"};
 
 void printNumericTable(const NumericTablePtr &dataTable,
                        const char *message = "", size_t nPrintedRows = 0,

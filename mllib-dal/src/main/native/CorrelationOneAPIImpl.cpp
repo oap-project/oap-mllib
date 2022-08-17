@@ -38,9 +38,9 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
                                        const ccl::string &ipPort,
                                        jint computeDeviceOrdinal,
                                        jobject resultObj) {
-    std::cout << "oneDAL (native): GPU/CPU compute start , rankid = %ld "
-              << rankId << "; device = " << computeDeviceOrdinal
-              << "(0:HOST;1:CPU;2:GPU)" << std::endl;
+    std::cout << "oneDAL (native): compute start , rankid = " << rankId
+              << "; device = " << convert_enum[computeDeviceOrdinal]
+              << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
@@ -77,10 +77,9 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
-    std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
+    std::cout << "oneDAL (native): use DPC++ kernels with " << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
-    printf("oneDAL (native):  CorrelationTrainDAL %d \n", computeDeviceOrdinal);
     doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
                                computeDeviceOrdinal, resultObj);
 
