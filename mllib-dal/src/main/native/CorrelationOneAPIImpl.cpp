@@ -77,7 +77,7 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
-    std::cout << "oneDAL (native): use DPC++ kernels with " << std::endl;
+    std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
     doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
