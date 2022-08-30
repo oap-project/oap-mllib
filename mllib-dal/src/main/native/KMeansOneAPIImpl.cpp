@@ -41,7 +41,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jint computeDeviceOrdinal,
                                    jobject resultObj) {
     std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << convert_enum[computeDeviceOrdinal]
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
