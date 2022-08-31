@@ -23,8 +23,8 @@ class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
             Vectors.dense(-0.653824, 73.624718, -60.380787, 8.740559, 0.580889, -95.541794, 25.895468, 56.856102, -59.315926, 12.156931, -24.910173, 99.267456, 83.599007, -23.720819, -43.849953, -57.535759, 17.560658, 82.451462, 47.234901, -96.285553),
             Vectors.dense(27.077707, -20.899839, 44.962280, 24.264837, 23.276260, -0.962210, -16.296940, -33.444206, 51.587513, 43.147736, 21.356207, -2.550465, 0.378649, 4.149162, 56.484566, -3.075402, -30.369482, 27.513243, -17.073362, 57.726898))
 
-        val sourceData = TestCommon.readCSV("src/test/scala/data/kmeans_dense_train_data.csv")
-        val centroidData = TestCommon.readCSV("src/test/scala/data/kmeans_dense_train_centroids.csv")
+        val sourceData = TestCommon.readCSV("src/test/resources/data/kmeans_dense_train_data.csv")
+        val centroidData = TestCommon.readCSV("src/test/resources/data/kmeans_dense_train_centroids.csv")
 
         val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
         val centroidsTable = new HomogenTable(centroidData.length, centroidData(0).length, TestCommon.convertArray(centroidData), TestCommon.getComputeDevice);

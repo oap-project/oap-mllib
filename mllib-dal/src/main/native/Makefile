@@ -63,7 +63,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
 
 ONEDAL_LIBS := -lonedal_dpc \
                -lonedal_core \
-               -lonedal_thread
+	       -lonedal_thread
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
@@ -78,7 +78,7 @@ CPP_SRCS += \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
-  ./CorrelationDALImpl.cpp \
+  ./CorrelationOneAPIImpl.cpp \
   ./SummarizerDALImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
@@ -93,7 +93,7 @@ OBJS += \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
-  ./CorrelationDALImpl.o \
+  ./CorrelationOneAPIImpl.o \
   ./SummarizerDALImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \

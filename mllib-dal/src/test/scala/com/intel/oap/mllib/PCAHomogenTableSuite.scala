@@ -24,7 +24,7 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
             Vectors.dense(-0.340048,-0.585059, -0.167712, 0.296446, 0.607235, 0.064941, 0.000978, 0.186870, -0.010096, -0.134500)
         )
         val expectExplainedVariance = Array(3.492693, 1.677875, 1.529460, 1.147213, 0.769543, 0.731955, 0.507616, 0.075259, 0.047056, 0.021329)
-        val sourceData = TestCommon.readCSV("src/test/scala/data/pca_normalized.csv")
+        val sourceData = TestCommon.readCSV("src/test/resources/data/pca_normalized.csv")
 
         val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
 
@@ -55,7 +55,7 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
             Vectors.dense(0.256176,0.169571,-0.257595,-0.330404,-0.220727,-0.564058,0.339305,0.215309,0.415052,0.171641)
         )
         val expectExplainedVariance = Array(1.304369, 1.252785, 1.120113, 1.114487, 1.083063, 0.942371, 0.909094, 0.825540, 0.746623, 0.701554)
-        val sourceData = TestCommon.readCSV("src/test/scala/data/pca_no_normalized.csv")
+        val sourceData = TestCommon.readCSV("src/test/resources/data/pca_no_normalized.csv")
 
         val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
 
