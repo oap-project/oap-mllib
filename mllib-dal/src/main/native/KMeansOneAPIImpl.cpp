@@ -17,7 +17,6 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include <mutex>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
@@ -41,8 +40,8 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jint executorNum, const ccl::string &ipPort,
                                    jint computeDeviceOrdinal,
                                    jobject resultObj) {
-    std::cout << "oneDAL (native): GPU/CPU compute start , rankid = " << rankId
-              << "; device = " << computeDeviceOrdinal << "(0:HOST;1:GPU;2:CPU)"
+    std::cout << "oneDAL (native): compute start , rankid = " << rankId
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -93,7 +92,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
     jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
     jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
-    std::cout << "oneDAL (native): use GPU DPC++ kernels " << std::endl;
+    std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
     jlong ret = 0L;
