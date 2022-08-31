@@ -15,7 +15,6 @@
  *******************************************************************************/
 
 #include <chrono>
-#include <iostream>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
@@ -25,8 +24,8 @@
 
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
-#include "com_intel_oap_mllib_feature_PCADALImpl.h"
-#include "oneapi/dal/algo/pca.hpp"
+#include "com_intel_oap_mllib_stat_CorrelationDALImpl.h"
+#include "oneapi/dal/algo/covariance.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
 
@@ -34,9 +33,11 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                               jint executorNum, const ccl::string &ipPort,
-                               jint computeDeviceOrdinal, jobject resultObj) {
+static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
+                                       jlong pNumTabData, jint executorNum,
+                                       const ccl::string &ipPort,
+                                       jint computeDeviceOrdinal,
+                                       jobject resultObj) {
     std::cout << "oneDAL (native): compute start , rankid = " << rankId
               << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
@@ -45,47 +46,43 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto pca_desc = pca::descriptor{};
+    const auto cor_desc = covariance::descriptor{}.set_result_options(
+        covariance::result_options::cor_matrix |
+        covariance::result_options::means);
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-
-    pca::train_input local_input{htable};
-    const auto result_train = preview::train(comm, pca_desc, local_input);
+    const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
-        // Return all eigenvalues & eigenvectors
-        // Get the class of the input object
+        std::cout << "Mean:\n" << result_train.get_means() << std::endl;
+        std::cout << "Correlation:\n"
+                  << result_train.get_cor_matrix() << std::endl;
+        // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
+
         // Get Field references
-        jfieldID pcNumericTableField =
-            env->GetFieldID(clazz, "pcNumericTable", "J");
-        jfieldID explainedVarianceNumericTableField =
-            env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
+        jfieldID correlationNumericTableField =
+            env->GetFieldID(clazz, "correlationNumericTable", "J");
 
-        HomogenTablePtr eigenvectors =
-            std::make_shared<homogen_table>(result_train.get_eigenvectors());
-        saveHomogenTablePtrToVector(eigenvectors);
+        HomogenTablePtr correlation =
+            std::make_shared<homogen_table>(result_train.get_cor_matrix());
+        saveHomogenTablePtrToVector(correlation);
 
-        HomogenTablePtr eigenvalues =
-            std::make_shared<homogen_table>(result_train.get_eigenvalues());
-        saveHomogenTablePtrToVector(eigenvalues);
-
-        env->SetLongField(resultObj, pcNumericTableField,
-                          (jlong)eigenvectors.get());
-        env->SetLongField(resultObj, explainedVarianceNumericTableField,
-                          (jlong)eigenvalues.get());
+        env->SetLongField(resultObj, correlationNumericTableField,
+                          (jlong)correlation.get());
     }
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
+Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
-    doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
-                       computeDeviceOrdinal, resultObj);
+    doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
+                               computeDeviceOrdinal, resultObj);
+
     env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }
