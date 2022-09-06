@@ -38,6 +38,8 @@
 using namespace std;
 using namespace oneapi::dal;
 
+typedef std::shared_ptr<table_metadata> TableMetadataPtr;
+
 std::mutex g_mtx;
 std::vector<TableMetadataPtr> g_TableMetaDataVector;
 template <typename T> std::vector<std::shared_ptr<T>> g_SharedPtrVector;
@@ -49,25 +51,11 @@ static void saveTableMetaPtrToVector(const TableMetadataPtr &ptr) {
 }
 
 template <typename T>
-static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
+static void saveSharePtrToVector(const std::shared_ptr<T> &ptr) {
        g_mtx.lock();
        g_SharedPtrVector<T>.push_back(ptr);
        g_mtx.unlock();
 }
-
-static void saveShareMetaPtrVector(const metadataPtr &ptr) {
-       mtx.lock();
-       cMetaVector.push_back(ptr);
-       mtx.unlock();
-}
-
-template <typename T>
-static void savePtrVector(const std::shared_ptr<T> &ptr) {
-       mtx.lock();
-       cVector<T>.push_back(ptr);
-       mtx.unlock();
-}
-
 
 static data_layout getDataLayout(jint cLayout) {
     data_layout layout;
@@ -111,7 +99,7 @@ template <typename T>
        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
        switch(device) {
         case ComputeDevice::host:{
-            staySharePtrToVector<T>(p);
+            saveSharePtrToVector<T>(p);
             resultTablePtr = std::make_shared<homogen_table>(p.get(), cRowCount, cColCount,
                                                        detail::make_default_delete<const T>(detail::default_host_policy{}),
                                                        targetTable.get_data_layout());

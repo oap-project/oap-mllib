@@ -79,7 +79,6 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                           (jlong)eigenvalues.get());
     }
 }
-#endif
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
