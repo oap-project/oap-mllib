@@ -34,70 +34,25 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 
-static void doSummarizerHOSTOneAPICompute(JNIEnv *env, jint rankId,
-                                          jlong pNumTabData, jint executor_num,
-                                          const ccl::string &ipPort,
-                                          jobject resultObj) {
-    std::cout << "oneDAL (native): HOST compute start , rankid %ld " << rankId
+static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
+                                      jlong pNumTabData, jint executorNum,
+                                      const ccl::string &ipPort,
+                                      jint computeDeviceOrdinal,
+                                      jobject resultObj) {
+    std::cout << "oneDAL (native): compute start , rankid = " << rankId
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto bs_desc = basic_statistics::descriptor{};
-    const auto result_train = compute(bs_desc, htable);
-    if (isRoot) {
-        std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
-        std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
-        std::cout << "Mean:\n" << result_train.get_mean() << std::endl;
-        std::cout << "Variance:\n" << result_train.get_variance() << std::endl;
-
-        // Return all covariance & mean
-        jclass clazz = env->GetObjectClass(resultObj);
-
-        // Get Field references
-        jfieldID meanTableField = env->GetFieldID(clazz, "meanTable", "J");
-        jfieldID varianceTableField =
-            env->GetFieldID(clazz, "varianceTable", "J");
-        jfieldID minimumTableField =
-            env->GetFieldID(clazz, "minimumTable", "J");
-        jfieldID maximumTableField =
-            env->GetFieldID(clazz, "maximumTable", "J");
-
-        homogenPtr meanTable =
-            std::make_shared<homogen_table>(result_train.get_mean());
-        saveShareHomogenPtrVector(meanTable);
-        homogenPtr varianceTable =
-            std::make_shared<homogen_table>(result_train.get_variance());
-        saveShareHomogenPtrVector(varianceTable);
-        homogenPtr maxTable =
-            std::make_shared<homogen_table>(result_train.get_max());
-        saveShareHomogenPtrVector(maxTable);
-        homogenPtr minTable =
-            std::make_shared<homogen_table>(result_train.get_min());
-        saveShareHomogenPtrVector(minTable);
-        env->SetLongField(resultObj, meanTableField, (jlong)meanTable.get());
-        env->SetLongField(resultObj, varianceTableField,
-                          (jlong)varianceTable.get());
-        env->SetLongField(resultObj, maximumTableField, (jlong)maxTable.get());
-        env->SetLongField(resultObj, minimumTableField, (jlong)minTable.get());
-    }
-}
-
-static void
-doSummarizerCPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                                  jint executor_num, const ccl::string &ipPort,
-                                  cl::sycl::queue &queue, jobject resultObj) {
-    std::cout << "oneDAL (native): GPU/CPU compute start , rankid %ld "
-              << rankId << std::endl;
-    const bool isRoot = (rankId == ccl_root);
-    homogen_table htable =
-        *reinterpret_cast<const homogen_table *>(pNumTabData);
-
-    const auto bs_desc = basic_statistics::descriptor{};
+    auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executor_num, rankId, ipPort);
+        queue, executorNum, rankId, ipPort);
     const auto result_train = preview::compute(comm, bs_desc, htable);
+
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
         std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
@@ -116,18 +71,18 @@ doSummarizerCPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         jfieldID maximumTableField =
             env->GetFieldID(clazz, "maximumTable", "J");
 
-        homogenPtr meanTable =
+        HomogenTablePtr meanTable =
             std::make_shared<homogen_table>(result_train.get_mean());
-        saveShareHomogenPtrVector(meanTable);
-        homogenPtr varianceTable =
+        saveHomogenTablePtrToVector(meanTable);
+        HomogenTablePtr varianceTable =
             std::make_shared<homogen_table>(result_train.get_variance());
-        saveShareHomogenPtrVector(varianceTable);
-        homogenPtr maxTable =
+        saveHomogenTablePtrToVector(varianceTable);
+        HomogenTablePtr maxTable =
             std::make_shared<homogen_table>(result_train.get_max());
-        saveShareHomogenPtrVector(maxTable);
-        homogenPtr minTable =
+        saveHomogenTablePtrToVector(maxTable);
+        HomogenTablePtr minTable =
             std::make_shared<homogen_table>(result_train.get_min());
-        saveShareHomogenPtrVector(minTable);
+        saveHomogenTablePtrToVector(minTable);
         env->SetLongField(resultObj, meanTableField, (jlong)meanTable.get());
         env->SetLongField(resultObj, varianceTableField,
                           (jlong)varianceTable.get());
@@ -138,31 +93,12 @@ doSummarizerCPUorGPUOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
-    jint cComputeDevice, jint rankId, jstring ip_port, jobject resultObj) {
-    std::cout << "oneDAL (native): use GPU DPC++ kernels with " << std::endl;
-    const char *ipport = env->GetStringUTFChars(ip_port, 0);
-    std::string ipPort = std::string(ipport);
-    printf("oneDAL (native):  SummarizerTrainDAL %d \n", cComputeDevice);
-    compute_device device = getComputeDevice(cComputeDevice);
-    switch (device) {
-    case compute_device::host: {
-        printf("oneDAL (native):  SummarizerTrainDAL host \n");
-        doSummarizerHOSTOneAPICompute(env, rankId, pNumTabData, executor_num,
-                                      ipPort, resultObj);
-        break;
-    }
-#ifdef CPU_GPU_PROFILE
-    case compute_device::cpu:
-    case compute_device::gpu: {
-        cout << "oneDAL (native): use DPCPP GPU/CPU kernels" << endl;
-        auto queue = getQueue(device);
-        doSummarizerCPUorGPUOneAPICompute(
-            env, rankId, pNumTabData, executor_num, ipPort, queue, resultObj);
-        break;
-    }
-#endif
-    }
-    env->ReleaseStringUTFChars(ip_port, ipport);
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
+    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+    doSummarizerOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
+                              computeDeviceOrdinal, resultObj);
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }

@@ -79,7 +79,7 @@ CPP_SRCS += \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
   ./CorrelationOneAPIImpl.cpp \
-  ./SummarizerDALImpl.cpp \
+  ./SummarizerOneAPIImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
@@ -94,7 +94,7 @@ OBJS += \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
   ./CorrelationOneAPIImpl.o \
-  ./SummarizerDALImpl.o \
+  ./SummarizerOneAPIImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \
