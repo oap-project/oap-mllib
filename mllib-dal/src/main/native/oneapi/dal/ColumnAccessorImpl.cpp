@@ -117,32 +117,32 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cPu
 * Signature: (JJ)[D
 */
 JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cPullInt
-(JNIEnv *env, jobject, jlong cTableAddr, jlong cColumnIndex, jlong cRowStartIndex,
- jlong cRowEndIndex, jint computeDeviceOrdinal) {
-    printf("ColumnAccessor PullInt \n");
-    homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
-    column_accessor<const int> acc { htable };
-    oneapi::dal::array<int> col_values;
-    jintArray newIntArray;
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-switch(device) {
-     case ComputeDevice::host:{
-            col_values = acc.pull(cColumnIndex, {cRowStartIndex, cRowEndIndex});
-            break;
-     }
+  (JNIEnv *env, jobject, jlong cTableAddr, jlong cColumnIndex, jlong cRowStartIndex,
+   jlong cRowEndIndex, jint computeDeviceOrdinal) {
+  printf("ColumnAccessor PullInt \n");
+  homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
+  column_accessor<const int> acc { htable };
+  oneapi::dal::array<int> col_values;
+  jintArray newIntArray;
+  ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+  switch(device) {
+         case ComputeDevice::host:{
+                col_values = acc.pull(cColumnIndex, {cRowStartIndex, cRowEndIndex});
+                break;
+         }
 #ifdef CPU_GPU_PROFILE
-     case ComputeDevice::cpu:
-     case ComputeDevice::gpu:{
-            auto queue = getQueue(device);
-            col_values = acc.pull(queue, cColumnIndex, {cRowStartIndex, cRowEndIndex});
-            break;
-     }
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
+                auto queue = getQueue(device);
+                col_values = acc.pull(queue, cColumnIndex, {cRowStartIndex, cRowEndIndex});
+                break;
+         }
 #endif
-     default: {
-           return newIntArray;
-     }
+         default: {
+               return newIntArray;
+         }
+    }
     newIntArray = env->NewIntArray(col_values.get_count());
     env->SetIntArrayRegion(newIntArray, 0, col_values.get_count(), col_values.get_data());
     return newIntArray;
-  }
 }
