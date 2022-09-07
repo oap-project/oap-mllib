@@ -62,13 +62,13 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
         jclass clazz = env->GetObjectClass(resultObj);
 
         // Get Field references
-        jfieldID meanTableField = env->GetFieldID(clazz, "meanTable", "J");
+        jfieldID meanTableField = env->GetFieldID(clazz, "meanNumericTable", "J");
         jfieldID varianceTableField =
-            env->GetFieldID(clazz, "varianceTable", "J");
+            env->GetFieldID(clazz, "varianceNumericTable", "J");
         jfieldID minimumTableField =
-            env->GetFieldID(clazz, "minimumTable", "J");
+            env->GetFieldID(clazz, "minimumNumericTable", "J");
         jfieldID maximumTableField =
-            env->GetFieldID(clazz, "maximumTable", "J");
+            env->GetFieldID(clazz, "maximumNumericTable", "J");
 
         HomogenTablePtr meanTable =
             std::make_shared<homogen_table>(result_train.get_mean());
