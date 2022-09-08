@@ -82,8 +82,6 @@ class SummarizerDALImpl(val executorNum: Int,
         Iterator.empty
       }
 
-      OneCCL.cleanup()
-
       ret
     }.collect()
 

@@ -62,7 +62,8 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
         jclass clazz = env->GetObjectClass(resultObj);
 
         // Get Field references
-        jfieldID meanTableField = env->GetFieldID(clazz, "meanNumericTable", "J");
+        jfieldID meanTableField =
+            env->GetFieldID(clazz, "meanNumericTable", "J");
         jfieldID varianceTableField =
             env->GetFieldID(clazz, "varianceNumericTable", "J");
         jfieldID minimumTableField =
