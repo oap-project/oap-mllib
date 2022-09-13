@@ -58,7 +58,7 @@ void printNumericTable(const NumericTablePtr &dataTable,
                        size_t nPrintedCols = 0, size_t interval = 10);
 size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
-CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName)
+CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
 void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 

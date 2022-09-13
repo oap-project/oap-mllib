@@ -63,7 +63,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
 
 ONEDAL_LIBS := -lonedal_dpc \
                -lonedal_core \
-	           -lonedal_thread
+	       -lonedal_thread
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
@@ -101,7 +101,6 @@ OBJS += \
   ./oneapi/dal/RowAccessorImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
-
 
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CPP_SRCS += ./GPU.cpp

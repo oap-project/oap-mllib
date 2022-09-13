@@ -7,7 +7,6 @@ public class CommonTest {
             device = "HOST";
         }
         System.out.println("getDevice : " + device);
-
         return Common.ComputeDevice.getDeviceByName(device);
     }
 }

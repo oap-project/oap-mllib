@@ -19,9 +19,9 @@
 
 package org.apache.spark.ml.clustering.spark321
 
-import au.com.bytecode.opencsv.CSVWriter
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansShim}
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.clustering.{KMeans => SparkKMeans, _}
 import org.apache.spark.ml.functions.checkNonNegativeWeight
@@ -29,16 +29,14 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.Instrumentation.instrumented
-import org.apache.spark.mllib.clustering.{DistanceMeasure, VectorWithNorm, KMeans => MLlibKMeans}
-import org.apache.spark.mllib.linalg.{Vectors => OldVectors, Vector => OldVector}
+import org.apache.spark.mllib.clustering.{DistanceMeasure, KMeans => MLlibKMeans, VectorWithNorm}
+import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.mllib.linalg.VectorImplicits._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.storage.StorageLevel
-
-import java.io.{BufferedWriter, FileWriter}
 
 /**
  * K-means clustering with support for k-means|| initialization proposed by Bahmani et al.

@@ -89,7 +89,6 @@ template <typename T>
        std::shared_ptr<T> p(new T[targetDatasize + sourceDatasize], [](T* p){
             delete[] p;
         });
-
        for (std::int64_t i = 0; i < targetDatasize; i++) {
            p.get()[i] = targetData[i];
        }

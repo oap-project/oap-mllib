@@ -67,7 +67,6 @@ object TestCommon {
     }
     arrayDouble
   }
-
   def getMatrixFromTable(table: HomogenTable,
                                   device: Common.ComputeDevice): DenseMatrix = {
     val numRows = table.getRowCount.toInt
