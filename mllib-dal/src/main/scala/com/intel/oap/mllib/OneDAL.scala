@@ -85,11 +85,13 @@ object OneDAL {
     matrix
   }
 
-  def homogenTableToMatrix(table: HomogenTable): Matrix = {
+  def homogenTableToMatrix(table: HomogenTable, device: Common.ComputeDevice): Matrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
-    val arrayDouble = table.getDoubleData()
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
     val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
@@ -114,11 +116,13 @@ object OneDAL {
     OldMatrix
   }
 
-  def homogenTableToOldMatrix(table: HomogenTable): OldMatrix = {
+  def homogenTableToOldMatrix(table: HomogenTable, device: Common.ComputeDevice): OldMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
-    val arrayDouble = table.getDoubleData()
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
     val OldMatrix = new OldDenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
 
@@ -390,7 +394,6 @@ object OneDAL {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
-    printf(s"Processing partitions with $executorNum executors \n")
 
     val spark = SparkSession.active
     import spark.implicits._
@@ -401,7 +404,6 @@ object OneDAL {
     } else {
       labeledPoints
     }
-    printf(s"rddLabeledPointToMergedHomogenTables \n")
 
     val tables = dataForConversion.select(labelCol, featuresCol)
       .toDF().mapPartitions { it: Iterator[Row] =>
@@ -432,7 +434,6 @@ object OneDAL {
     }.cache()
 
     tables.count()
-    printf(s"rddLabeledPointToMergedHomogenTables 1\n")
 
     // Coalesce partitions belonging to the same executor
     val coalescedTables = tables.rdd.coalesce(executorNum,

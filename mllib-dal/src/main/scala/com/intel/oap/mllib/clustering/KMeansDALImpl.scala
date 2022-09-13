@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -39,7 +39,7 @@ class KMeansDALImpl(var nClusters: Int,
   def train(data: RDD[Vector]): MLlibKMeansModel = {
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", "GPU")
-    val computeDevice = Common.ComputeDevice.getOrdinalByName(useDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     val coalescedTables = OneDAL.coalesceToHomogenTables(data, executorNum, computeDevice)
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -96,12 +96,12 @@ class KMeansDALImpl(var nClusters: Int,
   }
 
   @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long, centers: Long,
-                                                       cluster_num: Int,
+                                                       clusterNum: Int,
                                                        tolerance: Double,
-                                                       iteration_num: Int,
-                                                       executor_num: Int,
-                                                       compute_device: Int,
-                                                       rank_id: Int,
-                                                       ip_port: String,
+                                                       iterationNum: Int,
+                                                       executorNum: Int,
+                                                       computeDeviceOrdinal: Int,
+                                                       rankId: Int,
+                                                       ipPort: String,
                                                        result: KMeansResult): Long
 }

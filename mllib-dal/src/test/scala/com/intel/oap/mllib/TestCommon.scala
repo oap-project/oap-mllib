@@ -1,7 +1,9 @@
 package com.intel.oap.mllib
 
-import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.mllib.linalg.{ Vector => OldVector}
+import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
+import org.apache.spark.ml.linalg.{DenseMatrix, Vector}
+import org.apache.spark.mllib.linalg.{Vector => OldVector}
+import com.intel.oneapi.dal.table.{Common, HomogenTable}
 
 import scala.io.Source
 
@@ -19,7 +21,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[Array[Double]]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -35,7 +37,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[Vector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -51,7 +53,7 @@ object TestCommon {
   }
 
   def convertArray(arrayVectors: Array[OldVector]): Array[Double] = {
-    val numCols = arrayVectors.head.size
+    val numCols: Int = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -64,5 +66,34 @@ object TestCommon {
       }
     }
     arrayDouble
+  }
+
+  def getMatrixFromTable(table: HomogenTable,
+                                  device: Common.ComputeDevice): DenseMatrix = {
+    val numRows = table.getRowCount.toInt
+    val numCols = table.getColumnCount.toInt
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
+    // Transpose as DAL numeric table is row-major and DenseMatrix is column major
+    val matrix = new DenseMatrix(numRows, numCols, arrayDouble, isTransposed = true)
+
+    matrix
+  }
+
+  def getComputeDevice: Common.ComputeDevice = {
+    val device = System.getProperty("computeDevice")
+    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
+    if(device != null) {
+      device.toUpperCase match {
+        case "HOST" => computeDevice = Common.ComputeDevice.HOST
+        case "CPU" => computeDevice = Common.ComputeDevice.CPU
+        case "GPU" => computeDevice = Common.ComputeDevice.GPU
+        case _ => "Invalid Device"
+      }
+    }
+    System.out.println("getDevice : " + computeDevice)
+    computeDevice
   }
 }

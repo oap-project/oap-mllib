@@ -34,6 +34,7 @@ import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import org.apache.spark.storage.StorageLevel
 
 // scalastyle:off line.size.limit
 
@@ -134,8 +135,9 @@ class NaiveBayes @Since("1.5.0") (
     val sc = spark.sparkContext
 
     // select label and features columns and cache data.
-    val naiveBayesData = dataset.select($(labelCol), $(featuresCol)).cache()
-    naiveBayesData.count()
+    val naiveBayesData = dataset.select($(labelCol), $(featuresCol))
+    log.warn("The input data is not cached. If the workload has much " +
+      "preprocessing, it's recommended to cache the preprocessed data.")
 
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()

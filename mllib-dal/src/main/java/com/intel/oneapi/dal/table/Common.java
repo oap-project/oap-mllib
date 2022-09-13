@@ -30,9 +30,10 @@ public class Common {
         public static ComputeDevice get(int ordinal) {
             return values[ordinal];
         }
-        public static ComputeDevice getOrdinalByName(String key){
+
+        public static ComputeDevice getDeviceByName(String deviceName){
             ComputeDevice device = null;
-            switch (key.toUpperCase()){
+            switch (deviceName.toUpperCase()){
                 case "HOST":
                     device = HOST;
                     break;

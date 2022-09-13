@@ -63,7 +63,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
 
 ONEDAL_LIBS := -lonedal_dpc \
                -lonedal_core \
-               -lonedal_thread
+	           -lonedal_thread
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
@@ -74,12 +74,12 @@ endif
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
   ./KMeansOneAPIImpl.cpp \
-  ./PCADALImpl.cpp \
+  ./PCAOneAPIImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
-  ./CorrelationDALImpl.cpp \
-  ./SummarizerDALImpl.cpp \
+  ./CorrelationOneAPIImpl.cpp \
+  ./SummarizerOneAPIImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
@@ -89,12 +89,12 @@ CPP_SRCS += \
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
   ./KMeansOneAPIImpl.o \
-  ./PCADALImpl.o \
+  ./PCAOneAPIImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
-  ./CorrelationDALImpl.o \
-  ./SummarizerDALImpl.o \
+  ./CorrelationOneAPIImpl.o \
+  ./SummarizerOneAPIImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \

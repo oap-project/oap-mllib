@@ -6,8 +6,8 @@
 
 typedef std::shared_ptr<sycl::queue> queuePtr;
 
-static std::mutex mtx;
-static std::vector<sycl::queue> cVector;
+static std::mutex g_mtx;
+static std::vector<sycl::queue> g_queueVector;
 
 static std::vector<sycl::device> get_gpus() {
     auto platforms = sycl::platform::get_platforms();
@@ -69,37 +69,35 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
 }
 
 static sycl::queue getSyclQueue(const sycl::device device) {
-    mtx.lock();
-    if (!cVector.empty()) {
-        const auto device = cVector[0];
-        mtx.unlock();
+    g_mtx.lock();
+    if (!g_queueVector.empty()) {
+        const auto device = g_queueVector[0];
+        g_mtx.unlock();
         return device;
     } else {
         sycl::queue queue{device};
-        cVector.push_back(queue);
-        const auto device = cVector[0];
-        mtx.unlock();
+        g_queueVector.push_back(queue);
+        const auto device = g_queueVector[0];
+        g_mtx.unlock();
         return device;
     }
 }
 
-sycl::queue getQueue(const compute_device device) {
+sycl::queue getQueue(const ComputeDevice device) {
     std::cout << "Get Queue" << std::endl;
 
     switch (device) {
-    case compute_device::host:
-    case compute_device::cpu: {
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
         std::cout
             << "Not implemented for HOST/CPU device, Please run on GPU device."
             << std::endl;
         exit(-1);
     }
-    case compute_device::gpu: {
+    case ComputeDevice::gpu: {
         std::cout << "selector GPU" << std::endl;
         auto device_gpu = sycl::gpu_selector{}.select_device();
-        auto queue = getSyclQueue(device_gpu);
-        std::cout << "selector GPU end" << std::endl;
-        return queue;
+        return getSyclQueue(device_gpu);
     }
 
     default: {
