@@ -6,7 +6,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.FunctionsSuite
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
-class MomentsHomogenTableSuite extends FunctionsSuite with Logging{
+class SummarizerHomogenTableSuite extends FunctionsSuite with Logging{
     test("test compute low order moments HomogenTable") {
         val expectMean = Array(-0.069474,0.329666,0.152558,0.202047,-0.323516,-0.471058,0.162655,0.347832,-0.656644,0.213516)
         val expectVariance = Array(36.423088,32.901699,30.471611,29.994194,33.665047,30.980848,32.892132,33.231438,34.720554,35.646618)
