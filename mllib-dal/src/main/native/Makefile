@@ -67,7 +67,6 @@ LIBS_COMMON :=-L $(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
         -L $(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L $(I_MPI_ROOT)
 
-<<<<<<< HEAD
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
       LIBS_COMMON := $(LIBS_COMMON) \
                      -L $(CCL_ROOT)/lib/cpu -lccl
