@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (JIIZ[ILcom/intel/oap/mllib/stat/SummarizerResult;)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL
-  (JNIEnv *, jobject, jlong, jint, jint, jboolean, jintArray, jobject);
+  (JNIEnv *, jobject, jlong, jint,  jint, jint, jstring, jobject);
 
 #ifdef __cplusplus
 }
