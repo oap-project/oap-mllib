@@ -10,9 +10,9 @@
 
 However, JVM-based MLlib only has limited use of BLAS acceleration and Spark shuffle is also slow for communication during distributed training. It doesn't fully utilize modern CPU and GPU capabilities to achieve best performance.
 
-## OAP MLlib: Platform Optimized Machine Learning at Scale
+## OAP MLlib Solution
 
-OAP MLlib is an optimized package to accelerate machine learning algorithms in Apache Spark MLlib.  It is compatible with Spark MLlib and leverages open source [Intel® oneAPI Data Analytics Library (oneDAL)](https://github.com/oneapi-src/oneDAL) to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source [Intel® oneAPI Collective Communications Library (oneCCL)](https://github.com/oneapi-src/oneCCL) to provide efficient communication patterns in multi-node multi-GPU clusters.
+OAP MLlib is a platform optimized package to accelerate machine learning algorithms in Apache Spark MLlib.  It is compatible with Spark MLlib and leverages open source [Intel® oneAPI Data Analytics Library (oneDAL)](https://github.com/oneapi-src/oneDAL) to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source [Intel® oneAPI Collective Communications Library (oneCCL)](https://github.com/oneapi-src/oneCCL) to provide efficient communication patterns in multi-node multi-GPU clusters.
 
 ## Who will use OAP MLlib
 
