@@ -50,7 +50,7 @@ Then you can refer to the following [Running](#running) section to try out.
 
 ## Building From Scratch
 
-You can also build the package from source code, please refer to [Building Code](# "Building Code") section.
+You can also build the package from source code, please refer to [Building Code](#building-code) section.
 
 ## Running
 
