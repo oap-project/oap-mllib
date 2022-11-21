@@ -11,7 +11,7 @@
 #include <jni.h>
 #include <oneapi/ccl.hpp>
 
-sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm, int size, int rankId,
-                            jint *gpu_indices, int n_gpu);
+sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
+                           int size, int rankId, jint *gpu_indices, int n_gpu);
 
 sycl::queue getQueue(const ComputeDevice device);

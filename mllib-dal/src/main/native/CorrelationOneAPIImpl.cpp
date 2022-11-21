@@ -23,20 +23,20 @@
 #endif
 
 #include "Communicator.hpp"
+#include "OneCCL.h"
 #include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_stat_CorrelationDALImpl.h"
 #include "oneapi/dal/algo/covariance.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
-#include "OneCCL.h"
 
 using namespace std;
 using namespace oneapi::dal;
 
-static void doCorrelationOneAPICompute(JNIEnv *env,
-                                       jlong pNumTabData,
-                                       preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-                                       jobject resultObj) {
+static void doCorrelationOneAPICompute(
+    JNIEnv *env, jlong pNumTabData,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
     std::cout << "oneDAL (native): compute start " << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
@@ -68,14 +68,14 @@ static void doCorrelationOneAPICompute(JNIEnv *env,
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData,
-    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint computeDeviceOrdinal,
+    jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
     int nGpu = env->GetArrayLength(gpuIdxArray);
     std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
-         << std::endl;
+              << std::endl;
 
     jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -85,9 +85,9 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     auto queue =
         getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
 
-    ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
+    ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-            queue, size, rankId, kvs);
+        queue, size, rankId, kvs);
     doCorrelationOneAPICompute(env, pNumTabData, comm, resultObj);
     env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 
