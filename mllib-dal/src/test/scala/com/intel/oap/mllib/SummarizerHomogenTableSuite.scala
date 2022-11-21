@@ -33,6 +33,7 @@ class SummarizerHomogenTableSuite extends FunctionsSuite with Logging{
 
         val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
         val summarizerDAL = new SummarizerDALImpl(1, 1)
+        val gpuIndices = Array(0)
         val result = new SummarizerResult()
         summarizerDAL.cSummarizerTrainDAL(dataTable.getcObejct(), 1, 1, Common.ComputeDevice.HOST.ordinal(), 0, "127.0.0.1_3000", result)
         val meanTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.meanNumericTable), Common.ComputeDevice.HOST)

@@ -40,13 +40,14 @@ class CorrelationHomogenTableSuite extends FunctionsSuite with Logging {
             Vectors.dense(0.010893,-0.076968,0.023333,0.021695,0.041524,0.082077,0.053211,0.157492,-0.058518,1.000000))
         val sourceData = TestCommon.readCSV("src/test/resources/data/covcormoments_dense.csv")
 
-        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
+        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), TestCommon.getComputeDevice);
 
         val correlationDAL = new CorrelationDALImpl(1, 1)
+        val gpuIndices = Array(0)
         val result = new CorrelationResult()
         correlationDAL.cCorrelationTrainDAL(dataTable.getcObejct(), 1, 1, Common.ComputeDevice.HOST.ordinal(), 0, "127.0.0.1_3000", result);
         val correlationMatrix = TestCommon.getMatrixFromTable(OneDAL.makeHomogenTable(
-            result.correlationNumericTable), Common.ComputeDevice.HOST)
+            result.correlationNumericTable), TestCommon.getComputeDevice)
 
         assertArrayEquals(TestCommon.convertArray(expectCorrelation), correlationMatrix.toArray, 0.000001)
     }

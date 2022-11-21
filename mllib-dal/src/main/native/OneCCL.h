@@ -43,4 +43,5 @@ event CCL_API gather(const BufferType *sendbuf, int sendcount,
 } // namespace ccl
 
 ccl::communicator &getComm();
+ccl::shared_ptr_class<ccl::kvs> &getKvs();
 extern const int ccl_root;

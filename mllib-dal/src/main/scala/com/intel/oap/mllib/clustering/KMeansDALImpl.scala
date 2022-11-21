@@ -50,6 +50,13 @@ class KMeansDALImpl(var nClusters: Int,
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       var cCentroids = 0L
       val result = new KMeansResult()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+
       val tableArr = table.next()
       val initCentroids = if (useDevice == "GPU") {
         OneCCL.initDpcpp()
@@ -67,8 +74,7 @@ class KMeansDALImpl(var nClusters: Int,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
+        gpuIndices,
         result
       )
 

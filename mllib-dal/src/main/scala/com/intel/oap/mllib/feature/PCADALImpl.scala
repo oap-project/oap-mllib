@@ -61,14 +61,20 @@ class PCADALImpl(val k: Int,
       } else {
         OneCCL.init(executorNum, rank, kvsIPPort)
       }
+
       val result = new PCAResult()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
       cPCATrainDAL(
         tableArr,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
+        gpuIndices,
         result
       )
 
@@ -199,7 +205,6 @@ class PCADALImpl(val k: Int,
                                    executorNum: Int,
                                    executorCores: Int,
                                    computeDeviceOrdinal: Int,
-                                   rankId: Int,
-                                   ipPort: String,
+                                   gpuIndices: Array[Int],
                                    result: PCAResult): Long
 }

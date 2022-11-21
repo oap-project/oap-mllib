@@ -29,22 +29,18 @@
 #include "oneapi/dal/algo/kmeans.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
+#include "OneCCL.h"
 
 using namespace std;
 using namespace oneapi::dal;
-const int ccl_root = 0;
 
-static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+static jlong doKMeansOneAPICompute(JNIEnv *env, jlong pNumTabData,
                                    jlong pNumTabCenters, jint clusterNum,
                                    jdouble tolerance, jint iterationNum,
-                                   jint executorNum, const ccl::string &ipPort,
-                                   jint computeDeviceOrdinal,
+                                   preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
                                    jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
-    const bool isRoot = (rankId == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    std::cout << "oneDAL (native): compute start" << std::endl;
+    const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
@@ -54,9 +50,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);
     kmeans::train_input local_input{htable, centroids};
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
+
     kmeans::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
@@ -90,16 +84,31 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
     JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
-    jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
+    jint clusterNum, jdouble tolerance, jint iterationNum,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
     jlong ret = 0L;
+    int nGpu = env->GetArrayLength(gpuIdxArray);
+    std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
+         << std::endl;
+
+    jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+    int size = cclComm.size();
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+    auto queue =
+        getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+    ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, size, rankId, kvs);
     ret = doKMeansOneAPICompute(
-        env, rankId, pNumTabData, pNumTabCenters, clusterNum, tolerance,
-        iterationNum, executorNum, ipPortStr, computeDeviceOrdinal, resultObj);
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+        env, pNumTabData, pNumTabCenters, clusterNum, tolerance,
+        iterationNum, comm, resultObj);
+    env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
     return ret;
 }
 #endif

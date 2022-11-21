@@ -53,13 +53,18 @@ class CorrelationDALImpl(
       val computeStartTime = System.nanoTime()
 
       val result = new CorrelationResult()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
       cCorrelationTrainDAL(
         tableArr,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
+        gpuIndices,
         result
       )
 
@@ -106,7 +111,6 @@ class CorrelationDALImpl(
                                            executorNum: Int,
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
-                                           rankId: Int,
-                                           ipPort: String,
+                                           gpuIndices: Array[Int],
                                            result: CorrelationResult): Long
 }

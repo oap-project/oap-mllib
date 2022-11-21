@@ -38,8 +38,10 @@ static std::list<std::string> local_host_ips;
 static size_t comm_size = 0;
 static size_t rank_id = 0;
 static std::vector<ccl::communicator> g_comms;
+static std::vector<ccl::shared_ptr_class<ccl::kvs>> g_kvs;
 
 ccl::communicator &getComm() { return g_comms[0]; }
+ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
 
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
@@ -60,6 +62,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     ccl::shared_ptr_class<ccl::kvs> kvs;
     kvs = ccl::create_main_kvs(kvs_attr);
 
+    g_kvs.push_back(kvs);
     g_comms.push_back(ccl::create_communicator(size, rank, kvs));
 
     auto t2 = std::chrono::high_resolution_clock::now();

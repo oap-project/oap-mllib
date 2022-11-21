@@ -23,17 +23,17 @@ namespace v1 {
 template <class T>
 class singleton {
 public:
-    static T& get(int size, int rank, ccl::string ip_port) {
+    static T& get(int size, int rank, ccl::shared_ptr_class<ccl::kvs> kvs) {
         static std::once_flag flag;
-        std::call_once(flag, [size, rank, ip_port] {
-            get_instance(size, rank, ip_port);
+        std::call_once(flag, [size, rank, kvs] {
+            get_instance(size, rank, kvs);
         });
-        return get_instance(size, rank, ip_port);
+        return get_instance(size, rank, kvs);
     }
 
 private:
-    static T& get_instance(int size, int rank, ccl::string ip_port) {
-        static T instance{size, rank, ip_port};
+    static T& get_instance(int size, int rank, ccl::shared_ptr_class<ccl::kvs> kvs) {
+        static T instance{size, rank, kvs};
         return instance;
     }
 };

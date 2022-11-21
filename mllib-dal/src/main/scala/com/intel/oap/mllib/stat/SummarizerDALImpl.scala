@@ -53,13 +53,18 @@ class SummarizerDALImpl(val executorNum: Int,
       val computeStartTime = System.nanoTime()
 
       val result = new SummarizerResult()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
       cSummarizerTrainDAL(
         tableArr,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
+        gpuIndices,
         result
       )
 
@@ -137,7 +142,6 @@ class SummarizerDALImpl(val executorNum: Int,
                                           executorNum: Int,
                                           executorCores: Int,
                                           computeDeviceOrdinal: Int,
-                                          rankId: Int,
-                                          ipPort: String,
+                                          gpuIndices: Array[Int],
                                           result: SummarizerResult): Long
 }
