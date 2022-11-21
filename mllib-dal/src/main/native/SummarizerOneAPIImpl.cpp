@@ -28,30 +28,22 @@
 #include "oneapi/dal/algo/basic_statistics.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
+#include "OneCCL.h"
 
 using namespace std;
 using namespace oneapi::dal;
-const int ccl_root = 0;
 
-static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
-                                      jlong pNumTabData, jint executorNum,
-                                      const ccl::string &ipPort,
-                                      jint computeDeviceOrdinal,
+static void doSummarizerOneAPICompute(JNIEnv *env,
+                                      jlong pNumTabData,
+                                      preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
                                       jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
-    const bool isRoot = (rankId == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    std::cout << "oneDAL (native): compute start " << std::endl;
+    const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto bs_desc = basic_statistics::descriptor{};
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
     const auto result_train = preview::compute(comm, bs_desc, htable);
-
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
         std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
@@ -93,13 +85,28 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
-    doSummarizerOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
-                              computeDeviceOrdinal, resultObj);
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+    JNIEnv *env, jobject obj, jlong pNumTabData,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
+    int nGpu = env->GetArrayLength(gpuIdxArray);
+    std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
+         << std::endl;
+
+    jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+    int size = cclComm.size();
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+    auto queue =
+        getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+    ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, size, rankId, kvs);
+    doSummarizerOneAPICompute(env, pNumTabData, comm, resultObj);
+    env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+
     return 0;
 }
 #endif

@@ -65,8 +65,43 @@ static sycl::queue getSyclQueue(const sycl::device device) {
     }
 }
 
-sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
-                           int size, int rankId, jint *gpu_indices, int n_gpu) {
+sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm, int size, int rankId,
+                            jint *gpu_indices, int n_gpu) {
+   switch (device) {
+       case ComputeDevice::host:
+       case ComputeDevice::cpu: {
+           std::cout
+               << "Not implemented for HOST/CPU device, Please run on GPU device."
+               << std::endl;
+           exit(-1);
+       }
+       case ComputeDevice::gpu: {
+           std::cout << "selector GPU" << std::endl;
+           auto local_rank = getLocalRank(comm, size, rankId);
+           auto gpus = get_gpus();
+
+           std::cout << "rank: " << rankId << " size: " << size
+                     << " local_rank: " << local_rank << " n_gpu: " << n_gpu
+                     << std::endl;
+
+           auto gpu_selected = gpu_indices[local_rank % n_gpu];
+           std::cout << "GPU selected for current rank: " << gpu_selected << std::endl;
+
+           // In case gpu_selected index is larger than number of GPU SYCL devices
+           auto rank_gpu = gpus[gpu_selected % gpus.size()];
+           return getSyclQueue(rank_gpu);
+       }
+
+       default: {
+           std::cout << "No Device!" << std::endl;
+           exit(-1);
+       }
+   }
+}
+
+sycl::queue getQueue(const ComputeDevice device) {
+    std::cout << "Get Queue" << std::endl;
+
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
@@ -118,9 +153,9 @@ sycl::queue getQueue(const ComputeDevice device) {
         std::cout << "selector GPU end" << std::endl;
         return getSyclQueue(device_gpu);
     }
-    default: {
-        std::cout << "No Device!" << std::endl;
-        exit(-1);
-    }
+        default: {
+            std::cout << "No Device!" << std::endl;
+            exit(-1);
+        }
     }
 }
