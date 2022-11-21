@@ -25,20 +25,20 @@
 #endif
 
 #include "Communicator.hpp"
+#include "OneCCL.h"
 #include "com_intel_oap_mllib_clustering_KMeansDALImpl.h"
 #include "oneapi/dal/algo/kmeans.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
-#include "OneCCL.h"
 
 using namespace std;
 using namespace oneapi::dal;
 
-static jlong doKMeansOneAPICompute(JNIEnv *env, jlong pNumTabData,
-                                   jlong pNumTabCenters, jint clusterNum,
-                                   jdouble tolerance, jint iterationNum,
-                                   preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-                                   jobject resultObj) {
+static jlong doKMeansOneAPICompute(
+    JNIEnv *env, jlong pNumTabData, jlong pNumTabCenters, jint clusterNum,
+    jdouble tolerance, jint iterationNum,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
     std::cout << "oneDAL (native): compute start" << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
@@ -92,7 +92,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     jlong ret = 0L;
     int nGpu = env->GetArrayLength(gpuIdxArray);
     std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
-         << std::endl;
+              << std::endl;
 
     jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -102,12 +102,11 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     auto queue =
         getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
 
-    ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
+    ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, size, rankId, kvs);
-    ret = doKMeansOneAPICompute(
-        env, pNumTabData, pNumTabCenters, clusterNum, tolerance,
-        iterationNum, comm, resultObj);
+    ret = doKMeansOneAPICompute(env, pNumTabData, pNumTabCenters, clusterNum,
+                                tolerance, iterationNum, comm, resultObj);
     env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
     return ret;
 }
