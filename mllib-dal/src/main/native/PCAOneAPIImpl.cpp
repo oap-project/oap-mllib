@@ -26,8 +26,8 @@
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
-#include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/algo/covariance.hpp"
+#include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
 
@@ -47,7 +47,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cov_desc = dal::covariance::descriptor{}.set_result_options(
-            dal::covariance::result_options::cov_matrix);
+        dal::covariance::result_options::cov_matrix);
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
@@ -61,7 +61,8 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         using descriptor_t = dal::pca::descriptor<float_t, method_t, task_t>;
         const auto pca_desc = descriptor_t().set_deterministic(true);
 
-        const auto result_train = dal::train(queue, pca_desc, result.get_cov_matrix());
+        const auto result_train =
+            dal::train(queue, pca_desc, result.get_cov_matrix());
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
