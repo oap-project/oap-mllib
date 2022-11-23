@@ -55,15 +55,17 @@ INCS := -I $(JAVA_HOME)/include \
 # Use static link if possible, TBB is only available as dynamic libs
 LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
         -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_dpc.a \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L$(CMPLR_ROOT)/linux/compiler/lib -lOpenCL \
-        -L$(I_MPI_ROOT)
+        -L$(I_MPI_ROOT) \
+        "$(DAALROOT)"/lib/intel64/libonedal_dpc.a \
+        "$(DAALROOT)"/lib/intel64/libonedal_core.a \
+        "$(DAALROOT)"/lib/intel64/libonedal_thread.a
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
+  LIBS := $(LIBS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS) -l:libonedal_sycl.a
+  LIBS := $(LIBS_COMMON) -L$(DAALROOT)/lib/intel64 -l:libonedal_sycl.a
 endif
 
 CPP_SRCS += \
