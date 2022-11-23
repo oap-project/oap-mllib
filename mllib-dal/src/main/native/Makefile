@@ -65,7 +65,7 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := $(LIBS_COMMON) -L$(DAALROOT)/lib/intel64 -l:libonedal_sycl.a
+  LIBS := $(LIBS_COMMON) "$(DAALROOT)"/lib/intel64/libonedal_sycl.a
 endif
 
 CPP_SRCS += \
