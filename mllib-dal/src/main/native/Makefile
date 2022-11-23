@@ -39,7 +39,7 @@ CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON) -fsycl
+  CFLAGS := $(CFLAGS_COMMON) -fsycl -fsycl-device-code-split=per_kernel
 else
   $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
   exit 1
@@ -49,8 +49,6 @@ INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I $(CCL_ROOT)/include/cpu_gpu_dpcpp \
         -I $(DAALROOT)/include \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
         -I ./javah \
         -I ./
 
@@ -59,11 +57,8 @@ LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
         -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
         -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_dpc.a \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
+        -L$(CMPLR_ROOT)/linux/compiler/lib -lOpenCL \
         -L$(I_MPI_ROOT)
-
-ONEDAL_LIBS := -lonedal_dpc \
-               -lonedal_core \
-	       -lonedal_thread
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
