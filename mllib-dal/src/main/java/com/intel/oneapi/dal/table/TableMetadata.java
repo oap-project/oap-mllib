@@ -3,7 +3,7 @@ package com.intel.oneapi.dal.table;
 import java.util.ArrayList;
 
 public class TableMetadata {
-    private TableMetadataImpl impl;
+    private TableMetadataIface impl;
     public TableMetadata(long cMetadata) {
         this.impl = new SimpleMetadataImpl(cMetadata);
     }
