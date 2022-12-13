@@ -38,7 +38,7 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 ## Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started, you can download OAP MLlib JAR from [Release Page](https://github.com/oap-project/oap-mllib/releases/download/v1.4.0/oap-mllib-1.4.0.jar).
+Use a pre-built OAP MLlib JAR to get started, you can download OAP MLlib JAR from [Release Page](https://github.com/oap-project/oap-mllib/releases/download/v1.5.0/oap-mllib-1.5.0.jar).
 
 Then you can refer to the following [Running](#running) section to try out.
 
