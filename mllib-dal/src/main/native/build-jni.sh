@@ -37,8 +37,13 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     com.intel.oap.mllib.classification.NaiveBayesDALImpl \
     com.intel.oap.mllib.regression.LinearRegressionDALImpl \
     com.intel.oap.mllib.stat.CorrelationDALImpl \
+    com.intel.oap.mllib.classification.RandomForestClassifierDALImpl \
     com.intel.oap.mllib.stat.SummarizerDALImpl \
     com.intel.oneapi.dal.table.HomogenTableImpl \
     com.intel.oneapi.dal.table.SimpleMetadataImpl \
     com.intel.oneapi.dal.table.ColumnAccessor \
-    com.intel.oneapi.dal.table.RowAccessor
+    com.intel.oneapi.dal.table.RowAccessor \
+    com.intel.oneapi.dal.table.CSRTableImpl \
+    com.intel.oneapi.dal.table.CSRAccessor
+
+

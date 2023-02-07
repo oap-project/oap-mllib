@@ -8,4 +8,5 @@ public abstract class Table {
     protected abstract boolean hasData();
     protected abstract Long getKind();
     protected abstract TableMetadata getMetaData();
+    public abstract long getcObejct();
 }

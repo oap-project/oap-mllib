@@ -4,7 +4,7 @@ import com.intel.oap.mllib.LibLoader;
 
 import java.io.IOException;
 
-public class HomogenTableImpl implements HomogenTableIface {
+public class CSRTableImpl implements CSRTableIface {
     static {
         try {
             LibLoader.loadLibraries();
@@ -16,52 +16,68 @@ public class HomogenTableImpl implements HomogenTableIface {
     private TableMetadata metadata;
     private Common.ComputeDevice device;
 
-    protected HomogenTableImpl(Common.ComputeDevice computeDevice) {
+    protected CSRTableImpl(Common.ComputeDevice computeDevice) {
         super();
         this.device = computeDevice;
-        this.cObject = this.cEmptyTableInit();
+        this.cObject = this.cEmptyCSRTableInit();
     }
 
-    public HomogenTableImpl(long cTable) {
+    public CSRTableImpl(long cTable) {
         this.cObject = cTable;
     }
 
-    public HomogenTableImpl(long rowCount,
-                            long colCount,
-                            int[] data,
-                            Common.DataLayout dataLayout,
-                            Common.ComputeDevice computeDevice) {
+    public CSRTableImpl(long rowCount,
+                        long colCount,
+                        int[] data,
+                        long[] columnIndices,
+                        long[] rowIndices,
+                        Common.CSRIndexing csrIndexing,
+                        Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
-        this.cObject = iInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
+        this.cObject = iInit(rowCount, colCount,
+                data, columnIndices, rowIndices,
+                csrIndexing.ordinal(), this.device.ordinal());
     }
 
-    public HomogenTableImpl(long rowCount,
-                            long colCount,
-                            float[] data,
-                            Common.DataLayout dataLayout,
-                            Common.ComputeDevice computeDevice) {
+    public CSRTableImpl(long rowCount,
+                        long colCount,
+                        float[] data,
+                        long[] columnIndices,
+                        long[] rowIndices,
+                        Common.CSRIndexing csrIndexing,
+                        Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
-        this.cObject = fInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
+        this.cObject = fInit(rowCount, colCount,
+                data, columnIndices, rowIndices,
+                csrIndexing.ordinal(), this.device.ordinal());
 
     }
 
-    public HomogenTableImpl(long rowCount,
-                            long colCount,
-                            long[] data,
-                            Common.DataLayout dataLayout,
-                            Common.ComputeDevice computeDevice) {
+    public CSRTableImpl(long rowCount,
+                        long colCount,
+                        long[] data,
+                        long[] columnIndices,
+                        long[] rowIndices,
+                        Common.CSRIndexing csrIndexing,
+                        Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
-        this.cObject = lInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
+        this.cObject = lInit(rowCount, colCount,
+                data, columnIndices, rowIndices,
+                csrIndexing.ordinal(), this.device.ordinal());
 
     }
 
-    public HomogenTableImpl(long rowCount,
-                            long colCount,
-                            double[] data,
-                            Common.DataLayout dataLayout,
-                            Common.ComputeDevice computeDevice) {
+    public CSRTableImpl(long rowCount,
+                        long colCount,
+                        double[] data,
+                        long[] columnIndices,
+                        long[] rowIndices,
+                        Common.CSRIndexing csrIndexing,
+                        Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
-        this.cObject = dInit(rowCount, colCount, data, dataLayout.ordinal(), this.device.ordinal());
+        this.cObject = dInit(rowCount, colCount,
+                data, columnIndices, rowIndices,
+                csrIndexing.ordinal(), this.device.ordinal());
 
     }
 
@@ -75,6 +91,7 @@ public class HomogenTableImpl implements HomogenTableIface {
         return cGetRowCount(this.cObject);
     }
 
+
     @Override
     public long getKind() {
         return this.cGetKind(this.cObject);
@@ -85,7 +102,6 @@ public class HomogenTableImpl implements HomogenTableIface {
 
         return Common.DataLayout.get(cGetDataLayout(this.cObject));
     }
-
     @Override
     public TableMetadata getMetaData() {
         long cMetadata = cGetMetaData(this.cObject);
@@ -100,19 +116,29 @@ public class HomogenTableImpl implements HomogenTableIface {
 
     @Override
     public ColumnAccessor getPullColumnIface() {
-        ColumnAccessor accessor = new ColumnAccessor(
+        return null;
+    }
+
+    @Override
+    public CSRAccessor getPullCSRBlockIface() {
+        CSRAccessor accessor = new CSRAccessor(
                 cGetPullColumnIface(this.cObject), this.device);
         return accessor;
     }
 
     @Override
-    public CSRAccessor getPullCSRBlockIface() {
-        return null;
+    public boolean hasData() {
+        return this.getColumnCount() > 0 && this.getRowCount() > 0;
     }
 
     @Override
-    public boolean hasData() {
-        return this.getColumnCount() > 0 && this.getRowCount() > 0;
+    public long[] getColumnIndices() {
+        return cGetColumnIndices(this.cObject);
+    }
+
+    @Override
+    public long[] getRowIndices() {
+        return cGetRowIndices(this.cObject);
     }
 
     @Override
@@ -139,46 +165,51 @@ public class HomogenTableImpl implements HomogenTableIface {
         return this.cObject;
     }
 
-    public void addHomogenTable(long homogenTableAddr ) {
-        this.cObject = cAddHomogenTable(this.cObject, homogenTableAddr, this.device.ordinal());
-    }
     private native long iInit(long rowCount,
                               long colCount,
                               int[] data,
-                              int  dataLayoutIndex,
+                              long[] columnIndices,
+                              long[] rowIndices,
+                              int  csrIndexing,
                               int computeDeviceIndex);
 
     private native long fInit(long rowCount,
                               long colCount,
                               float[] data,
-                              int dataLayoutIndex,
+                              long[] columnIndices,
+                              long[] rowIndices,
+                              int csrIndexing,
                               int computeDeviceIndex);
 
     private native long dInit(long rowCount,
                               long colCount,
                               double[] data,
-                              int dataLayoutIndex,
+                              long[] columnIndices,
+                              long[] rowIndices,
+                              int csrIndexing,
                               int computeDeviceIndex);
 
     private native long lInit(long rowCount,
                               long colCount,
                               long[] data,
-                              int dataLayoutIndex,
+                              long[] columnIndices,
+                              long[] rowIndices,
+                              int csrIndexing,
                               int computeDeviceIndex);
+
+    private native long cEmptyCSRTableInit();
     private native long cGetColumnCount(long cObject);
     private native long cGetRowCount(long cObject);
     private native long cGetKind(long cObject);
     private native int cGetDataLayout(long cObject);
     private native long cGetMetaData(long cObject);
-    private native long cGetPullRowsIface(long cObject);
     private native long cGetPullColumnIface(long cObject);
-    private native long cGetPullCSRBlockIface(long cObject);
     private native int[] cGetIntData(long cObject);
     private native long[] cGetLongData(long cObject);
     private native float[] cGetFloatData(long cObject);
     private native double[] cGetDoubleData(long cObject);
-    private native long cAddHomogenTable(long cObject,
-                                         long homogenTableAddr,
-                                         int computeDeviceIndex);
-    private native long cEmptyTableInit();
+    private native long[] cGetColumnIndices(long cObject);
+    private native long[] cGetRowIndices(long cObject);
+
+
 }
