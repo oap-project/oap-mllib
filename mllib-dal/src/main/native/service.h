@@ -49,6 +49,7 @@ using namespace oneapi::dal;
 typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
 typedef std::shared_ptr<homogen_table> HomogenTablePtr;
+typedef std::shared_ptr<csr_table> CSRTablePtr;
 
 enum class ComputeDevice { host, cpu, gpu };
 const std::string ComputeDeviceString[] = {"HOST", "CPU", "GPU"};
