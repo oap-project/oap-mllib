@@ -208,6 +208,4 @@ public class CSRTableImpl implements CSRTableIface {
     private native double[] cGetDoubleData(long cObject);
     private native long[] cGetColumnIndices(long cObject);
     private native long[] cGetRowIndices(long cObject);
-
-
 }

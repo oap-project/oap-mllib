@@ -15,88 +15,31 @@
  */
 package com.intel.oap.mllib.classification
 
-import com.google.common.collect.HashBiMap
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import com.intel.oap.mllib.stat.CorrelationResult
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-<<<<<<< HEAD
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.{Matrix, Vector}
-=======
-import org.apache.spark.annotation.Since
-import org.apache.spark.internal.Logging
-import org.apache.spark.ml.classification.DecisionTreeClassificationModel
-import org.apache.spark.ml.linalg.Vector
->>>>>>> update
 import org.apache.spark.ml.tree.{InternalNode, LeafNode, Node, Split}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
-<<<<<<< HEAD
 import java.util
 import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 
-=======
-import scala.collection.mutable.HashMap
-
-class RandomForestClassificationModel private[mllib] (
-                           val uid: String,
+private[mllib] class RandomForestClassificationModel (
                          val _trees: Array[DecisionTreeClassificationModel],
                          val numFeatures: Int,
                          val numClasses: Int)
-
-//class DecisionTreeClassificationModel private[mllib] (
-//                          val uid: String,
-//                          val rootNode: Node,
-//                          val numFeatures: Int,
-//                          val numClasses: Int)
-//
-//private[mllib] class LearningNode(
-//                                  var id: Int,
-//                                  var leftChild: Option[LearningNode],
-//                                  var rightChild: Option[LearningNode],
-//                                  var split: Option[Split],
-//                                  var isLeaf: Boolean,
-//                                  var stats: ImpurityStats)extends Serializable {
-//
-//  def toNode: Node = toNode(prune = true)
-//
-//  /**
-//   * Convert this [[LearningNode]] to a regular [[Node]], and recurse on any children.
-//   */
-//  def toNode(prune: Boolean = true): Node = {
-//
-//    if (!leftChild.isEmpty || !rightChild.isEmpty) {
-//      assert(leftChild.nonEmpty && rightChild.nonEmpty && split.nonEmpty && stats != null,
-//        "Unknown error during Decision Tree learning.  Could not convert LearningNode to Node.")
-//      (leftChild.get.toNode(prune), rightChild.get.toNode(prune)) match {
-//        case (l: LeafNode, r: LeafNode) if prune && l.prediction == r.prediction =>
-//          new LeafNode(l.prediction, stats.impurity, stats.impurityCalculator)
-//        case (l, r) =>
-//          new InternalNode(stats.impurityCalculator.predict, stats.impurity, stats.gain,
-//            l, r, split.get, stats.impurityCalculator)
-//      }
-//    } else {
-//      if (stats.valid) {
-//        new LeafNode(stats.impurityCalculator.predict, stats.impurity,
-//          stats.impurityCalculator)
-//      } else {
-//        // Here we want to keep same behavior with the old mllib.DecisionTreeModel
-//        new LeafNode(stats.impurityCalculator.predict, -1.0, stats.impurityCalculator)
-//      }
-//    }
-//  }
-//}
-
->>>>>>> update
 class RandomForestClassifierDALImpl(val uid: String,
                                     val classCount: Int,
                                     val treeCount: Int,
