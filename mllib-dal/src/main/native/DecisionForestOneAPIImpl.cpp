@@ -36,26 +36,45 @@ using namespace std;
 using namespace oneapi::dal;
 const int ccl_root = 0;
 const Map<int, vector<char>> treeForest;
+vector<char> vector;
 
 struct trees_wrap{
+
     bool operator()(const df::leaf_node_info<df::task::classification>& info) {
-        std::string info = info.get_level()
-        + "|" + "leaf"
-        + "|" + info.get_response()
-        + "|" + info.get_impurity()
-        + "|" + info.get_sample_count()
-        std::cout << info << std::endl;
+        std::string str;
+        str.append(to_string(info.get_level()));
+        str.append("|" );
+        str.append("leaf");
+        str.append("|" );
+        str.append(to_string(info.get_response()));
+        str.append("|" );
+        str.append(to_string(info.get_impurity()));
+        str.append("|" );
+        str.append(to_string(info.get_sample_count()));
+
+        vector.push_back(str);
+        std::cout << str << std::endl;
+
         return true;
-    }
 
     bool operator()(const df::split_node_info<df::task::classification>& info) {
-        std::string info = info.get_level()
-        + "|" + "split"
-        + "|" + info.get_feature_index()
-        + "|" + info.get_feature_value()
-        + "|" + info.get_impurity()
-        + "|" + info.get_sample_count()
-        std::cout << info << std::endl;
+        std::string str;
+        str.append(to_string(info.get_level()));
+        str.append("|" );
+        str.append("split");
+        str.append("|" );
+        str.append(to_string(info.get_feature_index()));
+        str.append("|" );
+        str.append(to_string(info.get_feature_value()));
+        str.append("|" );
+        str.append(to_string(info.get_impurity()));
+        str.append("|" );
+        str.append(to_string(info.get_sample_count()));
+        str.append(to_string(info.get_sample_count()));
+
+        vector.push_back(str);
+
+        std::cout << str << std::endl;
         return true;
     }
 };
@@ -65,8 +84,8 @@ void print_model(const df::model<Task>& m) {
     std::cout << "Number of trees: " << m.get_tree_count() << std::endl;
     for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
         std::cout << "Tree #" << i << std::endl;
-
         m.traverse_depth_first(i, trees_wrap{});
+        treeForest.insert({ i , vector})
     }
 }
 
