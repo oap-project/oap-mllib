@@ -11,12 +11,13 @@ APP_CLASS=org.apache.spark.examples.ml.KMeansExample
 
 DEVICE=GPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
-WORKER_GPU_AMOUNT=4
+WORKER_GPU_AMOUNT=1
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
+echo $OAP_MLLIB_JAR
 
 # Should run in standalone mode
-time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
+time $SPARK_HOME/bin/spark-submit --master spark://kunpeng:7077 \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \

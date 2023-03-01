@@ -78,7 +78,7 @@ public final class LibLoader {
   private static synchronized Boolean loadLibSYCL() throws IOException {
     // Check if SYCL libraries are available
     InputStream streamIn = LibLoader.class.getResourceAsStream(LIBRARY_PATH_IN_JAR +
-            "/libsycl.so.5");
+            "/libsycl.so.6");
     if (streamIn == null) {
       return false;
     }
@@ -89,7 +89,7 @@ public final class LibLoader {
     loadFromJar(subDir, "libirng.so");
     loadFromJar(subDir, "libsvml.so");
     loadFromJar(subDir, "libOpenCL.so.1");
-    loadFromJar(subDir, "libsycl.so.5");
+    loadFromJar(subDir, "libsycl.so.6");
 
     return true;
   }
