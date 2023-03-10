@@ -206,6 +206,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_dInit
      env->ReleaseDoubleArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
 }
+
 /*
  * Class:     com_intel_oneapi_dal_table_CSRTableImpl
  * Method:    lInit
@@ -251,6 +252,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_lInit
      env->ReleaseLongArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
  }
+
 /*
  * Class:     com_intel_oneapi_dal_table_CSRTableImpl
  * Method:    cGetColumnCount

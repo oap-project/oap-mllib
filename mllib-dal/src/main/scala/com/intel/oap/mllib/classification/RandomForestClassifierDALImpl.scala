@@ -15,8 +15,8 @@
  */
 package com.intel.oap.mllib.classification
 
+import com.google.common.collect.HashBiMap
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.stat.CorrelationResult
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 
@@ -36,7 +36,8 @@ import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 
-private[mllib] class RandomForestClassificationModel (
+class RandomForestClassificationModel private[mllib] (
+                           val uid: String,
                          val _trees: Array[DecisionTreeClassificationModel],
                          val numFeatures: Int,
                          val numClasses: Int)

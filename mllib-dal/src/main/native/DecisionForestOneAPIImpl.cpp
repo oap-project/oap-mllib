@@ -107,6 +107,7 @@ struct collect_nodes {
         str.append(to_string(info.get_sample_count()));
 
         treesVector->push_back(convertleafToLearningNode(info, classCount));
+
         std::cout << str << std::endl;
 
         i++;

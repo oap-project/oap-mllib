@@ -44,7 +44,6 @@ import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => Ol
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
-
 // scalastyle:off line.size.limit
 /**
  * <a href="http://en.wikipedia.org/wiki/Random_forest">Random Forest</a> learning algorithm for
@@ -196,7 +195,6 @@ class RandomForestClassifier @Since("1.4.0") (
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
     val initStartTime = System.nanoTime()
-    println(s"trainRandomForestClassifierDAL numClasses : " + numClasses)
 
     val rfDAL = new RandomForestClassifierDALImpl(uid,
       numClasses,
@@ -216,7 +214,6 @@ class RandomForestClassifier @Since("1.4.0") (
     val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
     val numFeatures = metadata.numFeatures
-
     val trees = buildTrees(treesMap, numFeatures, numClasses, metadata).map(_.asInstanceOf[DecisionTreeClassificationModel])
     instr.logNumClasses(numClasses)
     instr.logNumFeatures(numFeatures)
