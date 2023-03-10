@@ -43,8 +43,10 @@ using namespace daal::data_management;
 
 #include "error_handling.h"
 #include "oneapi/dal/table/homogen.hpp"
+#include "oneapi/dal/table/detail/csr.hpp"
 
 using namespace oneapi::dal;
+using namespace oneapi::dal::detail;
 
 typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
@@ -62,6 +64,8 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
 CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
 void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
+void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
+
 
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);

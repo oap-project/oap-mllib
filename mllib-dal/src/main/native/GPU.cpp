@@ -6,7 +6,7 @@
 
 typedef std::shared_ptr<sycl::queue> queuePtr;
 
-static std::mutex g_mtx;
+static std::mutex g_mtx_gpu;
 static std::vector<sycl::queue> g_queueVector;
 
 static std::vector<sycl::device> get_gpus() {
@@ -51,16 +51,16 @@ static int getLocalRank(ccl::communicator &comm, int size, int rank) {
 }
 
 static sycl::queue getSyclQueue(const sycl::device device) {
-    g_mtx.lock();
+    g_mtx_gpu.lock();
     if (!g_queueVector.empty()) {
         const auto device = g_queueVector[0];
-        g_mtx.unlock();
+        g_mtx_gpu.unlock();
         return device;
     } else {
         sycl::queue queue{device};
         g_queueVector.push_back(queue);
         const auto device = g_queueVector[0];
-        g_mtx.unlock();
+        g_mtx_gpu.unlock();
         return device;
     }
 }

@@ -211,7 +211,6 @@ class RandomForestClassifier @Since("1.4.0") (
 
     val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
-
     val numFeatures = metadata.numFeatures
 
     val trees = buildTrees(treesMap, numFeatures, numClasses, metadata).map(_.asInstanceOf[DecisionTreeClassificationModel])

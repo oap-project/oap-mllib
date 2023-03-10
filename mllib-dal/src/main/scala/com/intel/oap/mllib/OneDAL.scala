@@ -926,4 +926,6 @@ object OneDAL {
                                         colIndices: Array[Long], rowOffsets: Array[Long],
                                         nFeatures: Long, nVectors: Long): Long
 
+  @native def cConvertCPPMapToHashMap(resultMap :Long): Object
+
 }

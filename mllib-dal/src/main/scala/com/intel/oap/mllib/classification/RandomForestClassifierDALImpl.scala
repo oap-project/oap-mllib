@@ -15,6 +15,7 @@
  */
 package com.intel.oap.mllib.classification
 
+import com.google.common.collect.HashBiMap
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
@@ -70,6 +71,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         "Please run on GPU device.")
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
+    val numFeatures = labeledPoints.select(featuresCol).head().size
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -124,9 +126,9 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-
     results(0)
   }
+
 
   @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
                                                    lableTabAddr: Long,

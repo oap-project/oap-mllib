@@ -89,26 +89,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cGetMetaDat
 
 /*
  * Class:     com_intel_oneapi_dal_table_CSRTableImpl
- * Method:    cGetPullRowsIface
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cGetPullRowsIface
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     com_intel_oneapi_dal_table_CSRTableImpl
  * Method:    cGetPullColumnIface
  * Signature: (J)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cGetPullColumnIface
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     com_intel_oneapi_dal_table_CSRTableImpl
- * Method:    cGetPullCSRBlockIface
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cGetPullCSRBlockIface
   (JNIEnv *, jobject, jlong);
 
 /*
