@@ -334,8 +334,79 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 //  @Since("3.1.0")
 //  def setMaxBlockSizeInMB(value: Double): this.type = set(maxBlockSizeInMB, value)
 
+  override def fit(
+    dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
+    instr.logPipelineStage(this)
+    instr.logDataset(dataset)
+    instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, solver, tol,
+      elasticNetParam, fitIntercept, maxIter, regParam, standardization, aggregationDepth, loss,
+      epsilon, maxBlockSizeInMB)
+
+      println("right fit")
+
+    val yMean = 0.0
+
+
+    val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
+    instr.logNumFeatures(numFeatures)
+
+    val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
+      dataset.sparkSession.sparkContext)
+    val useLRDAL = Utils.isOAPEnabled() && isPlatformSupported
+
+    val model = if (useLRDAL) {
+      trainWithDAL(dataset, numFeatures, yMean)
+    } else {
+      // todo
+      trainWithDAL(dataset, numFeatures, yMean)
+    }
+
+    model
+  }
+
+  //private def trainWithDAL(instances: RDD[(Vector, Double)]
+  private def trainWithDAL(dataset: Dataset[_],
+      numFeatures: Int,
+      yMean: Double): LinearRegressionModel = instrumented { instr =>
+
+    val sc = instances.sparkContext
+
+    val executor_num = Utils.sparkExecutorNum(sc)
+    val executor_cores = Utils.sparkExecutorCores()
+
+
+    val coefficients = Vectors.sparse(numFeatures, Seq.empty)
+    val intercept = yMean
+
+
+    //prepare data
+    val inputData = instances.map {
+      case (point: Vector, weight: Double) => point
+    }
+
+    val lrDAL = new LRDALImpl(executor_num, executor_cores)
+
+    //train
+    val lrmodel = lrDAL.train(inputdata)
+
+    val model = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept).setParent(this))
+    val trainingSummary = new LinearRegressionTrainingSummary(
+      summaryModel.transform(dataset), predictionColName, $(labelCol), $(featuresCol),
+      summaryModel, model.diagInvAtWA.toArray, model.objectiveHistory)
+
+    model.setSummary(Some(trainingSummary))
+
+  }
+  /** todo
+  private def trainWithML(dataset: Dataset[_],
+      numFeatures: Int,
+      yMean: Double): LinearRegressionModel = instrumented {
+        trainWithDAL(dataset, numFeatures, yMean)
+  }
+  */
+
   override def train(
-      dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
+    dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, solver, tol,

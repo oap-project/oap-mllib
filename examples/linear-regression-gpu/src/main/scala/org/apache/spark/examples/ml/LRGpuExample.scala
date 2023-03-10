@@ -20,9 +20,7 @@ package org.apache.spark.examples.ml
 // scalastyle:off println
 
 // $example on$
-import org.apache.spark.ml.clustering.KMeans
-import org.apache.spark.ml.regression.LinearRegression
-import org.apache.spark.ml.evaluation.ClusteringEvaluator
+//import org.apache.spark.ml.regression.LinearRegression
 // $example off$
 import org.apache.spark.sql.SparkSession
 
@@ -30,7 +28,7 @@ import org.apache.spark.sql.SparkSession
  * An example demonstrating k-means clustering. 
  * Slightly modified from MLlib KMeansExample to add data file path as input parameter
  */
-object KMeansExample {
+object LRExample {
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
@@ -49,28 +47,22 @@ object KMeansExample {
     dataset.cache()
 
     // Trains a k-means model.
-    println("seem good0")
-    val kmeans = new KMeans().setK(2).setSeed(1L).setInitMode("random").setMaxIter(5)
-    val lr = new LinearRegression().setMaxIter(10).setRegParam(0.3).setElasticNetParam(0.8)
-    println("seem good1")
-    val lrModel = lr.fit(dataset)
-    println("seem good2")
-    val model = kmeans.fit(dataset)
-    println("seem good3")
+    println("seems good0")
+    //val lr = new LinearRegression().setMaxIter(10).setRegParam(0.3).setElasticNetParam(0.8)
 
-    // Make predictions
-    //val predictions = model.transform(dataset)
+    // Fit the model
+    //val lrModel = lr.fit(dataset)
 
-    // Evaluate clustering by computing Silhouette score
-    //val evaluator = new ClusteringEvaluator()
+    // Print the coefficients and intercept for linear regression
+    //println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
 
-    //val silhouette = evaluator.evaluate(predictions)
-    println(s"Silhouette with squared euclidean distance = ")
-
-    // Shows the result.
-    println("Cluster Centers: ")
-    //model.clusterCenters.foreach(println)
-    // $example off$
+    // Summarize the model over the dataset and print out some metrics
+    //val trainingSummary = lrModel.summary
+    //println(s"numIterations: ${trainingSummary.totalIterations}")
+    //println(s"objectiveHistory: [${trainingSummary.objectiveHistory.mkString(",")}]")
+    //trainingSummary.residuals.show()
+    //println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
+    //println(s"r2: ${trainingSummary.r2}")
 
     spark.stop()
   }
