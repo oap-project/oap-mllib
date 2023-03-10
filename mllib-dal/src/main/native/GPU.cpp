@@ -3,7 +3,11 @@
 #include <unistd.h>
 
 #include "GPU.h"
-#include "service.h"
+
+typedef std::shared_ptr<sycl::queue> queuePtr;
+
+static std::mutex g_mtx;
+static std::vector<sycl::queue> g_queueVector;
 
 static std::vector<sycl::device> get_gpus() {
     auto platforms = sycl::platform::get_platforms();
@@ -62,4 +66,43 @@ sycl::device getAssignedGPU(ccl::communicator &comm, int size, int rankId,
     auto rank_gpu = gpus[gpu_selected % gpus.size()];
 
     return rank_gpu;
+}
+
+static sycl::queue getSyclQueue(const sycl::device device) {
+    g_mtx.lock();
+    if (!g_queueVector.empty()) {
+        const auto device = g_queueVector[0];
+        g_mtx.unlock();
+        return device;
+    } else {
+        sycl::queue queue{device};
+        g_queueVector.push_back(queue);
+        const auto device = g_queueVector[0];
+        g_mtx.unlock();
+        return device;
+    }
+}
+
+sycl::queue getQueue(const ComputeDevice device) {
+    std::cout << "Get Queue" << std::endl;
+
+    switch (device) {
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
+        std::cout
+            << "Not implemented for HOST/CPU device, Please run on GPU device."
+            << std::endl;
+        exit(-1);
+    }
+    case ComputeDevice::gpu: {
+        std::cout << "selector GPU" << std::endl;
+        auto device_gpu = sycl::gpu_selector{}.select_device();
+        return getSyclQueue(device_gpu);
+    }
+
+    default: {
+        std::cout << "No Device!" << std::endl;
+        exit(-1);
+    }
+    }
 }

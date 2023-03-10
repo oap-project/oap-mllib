@@ -82,6 +82,19 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     return 1;
 }
 
+/*
+ * Class:     com_intel_oap_mllib_OneCCL__
+ * Method:    c_init
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL
+Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp(JNIEnv *env, jobject) {
+    std::cerr << "OneCCL (native): init dpcpp" << std::endl;
+    ccl::init();
+
+    return 1;
+}
+
 JNIEXPORT void JNICALL
 Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
 
