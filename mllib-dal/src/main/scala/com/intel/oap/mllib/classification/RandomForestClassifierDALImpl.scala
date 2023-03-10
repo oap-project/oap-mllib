@@ -15,26 +15,73 @@
  */
 package com.intel.oap.mllib.classification
 
+import com.google.common.collect.HashBiMap
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.stat.CorrelationResult
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
+import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.Vector
-import org.apache.spark.ml.tree.Node
+import org.apache.spark.ml.tree.{InternalNode, LeafNode, Node, Split}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
+import org.apache.spark.ml.tree
+import org.apache.spark.mllib.tree.model.ImpurityStats
 
-class DecisionTreeClassificationModel private[mllib] (val rootNode: Node,
-                                                    val numFeatures: Int,
-                                                    val numClasses: Int)
+import scala.collection.mutable.HashMap
 
-private[mllib] class RandomForestClassificationModel (
+class RandomForestClassificationModel private[mllib] (
+                           val uid: String,
                          val _trees: Array[DecisionTreeClassificationModel],
                          val numFeatures: Int,
                          val numClasses: Int)
 
-class RandomForestClassifierDALImpl(val classCount: Int,
+//class DecisionTreeClassificationModel private[mllib] (
+//                          val uid: String,
+//                          val rootNode: Node,
+//                          val numFeatures: Int,
+//                          val numClasses: Int)
+//
+//private[mllib] class LearningNode(
+//                                  var id: Int,
+//                                  var leftChild: Option[LearningNode],
+//                                  var rightChild: Option[LearningNode],
+//                                  var split: Option[Split],
+//                                  var isLeaf: Boolean,
+//                                  var stats: ImpurityStats)extends Serializable {
+//
+//  def toNode: Node = toNode(prune = true)
+//
+//  /**
+//   * Convert this [[LearningNode]] to a regular [[Node]], and recurse on any children.
+//   */
+//  def toNode(prune: Boolean = true): Node = {
+//
+//    if (!leftChild.isEmpty || !rightChild.isEmpty) {
+//      assert(leftChild.nonEmpty && rightChild.nonEmpty && split.nonEmpty && stats != null,
+//        "Unknown error during Decision Tree learning.  Could not convert LearningNode to Node.")
+//      (leftChild.get.toNode(prune), rightChild.get.toNode(prune)) match {
+//        case (l: LeafNode, r: LeafNode) if prune && l.prediction == r.prediction =>
+//          new LeafNode(l.prediction, stats.impurity, stats.impurityCalculator)
+//        case (l, r) =>
+//          new InternalNode(stats.impurityCalculator.predict, stats.impurity, stats.gain,
+//            l, r, split.get, stats.impurityCalculator)
+//      }
+//    } else {
+//      if (stats.valid) {
+//        new LeafNode(stats.impurityCalculator.predict, stats.impurity,
+//          stats.impurityCalculator)
+//      } else {
+//        // Here we want to keep same behavior with the old mllib.DecisionTreeModel
+//        new LeafNode(stats.impurityCalculator.predict, -1.0, stats.impurityCalculator)
+//      }
+//    }
+//  }
+//}
+
+class RandomForestClassifierDALImpl(val uid: String,
+                                    val classCount: Int,
                                     val treeCount: Int,
                                     val featurePerNode: Int,
                                     val minObservationsLeafNode: Int,
@@ -58,6 +105,7 @@ class RandomForestClassifierDALImpl(val classCount: Int,
         labelCol, featuresCol, executorNum, computeDevice)
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
+    val numFeatures = labeledPoints.select(featuresCol).head().size
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -68,7 +116,12 @@ class RandomForestClassifierDALImpl(val classCount: Int,
       val computeStartTime = System.nanoTime()
 
       val result = new RandomForestResult()
-      cRFClassifierTrainDAL(
+//      val node = Array.fill[LearningNode](treeCount)(
+//        new LearningNode(1, None, None, None, false, null))
+//      val trees = node.map{ rootNode => new DecisionTreeClassificationModel(uid, rootNode.toNode(true), numFeatures,
+//        classCount)}
+//      val model = new RandomForestClassificationModel(uid, trees, numFeatures, classCount)
+      val model = cRFClassifierTrainDAL(
         featureTabAddr,
         lableTabAddr,
         executorNum,
@@ -81,8 +134,7 @@ class RandomForestClassifierDALImpl(val classCount: Int,
         minWeightFractionLeafNode,
         minImpurityDecreaseSplitNode,
         kvsIPPort,
-        result
-      )
+        result)
 
       val computeEndTime = System.nanoTime()
 
@@ -95,7 +147,9 @@ class RandomForestClassifierDALImpl(val classCount: Int,
         val probabilitiesNumericTable = OneDAL.homogenTableToMatrix(
           OneDAL.makeHomogenTable(result.probabilitiesNumericTable),
           computeDevice)
-
+        val predictionNumericTable = OneDAL.homogenTableToMatrix(
+          OneDAL.makeHomogenTable(result.predictionNumericTable),
+          computeDevice)
         val convResultEndTime = System.nanoTime()
 
         val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
@@ -112,10 +166,11 @@ class RandomForestClassifierDALImpl(val classCount: Int,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-    val parentModel = new RandomForestClassificationModel(null, 0, 0)
+    val parentModel = new RandomForestClassificationModel(null, null, 0, 0)
     parentModel
 
   }
+
 
   @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
                                              lableTabAddr: Long,
@@ -129,5 +184,5 @@ class RandomForestClassifierDALImpl(val classCount: Int,
                                              minWeightFractionLeafNode: Double,
                                              minImpurityDecreaseSplitNode: Double,
                                              ipPort: String,
-                                             result: RandomForestResult): Long
+                                             result: RandomForestResult): Object
 }

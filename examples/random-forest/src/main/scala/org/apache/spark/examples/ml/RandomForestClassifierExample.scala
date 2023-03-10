@@ -62,6 +62,7 @@ object RandomForestClassifierExample {
       .builder
       .master("local")
       .appName("RandomForestClassifierExample")
+      .config("spark.default.parallelism", 1)
       .getOrCreate()
 
     // $example on$
@@ -84,7 +85,7 @@ object RandomForestClassifierExample {
       .fit(data)
 
     // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3))
+    val Array(trainingData, testData) = data.randomSplit(Array(1, 0))
 
     // Train a RandomForest model.
     val rf = new RandomForestClassifier()
@@ -92,6 +93,7 @@ object RandomForestClassifierExample {
       .setFeaturesCol("features")
       .setNumTrees(1)
       .setSeed(777L)
+      .setBootstrap(false)
 
     // Convert indexed labels back to original labels.
     val labelConverter = new IndexToString()
@@ -104,13 +106,18 @@ object RandomForestClassifierExample {
       .setStages(Array(labelIndexer, featureIndexer, rf, labelConverter))
 
     trainingData.show()
+    println(s"row account ${trainingData.count()}")
     // Train model. This also runs the indexers.
     val model = pipeline.fit(trainingData)
+
     // Make predictions.
-    val predictions = model.transform(testData)
+    val predictions = model.transform(trainingData)
 
     // Select example rows to display.
+    println(s"Select example rows to display")
     predictions.show()
+    println(s"Select example rows to display end")
+
 
 
     // Select (prediction, true label) and compute test error.
@@ -124,6 +131,11 @@ object RandomForestClassifierExample {
 
     val rfModel = model.stages(2).asInstanceOf[RandomForestClassificationModel]
     println(s"tree length: ${rfModel.trees.length}")
+    for ( m <- rfModel.trees) {
+      println(s"prediction : ${m.rootNode.prediction}")
+      println(s"impurity: ${m.rootNode.impurity}")
+      println(s"oldnode: ${m.rootNode.toString}")
+    }
     println(s"Learned classification forest model:\n ${rfModel.toDebugString}")
 
     // $example off$

@@ -34,6 +34,7 @@ object KMeansExample {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
+      .master("local")
       .appName(s"${this.getClass.getSimpleName}")
       .getOrCreate()
 

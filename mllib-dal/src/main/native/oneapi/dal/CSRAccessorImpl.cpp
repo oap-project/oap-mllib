@@ -48,29 +48,29 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_CSRAccessor_cPull
    jint computeDeviceOrdinal){
   printf("CSRAccessor PullDouble \n");
   csr_table htable = *reinterpret_cast<const csr_table *>(cTableAddr);
-  row_accessor<const double> acc {htable};
+  csr_accessor<const double> acc {htable};
   jdoubleArray newDoubleArray;
-  oneapi::dal::array<double> row_values;
+  csr_block<double> csr;
   ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
          case ComputeDevice::host:{
-                row_values = acc.pull({cRowStartIndex, cRowEndIndex});
+                csr = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
-                auto queue = getQueue(device);
-                row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
-                break;
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
          }
 #endif
          default: {
                return newDoubleArray;
          }
       }
-      newDoubleArray = env->NewDoubleArray(row_values.get_count());
-      env->SetDoubleArrayRegion(newDoubleArray, 0, row_values.get_count(),  row_values.get_data());
+      newDoubleArray = env->NewDoubleArray(csr.data.get_count());
+      env->SetDoubleArrayRegion(newDoubleArray, 0, csr.data.get_count(), csr.data.get_data());
       return newDoubleArray;
   }
 
@@ -86,27 +86,27 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_CSRAccessor_cPullF
    csr_table htable = *reinterpret_cast<const csr_table *>(cTableAddr);
    csr_accessor<const float> acc { htable };
    jfloatArray newFloatArray;
-   oneapi::dal::array<float> row_values;
+   csr_block<float> csr;
    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
    switch(device) {
           case ComputeDevice::host:{
-                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
+                 csr = acc.pull({cRowStartIndex, cRowEndIndex});
                  break;
           }
  #ifdef CPU_GPU_PROFILE
           case ComputeDevice::cpu:
           case ComputeDevice::gpu:{
-                 auto queue = getQueue(device);
-                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
-                 break;
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
           }
  #endif
           default: {
                 return newFloatArray;
           }
        }
-       newFloatArray = env->NewFloatArray(row_values.get_count());
-       env->SetFloatArrayRegion(newFloatArray, 0, row_values.get_count(), row_values.get_data());
+       newFloatArray = env->NewFloatArray(csr.data.get_count());
+       env->SetFloatArrayRegion(newFloatArray, 0, csr.data.get_count(), csr.data.get_data());
        return newFloatArray;
    }
 
@@ -122,26 +122,26 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_CSRAccessor_cPullInt
   csr_table htable = *reinterpret_cast<csr_table *>(cTableAddr);
   csr_accessor<const int> acc { htable };
   jintArray newIntArray;
-  oneapi::dal::array<int> row_values;
+  csr_block<int> csr;
   ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
          case ComputeDevice::host:{
-                row_values = acc.pull({cRowStartIndex, cRowEndIndex});
+                csr = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
 #ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
-                auto queue = getQueue(device);
-                row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
-                break;
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
          }
 #endif
          default: {
                return newIntArray;
          }
       }
-      newIntArray = env->NewIntArray(row_values.get_count());
-      env->SetIntArrayRegion(newIntArray, 0, row_values.get_count(), row_values.get_data());
+      newIntArray = env->NewIntArray(csr.data.get_count());
+      env->SetIntArrayRegion(newIntArray, 0, csr.data.get_count(), csr.data.get_data());
       return newIntArray;
   }

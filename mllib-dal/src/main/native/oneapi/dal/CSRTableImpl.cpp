@@ -39,21 +39,21 @@ using namespace std;
 using namespace oneapi::dal;
 
 typedef std::shared_ptr<table_metadata> TableMetadataPtr;
-std::mutex g_mtx;
-std::vector<TableMetadataPtr> g_TableMetaDataVector;
-template <typename T> std::vector<std::shared_ptr<T>> g_SharedPtrVector;
+std::mutex g_mtx_csr;
+std::vector<TableMetadataPtr> g_TableMetaDataVector_csr;
+template <typename T> std::vector<std::shared_ptr<T>> g_SharedPtrVector_csr;
 
 static void saveTableMetaPtrToVector(const TableMetadataPtr &ptr) {
-       g_mtx.lock();
-       g_TableMetaDataVector.push_back(ptr);
-       g_mtx.unlock();
+       g_mtx_csr.lock();
+       g_TableMetaDataVector_csr.push_back(ptr);
+       g_mtx_csr.unlock();
 }
 
 template <typename T>
 static void staySharePtrToVector(const std::shared_ptr<T> &ptr) {
-       g_mtx.lock();
-       g_SharedPtrVector<T>.push_back(ptr);
-       g_mtx.unlock();
+       g_mtx_csr.lock();
+       g_SharedPtrVector_csr<T>.push_back(ptr);
+       g_mtx_csr.unlock();
 }
 
 
@@ -79,6 +79,39 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_iInit
   (JNIEnv *env, jobject, jlong cRowCount, jlong cColCount,
             jintArray cData, jlongArray cColumnIndices, jlongArray cRowIndices,
             jint cCSRIndexing, jint computeDeviceOrdinal) {
+    printf("CSRTable int init \n");
+    jboolean isCopy = true;
+    jint *fData = env->GetIntArrayElements(cData, &isCopy);
+    jlong *fColumnIndices = env->GetLongArrayElements(cColumnIndices, &isCopy);
+    jlong *fRowIndices = env->GetLongArrayElements(cRowIndices, &isCopy);
+    CSRTablePtr tablePtr;
+    const std::int64_t element_count{ sizeof(fData) };
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch(device) {
+         case ComputeDevice::host:{
+             tablePtr = std::make_shared<csr_table>(oneapi::dal::array<int>::wrap(fData, element_count),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fColumnIndices, element_count),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fRowIndices, cRowCount +1),
+                                                    cRowCount,
+                                                    cColCount);
+             break;
+         }
+#ifdef CPU_GPU_PROFILE
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
+         }
+#endif
+         default: {
+             env->ReleaseIntArrayElements(cData, fData, 0);
+             return 0;
+         }
+    }
+     saveCSRTablePtrToVector(tablePtr);
+     env->ReleaseIntArrayElements(cData, fData, 1);
+     return (jlong)tablePtr.get();
 
   }
 
@@ -91,6 +124,41 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_fInit
   (JNIEnv *env, jobject, jlong cRowCount, jlong cColCount,
              jfloatArray cData, jlongArray cColumnIndices, jlongArray cRowIndices,
              jint cCSRIndexing, jint computeDeviceOrdinal){
+    printf("CSRTable float init \n");
+    jboolean isCopy = true;
+    jfloat *fData = env->GetFloatArrayElements(cData, &isCopy);
+    jlong *fColumnIndices = env->GetLongArrayElements(cColumnIndices, &isCopy);
+    jlong *fRowIndices = env->GetLongArrayElements(cRowIndices, &isCopy);
+    const std::vector<sycl::event> dependencies = {};
+    CSRTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch(device) {
+         case ComputeDevice::host:{
+             tablePtr = std::make_shared<csr_table>(oneapi::dal::array<float>::wrap(fData, sizeof(fData)),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fColumnIndices, sizeof(fData)),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fRowIndices, cRowCount +1),
+                                                    cRowCount,
+                                                    cColCount,
+                                                    getCSRIndexing(cCSRIndexing));
+             break;
+         }
+#ifdef CPU_GPU_PROFILE
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
+         }
+#endif
+         default: {
+             env->ReleaseFloatArrayElements(cData, fData, 0);
+             return 0;
+         }
+    }
+     saveCSRTablePtrToVector(tablePtr);
+     env->ReleaseFloatArrayElements(cData, fData, 1);
+     return (jlong)tablePtr.get();
+  }
 
 
 /*
@@ -102,6 +170,53 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_dInit
   (JNIEnv *env, jobject, jlong cRowCount, jlong cColCount,
                 jdoubleArray cData, jlongArray cColumnIndices, jlongArray cRowIndices,
                 jint cCSRIndexing, jint computeDeviceOrdinal) {
+    printf("CSRTable double init \n");
+    jboolean isCopy = true;
+    jdouble *fData = env->GetDoubleArrayElements(cData, &isCopy);
+    jlong *fColumnIndices = env->GetLongArrayElements(cColumnIndices, &isCopy);
+    jlong *fRowIndices = env->GetLongArrayElements(cRowIndices, &isCopy);
+    const std::vector<sycl::event> dependencies = {};
+    CSRTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch(device) {
+         case ComputeDevice::host:{
+             tablePtr = std::make_shared<csr_table>(oneapi::dal::array<double>::wrap(fData, sizeof(fData)),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fColumnIndices, sizeof(fData)),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fRowIndices, cRowCount +1),
+                                                    cRowCount,
+                                                    cColCount,
+                                                    getCSRIndexing(cCSRIndexing));
+             break;
+         }
+#ifdef CPU_GPU_PROFILE
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
+             break;
+         }
+#endif
+         default: {
+             env->ReleaseDoubleArrayElements(cData, fData, 0);
+             return 0;
+         }
+    }
+     saveCSRTablePtrToVector(tablePtr);
+     env->ReleaseDoubleArrayElements(cData, fData, 1);
+     return (jlong)tablePtr.get();
+}
+
+
+/*
+ * Class:     com_intel_oneapi_dal_table_CSRTableImpl
+ * Method:    lInit
+ * Signature: (JJ[J[J[JII)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_lInit
+  (JNIEnv *env, jobject, jlong cRowCount, jlong cColCount,
+                   jlongArray cData, jlongArray cColumnIndices, jlongArray cRowIndices,
+                   jint cCSRIndexing, jint computeDeviceOrdinal){
     printf("CSRTable long init \n");
     jboolean isCopy = true;
     jlong *fData = env->GetLongArrayElements(cData, &isCopy);
@@ -112,27 +227,20 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_dInit
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch(device) {
          case ComputeDevice::host:{
-             tablePtr = std::make_shared<csr_table>(fData,
-                                                    cColCount,
+             tablePtr = std::make_shared<csr_table>(oneapi::dal::array<long>::wrap(fData, sizeof(fData)),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fColumnIndices, sizeof(fData)),
+                                                    oneapi::dal::array<std::int64_t>::wrap(fRowIndices, cRowCount +1),
                                                     cRowCount,
-                                                    fRowIndices,
-                                                    fColumnIndices,
+                                                    cColCount,
                                                     getCSRIndexing(cCSRIndexing));
              break;
          }
 #ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
-             auto queue = getQueue(device);
-             auto data = sycl::malloc_shared<long>(cRowCount * cColCount, queue);
-             queue.memcpy(data, fData, sizeof(long) * cRowCount * cColCount).wait();
-             tablePtr = std::make_shared<homogen_table>(queue,
-                                                        data,
-                                                        cColCount,
-                                                        cRowCount,
-                                                        fRowIndices,
-                                                        fColumnIndices,
-                                                        getCSRIndexing(cCSRIndexing));
+            std::cout << "CSRTable is not implemented for GPU/CPU device."
+                << std::endl;
+            exit(-1);
              break;
          }
 #endif
@@ -141,34 +249,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_dInit
              return 0;
          }
     }
-     saveHomogenTablePtrToVector(tablePtr);
+     saveCSRTablePtrToVector(tablePtr);
      env->ReleaseLongArrayElements(cData, fData, 1);
      return (jlong)tablePtr.get();
-}
-
-
-}
-
-/*
- * Class:     com_intel_oneapi_dal_table_CSRTableImpl
- * Method:    lInit
- * Signature: (JJ[J[J[JII)J
- */
-JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_lInit
-  (JNIEnv *env, jobject, jlong cRowCount, jlong cColCount,
-                jlongArray cData, jlongArray cColumnIndices, jlongArray cRowIndices,
-                jint cDataLayout, jint computeDeviceOrdinal){
-
  }
 
-/*
- * Class:     com_intel_oneapi_dal_table_CSRTableImpl
- * Method:    cEmptyCSRTableInit
- * Signature: ()J
- */
-JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cEmptyCSRTableInit
-  (JNIEnv *env, jobject) {
-  }
 
 /*
  * Class:     com_intel_oneapi_dal_table_CSRTableImpl
@@ -315,9 +400,10 @@ JNIEXPORT jlongArray JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cGetCo
   (JNIEnv *env, jobject, jlong cTableAddr) {
         printf("CSRTable getColumnIndices \n");
         csr_table htable = *reinterpret_cast<csr_table *>(cTableAddr);
-        const long *column_indices = htable.get_column_indices();
+        const long *data = htable.get_column_indices();
+        const int datasize = sizeof(data);
 
-        jlongArray newLongArray = env->NewLongArray(strlen(column_indices));
+        jlongArray newLongArray = env->NewLongArray(datasize);
         env->SetLongArrayRegion(newLongArray, 0, datasize, data);
         return newLongArray;
     }
@@ -331,9 +417,9 @@ JNIEXPORT jlongArray JNICALL Java_com_intel_oneapi_dal_table_CSRTableImpl_cGetRo
   (JNIEnv *env, jobject, jlong cTableAddr) {
       printf("CSRTable getRowIndices \n");
       csr_table htable = *reinterpret_cast<csr_table *>(cTableAddr);
-      const long *row_indices = htable.get_row_indices();
-
-      jlongArray newLongArray = env->NewLongArray(strlen(row_indices));
+      const long *data = htable.get_row_indices();
+      const int datasize = sizeof(data);
+      jlongArray newLongArray = env->NewLongArray(datasize);
       env->SetLongArrayRegion(newLongArray, 0, datasize, data);
       return newLongArray;
   }
