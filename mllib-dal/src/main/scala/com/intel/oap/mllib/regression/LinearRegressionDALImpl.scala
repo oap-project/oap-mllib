@@ -21,7 +21,47 @@ import com.intel.oap.mllib.{OneCCL, OneDAL}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
 import org.apache.spark.ml.util.Instrumentation
+import org.apache.spark.mllib.clustering.{LinearRegressionModel => MLlibLinearRegressionModel}
 import org.apache.spark.sql.Dataset
+
+class LRDALImpl(val executorNum: Int,
+                    val executorCores: Int
+                   ) extends Serializable with Logging {
+
+  def train(data: RDD[Vector]): linalg = {
+
+  val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
+  val kvsIPPort = getOneCCLIPPort(coalescedTables)
+  val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val result = new LinearRegressionResult()
+    val tableArr = table.next()
+    OneCCL.initDpcpp()
+
+    results = cLROneapiCompute(
+      data,
+      tableArr,
+      executorNum,
+      computeDevice.ordinal(),
+      rank,
+      kvsIPPort,
+      result
+    )
+
+    var ret = {}
+    ret
+  }.collect()
+  val parentModel = new MLlibLinearRegressionModel(
+    result.map(OldVectors.fromML(_)))
+  parentModel
+  }
+ @native private[mllib] def cLROneapiCompute(data: Long,
+                                                     executorNum: Int,
+                                                     computeDeviceOrdinal: Int,
+                                                     rankId: Int,
+                                                     ipPort: String,
+                                                     result: LinearRegressionResult): Long
+
+
 
 /**
  * Model fitted by [[LinearRegressionDALImpl]].
