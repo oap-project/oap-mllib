@@ -269,6 +269,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
+<<<<<<< HEAD:mllib-dal/src/main/native/KMeansImpl.cpp
     auto t1 = std::chrono::high_resolution_clock::now();
     kmeans::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
@@ -278,6 +279,10 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     std::cout << "KMeans (native): rankid  " << rankId
               << "; training step took " << duration / 1000 << " secs"
               << std::endl;
+=======
+    kmeans::train_result result_train =
+        preview::train(comm, kmeans_desc, local_input);
+>>>>>>> update kmeans:mllib-dal/src/main/native/KMeansOneAPIImpl.cpp
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
                   << std::endl;
