@@ -46,14 +46,21 @@ class PCADALImpl(val k: Int,
     val sparkContext = normalizedData.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
-      computeDevice)
+    val coalescedTables = if (useDevice == "GPU") {
+      OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
+        computeDevice)
+    } else {
+      OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
+    }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.initDpcpp()
-
+      if (useDevice == "GPU") {
+        OneCCL.initDpcpp()
+      } else {
+        OneCCL.init(executorNum, rank, kvsIPPort)
+      }
       val result = new PCAResult()
       cPCATrainDAL(
         tableArr,
@@ -65,12 +72,24 @@ class PCADALImpl(val k: Int,
       )
 
       val ret = if (rank == 0) {
-        val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
-        val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
-          result.explainedVarianceNumericTable)
-        val principleComponents = getPrincipleComponentsFromDAL(pcNumericTable, k, computeDevice)
-        val explainedVariance = getExplainedVarianceFromDAL(
-          explainedVarianceNumericTable, k, computeDevice)
+        val principleComponents = if (useDevice == "GPU") {
+          val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
+          getPrincipleComponentsFromOneAPI(pcNumericTable, k, computeDevice)
+        } else {
+          val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
+          getPrincipleComponentsFromDAL(pcNumericTable, k)
+        }
+
+        val explainedVariance = if (useDevice == "GPU") {
+          val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
+            result.explainedVarianceNumericTable)
+          getExplainedVarianceFromOneAPI(
+            explainedVarianceNumericTable, k, computeDevice)
+        } else {
+          val explainedVarianceNumericTable = OneDAL.makeNumericTable(
+            result.explainedVarianceNumericTable)
+          getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
+        }
 
         Iterator((principleComponents, explainedVariance))
       } else {
@@ -100,22 +119,22 @@ class PCADALImpl(val k: Int,
     res.map(_.asML)
   }
 
-  private[mllib] def getPrincipleComponentsFromDAL(table: HomogenTable,
+  private[mllib] def getPrincipleComponentsFromOneAPI(table: HomogenTable,
                                             k: Int,
                                             device: Common.ComputeDevice): DenseMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
     require(k <= numRows, "k should be less or equal to row number")
 
-    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, device)
+    val arrayDouble = getDoubleBufferDataFromOneAPI(table, numRows, device)
 
     // Column-major, transpose of top K rows of NumericTable
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
   }
 
-  private[mllib] def getExplainedVarianceFromDAL(table_1xn: HomogenTable, k: Int,
+  private[mllib] def getExplainedVarianceFromOneAPI(table_1xn: HomogenTable, k: Int,
                                           device: Common.ComputeDevice): DenseVector = {
-    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, device)
+    val arrayDouble = getDoubleBufferDataFromOneAPI(table_1xn, 1, device)
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
@@ -125,7 +144,7 @@ class PCADALImpl(val k: Int,
 
   // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
   // so use table.getBlockOfRows instead of it.
-  private[mllib] def getDoubleBufferDataFromDAL(table: HomogenTable,
+  private[mllib] def getDoubleBufferDataFromOneAPI(table: HomogenTable,
                                          numRows: Int,
                                          device: Common.ComputeDevice): Array[Double] = {
 
@@ -135,6 +154,43 @@ class PCADALImpl(val k: Int,
 
     arrayDouble
   }
+
+  private def getPrincipleComponentsFromDAL(table: NumericTable, k: Int): DenseMatrix = {
+    val numRows = table.getNumberOfRows.toInt
+    val numCols = table.getNumberOfColumns.toInt
+    require(k <= numRows, "k should be less or equal to row number")
+
+    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, numCols)
+
+    // Column-major, transpose of top K rows of NumericTable
+    new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
+  }
+
+  private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
+    val dataNumCols = table_1xn.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, dataNumCols)
+    val sum = arrayDouble.sum
+    val topK = Arrays.copyOfRange(arrayDouble, 0, k)
+    for (i <- 0 until k)
+      topK(i) = topK(i) / sum
+    new DenseVector(topK)
+  }
+
+  // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
+  // so use table.getBlockOfRows instead of it.
+  private def getDoubleBufferDataFromDAL(table: NumericTable,
+                                         numRows: Int,
+                                         numCols: Int): Array[Double] = {
+    var dataDouble: DoubleBuffer = null
+
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble: Array[Double] = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
+
+    arrayDouble
+  }
+
 
   // Single entry to call Correlation PCA DAL backend with parameter K
   @native private[mllib] def cPCATrainDAL(data: Long,
