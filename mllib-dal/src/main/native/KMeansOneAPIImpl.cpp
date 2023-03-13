@@ -264,16 +264,10 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                  .set_accuracy_threshold(tolerance);
     kmeans::train_input local_input{htable, centroids};
     auto queue = getQueue(device);
-    std::cout << "kmeans oneapi training 1"
-                  << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-    std::cout << "kmeans oneapi training 2"
-                     << std::endl;
     kmeans::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
-    std::cout << "kmeans oneapi training 3"
-                      << std::endl;
     if (isRoot) {
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -336,10 +330,6 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
                 iterationNum, executorNum, ipPortStr, device, resultObj);
     }
 #endif
-    default: {
-        std::cout << "No Device!" << std::endl;
-        exit(-1);
-    }
     }
 
     env->ReleaseStringUTFChars(ipPort, ipPortPtr);
