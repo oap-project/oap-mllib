@@ -25,7 +25,6 @@
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
-#endif
 
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
@@ -106,7 +105,6 @@ template <typename T>
                                                        targetTable.get_data_layout());
             break;
         }
-#ifdef CPU_GPU_PROFILE
         case ComputeDevice::cpu:
         case ComputeDevice::gpu:{
             auto queue = getQueue(device);
@@ -117,7 +115,6 @@ template <typename T>
                                                        dependencies, targetTable.get_data_layout());
             break;
         }
-#endif
         default: {
             return 0;
         }
@@ -147,7 +144,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
                                                         getDataLayout(cLayout));
              break;
        }
-#ifdef CPU_GPU_PROFILE
        case ComputeDevice::cpu:
        case ComputeDevice::gpu:{
              auto queue = getQueue(device);
@@ -158,7 +154,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
                                                         dependencies, getDataLayout(cLayout));
              break;
        }
-#endif
        default: {
              env->ReleaseIntArrayElements(cData, fData, 0);
              return 0;
@@ -190,7 +185,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
                                                         getDataLayout(cLayout));
              break;
          }
-#ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
              auto queue = getQueue(device);
@@ -201,7 +195,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
                                                         dependencies, getDataLayout(cLayout));
              break;
          }
-#endif
          default: {
              env->ReleaseFloatArrayElements(cData, fData, 0);
              return 0;
@@ -232,7 +225,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
                                                         getDataLayout(cLayout));
              break;
          }
-#ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
              auto queue = getQueue(device);
@@ -243,7 +235,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
                                                         dependencies, getDataLayout(cLayout));
              break;
          }
-#endif
          default: {
              env->ReleaseDoubleArrayElements(cData, fData, 0);
              return 0;
@@ -275,7 +266,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
                                                         getDataLayout(cLayout));
              break;
          }
-#ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
              auto queue = getQueue(device);
@@ -286,7 +276,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
                                                         dependencies, getDataLayout(cLayout));
              break;
          }
-#endif
          default: {
              env->ReleaseLongArrayElements(cData, fData, 0);
              return 0;
@@ -490,3 +479,4 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHom
            return (jlong)sourceTablePtr;
        }
  }
+#endif
