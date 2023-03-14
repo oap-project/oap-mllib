@@ -24,13 +24,14 @@
 #define ONEDAL_DATA_PARALLEL
 #endif
 #include "Communicator.hpp"
+#include "OutputHelpers.hpp"
 #include "oneapi/dal/algo/kmeans.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #endif
 
+#include "OneCCL.h"
 #include "com_intel_oap_mllib_clustering_KMeansDALImpl.h"
 #include "service.h"
-#include "OneCCL.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -180,11 +181,12 @@ static bool areAllCentersConverged(const NumericTablePtr &oldCenters,
     return true;
 }
 
-static jlong doKMeansDaalCompute(
-    JNIEnv *env, jobject obj, int rankId, ccl::communicator &comm,
-    NumericTablePtr &pData, NumericTablePtr &centroids, jint cluster_num,
-    jdouble tolerance, jint iteration_num, jint executor_num,
-    jobject resultObj) {
+static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
+                                 ccl::communicator &comm,
+                                 NumericTablePtr &pData,
+                                 NumericTablePtr &centroids, jint cluster_num,
+                                 jdouble tolerance, jint iteration_num,
+                                 jint executor_num, jobject resultObj) {
 
     algorithmFPType totalCost;
 
@@ -249,8 +251,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jlong pNumTabCenters, jint clusterNum,
                                    jdouble tolerance, jint iterationNum,
                                    jint executorNum, const ccl::string &ipPort,
-                                   ComputeDevice &device,
-                                   jobject resultObj) {
+                                   ComputeDevice &device, jobject resultObj) {
     std::cout << "oneDAL (native): compute start , rankid = " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
@@ -272,19 +273,20 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         preview::train(comm, kmeans_desc, local_input);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-                std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     std::cout << "KMeans (native) RankId = << " << rankId
-                  << "; spend training times : " << duration
-                      << " secs" << std::endl;
+              << "; spend training times : " << duration << " secs"
+              << std::endl;
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
-                              << std::endl;
-        std::cout << "Centroids:\n" << result_train.get_model().get_centroids() << std::endl;
+                  << std::endl;
+        std::cout << "Centroids:\n"
+                  << result_train.get_model().get_centroids() << std::endl;
         t2 = std::chrono::high_resolution_clock::now();
         duration =
-                    std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
         std::cout << "KMeans (native) spend training times : " << duration
-                          << " secs" << std::endl;
+                  << " secs" << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -308,7 +310,6 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 }
 #endif
 
-
 /*
  * Class:     com_intel_oap_mllib_clustering_KMeansDALImpl
  * Method:    cKMeansOneapiComputeWithInitCenters
@@ -318,10 +319,11 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
     JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
     jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
+    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
-        << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
-        << std::endl;
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
     jlong ret = 0L;
@@ -330,20 +332,25 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
 #ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-         ccl::communicator &comm = getComm();
-         int rankId = comm.rank();
-         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-         NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
-         ret = doKMeansDaalCompute(env, obj, rankId, comm,
-                                   pData, centroids, clusterNum,
-                                   tolerance, iterationNum, executorNum,
-                                   resultObj);
+        ccl::communicator &comm = getComm();
+        NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+        NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
+        // Set number of threads for oneDAL to use for each rank
+        services::Environment::getInstance()->setNumberOfThreads(executorCores);
+
+        int nThreadsNew =
+            services::Environment::getInstance()->getNumberOfThreads();
+        std::cout << "oneDAL (native): Number of CPU threads used: "
+                  << nThreadsNew << std::endl;
+        ret = doKMeansDaalCompute(env, obj, rankId, comm, pData, centroids,
+                                  clusterNum, tolerance, iterationNum,
+                                  executorNum, resultObj);
     }
 #else
     case ComputeDevice::gpu: {
-        ret = doKMeansOneAPICompute(
-                env, rankId, pNumTabData, pNumTabCenters, clusterNum, tolerance,
-                iterationNum, executorNum, ipPortStr, device, resultObj);
+        ret = doKMeansOneAPICompute(env, rankId, pNumTabData, pNumTabCenters,
+                                    clusterNum, tolerance, iterationNum,
+                                    executorNum, ipPortStr, device, resultObj);
     }
 #endif
     }

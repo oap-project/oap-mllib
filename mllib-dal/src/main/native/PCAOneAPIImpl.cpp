@@ -23,15 +23,14 @@
 #define ONEDAL_DATA_PARALLEL
 #endif
 #include "Communicator.hpp"
+#include "OutputHelpers.hpp"
 #include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #endif
 
-
-#include "OutputHelpers.hpp"
+#include "OneCCL.h"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
 #include "service.h"
-#include "OneCCL.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -46,8 +45,8 @@ using namespace daal::services;
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
-                            ccl::communicator &comm, NumericTablePtr &pData,
-                            int nBlocks, jobject resultObj) {
+                             ccl::communicator &comm, NumericTablePtr &pData,
+                             int nBlocks, jobject resultObj) {
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -228,10 +227,11 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
+    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
-            << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
-            << std::endl;
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -239,15 +239,21 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
 #ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-         ccl::communicator &comm = getComm();
-         int rankId = comm.rank();
-         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-         doPCADAALCompute(env, obj, rankId, comm, pData, executorNum, resultObj);
+        ccl::communicator &comm = getComm();
+        NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+        // Set number of threads for oneDAL to use for each rank
+        services::Environment::getInstance()->setNumberOfThreads(executorCores);
+
+        int nThreadsNew =
+            services::Environment::getInstance()->getNumberOfThreads();
+        std::cout << "oneDAL (native): Number of CPU threads used: "
+                  << nThreadsNew << std::endl;
+        doPCADAALCompute(env, obj, rankId, comm, pData, executorNum, resultObj);
     }
 #else
     case ComputeDevice::gpu: {
         doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
-                               computeDeviceOrdinal, resultObj);
+                           computeDeviceOrdinal, resultObj);
     }
 #endif
     }
