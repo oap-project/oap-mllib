@@ -270,24 +270,15 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-<<<<<<< HEAD:mllib-dal/src/main/native/KMeansImpl.cpp
-<<<<<<< HEAD:mllib-dal/src/main/native/KMeansImpl.cpp
-=======
->>>>>>> 1. enable PCA GPI and CPU:mllib-dal/src/main/native/KMeansOneAPIImpl.cpp
     auto t1 = std::chrono::high_resolution_clock::now();
     kmeans::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-<<<<<<< HEAD:mllib-dal/src/main/native/KMeansImpl.cpp
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "KMeans (native): rankid  " << rankId
               << "; training step took " << duration / 1000 << " secs"
               << std::endl;
-=======
-    kmeans::train_result result_train =
-        preview::train(comm, kmeans_desc, local_input);
->>>>>>> update kmeans:mllib-dal/src/main/native/KMeansOneAPIImpl.cpp
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
                   << std::endl;
@@ -299,21 +290,20 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                 .count();
         std::cout << "KMeans (native): training step took " << duration / 1000
                   << " secs in end. " << std::endl;
-=======
                 std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     std::cout << "KMeans (native) RankId = << " << rankId
-                  << "; spend training times : " << duration
-                      << " secs" << std::endl;
+              << "; spend training times : " << duration << " secs"
+              << std::endl;
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
-                              << std::endl;
-        std::cout << "Centroids:\n" << result_train.get_model().get_centroids() << std::endl;
+                  << std::endl;
+        std::cout << "Centroids:\n"
+                  << result_train.get_model().get_centroids() << std::endl;
         t2 = std::chrono::high_resolution_clock::now();
         duration =
-                    std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
         std::cout << "KMeans (native) spend training times : " << duration
                           << " secs" << std::endl;
->>>>>>> 1. enable PCA GPI and CPU:mllib-dal/src/main/native/KMeansOneAPIImpl.cpp
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
