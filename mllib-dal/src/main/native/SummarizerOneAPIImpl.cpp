@@ -270,11 +270,11 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
     jobject resultObj) {
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
-
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-    return 0;
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
