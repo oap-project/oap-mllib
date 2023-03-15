@@ -195,10 +195,26 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-
     pca::train_input local_input{htable};
+    auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::train(comm, pca_desc, local_input);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "PCA (native) RankId = << " << rankId
+              << "; spend training times : " << duration / 1000 << " secs"
+              << std::endl;
     if (isRoot) {
+        std::cout << "Eigenvectors:\n"
+                  << result_train.get_eigenvectors() << std::endl;
+        std::cout << "Eigenvalues:\n"
+                  << result_train.get_eigenvalues() << std::endl;
+        t2 = std::chrono::high_resolution_clock::now();
+        duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "PCA (native) spend training times : " << duration / 1000
+                  << " secs" << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
