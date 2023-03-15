@@ -290,20 +290,6 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                 .count();
         std::cout << "KMeans (native): training step took " << duration / 1000
                   << " secs in end. " << std::endl;
-                std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "KMeans (native) RankId = << " << rankId
-              << "; spend training times : " << duration << " secs"
-              << std::endl;
-    if (isRoot) {
-        std::cout << "Iteration count: " << result_train.get_iteration_count()
-                  << std::endl;
-        std::cout << "Centroids:\n"
-                  << result_train.get_model().get_centroids() << std::endl;
-        t2 = std::chrono::high_resolution_clock::now();
-        duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "KMeans (native) spend training times : " << duration
-                          << " secs" << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references

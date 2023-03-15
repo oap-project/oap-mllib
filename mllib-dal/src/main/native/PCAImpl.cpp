@@ -47,11 +47,8 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              int nBlocks, jobject resultObj) {
-<<<<<<< HEAD:mllib-dal/src/main/native/PCAImpl.cpp
     std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
               << std::endl;
-=======
->>>>>>> 1. enable summarizer GPU and CPU:mllib-dal/src/main/native/PCAOneAPIImpl.cpp
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -250,11 +247,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
     jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
-<<<<<<< HEAD:mllib-dal/src/main/native/PCAImpl.cpp
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
-=======
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
->>>>>>> 1. enable summarizer GPU and CPU:mllib-dal/src/main/native/PCAOneAPIImpl.cpp
               << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);

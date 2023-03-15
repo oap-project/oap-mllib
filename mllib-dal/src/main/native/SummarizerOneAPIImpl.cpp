@@ -223,14 +223,26 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
+    auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
-
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    std::cout << "Summarizer (native) RankId = << " << rankId
+              << "; spend training times : " << duration / 1000 << " secs"
+              << std::endl;
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
         std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
         std::cout << "Mean:\n" << result_train.get_mean() << std::endl;
         std::cout << "Variance:\n" << result_train.get_variance() << std::endl;
-
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        std::cout << "Summarizer (native) spend training times : "
+                  << duration / 1000 << " secs" << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
