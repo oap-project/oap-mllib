@@ -5,5 +5,3 @@ public interface TableMetadataImpl {
      Common.FeatureType getFeatureType(int index) throws Exception;
      Common.DataType getDataType(int index) throws Exception;
 }
-
-
