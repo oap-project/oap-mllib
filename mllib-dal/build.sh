@@ -52,7 +52,7 @@ check_gpu_libs() {
   RESOURCE_PATH=src/main/resources/lib
   LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
     libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12 libintlc.so.5 libsvml.so libirng.so libimf.so \
-    libOpenCL.so.1 libsycl.so.6)
+    libOpenCL.so.1 libsycl.so.5)
   for lib in ${LIBS[@]}
   do
     if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
