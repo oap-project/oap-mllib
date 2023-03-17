@@ -17,50 +17,92 @@
 package com.intel.oap.mllib.regression
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oneapi.dal.table.Common
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
-import org.apache.spark.ml.util.Instrumentation
-import org.apache.spark.mllib.clustering.{LinearRegressionModel => MLlibLinearRegressionModel}
+import org.apache.spark.ml.util._
+import org.apache.spark.mllib.regression.{LinearRegressionModel => MLlibLinearRegressionModel}
+import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.sql.Dataset
+import org.apache.spark.rdd.RDD
 
-class LRDALImpl(val executorNum: Int,
-                    val executorCores: Int
-                   ) extends Serializable with Logging {
+class LRDALImpl(val fitIntercept: Boolean,
+  val regParam: Double,
+  val elasticNetParam: Double,
+  val standardizeFeatures: Boolean,
+  val standardizeLabel: Boolean,
+  val executorNum: Int,
+  val executorCores: Int ) extends Serializable with Logging {
 
-  def train(data: RDD[Vector]): linalg = {
+  def train(labeledPoints: Dataset[_],
+              labelCol: String,
+              featuresCol: String): MLlibLinearRegressionModel = {
 
-  val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
-  val kvsIPPort = getOneCCLIPPort(coalescedTables)
-  val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-    val result = new LinearRegressionResult()
-    val tableArr = table.next()
-    OneCCL.initDpcpp()
+    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+      OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+    } else {
+      OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+    }
 
-    results = cLROneapiCompute(
-      data,
-      tableArr,
-      executorNum,
-      computeDevice.ordinal(),
-      rank,
-      kvsIPPort,
-      result
-    )
+    val sparkContext = labeledPointsTables.sparkContext
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
-    var ret = {}
-    ret
-  }.collect()
-  val parentModel = new MLlibLinearRegressionModel(
-    result.map(OldVectors.fromML(_)))
-  parentModel
+    val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
+    val results = labeledPointsTables.mapPartitionsWithIndex { case (rank: Int, tables: Iterator[(Long, Long)]) =>
+      val tableArr = tables.next()
+      val (featureTabAddr, lableTabAddr) = tables.next()
+      //create an result and send to implement
+      val result = new LiRResult()
+      OneCCL.initDpcpp()
+
+      val coeffNumericTable = cLinearRegressionGPUTrainDAL(
+        featureTabAddr,
+        lableTabAddr,
+        regParam,
+        elasticNetParam,
+        executorNum,
+        computeDevice.ordinal(),
+        rank,
+        kvsIPPort,
+        result
+      )
+      val ret = if (rank == 0) {
+          val coefficientArray = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(coeffNumericTable),
+            computeDevice)
+          Iterator(coefficientArray)
+        } else {
+          Iterator.empty
+        }
+      ret
+    }.collect()
+
+    // Make sure there is only one result from rank 0
+    assert(results.length == 1)
+    val coefficientVector = results(0)
+
+    val coefficientResult = coefficientVector.map(OldVectors.fromML(_)).slice(1, coefficientVector.size)
+    val interceptResult = coefficientVector.map(OldVectors.fromML(_))
+    val parentModel = new MLlibLinearRegressionModel(
+      coefficientResult(0),
+      interceptResult(0)(0))
+
+    parentModel
   }
- @native private[mllib] def cLROneapiCompute(data: Long,
-                                                     executorNum: Int,
-                                                     computeDeviceOrdinal: Int,
-                                                     rankId: Int,
-                                                     ipPort: String,
-                                                     result: LinearRegressionResult): Long
 
+  @native private[mllib] def cLinearRegressionGPUTrainDAL(data: Long,
+                                            label: Long,
+                                            regParam: Double,
+                                            elasticNetParam: Double,
+                                            executorNum: Int,
+                                            computeDeviceOrdinal: Int,
+                                            rankId: Int,
+                                            ipPort: String,
+                                            result: LiRResult): Long
+
+  }
 
 
 /**
@@ -73,12 +115,14 @@ class LRDALImpl(val executorNum: Int,
  */
 // LinearRegressionDALModel is the same with WeightedLeastSquaresModel
 // diagInvAtWA and objectiveHistory are not supported right now
+
 private[mllib] class LinearRegressionDALModel(val coefficients: DenseVector,
                                               val intercept: Double,
                                               val diagInvAtWA: DenseVector,
                                               val objectiveHistory: Array[Double])
   extends Serializable {
-}
+
+  }
 
 class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                val regParam: Double,
@@ -89,73 +133,74 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                val executorCores: Int)
   extends Serializable with Logging {
 
-  require(regParam >= 0.0, s"regParam cannot be negative: $regParam")
-  require(elasticNetParam >= 0.0 && elasticNetParam <= 1.0,
-    s"elasticNetParam must be in [0, 1]: $elasticNetParam")
+    require(regParam >= 0.0, s"regParam cannot be negative: $regParam")
+    require(elasticNetParam >= 0.0 && elasticNetParam <= 1.0,
+      s"elasticNetParam must be in [0, 1]: $elasticNetParam")
 
-  /**
-    * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
-    */
-  def train(labeledPoints: Dataset[_],
-            labelCol: String,
-            featuresCol: String): LinearRegressionDALModel = {
+    /**
+      * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
+      */
 
-    val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+    def train(labeledPoints: Dataset[_],
+              labelCol: String,
+              featuresCol: String): LinearRegressionDALModel = {
 
-    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-      OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
-    } else {
-      OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+      val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+
+      val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+        OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+      } else {
+        OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+      }
+
+      val results = labeledPointsTables.mapPartitionsWithIndex {
+        case (rank: Int, tables: Iterator[(Long, Long)]) =>
+          val (featureTabAddr, lableTabAddr) = tables.next()
+
+          OneCCL.init(executorNum, rank, kvsIPPort)
+
+          val result = new LiRResult
+          cLinearRegressionTrainDAL(
+            featureTabAddr,
+            lableTabAddr,
+            regParam,
+            elasticNetParam,
+            executorNum,
+            executorCores,
+            result
+          )
+
+          val ret = if (OneCCL.isRoot()) {
+            val coefficientArray = OneDAL.numericTableToVectors(
+              OneDAL.makeNumericTable(result.coeffNumericTable))
+            Iterator(coefficientArray(0))
+          } else {
+            Iterator.empty
+          }
+
+          OneCCL.cleanup()
+          ret
+      }.collect()
+
+      // Make sure there is only one result from rank 0
+      assert(results.length == 1)
+
+      val coefficientVector = results(0)
+
+      val parentModel = new LinearRegressionDALModel(
+        new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
+        coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
+
+      parentModel
     }
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
-      case (rank: Int, tables: Iterator[(Long, Long)]) =>
-        val (featureTabAddr, lableTabAddr) = tables.next()
+    // Single entry to call Linear Regression DAL backend with parameters
+    @native private def cLinearRegressionTrainDAL(data: Long,
+                                    label: Long,
+                                    regParam: Double,
+                                    elasticNetParam: Double,
+                                    executor_num: Int,
+                                    executor_cores: Int,
+                                    result: LiRResult): Long
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
-
-        val result = new LiRResult
-        cLinearRegressionTrainDAL(
-          featureTabAddr,
-          lableTabAddr,
-          regParam,
-          elasticNetParam,
-          executorNum,
-          executorCores,
-          result
-        )
-
-        val ret = if (OneCCL.isRoot()) {
-          val coefficientArray = OneDAL.numericTableToVectors(
-            OneDAL.makeNumericTable(result.coeffNumericTable))
-          Iterator(coefficientArray(0))
-        } else {
-          Iterator.empty
-        }
-
-        OneCCL.cleanup()
-        ret
-    }.collect()
-
-    // Make sure there is only one result from rank 0
-    assert(results.length == 1)
-
-    val coefficientVector = results(0)
-
-    val parentModel = new LinearRegressionDALModel(
-      new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
-      coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
-
-    parentModel
   }
-
-  // Single entry to call Linear Regression DAL backend with parameters
-  @native private def cLinearRegressionTrainDAL(data: Long,
-                                  label: Long,
-                                  regParam: Double,
-                                  elasticNetParam: Double,
-                                  executor_num: Int,
-                                  executor_cores: Int,
-                                  result: LiRResult): Long
-
-}

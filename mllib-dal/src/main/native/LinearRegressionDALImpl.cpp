@@ -245,7 +245,10 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jint executorNum, const ccl::string &ipPort,
                                    jint computeDeviceOrdinal,
-                                   jobject resultObj) {}
+                                   jobject resultObj) {
+    jlong ret = 0L;
+	return ret;
+}
 
 
 JNIEXPORT jlong JNICALL
@@ -253,6 +256,8 @@ Java_com_intel_oap_mllib_regression_KMeansDALImpl_cLROneapiCompute(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
     jlong ret = 0L;
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
     ret = doLROneAPICompute(
         env, rankId, pNumTabData, executorNum, ipPortStr,
 		computeDeviceOrdinal, resultObj);
