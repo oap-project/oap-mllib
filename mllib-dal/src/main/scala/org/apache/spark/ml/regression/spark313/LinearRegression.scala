@@ -336,6 +336,9 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 
   override def fit(
     dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
+
+    val instances = extractInstances(dataset)
+      .setName("training instances")
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, solver, tol,
@@ -344,8 +347,8 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 
       println("right fit")
 
+    val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
     val yMean = 0.0
-
 
     val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
     instr.logNumFeatures(numFeatures)
@@ -354,20 +357,19 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
       dataset.sparkSession.sparkContext)
     val useLRDAL = Utils.isOAPEnabled() && isPlatformSupported
 
+    //todo 
     val model = if (useLRDAL) {
-      trainWithDAL(dataset, numFeatures, yMean)
+      trainWithDAL(instances)
     } else {
       // todo
-      trainWithDAL(dataset, numFeatures, yMean)
+      trainWithDAL(dataset, instances)
     }
 
     model
   }
 
-  //private def trainWithDAL(instances: RDD[(Vector, Double)]
   private def trainWithDAL(dataset: Dataset[_],
-      numFeatures: Int,
-      yMean: Double): LinearRegressionModel = instrumented { instr =>
+      ): LinearRegressionModel = instrumented { instr =>
 
     val sc = instances.sparkContext
 
