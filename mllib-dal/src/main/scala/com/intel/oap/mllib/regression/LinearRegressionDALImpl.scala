@@ -28,11 +28,7 @@ import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors
 import org.apache.spark.sql.Dataset
 import org.apache.spark.rdd.RDD
 
-class LRDALImpl(val fitIntercept: Boolean,
-  val regParam: Double,
-  val elasticNetParam: Double,
-  val standardizeFeatures: Boolean,
-  val standardizeLabel: Boolean,
+class LRDALImpl(
   val executorNum: Int,
   val executorCores: Int ) extends Serializable with Logging {
 
@@ -61,8 +57,6 @@ class LRDALImpl(val fitIntercept: Boolean,
       val coeffNumericTable = cLinearRegressionGPUTrainDAL(
         featureTabAddr,
         lableTabAddr,
-        regParam,
-        elasticNetParam,
         executorNum,
         computeDevice.ordinal(),
         rank,
@@ -94,8 +88,6 @@ class LRDALImpl(val fitIntercept: Boolean,
 
   @native private[mllib] def cLinearRegressionGPUTrainDAL(data: Long,
                                             label: Long,
-                                            regParam: Double,
-                                            elasticNetParam: Double,
                                             executorNum: Int,
                                             computeDeviceOrdinal: Int,
                                             rankId: Int,

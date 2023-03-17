@@ -30,7 +30,7 @@ import breeze.optimize.{
 }
 import breeze.stats.distributions.StudentsT
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim}
+import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim, LRDALImpl}
 import org.apache.hadoop.fs.Path
 import scala.collection.mutable
 
@@ -337,8 +337,6 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
   override def fit(
     dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
 
-    val instances = extractInstances(dataset)
-      .setName("training instances")
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, solver, tol,
@@ -348,10 +346,6 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
       println("right fit")
 
     val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
-    val yMean = 0.0
-
-    val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
-    instr.logNumFeatures(numFeatures)
 
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
@@ -359,17 +353,24 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 
     //todo 
     val model = if (useLRDAL) {
-      trainWithDAL(instances)
+      trainWithDAL(dataset, handlePersistence)
     } else {
       // todo
-      trainWithDAL(dataset, instances)
+      trainWithDAL(dataset, handlePersistence)
     }
 
-    model
+    val (summaryModel, predictionColName) = model.findSummaryModelAndPredictionCol()
+    val trainingSummary = new LinearRegressionTrainingSummary(
+      summaryModel.transform(dataset), predictionColName, $(labelCol), $(featuresCol),
+      summaryModel, model.diagInvAtWA.toArray, model.objectiveHistory)
+
+    model.setSummary(Some(trainingSummary))
   }
 
   private def trainWithDAL(dataset: Dataset[_],
-      ): LinearRegressionModel = instrumented { instr =>
+                           handlePersistence: Boolean): LinearRegressionModel = instrumented { instr =>
+    val instances = extractInstances(dataset)
+      .setName("training instances")
 
     val sc = instances.sparkContext
 
@@ -377,27 +378,19 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
     val executor_cores = Utils.sparkExecutorCores()
 
 
+    val numFeatures = MetadataUtils.getNumFeatures(dataset, $(featuresCol))
     val coefficients = Vectors.sparse(numFeatures, Seq.empty)
-    val intercept = yMean
 
-
-    //prepare data
-    val inputData = instances.map {
-      case (point: Vector, weight: Double) => point
-    }
-
-    val lrDAL = new LRDALImpl(executor_num, executor_cores)
+    val lrDAL = new LRDALImpl(
+      executor_num, 
+      executor_cores)
 
     //train
-    val lrmodel = lrDAL.train(inputdata)
+    val lrmodel = lrDAL.train(dataset, $(labelCol), $(featuresCol))
 
-    val model = copyValues(new LinearRegressionModel(uid, model.coefficients, model.intercept).setParent(this))
-    val trainingSummary = new LinearRegressionTrainingSummary(
-      summaryModel.transform(dataset), predictionColName, $(labelCol), $(featuresCol),
-      summaryModel, model.diagInvAtWA.toArray, model.objectiveHistory)
+    val model = new LinearRegressionModel(uid, lrmodel.coefficients, lrmodel.intercept).setParent(this)
 
-    model.setSummary(Some(trainingSummary))
-
+    model
   }
   /** todo
   private def trainWithML(dataset: Dataset[_],
