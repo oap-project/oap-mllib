@@ -98,7 +98,7 @@ class RandomForestClassifierDALImpl(val uid: String,
             labelCol: String,
             featuresCol: String): (Matrix, Matrix,
                                    util.Map[Integer, util.ArrayList[LearningNode]]) = {
-    println(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
+    logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)

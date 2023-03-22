@@ -360,13 +360,18 @@ static void doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabF
             .set_infer_mode(df::infer_mode::class_responses |
                             df::infer_mode::class_probabilities)
             .set_voting_mode(df::voting_mode::weighted);
+
     auto queue = getQueue(device);
+    std::cout << "doRFClassifierOneAPICompute create comm " << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
             queue, executorNum, rankId, ipPort);
+    std::cout << "doRFClassifierOneAPICompute create comm end " << std::endl;
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
+    std::cout << "doRFClassifierOneAPICompute result_train " << std::endl;
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
+    std::cout << "doRFClassifierOneAPICompute result_infer " << std::endl;
 
     if (comm.get_rank() == 0) {
         std::cout << "Variable importance results:\n"
