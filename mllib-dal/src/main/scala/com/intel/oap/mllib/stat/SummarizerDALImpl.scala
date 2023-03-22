@@ -111,7 +111,9 @@ class SummarizerDALImpl(val executorNum: Int,
       } else {
         Iterator.empty
       }
-
+      if (useDevice == "CPU") {
+        OneCCL.cleanup()
+      }
       ret
     }.collect()
 
