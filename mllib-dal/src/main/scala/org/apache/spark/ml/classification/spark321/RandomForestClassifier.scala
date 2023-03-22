@@ -20,7 +20,7 @@
 package org.apache.spark.ml.classification.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.classification.{RandomForestClassifierDALImpl, RandomForestClassifierShim}
+import com.intel.oap.mllib.classification.{RandomForestClassifierDALImpl, RandomForestClassifierShim, RandomForestResult, LearningNode => LearningNodeDAL}
 import org.json4s.{DefaultFormats, JObject}
 import org.json4s.JsonDSL._
 import org.apache.spark.annotation.Since
@@ -36,10 +36,15 @@ import org.apache.spark.ml.util.{Identifiable, MetadataUtils}
 import org.apache.spark.ml.util.DefaultParamsReader.Metadata
 import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo}
-import org.apache.spark.mllib.tree.model.{RandomForestModel => OldRandomForestModel}
+import org.apache.spark.mllib.tree.impurity.{GiniCalculator, ImpurityCalculator}
+import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => OldRandomForestModel}
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
+
+import java.util
+import java.util.{ArrayList, Map => JavaMap}
+import scala.collection.JavaConversions.mapAsScalaMap
 
 // scalastyle:off line.size.limit
 
@@ -171,43 +176,44 @@ class RandomForestClassifier @Since("1.4.0") (
     val numClasses: Int = getNumClasses(dataset)
 
     val initStartTime = System.nanoTime()
+    println(s"trainRandomForestClassifierDAL numClasses : " + numClasses)
+
     val rfDAL = new RandomForestClassifierDALImpl(uid,
       numClasses,
       getNumTrees,
+      getMinInstancesPerNode,
       1,
       1,
-      1,
-      0.0,
+      getMinWeightFractionPerNode,
       0.0,
       executorNum,
-      executorCores)
+      executorCores,
+      getBootstrap)
 
-    val trees = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
+    val (probabilitiesNumericTable, predictionNumericTable, treesMap) = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
-    instr.logNumClasses(trees.numClasses)
-    instr.logNumFeatures(trees.numFeatures)
-    val model = copyValues(new RandomForestClassificationModel(trees.uid,
-      trees._trees, trees.numFeatures, trees.numClasses))
-    val weightColName = if (!isDefined(weightCol)) "weightCol" else $(weightCol)
 
-    val (summaryModel, probabilityColName, predictionColName) = model.findSummaryModel()
-    val rfSummary = if (numClasses <= 2) {
-      new BinaryRandomForestClassificationTrainingSummaryImpl(
-        summaryModel.transform(dataset),
-        probabilityColName,
-        predictionColName,
-        $(labelCol),
-        weightColName,
-        Array(0.0))
-    } else {
-      new RandomForestClassificationTrainingSummaryImpl(
-        summaryModel.transform(dataset),
-        predictionColName,
-        $(labelCol),
-        weightColName,
-        Array(0.0))
-    }
-    model.setSummary(Some(rfSummary))
+    val numFeatures = dataset.select(${featuresCol}).head().size
+
+    val trees = buildTrees(treesMap, numFeatures, numClasses).map(_.asInstanceOf[DecisionTreeClassificationModel])
+    instr.logNumClasses(numClasses)
+    instr.logNumFeatures(numFeatures)
+    createModel(dataset, trees, numFeatures, numClasses)
+  }
+
+  private def buildTrees(treesMap : JavaMap[Integer,
+                         java.util.ArrayList[LearningNodeDAL]],
+                         numFeatures : Int,
+                         numClasses : Int): Array[DecisionTreeModel] = {
+    treesMap.map { case (id: Integer, nodelist: java.util.ArrayList[double])
+      => {
+        val rootNode = TreeUtils.buildTreeDFS(nodelist)
+        new DecisionTreeClassificationModel(uid,
+                                            rootNode.toNode(),
+                                            numFeatures,
+                                            numClasses)
+      }
+    }.toArray
   }
 
   private def trainDiscreteImpl(dataset: Dataset[_],

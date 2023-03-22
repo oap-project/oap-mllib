@@ -573,19 +573,13 @@ object OneDAL {
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
     val mergedTables = coalescedTables.mapPartitions { iter =>
-      val context = new DaalContext()
-      val mergedFeatures = new RowMergedNumericTable(context)
-      val mergedLabels = new RowMergedNumericTable(context)
-
+      val mergedFeatures = new HomogenTable(device)
+      val mergedLabels = new HomogenTable(device)
       iter.foreach { case (featureAddr, labelAddr) =>
-        OneDAL.cAddNumericTable(mergedFeatures.getCNumericTable, featureAddr)
-        OneDAL.cAddNumericTable(mergedLabels.getCNumericTable, labelAddr)
+        mergedFeatures.addHomogenTable(featureAddr)
+        mergedLabels.addHomogenTable(labelAddr)
       }
-
-      //      Service.printNumericTable("mergedFeatures", mergedFeatures, 10, 20)
-      //      Service.printNumericTable("mergedLabels", mergedLabels, 10, 20)
-
-      Iterator((mergedFeatures.getCNumericTable, mergedLabels.getCNumericTable))
+      Iterator((mergedFeatures.getcObejct(), mergedLabels.getcObejct()))
     }.cache()
 
     mergedTables.count()

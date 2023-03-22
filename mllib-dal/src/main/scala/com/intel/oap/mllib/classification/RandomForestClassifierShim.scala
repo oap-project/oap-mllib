@@ -20,7 +20,6 @@ import com.intel.oap.mllib.Utils
 import org.apache.spark.internal.Logging
 import org.apache.spark.{SPARK_VERSION, SparkException}
 import org.apache.spark.ml.classification.spark321.{RandomForestClassifier => RandomForestClassifier321}
-import org.apache.spark.ml.classification.RandomForestClassificationModel
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.sql.Dataset
 

@@ -22,13 +22,15 @@ import com.intel.oneapi.dal.table.Common
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
-import org.apache.spark.ml.linalg.Vector
+import org.apache.spark.ml.linalg.{Matrix, Vector}
 import org.apache.spark.ml.tree.{InternalNode, LeafNode, Node, Split}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
+import java.util
+import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
 
 class RandomForestClassificationModel private[mllib] (
@@ -89,11 +91,14 @@ class RandomForestClassifierDALImpl(val uid: String,
                                     val minWeightFractionLeafNode: Double,
                                     val minImpurityDecreaseSplitNode: Double,
                                     val executorNum: Int,
-                                    val executorCores: Int) extends Serializable with Logging {
+                                    val executorCores: Int,
+                                    val bootstrap: Boolean) extends Serializable with Logging {
 
   def train(labeledPoints: Dataset[_],
             labelCol: String,
-            featuresCol: String): RandomForestClassificationModel = {
+            featuresCol: String): (Matrix, Matrix,
+                                   util.Map[Integer, util.ArrayList[LearningNode]]) = {
+    println(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
@@ -105,7 +110,6 @@ class RandomForestClassifierDALImpl(val uid: String,
         labelCol, featuresCol, executorNum, computeDevice)
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
-    val numFeatures = labeledPoints.select(featuresCol).head().size
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -114,25 +118,20 @@ class RandomForestClassifierDALImpl(val uid: String,
       OneCCL.initDpcpp()
 
       val computeStartTime = System.nanoTime()
-
-      val result = new RandomForestResult()
-//      val node = Array.fill[LearningNode](treeCount)(
-//        new LearningNode(1, None, None, None, false, null))
-//      val trees = node.map{ rootNode => new DecisionTreeClassificationModel(uid, rootNode.toNode(true), numFeatures,
-//        classCount)}
-//      val model = new RandomForestClassificationModel(uid, trees, numFeatures, classCount)
-      val model = cRFClassifierTrainDAL(
+      val result = new RandomForestResult
+      cRFClassifierTrainDAL(
         featureTabAddr,
         lableTabAddr,
         executorNum,
         computeDevice.ordinal(),
-        rank,
         classCount,
+        rank,
         treeCount,
         minObservationsLeafNode,
         minObservationsSplitNode,
         minWeightFractionLeafNode,
         minImpurityDecreaseSplitNode,
+        bootstrap,
         kvsIPPort,
         result)
 
@@ -156,7 +155,7 @@ class RandomForestClassifierDALImpl(val uid: String,
 
         logInfo(s"RandomForestClassifierDAL result conversion took ${durationCovResult} secs")
 
-        Iterator(probabilitiesNumericTable)
+        Iterator((probabilitiesNumericTable, predictionNumericTable, result.treesMap))
       } else {
         Iterator.empty
       }
@@ -166,14 +165,11 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-    val parentModel = new RandomForestClassificationModel(null, null, 0, 0)
-    parentModel
-
+    (results(0)._1, results(0)._2, results(0)._3)
   }
 
 
-  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
-                                             lableTabAddr: Long,
+  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long, lableTabAddr: Long,
                                              executorNum: Int,
                                              computeDeviceOrdinal: Int,
                                              classCount: Int,
@@ -183,6 +179,7 @@ class RandomForestClassifierDALImpl(val uid: String,
                                              minObservationsSplitNode: Int,
                                              minWeightFractionLeafNode: Double,
                                              minImpurityDecreaseSplitNode: Double,
+                                             bootstrap: Boolean,
                                              ipPort: String,
-                                             result: RandomForestResult): Object
+                                             result: RandomForestResult): Unit
 }
