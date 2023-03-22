@@ -71,7 +71,6 @@ class RandomForestClassifierDALImpl(val uid: String,
         "Please run on GPU device.")
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
-    val numFeatures = labeledPoints.select(featuresCol).head().size
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -96,6 +95,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         executorNum,
         computeDevice.ordinal(),
         classCount,
+        rank,
         treeCount,
         featurePerNode,
         minObservationsLeafNode,

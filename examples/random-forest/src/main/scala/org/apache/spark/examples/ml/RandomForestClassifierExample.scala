@@ -19,73 +19,57 @@
 package org.apache.spark.examples.ml
 
 // $example on$
-import org.apache.spark.ml.{Pipeline, Transformer}
+import org.apache.spark.ml.{Pipeline, Transformer, linalg}
 import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, LabeledPoint, StringIndexer, VectorIndexer, VectorIndexerModel}
-import org.apache.spark.ml.linalg.Vectors
-import org.apache.spark.ml.util.MetadataUtils
+import org.apache.spark.ml.linalg.{DenseVector, Vector, Vectors}
+import org.apache.spark.ml.util.{DatasetUtils, MetadataUtils}
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.{DataFrame, Row}
 
 // $example off$
 import org.apache.spark.sql.SparkSession
 
 object RandomForestClassifierExample {
-  /**
-   * Evaluate the given ClassificationModel on data. Print the results.
-   * @param model  Must fit ClassificationModel abstraction
-   * @param data  DataFrame with "prediction" and labelColName columns
-   * @param labelColName  Name of the labelCol parameter for the model
-   *
-   * TODO: Change model type to ClassificationModel once that API is public. SPARK-5995
-   */
-  private[ml] def evaluateClassificationModel(
-                                               model: Transformer,
-                                               data: DataFrame,
-                                               labelColName: String): Unit = {
-    val fullPredictions = model.transform(data).cache()
-    val predictions = fullPredictions.select("prediction").rdd.map(_.getDouble(0))
-    val labels = fullPredictions.select(labelColName).rdd.map(_.getDouble(0))
-    // Print number of classes for reference.
-    val numClasses = MetadataUtils.getNumClasses(fullPredictions.schema(labelColName)) match {
-      case Some(n) => n
-      case None => throw new RuntimeException(
-        "Unknown failure when indexing labels for classification.")
-    }
-    val accuracy = new MulticlassMetrics(predictions.zip(labels)).accuracy
-    println(s"  Accuracy ($numClasses classes): $accuracy")
-  }
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
-      .master("local")
       .appName("RandomForestClassifierExample")
       .config("spark.default.parallelism", 1)
       .getOrCreate()
 
     // $example on$
     // Load and parse the data file, converting it to a DataFrame.
-    val data = spark.read.format("libsvm").load("../data/sample_rf_csv_data.txt")
-    data.show()
+    val data = spark.read.format("libsvm").load("../data/sample_rf_csv_data.txt").toDF("label", "features")
+    data.show(20,false)
+    data.select("label","features").printSchema()
+    val featuresRDD = data
+      .select("label","features").rdd.map {
+      case Row(label: Double ,feature: Vector) => new LabeledPoint(label, feature.toDense)
+    }
 
+    import spark.implicits._
+    val df = featuresRDD.toDF("label", "features")
+    df.show()
     // Index labels, adding metadata to the label column.
     // Fit on whole dataset to include all labels in index.
     val labelIndexer = new StringIndexer()
       .setInputCol("label")
       .setOutputCol("indexedLabel")
-      .fit(data)
+      .fit(df)
     // Automatically identify categorical features, and index them.
     // Set maxCategories so features with > 4 distinct values are treated as continuous.
     val featureIndexer = new VectorIndexer()
       .setInputCol("features")
       .setOutputCol("indexedFeatures")
       .setMaxCategories(4)
-      .fit(data)
+      .fit(df)
 
     // Split the data into training and test sets (30% held out for testing).
-    val Array(trainingData, testData) = data.randomSplit(Array(1, 0))
+    val Array(trainingData, testData) = df.randomSplit(Array(1, 0))
 
     // Train a RandomForest model.
     val rf = new RandomForestClassifier()
@@ -117,8 +101,6 @@ object RandomForestClassifierExample {
     println(s"Select example rows to display")
     predictions.show()
     println(s"Select example rows to display end")
-
-
 
     // Select (prediction, true label) and compute test error.
     val evaluator = new MulticlassClassificationEvaluator()

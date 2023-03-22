@@ -41,6 +41,7 @@ import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => Ol
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
+
 // scalastyle:off line.size.limit
 /**
  * <a href="http://en.wikipedia.org/wiki/Random_forest">Random Forest</a> learning algorithm for
