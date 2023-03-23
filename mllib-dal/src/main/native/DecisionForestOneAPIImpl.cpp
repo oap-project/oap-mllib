@@ -202,6 +202,8 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
 
         // Add the ArrayList to the Java map
         jmethodID mapPut = env->GetMethodID(mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        std::cout << "convertJavaMap tree id  = " <<  entry.first
+                           << std::endl;
         jint jKey = static_cast<jint>(entry.first);
         env->CallObjectMethod(jMap, mapPut, jKey, jList);
     }

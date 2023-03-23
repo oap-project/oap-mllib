@@ -171,6 +171,9 @@ class RandomForestClassifierDALImpl(val uid: String,
     val myScalaMap = hashmap.mapValues(_.toSet)
     for ( (k, v) <- myScalaMap) {
       println(s"key: $k, value: $v")
+      for ( l <- v) {
+           println(l.toString)
+      }
     }
 
     (results(0)._1, results(0)._2, results(0)._3)
