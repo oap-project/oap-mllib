@@ -42,7 +42,7 @@ const int ccl_root = 0;
 //const char* INTERNALNODE_CLASS_NAME = "org.apache.spark.ml.tree.InternalNode";
 //const char* SPLIT_CLASS_NAME = "org/apache/spark/ml/tree/Split";
 //const char* IMPURITY_CALCULATOR_CLASS_NAME = "org.apache.spark.mllib.tree.impurity.ImpurityCalculator";
-
+typedef std::shared_ptr<jobject> objPtr;
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -369,7 +369,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
-
+    jobject trees;
     if (comm.get_rank() == 0) {
         std::cout << "Variable importance results:\n"
                   << result_train.get_var_importance() << std::endl;
@@ -381,7 +381,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> treeForest =
                 std::make_shared<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>();
         collect_model(env, result_train.get_model(), classCount, treeForest);
-        jobject trees = convertJavaMap(env, treeForest);
+        trees = convertJavaMap(env, treeForest);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -415,8 +415,8 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
 
 //        // Set treesMap for result
 //        env->SetObjectField(resultObj, treesMapField, trees);
-        return trees;
        }
+       return trees;
 }
 
 /*
@@ -433,12 +433,12 @@ JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_classification_RandomForestCl
       std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
       const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
       std::string ipPortStr = std::string(ipPortPtr);
-      jobejct hashmapObj = doRFClassifierOneAPICompute(
+      jobject hashmapObj = doRFClassifierOneAPICompute(
           env, rankId, pNumTabFeature, pNumTabLabel, executorNum, computeDeviceOrdinal, classCount,
           treeCount, minObservationsLeafNode, minObservationsSplitNode,
           minWeightFractionLeafNode, minImpurityDecreaseSplitNode, bootstrap,
           ipPortPtr, resultObj);
       env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-      return hashmapObj
+      return hashmapObj;
   }
 #endif
