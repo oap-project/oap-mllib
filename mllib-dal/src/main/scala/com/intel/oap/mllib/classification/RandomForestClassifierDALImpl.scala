@@ -29,6 +29,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
+import scala.collection.JavaConversions._
 
 import java.util
 import java.util.{ArrayList, Map}

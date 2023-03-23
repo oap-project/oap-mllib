@@ -397,7 +397,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
 //            std::cout << "Can't GetFieldID from java/util/HashMap" << std::endl;
 //            exit(-1);
 //        }
-        HomogenTablePtr prediction =
+            HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
 
@@ -406,11 +406,11 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         saveHomogenTablePtrToVector(probabilities);
 
         // Set prediction for result
-        env->SetDoubleField(resultObj, predictionNumericTableField,
+        env->SetLongField(resultObj, predictionNumericTableField,
                          (jlong)prediction.get());
 
         // Set probabilities for result
-        env->SetDoubleField(resultObj, probabilitiesNumericTableField,
+        env->SetLongField(resultObj, probabilitiesNumericTableField,
                            (jlong)probabilities.get());
 
 //        // Set treesMap for result
