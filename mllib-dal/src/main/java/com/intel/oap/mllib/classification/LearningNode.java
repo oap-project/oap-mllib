@@ -15,8 +15,14 @@ public class LearningNode {
                         "splitValue is %s; " +
                         "isLeaf is %s; " +
                         "probability size is %s;" +
-                        "sampleCount is %s;"
-                ,level, impurity, splitIndex, splitValue, isLeaf, probability.length, sampleCount);
+                        "sampleCount is %s;",
+                new Integer(level) == null ? "null" : level,
+                new Double(impurity) == null ? "null" : impurity,
+                new Integer(splitIndex) == null ? "null" : splitIndex,
+                new Double(splitValue) == null ? "null" : splitValue,
+                new Boolean(isLeaf) == null ? "null" : isLeaf,
+                probability == null ? "null" : probability.length,
+                new Integer(sampleCount) == null ? "null" : sampleCount);
 
         return str;
     }

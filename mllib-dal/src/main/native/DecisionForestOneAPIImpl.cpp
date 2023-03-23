@@ -205,6 +205,8 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
         std::cout << "convertJavaMap tree id  = " <<  entry.first
                            << std::endl;
         jint jKey = static_cast<jint>(entry.first);
+        std::cout << "convertJavaMap jKey  = " <<  jKey
+                            << std::endl;
         env->CallObjectMethod(jMap, mapPut, jKey, jList);
     }
     std::cout << "convert map to HashMap end " << std::endl;
