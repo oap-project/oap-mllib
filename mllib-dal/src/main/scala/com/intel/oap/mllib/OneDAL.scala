@@ -418,7 +418,7 @@ object OneDAL {
   private[mllib] def doubleArrayToHomogenTable(
       points: Array[Double],
       device: Common.ComputeDevice): HomogenTable = {
-    val table = new HomogenTable(1, points.length, points, device)
+    val table = new HomogenTable(points.length,1, points, device)
     table
   }
 

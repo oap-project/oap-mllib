@@ -119,7 +119,7 @@ class RandomForestClassifierDALImpl(val uid: String,
 
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
-      cRFClassifierTrainDAL(
+      val hashmap = cRFClassifierTrainDAL(
         featureTabAddr,
         lableTabAddr,
         executorNum,
@@ -155,7 +155,7 @@ class RandomForestClassifierDALImpl(val uid: String,
 
         logInfo(s"RandomForestClassifierDAL result conversion took ${durationCovResult} secs")
 
-        Iterator((probabilitiesNumericTable, predictionNumericTable, result.treesMap))
+        Iterator((probabilitiesNumericTable, predictionNumericTable, hashmap))
       } else {
         Iterator.empty
       }
@@ -181,5 +181,5 @@ class RandomForestClassifierDALImpl(val uid: String,
                                              minImpurityDecreaseSplitNode: Double,
                                              bootstrap: Boolean,
                                              ipPort: String,
-                                             result: RandomForestResult): Unit
+                                             result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

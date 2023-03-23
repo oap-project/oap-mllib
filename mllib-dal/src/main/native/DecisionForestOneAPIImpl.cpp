@@ -144,7 +144,7 @@ void collect_model(JNIEnv *env, const df::model<Task>& m,
 }
 
 jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> map) {
-
+    std::cout << "convert map to HashMap " << std::endl;
     // Create a new Java HashMap object
     jclass mapClass = env->FindClass("java/util/HashMap");
     jmethodID mapConstructor = env->GetMethodID(mapClass, "<init>", "()V");
@@ -160,6 +160,7 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
 
     // Iterate over the C++ map and add each entry to the Java map
     for (const auto& entry : *map) {
+        std::cout << "Iterate over the C++ map and add each entry to the Java map" << std::endl;
         // Create a new Java ArrayList to hold the LearningNode objects
         jobject jList = env->NewObject(listClass, listConstructor);
 
@@ -204,6 +205,7 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
         jint jKey = static_cast<jint>(entry.first);
         env->CallObjectMethod(jMap, mapPut, jKey, jList);
     }
+    std::cout << "convert map to HashMap end " << std::endl;
 
     return jMap;
 }
@@ -324,7 +326,7 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
 //    return leafNodeClass;
 //}
 
-static void doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabFeature,
+static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabFeature,
                                            jlong pNumTabLabel, jint executorNum,
                                            jint computeDeviceOrdinal, jint classCount, jint treeCount,
                                            jint minObservationsLeafNode, jint minObservationsSplitNode,
@@ -356,22 +358,17 @@ static void doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabF
             .set_min_impurity_decrease_in_split_node(minImpurityDecreaseSplitNode)
             .set_error_metric_mode(df::error_metric_mode::out_of_bag_error)
             .set_variable_importance_mode(df::variable_importance_mode::mdi)
-            .set_bootstrap(bootstrap)
             .set_infer_mode(df::infer_mode::class_responses |
                             df::infer_mode::class_probabilities)
             .set_voting_mode(df::voting_mode::weighted);
 
     auto queue = getQueue(device);
-    std::cout << "doRFClassifierOneAPICompute create comm " << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
             queue, executorNum, rankId, ipPort);
-    std::cout << "doRFClassifierOneAPICompute create comm end " << std::endl;
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
-    std::cout << "doRFClassifierOneAPICompute result_train " << std::endl;
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
-    std::cout << "doRFClassifierOneAPICompute result_infer " << std::endl;
 
     if (comm.get_rank() == 0) {
         std::cout << "Variable importance results:\n"
@@ -388,11 +385,18 @@ static void doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabF
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
+
         // Get Field references
         jfieldID predictionNumericTableField = env->GetFieldID(clazz, "predictionNumericTable", "J");
         jfieldID probabilitiesNumericTableField =
             env->GetFieldID(clazz, "probabilitiesNumericTable", "J");
-        jfieldID treesMapField = env->GetFieldID(clazz, "treesMap", "Ljava/util/HashMap");
+//        jfieldID treesMapField = env->GetFieldID(clazz, "treesMap", "Ljava/util/HashMap");
+//        if (treesMapField == NULL) {
+//            // Print an error message or throw an exception
+//            // if the field ID is not found
+//            std::cout << "Can't GetFieldID from java/util/HashMap" << std::endl;
+//            exit(-1);
+//        }
         HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
@@ -402,15 +406,16 @@ static void doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabF
         saveHomogenTablePtrToVector(probabilities);
 
         // Set prediction for result
-        env->SetIntField(resultObj, predictionNumericTableField,
+        env->SetDoubleField(resultObj, predictionNumericTableField,
                          (jlong)prediction.get());
 
         // Set probabilities for result
         env->SetDoubleField(resultObj, probabilitiesNumericTableField,
                            (jlong)probabilities.get());
 
-        // Set treesMap for result
-        env->SetObjectField(resultObj, treesMapField, trees);
+//        // Set treesMap for result
+//        env->SetObjectField(resultObj, treesMapField, trees);
+        return trees;
        }
 }
 
@@ -419,7 +424,7 @@ static void doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabF
  * Method:    cRFClassifierTrainDAL
  * Signature: (JJIIIIIIIDDZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL
+JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL
   (JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
   jint computeDeviceOrdinal, jint classCount, jint rankId, jint treeCount,
   jint minObservationsLeafNode, jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
@@ -428,11 +433,12 @@ JNIEXPORT void JNICALL Java_com_intel_oap_mllib_classification_RandomForestClass
       std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
       const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
       std::string ipPortStr = std::string(ipPortPtr);
-      doRFClassifierOneAPICompute(
+      jobejct hashmapObj = doRFClassifierOneAPICompute(
           env, rankId, pNumTabFeature, pNumTabLabel, executorNum, computeDeviceOrdinal, classCount,
           treeCount, minObservationsLeafNode, minObservationsSplitNode,
           minWeightFractionLeafNode, minImpurityDecreaseSplitNode, bootstrap,
           ipPortPtr, resultObj);
       env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+      return hashmapObj
   }
 #endif
