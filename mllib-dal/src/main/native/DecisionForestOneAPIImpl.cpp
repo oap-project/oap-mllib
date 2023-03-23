@@ -33,6 +33,7 @@
 #include "oneapi/dal/algo/decision_forest.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
+#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 using namespace std;
 using namespace oneapi::dal;
@@ -185,8 +186,12 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
             env->SetBooleanField(jNode, isLeafField, node.isLeaf);
 
             if (node.probability != nullptr) {
+                std::cout << "convertJavaMap jProbability  = " <<  node.probability.get()
+                                       << std::endl;
                 jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
-                jsize length = sizeof(node.probability);
+                jsize length = ARRAY_SIZE(node.probability.get());
+                std::cout << "convertJavaMap probability array size  = " <<  length
+                                                       << std::endl;
                 jdoubleArray jProbability = env->NewDoubleArray(length);
                 env->SetDoubleArrayRegion(jProbability, 0, length, node.probability.get());
                 env->SetObjectField(jNode, probabilityField, jProbability);
