@@ -204,10 +204,13 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
         jmethodID mapPut = env->GetMethodID(mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         std::cout << "convertJavaMap tree id  = " <<  entry.first
                            << std::endl;
-        jint jKey = static_cast<jint>(entry.first);
-        std::cout << "convertJavaMap jKey  = " <<  jKey
-                            << std::endl;
-        env->CallObjectMethod(jMap, mapPut, env->NewInteger(jKey), jList);
+        // Create a new Integer object with the value key
+        jobject jKey = env->NewObject(
+          env->FindClass("java/lang/Integer"), // Find the Integer class
+          env->GetMethodID(env->FindClass("java/lang/Integer"), "<init>", "(I)V"), // Get the constructor method
+          (jint) static_cast<jint>(entry.first)
+        );
+        env->CallObjectMethod(jMap, mapPut, jKey, jList);
     }
     std::cout << "convert map to HashMap end " << std::endl;
 
@@ -373,7 +376,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
-    jobject trees;
+    jobject trees = nullptr;
     if (comm.get_rank() == 0) {
         std::cout << "Variable importance results:\n"
                   << result_train.get_var_importance() << std::endl;
