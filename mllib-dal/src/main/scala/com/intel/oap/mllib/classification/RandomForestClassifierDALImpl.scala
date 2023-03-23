@@ -28,6 +28,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
+import scala.collection.JavaConversions._
 
 import java.util
 import java.util.{ArrayList, Map}
@@ -165,6 +166,13 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
+
+    val hashmap = results(0)._3
+    val myScalaMap = hashmap.mapValues(_.toSet)
+    for ( (k, v) <- myScalaMap) {
+      println(s"key: $k, value: $v")
+    }
+
     (results(0)._1, results(0)._2, results(0)._3)
   }
 

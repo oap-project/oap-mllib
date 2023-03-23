@@ -205,7 +205,7 @@ class RandomForestClassifier @Since("1.4.0") (
                          java.util.ArrayList[LearningNodeDAL]],
                          numFeatures : Int,
                          numClasses : Int): Array[DecisionTreeModel] = {
-    treesMap.map { case (id: Integer, nodelist: java.util.ArrayList[double])
+    treesMap.map { case (id: Integer, nodelist: java.util.ArrayList[LearningNodeDAL])
       => {
         val rootNode = TreeUtils.buildTreeDFS(nodelist)
         new DecisionTreeClassificationModel(uid,
