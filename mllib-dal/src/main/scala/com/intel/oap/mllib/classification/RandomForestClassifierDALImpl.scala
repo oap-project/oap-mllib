@@ -129,7 +129,6 @@ class RandomForestClassifierDALImpl(val uid: String,
     results(0)
   }
 
-
   @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
                                                    lableTabAddr: Long,
                                                    executorNum: Int,
