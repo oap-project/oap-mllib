@@ -393,7 +393,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> treeForest =
                 std::make_shared<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>();
         collect_model(env, result_train.get_model(), classCount, treeForest);
-        trees = convertJavaMap(env, treeForest);
+        trees = convertJavaMap(env, treeForest, classCount);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -409,7 +409,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
 //            std::cout << "Can't GetFieldID from java/util/HashMap" << std::endl;
 //            exit(-1);
 //        }
-            HomogenTablePtr prediction =
+        HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
 
