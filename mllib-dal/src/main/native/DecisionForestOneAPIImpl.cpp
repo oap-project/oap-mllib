@@ -43,7 +43,11 @@ const int ccl_root = 0;
 //const char* INTERNALNODE_CLASS_NAME = "org.apache.spark.ml.tree.InternalNode";
 //const char* SPLIT_CLASS_NAME = "org/apache/spark/ml/tree/Split";
 //const char* IMPURITY_CALCULATOR_CLASS_NAME = "org.apache.spark.mllib.tree.impurity.ImpurityCalculator";
-typedef std::shared_ptr<jobject> objPtr;
+//std::vector<jobject> g_ObjVector;
+//
+//void saveObjToVector(const jobject &ptr) {
+//    g_ObjVector.push_back(ptr);
+//}
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -195,15 +199,21 @@ jobject convertJavaMap(JNIEnv *env,
                                        << std::endl;
                 jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
                 jdoubleArray jProbability = env->NewDoubleArray(classCount);
-                env->SetDoubleArrayRegion(jProbability, 0, classCount, node.probability.get());
+//                env->SetDoubleArrayRegion(jProbability, 0, classCount, node.probability.get());
                 // call the native method to get the values
                 jdouble* elements = env->GetDoubleArrayElements(jProbability, nullptr);
                 // Do something with the array elements
                 for (int i = 0; i < classCount; i++) {
                     std::cout << "convertJavaMap elements : " << elements[i] << std::endl;
+                    std::cout << "convertJavaMap node.probability.get()[i] : " << node.probability.get()[i] << std::endl;
+                    elements[i] = node.probability.get()[i];
                 }
+                env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
                 env->SetObjectField(jNode, probabilityField, jProbability);
             }
+
+            double probability[] = (double[]) jNode->getClass()->getField("probability")->get(jNode);
+            std::cout << "convertJavaMap probability : " << probability[i] << std::endl;
 
             jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
             env->SetIntField(jNode, sampleCountField, node.sampleCount);
@@ -229,122 +239,6 @@ jobject convertJavaMap(JNIEnv *env,
 
     return jMap;
 }
-
-
-//jobject buildTree(JNIEnv* env, std::shared_ptr<std::vector<jobejct>> nodes, jint level, jint nodeIndex) {
-//    // Get the current node from the array
-//    jobject currentNode = nodes[index];
-//    // Recursively build the child nodes if the current node is not a leaf
-//    if (!isLeaf) {
-//        jobject leftNode = buildTree(env, clazz, nodes, index + 1);
-//        jobject rightNode = buildTree(env, clazz, nodes, index + 2);
-//
-//        // Set the child nodes of the current node
-//        env->SetObjectField(currentNode, env->GetFieldID(learningNodeClass, "leftChild", "Lcom/example/LearningNode;"), leftNode);
-//        env->SetObjectField(currentNode, env->GetFieldID(learningNodeClass, "rightChild", "Lcom/example/LearningNode;"), rightNode);
-//    }
-//}
-//
-//jobejct createSplitNode(JNIEnv* env, const df::split_node_info<df::task::classification>& info, int nodeIndex, jint classCount) {
-//    // 获取类和构造函数
-//    jclass internalNodeClass = env->FindClass(INTERNALNODE_CLASS_NAME);
-//    if(leafNodeClass == NULL){
-//        return;
-//    }
-//    jmethodID internalNodeConstructor = env->GetMethodID(internalNodeClass, "<init>", "(Ljava/lang/Long;Ljava/lang/Long;Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator)V");
-//    jfieldID predictionField = env->GetDoubleField(leafNodeClass, "prediction", "D");
-//    jfieldID impurityField = env->GetFieldID(leafNodeClass, "impurity", "D");
-//    jfieldID impurityStatsField = env->GetFieldID(learningNodeClass, "stats", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator;");
-//
-//    jobject predictionObj = env->GetObjectField(leafNodeClass, predictionField);
-//    jobject impurityObj = env->GetObjectField(leafNodeClass, impurityField);
-//    jobject splitObj = env->GetObjectField(leafNodeClass, impurityStatsField);
-//
-//
-//    std::unique_ptr<double> probability(new double[classCount]);
-//    double largestElement = 0;
-//    for (std::int64_t index_class = 0; index_class < class_count; ++index_class) {
-//         probability[index_class] = info.get_probability(index_class);
-//         if(largestElement < info.get_probability(index_class)) {
-//              largestElement = info.get_probability(index_class);
-//         }
-//    }
-//
-//    // set prediction
-//    env->SetDoubleField(leafNodeClass, predictionField,
-//                        largestElement);
-//    // set impurity
-//    env->SetDoubleField(leafNodeClass, impurityField,
-//                        info.get_impurity());
-//
-//    // set split
-//    if(!typeid(info) ==typeid(df::leaf_node_info)){
-//        env->SetIntField(node, splitField,
-//                                 info.get_feature_index());
-//    }
-//
-//    // 创建ImpurityCalculator对象
-//    jclass statsCls = env->FindClass(IMPURITY_STATS_CLASS_NAME);
-//    jmethodID statsConstructor = env->GetMethodID(leafNodeClass, "<init>", "(Lscala/Array)V");
-//    // Create a new instance of LearningNode with the extracted fields
-//    jobject impurityCalculator = env->NewObject(statsCls, statsConstructor, probability);
-//
-//    // set stats
-//    env->SetIntField(leafNodeClass, impurityStatsField, impurityCalculator);
-//
-//    return leafNodeClass;
-//}
-//
-//jobject createLeafNode(JNIEnv* env, const df::leaf_node_info<df::task::classification>& info, int nodeIndex, jint classCount) {
-//
-//    // 获取类和构造函数
-//    jclass leafNodeClass = env->FindClass(LEAFNODE_CLASS_NAME);
-//    if(leafNodeClass == NULL){
-//        return;
-//    }
-//    jmethodID leafNodeConstructor = env->GetMethodID(leafNodeClass, "<init>", "(Ljava/lang/Long;Ljava/lang/Long;Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator)V");
-//    jfieldID predictionField = env->GetDoubleField(leafNodeClass, "prediction", "D");
-//    jfieldID impurityField = env->GetFieldID(leafNodeClass, "impurity", "D");
-//    jfieldID impurityStatsField = env->GetFieldID(learningNodeClass, "stats", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator;");
-//
-//    jobject predictionObj = env->GetObjectField(leafNodeClass, predictionField);
-//    jobject impurityObj = env->GetObjectField(leafNodeClass, impurityField);
-//    jobject splitObj = env->GetObjectField(leafNodeClass, impurityStatsField);
-//
-//
-//    std::unique_ptr<double> probability(new double[classCount]);
-//    double largestElement = 0;
-//    for (std::int64_t index_class = 0; index_class < class_count; ++index_class) {
-//         probability[index_class] = info.get_probability(index_class);
-//         if(largestElement < info.get_probability(index_class)) {
-//              largestElement = info.get_probability(index_class);
-//         }
-//    }
-//
-//    // set prediction
-//    env->SetDoubleField(leafNodeClass, predictionField,
-//                        largestElement);
-//    // set impurity
-//    env->SetDoubleField(leafNodeClass, impurityField,
-//                        info.get_impurity());
-//
-//    // set split
-//    if(!typeid(info) ==typeid(df::leaf_node_info)){
-//        env->SetIntField(node, splitField,
-//                                 info.get_feature_index());
-//    }
-//
-//    // 创建ImpurityCalculator对象
-//    jclass statsCls = env->FindClass(IMPURITY_STATS_CLASS_NAME);
-//    jmethodID statsConstructor = env->GetMethodID(leafNodeClass, "<init>", "(Lscala/Array)V");
-//    // Create a new instance of LearningNode with the extracted fields
-//    jobject impurityCalculator = env->NewObject(statsCls, statsConstructor, probability);
-//
-//    // set stats
-//    env->SetIntField(leafNodeClass, impurityStatsField, impurityCalculator);
-//
-//    return leafNodeClass;
-//}
 
 static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabFeature,
                                            jlong pNumTabLabel, jint executorNum,
@@ -408,13 +302,6 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         jfieldID predictionNumericTableField = env->GetFieldID(clazz, "predictionNumericTable", "J");
         jfieldID probabilitiesNumericTableField =
             env->GetFieldID(clazz, "probabilitiesNumericTable", "J");
-//        jfieldID treesMapField = env->GetFieldID(clazz, "treesMap", "Ljava/util/HashMap");
-//        if (treesMapField == NULL) {
-//            // Print an error message or throw an exception
-//            // if the field ID is not found
-//            std::cout << "Can't GetFieldID from java/util/HashMap" << std::endl;
-//            exit(-1);
-//        }
         HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
@@ -431,8 +318,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         env->SetLongField(resultObj, probabilitiesNumericTableField,
                            (jlong)probabilities.get());
 
-//        // Set treesMap for result
-//        env->SetObjectField(resultObj, treesMapField, trees);
+//        saveObjToVector(trees);
        }
        return trees;
 }
