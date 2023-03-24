@@ -191,11 +191,17 @@ jobject convertJavaMap(JNIEnv *env,
 
             // Convert the probability array
             if (node.probability != nullptr) {
-                std::cout << "convertJavaMap jProbability  = " <<  node.probability.get()
+                std::cout << "convertJavaMap probability  = " <<  node.probability.get()[0]
                                        << std::endl;
                 jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
                 jdoubleArray jProbability = env->NewDoubleArray(classCount);
                 env->SetDoubleArrayRegion(jProbability, 0, classCount, node.probability.get());
+                // call the native method to get the values
+                jdouble* elements = env->GetDoubleArrayElements(jProbability, nullptr);
+                // Do something with the array elements
+                for (int i = 0; i < classCount; i++) {
+                    std::cout << "convertJavaMap elements : " << elements[i] << std::endl;
+                }
                 env->SetObjectField(jNode, probabilityField, jProbability);
             }
 
