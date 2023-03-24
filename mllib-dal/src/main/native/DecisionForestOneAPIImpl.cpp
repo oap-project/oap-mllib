@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iterator>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
@@ -75,11 +76,12 @@ LearningNode convertleafToLearningNode(const df::leaf_node_info<df::task::classi
            leafNode.level = info.get_level();
            leafNode.impurity = info.get_impurity();
            leafNode.sampleCount = info.get_sample_count();
-           std::unique_ptr<double[]> probability(new double[classCount]);
+           std::unique_ptr<double[]> arr(new double[classCount]);
            for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
-                probability[index_class] = info.get_probability(index_class);
+                arr[index_class] = info.get_probability(index_class);
            }
-           leafNode.probability = std::move(probability);
+
+           leafNode.probability = std::move(arr);
            return leafNode;
 }
 
@@ -138,13 +140,14 @@ void collect_model(JNIEnv *env, const df::model<Task>& m,
     for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
         std::cout << "Tree #" << i << std::endl;
         std::shared_ptr<std::vector<LearningNode>> myVec = std::make_shared<std::vector<LearningNode>>();
-
         m.traverse_depth_first(i, collect_nodes{myVec, classCount});
         treeForest->insert({i , myVec});
     }
 }
 
-jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> map) {
+jobject convertJavaMap(JNIEnv *env,
+                       const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> map,
+                       const jint classCount) {
     std::cout << "convert map to HashMap " << std::endl;
     // Create a new Java HashMap object
     jclass mapClass = env->FindClass("java/util/HashMap");
@@ -189,11 +192,8 @@ jobject convertJavaMap(JNIEnv *env, const std::shared_ptr<std::map<std::int64_t,
                 std::cout << "convertJavaMap jProbability  = " <<  node.probability.get()
                                        << std::endl;
                 jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
-                jsize length = ARRAY_SIZE(node.probability.get());
-                std::cout << "convertJavaMap probability array size  = " <<  length
-                                                       << std::endl;
-                jdoubleArray jProbability = env->NewDoubleArray(length);
-                env->SetDoubleArrayRegion(jProbability, 0, length, node.probability.get());
+                jdoubleArray jProbability = env->NewDoubleArray(classCount);
+                env->SetDoubleArrayRegion(jProbability, 0, classCount, node.probability.get());
                 env->SetObjectField(jNode, probabilityField, jProbability);
             }
 
