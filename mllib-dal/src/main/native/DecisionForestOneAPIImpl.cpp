@@ -79,9 +79,10 @@ LearningNode convertleafToLearningNode(const df::leaf_node_info<df::task::classi
            std::unique_ptr<double[]> arr(new double[classCount]);
            for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
                 arr[index_class] = info.get_probability(index_class);
+                std::cout << "convertleafToLearningNode set probability : " << arr[index_class] << std::endl;
            }
-
            leafNode.probability = std::move(arr);
+           std::cout << "convertleafToLearningNode set probability : " << leafNode.probability.get()[0] << std::endl;
            return leafNode;
 }
 
