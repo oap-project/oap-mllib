@@ -34,7 +34,6 @@
 #include "oneapi/dal/algo/decision_forest.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
-#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 using namespace std;
 using namespace oneapi::dal;
@@ -57,7 +56,8 @@ struct LearningNode {
     std::unique_ptr<double[]> probability = nullptr;
     int sampleCount = 0;
 };
-
+const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> treeForest =
+        std::make_shared<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>();
 
 LearningNode convertsplitToLearningNode(const df::split_node_info<df::task::classification>& info, const int classCount){
            LearningNode splitNode;
@@ -188,6 +188,7 @@ jobject convertJavaMap(JNIEnv *env,
             jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
             env->SetBooleanField(jNode, isLeafField, node.isLeaf);
 
+            // Convert the probability array
             if (node.probability != nullptr) {
                 std::cout << "convertJavaMap jProbability  = " <<  node.probability.get()
                                        << std::endl;
@@ -390,8 +391,6 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         std::cout << "Probabilities results:\n" << result_infer.get_probabilities() << std::endl;
 
         // convert c++ map to java hashmap
-        const std::shared_ptr<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>> treeForest =
-                std::make_shared<std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>();
         collect_model(env, result_train.get_model(), classCount, treeForest);
         trees = convertJavaMap(env, treeForest, classCount);
 
