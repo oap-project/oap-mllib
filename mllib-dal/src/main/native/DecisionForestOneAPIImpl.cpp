@@ -212,9 +212,6 @@ jobject convertJavaMap(JNIEnv *env,
                 env->SetObjectField(jNode, probabilityField, jProbability);
             }
 
-            double probability[] = (double[]) jNode->getClass()->getField("probability")->get(jNode);
-            std::cout << "convertJavaMap probability : " << probability[i] << std::endl;
-
             jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
             env->SetIntField(jNode, sampleCountField, node.sampleCount);
 
