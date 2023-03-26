@@ -244,12 +244,17 @@ jobject convertJavaMap(JNIEnv *env,
         jfieldID probability_field = env->GetFieldID(learningNodeClass, "probability", "[D");
         jobject probability_object = env->GetObjectField(element_object, probability_field);
         jdoubleArray probability_array = reinterpret_cast<jdoubleArray>(probability_object);
-
         jdouble* probability_data = env->GetDoubleArrayElements(probability_array, NULL);
+        if (probability_data == NULL) {
+            std::cout << "probability_data null " << std::endl;
+            // An exception occurred
+            exit(-1);
+        }
         for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
             std::cout << "convertleafToLearningNode get probability : " << probability_data[index_class] << std::endl;
         }
         std::cout << "convert map new_node.getlevel " << level << std::endl;
+        env->ReleaseDoubleArrayElements(probability_array, probability_data, 0);
 
     }
     std::cout << "convert map to HashMap end " << std::endl;
