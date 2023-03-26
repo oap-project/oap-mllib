@@ -110,9 +110,9 @@ class RandomForestClassifierDALImpl(val uid: String,
         gpuIndices,
         result)
       for ( (k, v) <- hashmap) {
-        println(s"key: $k, value: $v")
+        logInfo(s"key: $k, value: $v")
         for ( l <- v) {
-          println(l.toString)
+          logInfo(l.toString)
         }
       }
       val computeEndTime = System.nanoTime()
