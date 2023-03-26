@@ -191,6 +191,7 @@ jobject convertJavaMap(JNIEnv *env,
             jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
             env->SetBooleanField(jNode, isLeafField, node.isLeaf);
 
+            std::cout << "convertJavaMap node.probability start " << std::endl;
             // Convert the probability array
             if (node.probability != nullptr) {
                 std::cout << "convertJavaMap node.probability  = " <<  node.probability.get()[0]
@@ -228,6 +229,7 @@ jobject convertJavaMap(JNIEnv *env,
                    std::cout << "convertleafToLearningNode get probability : " << probability_data[index_class] << std::endl;
                 }
             }
+            std::cout << "convertJavaMap node.probability end " << std::endl;
 
             jfieldID probability_Field = env->GetFieldID(learningNodeClass, "probability", "[D");
             jobject probabilityObject = env->GetObjectField(jNode, probability_Field);
