@@ -228,11 +228,11 @@ jobject convertJavaMap(JNIEnv *env,
               (jint) static_cast<jint>(entry.first)
             );
             jobject value_object = env->CallObjectMethod(jMap, hash_map_get, joKey);
-            jmethodID array_list_get = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
-            jobject element_object = env->CallObjectMethod(value_object, array_list_get, 0);
-            jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
-            jint level = env->GetIntField(element_object, level_field);
-            std::cout << "convert map new_node.getlevel " << level << std::endl;
+//            jmethodID array_list_get = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
+//            jobject element_object = env->CallObjectMethod(value_object, array_list_get, 0);
+//            jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
+//            jint level = env->GetIntField(element_object, level_field);
+//            std::cout << "convert map new_node.getlevel " << level << std::endl;
             jfieldID probability_field = env->GetFieldID(learningNodeClass, "probability", "[D");
             jobject probability_object = env->GetObjectField(jNode, probability_field);
             jdoubleArray probability_array = reinterpret_cast<jdoubleArray>(probability_object);
