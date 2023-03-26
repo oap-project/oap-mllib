@@ -229,12 +229,6 @@ jobject convertJavaMap(JNIEnv *env,
                 }
             }
 
-            jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
-            env->SetIntField(jNode, sampleCountField, node.sampleCount);
-
-            // Add the LearningNode object to the ArrayList
-            jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
-            env->CallBooleanMethod(jList, listAdd, jNode);
             jfieldID probability_Field = env->GetFieldID(learningNodeClass, "probability", "[D");
             jobject probabilityObject = env->GetObjectField(jNode, probability_Field);
             if (probabilityObject == NULL) {
@@ -252,6 +246,13 @@ jobject convertJavaMap(JNIEnv *env,
             for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
                std::cout << "convertleafToLearningNode get probability data : " << probabilityData[index_class] << std::endl;
             }
+
+            jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
+            env->SetIntField(jNode, sampleCountField, node.sampleCount);
+
+            // Add the LearningNode object to the ArrayList
+            jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+            env->CallBooleanMethod(jList, listAdd, jNode);
         }
 
         // Add the ArrayList to the Java map
