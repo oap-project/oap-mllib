@@ -211,8 +211,10 @@ jobject convertJavaMap(JNIEnv *env,
 
                 }
                 env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
+                jdouble* data = env->GetDoubleArrayElements(jProbability, NULL);
+
                 for (int i = 0; i < classCount; i++) {
-                    std::cout << "convertJavaMap jProbability value : " << jProbability[i] << std::endl;
+                    std::cout << "convertJavaMap jProbability value : " << data[i] << std::endl;
                 }
                 env->SetObjectField(jNode, probabilityField, jProbability);
                 jobject probability_object = env->GetObjectField(jNode, probabilityField);
