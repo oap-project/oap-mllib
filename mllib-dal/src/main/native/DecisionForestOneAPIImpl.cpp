@@ -43,11 +43,11 @@ const int ccl_root = 0;
 //const char* INTERNALNODE_CLASS_NAME = "org.apache.spark.ml.tree.InternalNode";
 //const char* SPLIT_CLASS_NAME = "org/apache/spark/ml/tree/Split";
 //const char* IMPURITY_CALCULATOR_CLASS_NAME = "org.apache.spark.mllib.tree.impurity.ImpurityCalculator";
-//std::vector<jobject> g_ObjVector;
-//
-//void saveObjToVector(const jobject &ptr) {
-//    g_ObjVector.push_back(ptr);
-//}
+std::vector<jobject> g_ObjVector;
+
+void saveObjToVector(const jobject &ptr) {
+    g_ObjVector.push_back(ptr);
+}
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -207,6 +207,8 @@ jobject convertJavaMap(JNIEnv *env,
                     std::cout << "convertJavaMap elements : " << elements[i] << std::endl;
                     std::cout << "convertJavaMap node.probability.get()[i] : " << node.probability.get()[i] << std::endl;
                     elements[i] = node.probability.get()[i];
+                    std::cout << "convertJavaMap elements end : " << elements[i] << std::endl;
+
                 }
                 env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
                 env->SetObjectField(jNode, probabilityField, jProbability);
@@ -315,7 +317,7 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         env->SetLongField(resultObj, probabilitiesNumericTableField,
                            (jlong)probabilities.get());
 
-//        saveObjToVector(trees);
+        saveObjToVector(trees);
        }
        return trees;
 }
