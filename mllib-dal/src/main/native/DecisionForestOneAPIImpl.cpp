@@ -221,7 +221,13 @@ jobject convertJavaMap(JNIEnv *env,
             jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
             env->CallBooleanMethod(jList, listAdd, jNode);
             jmethodID hash_map_get = env->GetMethodID(mapClass, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-            jobject value_object = env->CallObjectMethod(jMap, hash_map_get, jKey);
+            // Create a new Integer object with the value key
+            jobject joKey = env->NewObject(
+              env->FindClass("java/lang/Integer"), // Find the Integer class
+              env->GetMethodID(env->FindClass("java/lang/Integer"), "<init>", "(I)V"), // Get the constructor method
+              (jint) static_cast<jint>(entry.first)
+            );
+            jobject value_object = env->CallObjectMethod(jMap, hash_map_get, joKey);
             jmethodID array_list_get = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
             jobject element_object = env->CallObjectMethod(value_object, array_list_get, 0);
             jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
