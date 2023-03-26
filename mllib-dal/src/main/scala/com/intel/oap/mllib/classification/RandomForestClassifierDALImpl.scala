@@ -92,7 +92,12 @@ class RandomForestClassifierDALImpl(val uid: String,
         bootstrap,
         kvsIPPort,
         result)
-
+      for ( (k, v) <- hashmap) {
+        println(s"key: $k, value: $v")
+        for ( l <- v) {
+          println(l.toString)
+        }
+      }
       val computeEndTime = System.nanoTime()
 
       val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
