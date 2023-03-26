@@ -211,8 +211,6 @@ jobject convertJavaMap(JNIEnv *env,
 
                 }
                 env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
-                jsize probability_length = env->GetArrayLength(jProbability);
-                std::cout << "convert map probability array length " << probability_length << std::endl;
                 env->SetObjectField(jNode, probabilityField, jProbability);
             }
 
@@ -242,8 +240,10 @@ jobject convertJavaMap(JNIEnv *env,
         jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
         jint level = env->GetIntField(element_object, level_field);
         jfieldID probability_field = env->GetFieldID(learningNodeClass, "probability", "[D");
-        jobject probability_object = env->GetObjectField(element_object, probability_field);
+        jobject probability_object = env->GetObjectField(jNode, probability_field);
         jdoubleArray probability_array = reinterpret_cast<jdoubleArray>(probability_object);
+        jsize probability_length = env->GetArrayLength(probability_array);
+        std::cout << "convert map probability array length " << probability_length << std::endl;
         jdouble* probability_data = env->GetDoubleArrayElements(probability_array, NULL);
         if (probability_data == NULL) {
             std::cout << "probability_data null " << std::endl;
