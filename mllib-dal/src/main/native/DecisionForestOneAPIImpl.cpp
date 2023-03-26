@@ -192,46 +192,45 @@ jobject convertJavaMap(JNIEnv *env,
             env->SetBooleanField(jNode, isLeafField, node.isLeaf);
 
             // Convert the probability array
-            std::cout << "convertJavaMap probability  = " <<  node.probability.get()[0]
-                                   << std::endl;
-            jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
-            jdoubleArray jProbability = env->NewDoubleArray(classCount);
+            if (node.probability != nullptr) {
+                std::cout << "convertJavaMap node.probability  = " <<  node.probability.get()[0]
+                                       << std::endl;
+                jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
+                jdoubleArray jProbability = env->NewDoubleArray(classCount);
 //                env->SetDoubleArrayRegion(jProbability, 0, classCount, node.probability.get());
-            // call the native method to get the values
-            jdouble* elements = env->GetDoubleArrayElements(jProbability, nullptr);
-            // Do something with the array elements
-            for (int i = 0; i < classCount; i++) {
-                std::cout << "convertJavaMap elements : " << elements[i] << std::endl;
-                std::cout << "convertJavaMap node.probability.get()[i] : " << node.probability.get()[i] << std::endl;
-                elements[i] = node.probability.get()[i];
-                std::cout << "convertJavaMap elements end : " << elements[i] << std::endl;
+                // call the native method to get the values
+                jdouble* elements = env->GetDoubleArrayElements(jProbability, nullptr);
+                // Do something with the array elements
+                for (int i = 0; i < classCount; i++) {
+                    std::cout << "convertJavaMap elements : " << elements[i] << std::endl;
+                    std::cout << "convertJavaMap node.probability.get()[i] : " << node.probability.get()[i] << std::endl;
+                    elements[i] = node.probability.get()[i];
+                    std::cout << "convertJavaMap elements end : " << elements[i] << std::endl;
 
-            }
-            env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
-            jdouble* data = env->GetDoubleArrayElements(jProbability, NULL);
-            std::cout << "convertJavaMap jProbability value 1: "<< std::endl;
+                }
+                env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
+                jdouble* data = env->GetDoubleArrayElements(jProbability, NULL);
 
-            for (int i = 0; i < classCount; i++) {
-                std::cout << "convertJavaMap jProbability value : " << data[i] << std::endl;
+                for (int i = 0; i < classCount; i++) {
+                    std::cout << "convertJavaMap jProbability value : " << data[i] << std::endl;
+                }
+                env->SetObjectField(jNode, probabilityField, jProbability);
+                jobject probability_object = env->GetObjectField(jNode, probabilityField);
+                if (probability_object == NULL) {
+                  std::cout << "probability_object null " << std::endl;
+                  // An exception occurred
+                  exit(-1);
+                }
+                jdouble* probability_array = reinterpret_cast<jdouble*>(probability_object);
+                if (probability_array == NULL) {
+                   std::cout << "probability_data null " << std::endl;
+                   // An exception occurred
+                   exit(-1);
+                }
+                for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
+                   std::cout << "convertleafToLearningNode get probability : " << probability_array[index_class] << std::endl;
+                }
             }
-            std::cout << "convertJavaMap jProbability value 2 : "<< std::endl;
-            env->SetObjectField(jNode, probabilityField, jProbability);
-            jobject probability_object = env->GetObjectField(jNode, probabilityField);
-            if (probability_object == NULL) {
-              std::cout << "probability_object null " << std::endl;
-              // An exception occurred
-              exit(-1);
-            }
-            jdouble* probability_array = reinterpret_cast<jdouble*>(probability_object);
-            if (probability_array == NULL) {
-               std::cout << "probability_data null " << std::endl;
-               // An exception occurred
-               exit(-1);
-            }
-            for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
-               std::cout << "convertleafToLearningNode get probability : " << probability_array[index_class] << std::endl;
-            }
-
 
             jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
             env->SetIntField(jNode, sampleCountField, node.sampleCount);
@@ -239,35 +238,6 @@ jobject convertJavaMap(JNIEnv *env,
             // Add the LearningNode object to the ArrayList
             jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
             env->CallBooleanMethod(jList, listAdd, jNode);
-
-//            jmethodID hash_map_get = env->GetMethodID(mapClass, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
-            // Create a new Integer object with the value key
-//            jobject joKey = env->NewObject(
-//              env->FindClass("java/lang/Integer"), // Find the Integer class
-//              env->GetMethodID(env->FindClass("java/lang/Integer"), "<init>", "(I)V"), // Get the constructor method
-//              (jint) static_cast<jint>(entry.first)
-//            );
-//            jobject value_object = env->CallObjectMethod(jMap, hash_map_get, joKey);
-//            jmethodID array_list_get = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
-//            jobject element_object = env->CallObjectMethod(value_object, array_list_get, 0);
-//            jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
-//            jint level = env->GetIntField(element_object, level_field);
-//            std::cout << "convert map new_node.getlevel " << level << std::endl;
-//            jfieldID probability_field = env->GetFieldID(learningNodeClass, "probability", "[D");
-//            jobject probability_object = env->GetObjectField(jNode, probability_field);
-//            jdouble* probability_array = reinterpret_cast<jdouble*>(probability_object);
-//            jsize probability_length = env->GetArrayLength(probability_array);
-//            std::cout << "convert map probability array length " << probability_length << std::endl;
-//            jdouble* probability_data = env->GetDoubleArrayElements(probability_array, NULL);
-//            if (probability_array == NULL) {
-//                std::cout << "probability_data null " << std::endl;
-//                // An exception occurred
-//                exit(-1);
-//            }
-//            for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
-//                std::cout << "convertleafToLearningNode get probability : " << probability_array[index_class] << std::endl;
-//            }
-//            env->ReleaseDoubleArrayElements(probability_array, probability_data, 0);
         }
 
         // Add the ArrayList to the Java map
