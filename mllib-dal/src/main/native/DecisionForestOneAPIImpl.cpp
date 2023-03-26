@@ -236,7 +236,7 @@ jobject convertJavaMap(JNIEnv *env,
         jmethodID hash_map_get = env->GetMethodID(mapClass, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
         jobject value_object = env->CallObjectMethod(jMap, hash_map_get, jKey);
         jmethodID array_list_get = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
-        jobject element_object = env->CallObjectMethod(jList, array_list_get, 0);
+        jobject element_object = env->CallObjectMethod(value_object, array_list_get, 0);
         jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
         jint level = env->GetIntField(element_object, level_field);
         jfieldID probability_field = env->GetFieldID(learningNodeClass, "probability", "[D");
