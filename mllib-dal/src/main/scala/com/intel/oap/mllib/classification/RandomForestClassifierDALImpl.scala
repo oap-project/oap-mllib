@@ -40,49 +40,6 @@ class RandomForestClassificationModel private[mllib] (
                          val numFeatures: Int,
                          val numClasses: Int)
 
-//class DecisionTreeClassificationModel private[mllib] (
-//                          val uid: String,
-//                          val rootNode: Node,
-//                          val numFeatures: Int,
-//                          val numClasses: Int)
-//
-//private[mllib] class LearningNode(
-//                                  var id: Int,
-//                                  var leftChild: Option[LearningNode],
-//                                  var rightChild: Option[LearningNode],
-//                                  var split: Option[Split],
-//                                  var isLeaf: Boolean,
-//                                  var stats: ImpurityStats)extends Serializable {
-//
-//  def toNode: Node = toNode(prune = true)
-//
-//  /**
-//   * Convert this [[LearningNode]] to a regular [[Node]], and recurse on any children.
-//   */
-//  def toNode(prune: Boolean = true): Node = {
-//
-//    if (!leftChild.isEmpty || !rightChild.isEmpty) {
-//      assert(leftChild.nonEmpty && rightChild.nonEmpty && split.nonEmpty && stats != null,
-//        "Unknown error during Decision Tree learning.  Could not convert LearningNode to Node.")
-//      (leftChild.get.toNode(prune), rightChild.get.toNode(prune)) match {
-//        case (l: LeafNode, r: LeafNode) if prune && l.prediction == r.prediction =>
-//          new LeafNode(l.prediction, stats.impurity, stats.impurityCalculator)
-//        case (l, r) =>
-//          new InternalNode(stats.impurityCalculator.predict, stats.impurity, stats.gain,
-//            l, r, split.get, stats.impurityCalculator)
-//      }
-//    } else {
-//      if (stats.valid) {
-//        new LeafNode(stats.impurityCalculator.predict, stats.impurity,
-//          stats.impurityCalculator)
-//      } else {
-//        // Here we want to keep same behavior with the old mllib.DecisionTreeModel
-//        new LeafNode(stats.impurityCalculator.predict, -1.0, stats.impurityCalculator)
-//      }
-//    }
-//  }
-//}
-
 class RandomForestClassifierDALImpl(val uid: String,
                                     val classCount: Int,
                                     val treeCount: Int,
