@@ -233,6 +233,23 @@ jobject convertJavaMap(JNIEnv *env,
           (jint) static_cast<jint>(entry.first)
         );
         env->CallObjectMethod(jMap, mapPut, jKey, jList);
+        jmethodID hash_map_get = env->GetMethodID(mapClass, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        jobject value_object = env->CallObjectMethod(jMap, hash_map_get, jKey);
+        jmethodID array_list_get = env->GetMethodID(listClass, "get", "(I)Ljava/lang/Object;");
+        jobject element_object = env->CallObjectMethod(jList, array_list_get, 0);
+        jfieldID level_field = env->GetFieldID(learningNodeClass, "level", "I");
+        jint level = env->GetIntField(element_object, level_field);
+        jfieldID probability_field = env->GetFieldID(learningNodeClass, "probability", "[D");
+        jobject probability_object = env->GetObjectField(element_object, probability_field);
+        jdoubleArray probability_array = reinterpret_cast<jdoubleArray>(probability_object);
+        jsize probability_length = env->GetArrayLength(probability_array);
+        std::cout << "convert map probability array length " << probability_length << std::endl;
+        jdouble* probability_data = env->GetDoubleArrayElements(probability_array, NULL);
+        for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
+            std::cout << "convertleafToLearningNode get probability : " << probability_data[index_class] << std::endl;
+        }
+        std::cout << "convert map new_node.getlevel " << level << std::endl;
+
     }
     std::cout << "convert map to HashMap end " << std::endl;
 
