@@ -43,11 +43,6 @@ const int ccl_root = 0;
 //const char* INTERNALNODE_CLASS_NAME = "org.apache.spark.ml.tree.InternalNode";
 //const char* SPLIT_CLASS_NAME = "org/apache/spark/ml/tree/Split";
 //const char* IMPURITY_CALCULATOR_CLASS_NAME = "org.apache.spark.mllib.tree.impurity.ImpurityCalculator";
-std::vector<jobject> g_ObjVector;
-
-void saveObjToVector(const jobject &ptr) {
-    g_ObjVector.push_back(ptr);
-}
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -230,28 +225,6 @@ jobject convertJavaMap(JNIEnv *env,
                 }
             }
             std::cout << "convertJavaMap node.probability end " << std::endl;
-            if (node.probability != nullptr) {
-                jfieldID probability_Field = env->GetFieldID(learningNodeClass, "probability", "[D");
-                jobject probabilityObject = env->GetObjectField(jNode, probability_Field);
-                if (probabilityObject == NULL) {
-                  std::cout << "probabilityObject null " << std::endl;
-                  // An exception occurred
-                  exit(-1);
-                }
-                jdoubleArray probabilityArray = reinterpret_cast<jdoubleArray>(probabilityObject);
-                jdouble* probabilityData = env->GetDoubleArrayElements(probabilityArray, NULL);
-                if (probabilityData == NULL) {
-                   std::cout << "probabilityData null " << std::endl;
-                   // An exception occurred
-                   exit(-1);
-                }
-                for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
-                   std::cout << "convertleafToLearningNode get probability data : " << probabilityData[index_class] << std::endl;
-                }
-
-                jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
-                env->SetIntField(jNode, sampleCountField, node.sampleCount);
-            }
 
             // Add the LearningNode object to the ArrayList
             jmethodID listAdd = env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
@@ -354,7 +327,6 @@ static jobject doRFClassifierOneAPICompute(JNIEnv *env, jint rankId, jlong pNumT
         env->SetLongField(resultObj, probabilitiesNumericTableField,
                            (jlong)probabilities.get());
 
-        saveObjToVector(trees);
        }
        return trees;
 }
