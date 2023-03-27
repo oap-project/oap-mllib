@@ -49,7 +49,7 @@ object TreeUtils {
   private def buildTree(nodes : java.util.ArrayList[LearningNodeDAL]): LearningNode = {
     var i = 0
 
-    def buildTreeHelper(): LearningNode = {
+    def buildTreeDF(): LearningNode = {
       val ln: LearningNodeDAL = nodes.get(i)
       i += 1
 
@@ -62,58 +62,14 @@ object TreeUtils {
         None
       }
       if (!ln.isLeaf) {
-        node.leftChild = Some(buildTreeHelper())
-        node.rightChild = Some(buildTreeHelper())
+        node.leftChild = Some(buildTreeDF())
+        node.rightChild = Some(buildTreeDF())
       }
 
       node
     }
 
-    buildTreeHelper()
-  }
-
-  private def buildTreeDF(parentNode : LearningNode,
-                          nodes : java.util.ArrayList[LearningNodeDAL],
-                          index : Int,
-                          parentLevel : Int) : Unit = {
-    if (nodes.get(index) == null) {
-      return
-    }
-    if (nodes.get(index).isLeaf) {
-      val impurityCalculator = new GiniCalculator(nodes.get(index).probability,
-                                                  nodes.get(index).sampleCount)
-      val impurityStats = new ImpurityStats(0,
-                                            nodes.get(index).impurity,
-                                            impurityCalculator,
-                                            null,
-                                            null)
-      val childNode = LearningNode.apply(index, nodes.get(index).isLeaf, impurityStats)
-      childNode.split = if (!nodes.get(index).isLeaf) {
-        Some(new ContinuousSplit(nodes.get(index).splitIndex, nodes.get(index).splitValue))
-      } else {
-        None
-      }
-      parentNode.leftChild = Some(childNode)
-    } else if (parentLevel == nodes.get(index).level) {
-      val impurityCalculator = new GiniCalculator(nodes.get(index).probability,
-                                                  nodes.get(index).sampleCount)
-      val impurityStats = new ImpurityStats(0,
-                                            nodes.get(index).impurity,
-                                            impurityCalculator,
-                                            null,
-                                            null)
-      val childNode = LearningNode.apply(index, nodes.get(index).isLeaf, impurityStats)
-      childNode.split = if (!nodes.get(index).isLeaf) {
-        Some(new ContinuousSplit(nodes.get(index).splitIndex, nodes.get(index).splitValue))
-      } else {
-        None
-      }
-
-      parentNode.rightChild = Some(childNode)
-      buildTreeDF(childNode, nodes, index + 1, nodes.get(index).level)
-    } else if (parentLevel > nodes.get(index).level) {
-      buildTreeDF(parentNode, nodes, index, nodes.get(index).level-1)
-    }
+    buildTreeDF()
   }
 
   private def calculateGainAndImpurityStats (parentNode : LearningNode): Unit = {
