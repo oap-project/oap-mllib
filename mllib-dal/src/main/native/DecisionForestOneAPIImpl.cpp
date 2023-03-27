@@ -351,6 +351,54 @@ JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_classification_RandomForestCl
           minWeightFractionLeafNode, minImpurityDecreaseSplitNode, bootstrap,
           ipPortPtr, resultObj);
       env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+
+      // Get the class of the input object
+      jclass clazz = env->GetObjectClass(hashmapObj);
+      jclass hash_map_class = env->FindClass("java/util/HashMap");
+      jmethodID hash_map_get = env->GetMethodID(hash_map_class, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+      jclass integer_class = env->FindClass("java/lang/Integer");
+      jmethodID integer_constructor = env->GetMethodID(integer_class, "intValue", "()I");
+      jobject key_object = env->NewObject(integer_class, integer_constructor, 0);
+      jobject arrayListObject = env->CallObjectMethod(clazz, hash_map_get, key_object);
+      jclass arrayListClass = env->GetObjectClass(arrayListObject);
+      jmethodID arrayListSizeMethod = env->GetMethodID(arrayListClass, "size", "()I");
+      jint arrayListSize = env->CallIntMethod(arrayListObject, arrayListSizeMethod);
+
+        jclass learningNodeClass = env->FindClass("com/example/LearningNode");
+        jfieldID levelField = env->GetFieldID(learningNodeClass, "level", "I");
+        jfieldID impurityField = env->GetFieldID(learningNodeClass, "impurity", "D");
+        jfieldID splitIndexField = env->GetFieldID(learningNodeClass, "splitIndex", "I");
+        jfieldID splitValueField = env->GetFieldID(learningNodeClass, "splitValue", "D");
+        jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
+        jfieldID probabilityField = env->GetFieldID(learningNodeClass, "probability", "[D");
+        jfieldID sampleCountField = env->GetFieldID(learningNodeClass, "sampleCount", "I");
+        for (int i = 0; i < arrayListSize; i++) {
+        jobject learningNodeObject = env->CallObjectMethod(arrayListObject, env->GetMethodID(arrayListClass, "get", "(I)Ljava/lang/Object;"), i);
+
+        int level = env->GetIntField(learningNodeObject, levelField);
+        double impurity = env->GetDoubleField(learningNodeObject, impurityField);
+        int splitIndex = env->GetIntField(learningNodeObject, splitIndexField);
+        double splitValue = env->GetDoubleField(learningNodeObject, splitValueField);
+        bool isLeaf = env->GetBooleanField(learningNodeObject, isLeafField);
+
+        jobject probabilityObject = env->GetObjectField(learningNodeObject, probabilityField);
+        if (probabilityObject != NULL) {
+           jdoubleArray probabilityArray = reinterpret_cast<jdoubleArray>(probabilityObject);
+           jdouble* probabilityData = env->GetDoubleArrayElements(probabilityArray, NULL);
+           if (probabilityData == NULL) {
+              std::cout << "probability_data null " << std::endl;
+              // An exception occurred
+              exit(-1);
+           }
+           for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
+              std::cout << "convertleafToLearningNode get probability : " << probabilityData[index_class] << std::endl;
+           }
+           env->ReleaseDoubleArrayElements(probabilityArray, probabilityData, JNI_ABORT);
+        }
+
+        int sampleCount = env->GetIntField(learningNodeObject, sampleCountField);
+
+        }
       return hashmapObj;
   }
 #endif
