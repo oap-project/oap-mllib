@@ -139,4 +139,43 @@ object TreeUtils {
       leftImpurityCalculator,
       rightImpurityCalculator)
   }
+
+  private def calculateGainAndImpurityStats (parentNode : LearningNode): Unit = {
+    val impurity: Double = parentNode.stats.impurity
+    val left = parentNode.leftChild.getOrElse(null)
+    val right = parentNode.rightChild.getOrElse(null)
+    val leftImpurityCalculator = if (left != null) {
+      calculateGainAndImpurityStats(left)
+      left.stats.impurityCalculator
+    } else {
+      null
+    }
+    val rightImpurityCalculator = if (right != null) {
+      calculateGainAndImpurityStats(right)
+      right.stats.impurityCalculator
+    } else {
+      null
+    }
+
+    val (leftCount, leftImpurity) = if (leftImpurityCalculator != null) {
+      (leftImpurityCalculator.count, leftImpurityCalculator.calculate())
+    } else {
+      (0.0, 0.0)
+    }
+    val (rightCount, rightImpurity) = if (rightImpurityCalculator != null) {
+      (rightImpurityCalculator.count, rightImpurityCalculator.calculate())
+    } else {
+      (0.0, 0.0)
+    }
+    val totalCount: Double = leftCount + rightCount
+    val leftWeight: Double = leftCount / totalCount.toDouble
+    val rightWeight: Double = rightCount/ totalCount.toDouble
+
+    val gain: Double = impurity - leftWeight * leftImpurity - rightWeight * rightImpurity
+    parentNode.stats = new ImpurityStats(gain,
+      impurity,
+      parentNode.stats.impurityCalculator,
+      leftImpurityCalculator,
+      rightImpurityCalculator)
+  }
 }
