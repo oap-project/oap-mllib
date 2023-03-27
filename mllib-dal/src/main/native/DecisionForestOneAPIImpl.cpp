@@ -394,8 +394,8 @@ JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_classification_RandomForestCl
                }
                env->ReleaseDoubleArrayElements(probabilityArray, probabilityData, JNI_ABORT);
             }
+            int sampleCount = env->GetIntField(learningNodeObject, sampleCountField);
         }
-        int sampleCount = env->GetIntField(learningNodeObject, sampleCountField);
       return hashmapObj;
   }
 #endif
