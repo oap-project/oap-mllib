@@ -28,7 +28,6 @@ import scala.collection.mutable
 
 
 object TreeUtils {
-<<<<<<< HEAD
   def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL],
                    metadata: DecisionTreeMetadata) : LearningNode = {
     if (nodes.isEmpty) {
@@ -39,20 +38,6 @@ object TreeUtils {
     traverseDFS(rootNode)
     rootNode
   }
-  private def traverseDFS(rootNode: LearningNode): Unit = {
-    println(s"split is : ${rootNode.split.nonEmpty}; " +
-      s"leftChild is : ${rootNode.leftChild.nonEmpty} ;" +
-      s"rightChild is : ${rootNode.rightChild.nonEmpty} ;" +
-      s"gain = ${rootNode.stats.gain};" +
-      s"impurity = ${rootNode.stats.impurity}")
-    if (!rootNode.leftChild.isEmpty) {
-      traverseDFS(rootNode.leftChild.getOrElse(null))
-    }
-    if (!rootNode.rightChild.isEmpty) {
-      traverseDFS(rootNode.rightChild.getOrElse(null))
-    }
-  }
-
   private def traverseDFS(rootNode: LearningNode): Unit = {
     println(s"split is : ${rootNode.split.nonEmpty}; " +
       s"leftChild is : ${rootNode.leftChild.nonEmpty} ;" +
