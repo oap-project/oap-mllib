@@ -24,8 +24,11 @@ import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
 import org.apache.spark.mllib.tree.impurity.GiniCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
+import scala.collection.mutable
+
 
 object TreeUtils {
+<<<<<<< HEAD
   def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL],
                    metadata: DecisionTreeMetadata) : LearningNode = {
     if (nodes.isEmpty) {
