@@ -85,24 +85,34 @@ object TreeUtils {
     }
 
     val (leftCount, leftImpurity) = if (leftImpurityCalculator != null) {
+      val count = if (leftImpurityCalculator.stats == null ) {
+        0.0
+      } else {
+        leftImpurityCalculator.stats.count(_ != 0.0)
+      }
       val sum = if (leftImpurityCalculator.stats == null ) {
         0.0
       } else {
-        rightImpurityCalculator.stats.sum
+        leftImpurityCalculator.stats.sum
       }
       val calculateImpurity = left.stats.impurity - sum
-      (leftImpurityCalculator.count, calculateImpurity)
+      (count, calculateImpurity)
     } else {
       (0.0, 0.0)
     }
     val (rightCount, rightImpurity) = if (rightImpurityCalculator != null) {
+      val count = if (rightImpurityCalculator.stats == null ) {
+        0.0
+      } else {
+        rightImpurityCalculator.stats.count(_ != 0.0)
+      }
       val sum = if (rightImpurityCalculator.stats == null ) {
         0.0
       } else {
         rightImpurityCalculator.stats.sum
       }
       val calculateImpurity = right.stats.impurity - sum
-      (rightImpurityCalculator.count, calculateImpurity)
+      (count, calculateImpurity)
     } else {
       (0.0, 0.0)
     }
