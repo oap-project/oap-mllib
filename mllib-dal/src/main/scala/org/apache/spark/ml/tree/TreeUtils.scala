@@ -31,8 +31,8 @@ object TreeUtils {
     val impurityStats = new ImpurityStats(0, nodes.get(0).impurity, impurityCalculator, null, null)
     val rootNode = LearningNode.apply(0, nodes.get(0).isLeaf, impurityStats)
     buildTreeDF(rootNode, nodes, 1, currentLevel)
-    traverseDFS(rootNode)
     calculateGainAndImpurityStats(rootNode)
+    traverseDFS(rootNode)
     rootNode
   }
   private def traverseDFS(rootNode: LearningNode): Unit = {
