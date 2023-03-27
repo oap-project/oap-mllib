@@ -16,8 +16,10 @@
 package org.apache.spark.ml.tree
 
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
+
 import org.apache.spark.mllib.tree.impurity.GiniCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
+
 
 object TreeUtils {
   def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL]) : LearningNode = {
@@ -83,12 +85,14 @@ object TreeUtils {
     }
 
     val (leftCount, leftImpurity) = if (leftImpurityCalculator != null) {
-      (leftImpurityCalculator.count, leftImpurityCalculator.calculate())
+      val calculateImpurity = left.stats.impurity - leftImpurityCalculator.stats.sum
+      (leftImpurityCalculator.count, calculateImpurity)
     } else {
       (0.0, 0.0)
     }
     val (rightCount, rightImpurity) = if (rightImpurityCalculator != null) {
-      (rightImpurityCalculator.count, rightImpurityCalculator.calculate())
+      val calculateImpurity = right.stats.impurity - leftImpurityCalculator.stats.sum
+      (rightImpurityCalculator.count, calculateImpurity)
     } else {
       (0.0, 0.0)
     }
