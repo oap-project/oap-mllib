@@ -358,14 +358,19 @@ JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_classification_RandomForestCl
       jclass integer_class = env->FindClass("java/lang/Integer");
       jmethodID integer_constructor = env->GetMethodID(integer_class, "intValue", "()I");
       jobject key_object = env->NewObject(integer_class, integer_constructor, 0);
+      std::cout << "1 " << std::endl;
       jobject arrayListObject = env->CallObjectMethod(clazz, hash_map_get, key_object);
+      std::cout << "2 " << std::endl;
       jclass arrayListClass = env->GetObjectClass(arrayListObject);
+      std::cout << "3 " << std::endl;
       jmethodID arrayListSizeMethod = env->GetMethodID(arrayListClass, "size", "()I");
       jint arrayListSize = env->CallIntMethod(arrayListObject, arrayListSizeMethod);
-
+      std::cout << "4 " << std::endl;
 
         for (int i = 0; i < arrayListSize; i++) {
+            std::cout << "5 " << std::endl;
             jobject learningNodeObject = env->CallObjectMethod(arrayListObject, env->GetMethodID(arrayListClass, "get", "(I)Ljava/lang/Object;"), i);
+            std::cout << "6 " << std::endl;
             jclass learningNodeClass = env->GetObjectClass(learningNodeObject);;
             jfieldID levelField = env->GetFieldID(learningNodeClass, "level", "I");
             jfieldID impurityField = env->GetFieldID(learningNodeClass, "impurity", "D");
