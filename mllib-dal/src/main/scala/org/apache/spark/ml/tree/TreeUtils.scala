@@ -40,11 +40,11 @@ object TreeUtils {
       s"leftChild is : ${rootNode.leftChild.nonEmpty} ;" +
       s"rightChild is : ${rootNode.rightChild.nonEmpty} ;" +
       s"state is : ${rootNode.stats.toString()}")
-    if (rootNode.leftChild.nonEmpty) {
-      traverseDFS(rootNode.leftChild.getOrElse())
+    if (!rootNode.leftChild.isEmpty) {
+      traverseDFS(rootNode.leftChild.getOrElse(null))
     }
-    if (rootNode.rightChild.nonEmpty) {
-      traverseDFS(rootNode.rightChild.getOrElse())
+    if (!rootNode.rightChild.isEmpty) {
+      traverseDFS(rootNode.rightChild.getOrElse(null))
     }
   }
 
