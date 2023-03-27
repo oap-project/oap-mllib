@@ -159,13 +159,23 @@ object TreeUtils {
     }
 
     val (leftCount, leftImpurity) = if (leftImpurityCalculator != null) {
-      val calculateImpurity = left.stats.impurity - leftImpurityCalculator.stats.sum
+      val sum = if (leftImpurityCalculator.stats == null ) {
+        0.0
+      } else {
+        rightImpurityCalculator.stats.sum
+      }
+      val calculateImpurity = left.stats.impurity - sum
       (leftImpurityCalculator.count, calculateImpurity)
     } else {
       (0.0, 0.0)
     }
     val (rightCount, rightImpurity) = if (rightImpurityCalculator != null) {
-      val calculateImpurity = right.stats.impurity - leftImpurityCalculator.stats.sum
+      val sum = if (rightImpurityCalculator.stats == null ) {
+        0.0
+      } else {
+        rightImpurityCalculator.stats.sum
+      }
+      val calculateImpurity = right.stats.impurity - sum
       (rightImpurityCalculator.count, calculateImpurity)
     } else {
       (0.0, 0.0)
