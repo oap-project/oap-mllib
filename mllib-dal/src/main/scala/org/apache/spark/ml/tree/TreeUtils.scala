@@ -16,26 +16,18 @@
 package org.apache.spark.ml.tree
 
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
-
 import org.apache.spark.mllib.tree.impurity.GiniCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
+
+import scala.collection.mutable
 
 
 object TreeUtils {
   def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL]) : LearningNode = {
-    val currentLevel = nodes.get(0).level ;
     if (nodes.isEmpty) {
       return null
     }
-    val impurityCalculator = new GiniCalculator(nodes.get(0).probability, nodes.get(0).sampleCount)
-    val impurityStats = new ImpurityStats(0, nodes.get(0).impurity, impurityCalculator, null, null)
-    val rootNode = LearningNode.apply(0, nodes.get(0).isLeaf, impurityStats)
-    rootNode.split = if (!nodes.get(0).isLeaf) {
-      Some(new ContinuousSplit(nodes.get(0).splitIndex, nodes.get(0).splitValue))
-    } else {
-      None
-    }
-    buildTreeDF(rootNode, nodes, 1, currentLevel)
+    val rootNode = buildTree(nodes)
     calculateGainAndImpurityStats(rootNode)
     traverseDFS(rootNode)
     rootNode
@@ -54,6 +46,32 @@ object TreeUtils {
     }
   }
 
+  private def buildTree(nodes : java.util.ArrayList[LearningNodeDAL]): LearningNode = {
+    var i = 0
+
+    def buildTreeHelper(): LearningNode = {
+      val ln: LearningNodeDAL = nodes.get(i)
+      i += 1
+
+      val impurityCalculator = new GiniCalculator(ln.probability, ln.sampleCount)
+      val impurityStats = new ImpurityStats(0, ln.impurity, impurityCalculator, null, null)
+      val node = LearningNode.apply(0, ln.isLeaf, impurityStats)
+      node.split = if (!ln.isLeaf) {
+        Some(new ContinuousSplit(ln.splitIndex, ln.splitValue))
+      } else {
+        None
+      }
+      if (!ln.isLeaf) {
+        node.leftChild = Some(buildTreeHelper())
+        node.rightChild = Some(buildTreeHelper())
+      }
+
+      node
+    }
+
+    buildTreeHelper()
+  }
+
   private def buildTreeDF(parentNode : LearningNode,
                           nodes : java.util.ArrayList[LearningNodeDAL],
                           index : Int,
@@ -61,7 +79,7 @@ object TreeUtils {
     if (nodes.get(index) == null) {
       return
     }
-    if (parentLevel < nodes.get(index).level) {
+    if (nodes.get(index).isLeaf) {
       val impurityCalculator = new GiniCalculator(nodes.get(index).probability,
                                                   nodes.get(index).sampleCount)
       val impurityStats = new ImpurityStats(0,
@@ -76,7 +94,6 @@ object TreeUtils {
         None
       }
       parentNode.leftChild = Some(childNode)
-      buildTreeDF(childNode, nodes, index + 1, nodes.get(index).level)
     } else if (parentLevel == nodes.get(index).level) {
       val impurityCalculator = new GiniCalculator(nodes.get(index).probability,
                                                   nodes.get(index).sampleCount)
@@ -92,9 +109,10 @@ object TreeUtils {
         None
       }
 
-
       parentNode.rightChild = Some(childNode)
-      buildTreeDF(childNode, nodes, index + 1, nodes.get(index).level-1)
+      buildTreeDF(childNode, nodes, index + 1, nodes.get(index).level)
+    } else if (parentLevel > nodes.get(index).level) {
+      buildTreeDF(parentNode, nodes, index, nodes.get(index).level-1)
     }
   }
 
