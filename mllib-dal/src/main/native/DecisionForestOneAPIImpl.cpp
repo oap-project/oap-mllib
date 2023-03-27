@@ -67,8 +67,8 @@ LearningNode convertsplitToLearningNode(const df::split_node_info<df::task::clas
            splitNode.impurity = info.get_impurity();
            splitNode.sampleCount = info.get_sample_count();
            std::unique_ptr<double[]> arr(new double[classCount]);
-           if (classCount > 0) {
-                arr[0] = info.get_response();
+           for (std::int64_t index_class = 0; index_class < classCount; ++index_class) {
+               arr[index_class] = 0.0;
            }
            splitNode.probability = std::move(arr);
            return splitNode;
