@@ -35,6 +35,18 @@ object TreeUtils {
     calculateGainAndImpurityStats(rootNode)
     rootNode
   }
+  private def traverseDFS(rootNode: LearningNode): Unit = {
+    println(s"split is : ${rootNode.split.nonEmpty}; " +
+      s"leftChild is : ${rootNode.leftChild.nonEmpty} ;" +
+      s"rightChild is : ${rootNode.rightChild.nonEmpty} ;" +
+      s"state is : ${rootNode.stats.toString()}")
+    if (rootNode.leftChild.nonEmpty) {
+      traverseDFS(rootNode.leftChild.getOrElse())
+    }
+    if (rootNode.rightChild.nonEmpty) {
+      traverseDFS(rootNode.rightChild.getOrElse())
+    }
+  }
 
   private def traverseDFS(rootNode: LearningNode): Unit = {
     println(s"split is : ${rootNode.split.nonEmpty}; " +
