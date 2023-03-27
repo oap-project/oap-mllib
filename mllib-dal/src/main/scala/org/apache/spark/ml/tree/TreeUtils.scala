@@ -30,6 +30,11 @@ object TreeUtils {
     val impurityCalculator = new GiniCalculator(nodes.get(0).probability, nodes.get(0).sampleCount)
     val impurityStats = new ImpurityStats(0, nodes.get(0).impurity, impurityCalculator, null, null)
     val rootNode = LearningNode.apply(0, nodes.get(0).isLeaf, impurityStats)
+    rootNode.split = if (!nodes.get(0).isLeaf) {
+      Some(new ContinuousSplit(nodes.get(0).splitIndex, nodes.get(0).splitValue))
+    } else {
+      None
+    }
     buildTreeDF(rootNode, nodes, 1, currentLevel)
     calculateGainAndImpurityStats(rootNode)
     traverseDFS(rootNode)
@@ -64,6 +69,11 @@ object TreeUtils {
                                             null,
                                             null)
       val childNode = LearningNode.apply(index, nodes.get(index).isLeaf, impurityStats)
+      childNode.split = if (!nodes.get(index).isLeaf) {
+        Some(new ContinuousSplit(nodes.get(index).splitIndex, nodes.get(index).splitValue))
+      } else {
+        None
+      }
       parentNode.leftChild = Some(childNode)
       buildTreeDF(childNode, nodes, index + 1, nodes.get(index).level)
     } else if (parentLevel == nodes.get(index).level) {
@@ -75,6 +85,13 @@ object TreeUtils {
                                             null,
                                             null)
       val childNode = LearningNode.apply(index, nodes.get(index).isLeaf, impurityStats)
+      childNode.split = if (!nodes.get(index).isLeaf) {
+        Some(new ContinuousSplit(nodes.get(index).splitIndex, nodes.get(index).splitValue))
+      } else {
+        None
+      }
+
+
       parentNode.rightChild = Some(childNode)
       buildTreeDF(childNode, nodes, index + 1, nodes.get(index).level-1)
     }
