@@ -40,7 +40,8 @@ object TreeUtils {
     println(s"split is : ${rootNode.split.nonEmpty}; " +
       s"leftChild is : ${rootNode.leftChild.nonEmpty} ;" +
       s"rightChild is : ${rootNode.rightChild.nonEmpty} ;" +
-      s"state is : ${rootNode.stats.toString()}")
+      s"gain = ${rootNode.stats.gain};" +
+      s"impurity = ${rootNode.stats.impurity}")
     if (!rootNode.leftChild.isEmpty) {
       traverseDFS(rootNode.leftChild.getOrElse(null))
     }
