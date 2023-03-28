@@ -55,9 +55,11 @@ $HADOOP_HOME/bin/hdfs namenode -format
 
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh
-$HADOOP_HOME/sbin/start-yarn.sh
 
 hadoop fs -ls /
-yarn node -list
+
+
+#start spark standalone
+$SPARK_HOME/sbin/start-all.sh
 
 jps
