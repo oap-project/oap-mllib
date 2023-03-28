@@ -67,9 +67,9 @@ LIBS_COMMON :=-L $(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
         -L $(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L $(I_MPI_ROOT)
 
-ONEDAL_LIBS := -lonedal_dpc \
-               -lonedal_core \
-	           -lonedal_thread
+ONEDAL_LIBS := "$(DAALROOT)"/lib/intel64/libonedal_dpc.a \
+               "$(DAALROOT)"/lib/intel64/libonedal_core.a \
+               "$(DAALROOT)"/lib/intel64/libonedal_thread.a
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
       LIBS_COMMON := $(LIBS_COMMON) \
