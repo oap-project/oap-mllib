@@ -38,6 +38,7 @@ object TreeUtils {
     traverseDFS(rootNode)
     rootNode
   }
+
   private def traverseDFS(rootNode: LearningNode): Unit = {
     println(s"split is : ${rootNode.split.nonEmpty}; " +
       s"leftChild is : ${rootNode.leftChild.nonEmpty} ;" +
