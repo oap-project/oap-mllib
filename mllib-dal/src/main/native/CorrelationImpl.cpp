@@ -159,7 +159,6 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
                                        ComputeDevice &device,
                                        jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
-              << std::endl;
     const bool isRoot = (rankId == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
