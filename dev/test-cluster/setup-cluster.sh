@@ -59,3 +59,5 @@ $HADOOP_HOME/sbin/start-yarn.sh
 
 hadoop fs -ls /
 yarn node -list
+
+jps
