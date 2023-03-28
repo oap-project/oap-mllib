@@ -63,9 +63,13 @@ endif
 
 # Use static link if possible, TBB is only available as dynamic libs
 LIBS_COMMON :=-L $(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L $(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc \
+        -L $(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_dpc.a \
         -L $(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L $(I_MPI_ROOT)
+
+ONEDAL_LIBS := -lonedal_dpc \
+               -lonedal_core \
+	           -lonedal_thread
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
       LIBS_COMMON := $(LIBS_COMMON) \
