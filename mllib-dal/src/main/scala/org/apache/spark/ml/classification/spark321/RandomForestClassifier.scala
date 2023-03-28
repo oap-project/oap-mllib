@@ -28,8 +28,7 @@ import org.apache.spark.ml.classification.{BinaryClassificationSummary, BinaryRa
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
-import org.apache.spark.ml.tree._
-import org.apache.spark.ml.tree.{TreeClassifierParams, TreeEnsembleModel}
+import org.apache.spark.ml.tree.{DecisionTreeModel, TreeClassifierParams, TreeEnsembleModel, _}
 import org.apache.spark.ml.tree.impl.RandomForest
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.{Identifiable, MetadataUtils}
