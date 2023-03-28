@@ -57,3 +57,5 @@ $HADOOP_HOME/sbin/start-dfs.sh
 
 hadoop fs -ls /
 
+#start spark standalone
+$SPARK_HOME/sbin/start-all.sh

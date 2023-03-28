@@ -17,8 +17,8 @@ ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CC := gcc
   CXX := g++
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  CC := icpx
-  CXX := icpx
+  CC := dpcpp
+  CXX := dpcpp
 endif
 
 RM := rm -rf
