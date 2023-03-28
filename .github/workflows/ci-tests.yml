@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   local-test:
-    name: Local Test for Units (CPU)
+    name: Local Test for Units (GPU)
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -28,7 +28,6 @@ jobs:
           ${{github.workspace}}/dev/ci/ci-local-dpc-test.sh
 
   cluster-test:
-    if: ${{ false }}  # disable for now since CPU not supported in new oneAPI interfaces of oneDAL
     name: Cluster Test for Examples (CPU)
     runs-on: ubuntu-18.04
     steps:

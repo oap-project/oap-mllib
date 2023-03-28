@@ -157,8 +157,8 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
                                        const ccl::string &ipPort,
                                        jint computeDeviceOrdinal,
                                        jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+    std::cout << "oneDAL (native): compute start , rankid " << rankId
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -176,8 +176,8 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "Correlation (native) RankId = << " << rankId
-              << "; spend training times : " << duration / 1000 << " secs"
+    std::cout << "Correlation (native): rankid " << rankId
+              << "; spend training times " << duration / 1000 << " secs"
               << std::endl;
     if (isRoot) {
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
@@ -187,7 +187,7 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "Correlation batch(native) spend training times : "
+        std::cout << "Correlation batch(native): spend training times "
                   << duration / 1000 << " secs" << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
@@ -227,7 +227,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used: "
+        std::cout << "oneDAL (native): Number of CPU threads used"
                   << nThreadsNew << std::endl;
         doCorrelationDaalCompute(env, obj, rankId, comm, pData, executorNum,
                                  resultObj);

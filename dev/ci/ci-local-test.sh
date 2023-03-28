@@ -20,4 +20,4 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ./build.sh -p CPU_ONLY_PROFILE -q
 
 unset LD_LIBRARY_PATH
-./test.sh -p CPU_ONLY_PROFILE -q
+./test.sh -p CPU_ONLY_PROFILE -q -d CPU

@@ -252,7 +252,7 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jdouble tolerance, jint iterationNum,
                                    jint executorNum, const ccl::string &ipPort,
                                    ComputeDevice &device, jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
+    std::cout << "oneDAL (native): compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     homogen_table htable =
@@ -274,8 +274,8 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "KMeans (native) RankId = << " << rankId
-              << "; spend training times : " << duration / 1000 << " secs"
+    std::cout << "KMeans (native): rankid  " << rankId
+              << "; spend training times " << duration / 1000 << " secs"
               << std::endl;
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
@@ -286,8 +286,8 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "KMeans (native) spend training times : "
-                  << duration / 1000 << " secs" << std::endl;
+        std::cout << "KMeans (native): spend training times " << duration / 1000
+                  << " secs" << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -323,7 +323,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
     jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
@@ -341,7 +341,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used: "
+        std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
         ret = doKMeansDaalCompute(env, obj, rankId, comm, pData, centroids,
                                   clusterNum, tolerance, iterationNum,

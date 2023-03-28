@@ -211,8 +211,8 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
                                       const ccl::string &ipPort,
                                       jint computeDeviceOrdinal,
                                       jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+    std::cout << "oneDAL (native): compute start , rankid " << rankId
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -229,8 +229,8 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
     auto duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
-    std::cout << "Summarizer (native) RankId = << " << rankId
-              << "; spend training times : " << duration / 1000 << " secs"
+    std::cout << "Summarizer (native): rankid " << rankId
+              << "; spend training times " << duration / 1000 << " secs"
               << std::endl;
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
@@ -241,7 +241,7 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
         duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
                        t2 - t1)
                        .count();
-        std::cout << "Summarizer (native) spend training times : "
+        std::cout << "Summarizer (native): spend training times "
                   << duration / 1000 << " secs" << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
@@ -283,7 +283,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
     jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
@@ -301,7 +301,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used: "
+        std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
         doSummarizerDAALCompute(env, obj, rankId, comm, pData, executorNum,
                                 resultObj);

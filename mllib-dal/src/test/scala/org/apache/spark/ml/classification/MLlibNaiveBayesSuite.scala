@@ -18,11 +18,9 @@
 package org.apache.spark.ml.classification
 
 import scala.util.Random
-
 import breeze.linalg.{DenseVector => BDV, Vector => BV}
 import breeze.stats.distributions.{Multinomial => BrzMultinomial, RandBasis => BrzRandBasis}
-
-import org.apache.spark.SparkException
+import org.apache.spark.{SparkConf, SparkException, TestCommon}
 import org.apache.spark.ml.classification.NaiveBayes._
 import org.apache.spark.ml.classification.NaiveBayesSuite._
 import org.apache.spark.ml.feature.LabeledPoint
@@ -35,6 +33,10 @@ import org.apache.spark.sql.{Dataset, Row}
 class MLlibNaiveBayesSuite extends MLTest with DefaultReadWriteTest {
 
   import testImplicits._
+  override def sparkConf: SparkConf = {
+    val conf = super.sparkConf
+    conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+  }
 
   @transient var dataset: Dataset[_] = _
   @transient var bernoulliDataset: Dataset[_] = _

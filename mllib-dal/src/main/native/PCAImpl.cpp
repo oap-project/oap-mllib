@@ -183,8 +183,8 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                jint executorNum, const ccl::string &ipPort,
                                jint computeDeviceOrdinal, jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+    std::cout << "oneDAL (native): compute start , rankid " << rankId
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -201,9 +201,8 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native) RankId = << " << rankId
-              << "; spend training times : " << duration / 1000 << " secs"
-              << std::endl;
+    std::cout << "PCA (native): spend training times " << duration / 1000
+              << " secs" << std::endl;
     if (isRoot) {
         std::cout << "Eigenvectors:\n"
                   << result_train.get_eigenvectors() << std::endl;
@@ -213,7 +212,8 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native) spend training times : " << duration / 1000
+        std::cout << "PCA (native):  rankid " << rankId
+                  << "; spend training times in end " << duration / 1000
                   << " secs" << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
@@ -246,7 +246,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
     jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
@@ -262,7 +262,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used: "
+        std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
         doPCADAALCompute(env, obj, rankId, comm, pData, executorNum, resultObj);
     }

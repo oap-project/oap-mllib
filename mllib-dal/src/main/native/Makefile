@@ -83,13 +83,13 @@ endif
 
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
-  ./KMeansOneAPIImpl.cpp \
-  ./PCAOneAPIImpl.cpp \
+  ./KMeansImpl.cpp \
+  ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
-  ./CorrelationOneAPIImpl.cpp \
-  ./SummarizerOneAPIImpl.cpp \
+  ./CorrelationImpl.cpp \
+  ./SummarizerImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
@@ -98,13 +98,13 @@ CPP_SRCS += \
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
-  ./KMeansOneAPIImpl.o \
-  ./PCAOneAPIImpl.o \
+  ./KMeansImpl.o \
+  ./PCAImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
-  ./CorrelationOneAPIImpl.o \
-  ./SummarizerOneAPIImpl.o \
+  ./CorrelationImpl.o \
+  ./SummarizerImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \
