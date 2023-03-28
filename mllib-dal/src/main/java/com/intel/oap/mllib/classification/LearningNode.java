@@ -1,5 +1,8 @@
 package com.intel.oap.mllib.classification;
-public class LearningNode {
+
+import java.io.Serializable;
+
+public class LearningNode implements Serializable {
     public int level;
     public double impurity;
     public int splitIndex;

@@ -17,7 +17,7 @@
 
 package org.apache.spark.ml.classification
 
-import org.apache.spark.SparkFunSuite
+import org.apache.spark.{SparkConf, SparkFunSuite}
 import org.apache.spark.ml.classification.LinearSVCSuite.generateSVMInput
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{Vector, Vectors}
@@ -40,6 +40,10 @@ class RandomForestClassifierSuite extends MLTest with DefaultReadWriteTest {
 
   import RandomForestClassifierSuite.compareAPIs
   import testImplicits._
+  override def sparkConf: SparkConf = {
+    val conf = super.sparkConf
+    conf.set("spark.oap.mllib.device", "GPU")
+  }
 
   private var orderedLabeledPoints50_1000: RDD[LabeledPoint] = _
   private var orderedLabeledPoints5_20: RDD[LabeledPoint] = _
