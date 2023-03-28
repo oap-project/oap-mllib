@@ -4,7 +4,7 @@
 
 HOST_NAME=$(hostname -f)
 # Set Spark master
-SPARK_MASTER=spark://$HOST_NAME:7077
+SPARK_MASTER=spark://localhost:7077
 # Set Hadoop home path
 export HADOOP_HOME=$HADOOP_HOME
 # Set Spark home path
