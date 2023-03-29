@@ -87,17 +87,12 @@ if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_P
   exit 1
 fi
 
-if [ "GPU" = $DEVICE_OPT ]; then
+if [ "HOST" = $DEVICE_OPT ]; then
   suiteArray=(
     "HomogenTableTest" \
     "ColumnAccessorTest" \
     "RowAccessorTest" \
-    "com.intel.oap.mllib.ConvertHomogenTableSuite" \
-
-    "org.apache.spark.ml.clustering.MLlibKMeansSuite" \
-    "org.apache.spark.ml.feature.MLlibPCASuite" \
-    "org.apache.spark.ml.stat.MLlibCorrelationSuite" \
-    "org.apache.spark.ml.stat.MLlibSummarizerSuite"
+    "com.intel.oap.mllib.ConvertHomogenTableSuite"
   )
 else
   suiteArray=(
