@@ -12,20 +12,19 @@ SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
 
-if [[ -n $DAALROOT ]]; then
-  echo
-  echo ====================================================================================
-  echo WARNING: DAALROOT detected. It is recommended to test without oneAPI environment!
-  echo ====================================================================================
-  echo
+if [[ -z $DAALROOT ]]; then
+ echo DAALROOT not defined!
+ exit 1
 fi
 
-# Unset FI_PROVIDER_PATH if present otherwise may hang
-if [[ -n $FI_PROVIDER_PATH ]]; then
-  echo ====================================================================================
-  echo WARNING: FI_PROVIDER_PATH detected. Will unset FI_PROVIDER_PATH before proceeding!
-  unset FI_PROVIDER_PATH
-  echo ====================================================================================
+if [[ -z $TBBROOT ]]; then
+ echo TBBROOT not defined!
+ exit 1
+fi
+
+if [[ -z $CCL_ROOT ]]; then
+ echo CCL_ROOT not defined!
+ exit 1
 fi
 
 if [[ ! -f target/oap-mllib-$OAP_MLLIB_VERSION.jar ]]; then
