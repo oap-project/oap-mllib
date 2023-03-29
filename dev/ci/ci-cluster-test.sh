@@ -22,8 +22,6 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
 ./build.sh -p CPU_ONLY_PROFILE -q
 
-ldd src/main/resources/lib/libMLlibDAL.so
-
 # Setup cluster
 source $GITHUB_WORKSPACE/dev/test-cluster/setup-cluster.sh
 

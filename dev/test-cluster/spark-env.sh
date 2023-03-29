@@ -1,0 +1,5 @@
+echo $CMPLR_ROOT
+echo $LIBRARY_PATH
+echo $DAALROOT
+echo $CCL_ROOT
+echo $LD_LIBRARY_PATH
