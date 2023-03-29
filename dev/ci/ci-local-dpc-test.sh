@@ -20,6 +20,7 @@ echo $TBBROOT
 echo $CCL_ROOT
 echo $DAALROOT
 
+
 cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 ./build.sh
 ./run.sh
