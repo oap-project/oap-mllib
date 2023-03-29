@@ -26,7 +26,5 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps-gpu.sh
 ./build.sh -p CPU_GPU_PROFILE -q
 
-unset LD_LIBRARY_PATH
-source /opt/intel/oneapi/setvars.sh
 ldd src/main/resources/lib/libMLlibDAL.so
 ./test.sh -p CPU_GPU_PROFILE -q -d HOST

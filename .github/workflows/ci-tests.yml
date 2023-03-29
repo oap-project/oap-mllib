@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   local-test-GPU:
-    name: Local Test for Units (GPU)
+    name: Local Test for Units (OneAPI Table)
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
