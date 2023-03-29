@@ -19,8 +19,6 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
 ./build.sh -p CPU_ONLY_PROFILE -q
 
-ldd src/main/resources/lib/libMLlibDAL.so
-
 # Setup cluster
 source $GITHUB_WORKSPACE/dev/test-cluster/setup-cluster.sh
 
@@ -35,6 +33,8 @@ hadoop fs -find /
 echo "========================================="
 echo "Cluster Testing with Spark Version: $SPARK_VERSION"
 echo "========================================="
+
+ldd $GITHUB_WORKSPACE/mllib-dal/src/main/resources/lib/libMLlibDAL.so
 
 # Build and run all examples
 ./build-all-scala.sh
