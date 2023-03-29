@@ -12,7 +12,7 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
 # Setup building envs
-source /opt/intel/oneapi/setvars.sh
+source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
