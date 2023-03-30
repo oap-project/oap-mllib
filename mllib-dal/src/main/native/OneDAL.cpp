@@ -152,4 +152,3 @@ Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble(
 
     return (jlong)ret;
 }
-
