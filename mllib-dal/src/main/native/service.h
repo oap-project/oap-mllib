@@ -42,8 +42,8 @@ using namespace daal::data_management;
 #include <vector>
 
 #include "error_handling.h"
-#include "oneapi/dal/table/homogen.hpp"
 #include "oneapi/dal/table/detail/csr.hpp"
+#include "oneapi/dal/table/homogen.hpp"
 
 using namespace oneapi::dal;
 using namespace oneapi::dal::detail;
@@ -65,7 +65,6 @@ CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
 void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
-
 
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);

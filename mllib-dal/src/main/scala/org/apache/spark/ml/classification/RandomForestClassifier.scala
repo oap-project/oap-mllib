@@ -22,6 +22,7 @@ package org.apache.spark.ml.classification
 import com.intel.oap.mllib.classification.RandomForestClassifierShim
 import org.json4s.{DefaultFormats, JObject}
 import org.json4s.JsonDSL._
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
