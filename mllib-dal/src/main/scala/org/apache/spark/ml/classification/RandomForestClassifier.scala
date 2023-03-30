@@ -22,6 +22,7 @@ package org.apache.spark.ml.classification
 import com.intel.oap.mllib.classification.RandomForestClassifierShim
 import org.json4s.{DefaultFormats, JObject}
 import org.json4s.JsonDSL._
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
@@ -137,7 +138,8 @@ class RandomForestClassifier @Since("1.4.0") (
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
   override protected def train(
-                                dataset: Dataset[_]): RandomForestClassificationModel = instrumented { instr =>
+                                dataset: Dataset[_]): RandomForestClassificationModel
+  = instrumented { instr =>
     val shim = RandomForestClassifierShim.create(uid)
     shim.initShim(extractParamMap())
     shim.train(dataset)

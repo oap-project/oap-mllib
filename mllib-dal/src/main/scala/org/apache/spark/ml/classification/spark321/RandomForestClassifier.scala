@@ -20,9 +20,15 @@
 package org.apache.spark.ml.classification.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.classification.{RandomForestClassifierDALImpl, RandomForestClassifierShim, RandomForestResult, LearningNode => LearningNodeDAL}
+import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL,
+  RandomForestClassifierDALImpl,
+  RandomForestClassifierShim,
+  RandomForestResult}
+import java.util.{ArrayList, Map => JavaMap}
 import org.json4s.{DefaultFormats, JObject}
 import org.json4s.JsonDSL._
+import scala.jdk.CollectionConverters._
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification.{BinaryClassificationSummary, BinaryRandomForestClassificationTrainingSummaryImpl, ClassificationSummary, DecisionTreeClassificationModel, ProbabilisticClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl, TrainingSummary}
 import org.apache.spark.ml.feature.Instance
@@ -40,11 +46,6 @@ import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => Ol
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
-
-import java.util
-import java.util.{ArrayList, Map => JavaMap}
-import scala.collection.JavaConversions.mapAsScalaMap
-
 // scalastyle:off line.size.limit
 
 /**

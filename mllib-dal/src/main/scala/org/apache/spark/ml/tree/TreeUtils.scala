@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Copyright 2020 Intel Corporation
  *
@@ -13,14 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
+
 package org.apache.spark.ml.tree
 
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
-import org.apache.spark.mllib.tree.impurity.GiniCalculator
-import org.apache.spark.mllib.tree.model.ImpurityStats
-
 import scala.collection.mutable
 
+import org.apache.spark.mllib.tree.impurity.GiniCalculator
+import org.apache.spark.mllib.tree.model.ImpurityStats
 
 object TreeUtils {
   def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL]) : LearningNode = {
