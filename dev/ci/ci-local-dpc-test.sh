@@ -17,9 +17,9 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu_gpu_dpcpp
 
-cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
-./build.sh
-./run.sh
+#cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
+#./build.sh
+#./run.sh
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
