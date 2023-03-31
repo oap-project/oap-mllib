@@ -246,8 +246,36 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jint executorNum, const ccl::string &ipPort,
                                    jint computeDeviceOrdinal,
                                    jobject resultObj) {
-    jlong ret = 0L;
-	return ret;
+    std::cout << "oneDAL (native): compute start , rankid = " << rankId
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+
+    const bool isRoot = (rankId == ccl_root);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    homogen_table pData = *((NumericTablePtr *)pNumTabData);
+
+
+    homogen_table htable =
+        *reinterpret_cast<const homogen_table *>(pNumTabData);
+
+    const auto linear_regression_desc = linear_regression::descriptor<>();
+    linear_regression::train_input local_input{htable};
+    auto queue = getQueue(device);
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rankId, ipPort);
+    linear_regression::train_result result_train =
+        preview::train(comm, linear_regression_desc, local_input);
+    if (isRoot) {
+        // Get the class of the input object
+        jclass clazz = env->GetObjectClass(resultObj);
+
+        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
+            result_train.get_model());
+        saveHomogenTablePtrToVector(centroidsPtr);
+        return (jlong)centroidsPtr.get();
+    } else {
+        return (jlong)0;
+    }
 }
 
 
