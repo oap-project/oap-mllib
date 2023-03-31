@@ -27,8 +27,8 @@ import org.apache.spark.sql.{DataFrame, Row}
 
 class MLlibCorrelationSuite extends SparkFunSuite with MLlibTestSparkContext with Logging {
   override def beforeAll(): Unit = {
-    spark.conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
     super.beforeAll()
+    spark.conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
   }
 
   val xData = Array(1.0, 0.0, -2.0)
