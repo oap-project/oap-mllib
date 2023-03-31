@@ -50,54 +50,10 @@ public final class LibLoader {
       return;
     }
 
-    if (!loadLibSYCL()) {
-      log.debug("SYCL libraries are not available, will load CPU libraries only.");
-    }
-    loadLibCCL();
     loadLibMLlibDAL();
 
     isLoaded = true;
   }
-
-  /**
-   * Load oneCCL libs in dependency order
-   */
-  private static synchronized void loadLibCCL() throws IOException {
-    // Load libfabric from system first, if failed load from jar
-    if (!loadFromSystem("libfabric.so.1")) {
-      // Fix dlopen(libfabric.so) error:
-      // $ cp libfabric.so.1 libfabric.so
-      // $ patchelf --set-soname libfabric.so libfabric.so
-      loadFromJar(subDir, "libfabric.so");
-      loadFromJar(subDir, "libfabric.so.1");
-      loadFromJar(subDir, "libsockets-fi.so");
-    }
-    loadFromJar(subDir, "libmpi.so.12");
-    loadFromJar(subDir, "libccl.so.1");
-  }
-
-  /**
-   * Load SYCL libs in dependency order
-   */
-  private static synchronized Boolean loadLibSYCL() throws IOException {
-    // Check if SYCL libraries are available
-    InputStream streamIn = LibLoader.class.getResourceAsStream(LIBRARY_PATH_IN_JAR +
-            "/libsycl.so.5");
-    if (streamIn == null) {
-      return false;
-    }
-    streamIn.close();
-
-    loadFromJar(subDir, "libintlc.so.5");
-    loadFromJar(subDir, "libimf.so");
-    loadFromJar(subDir, "libirng.so");
-    loadFromJar(subDir, "libsvml.so");
-    loadFromJar(subDir, "libOpenCL.so.1");
-    loadFromJar(subDir, "libsycl.so.5");
-
-    return true;
-  }
-
   /**
    * Load MLlibDAL lib
    */

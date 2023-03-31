@@ -21,16 +21,10 @@ if [[ -z $TBBROOT ]]; then
  exit 1
 fi
 
-if [[ -z $CCL_ROOT ]]; then
- echo CCL_ROOT not defined!
- exit 1
-fi
-
 check_cpu_libs() {
   # Check lib dependencies for building
   RESOURCE_PATH=src/main/resources/lib
-  LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
-    libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12)
+  LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
   for lib in ${LIBS[@]}
   do
     if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
@@ -50,9 +44,7 @@ check_cpu_libs() {
 check_gpu_libs() {
   # Check lib dependencies for building
   RESOURCE_PATH=src/main/resources/lib
-  LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
-    libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12 libintlc.so.5 libsvml.so libirng.so libimf.so \
-    libOpenCL.so.1 libsycl.so.5)
+  LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
   for lib in ${LIBS[@]}
   do
     if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then

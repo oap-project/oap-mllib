@@ -23,16 +23,6 @@ if [[ -z $TBBROOT ]]; then
   exit 1
 fi
 
-if [[ -z $I_MPI_ROOT ]]; then
-  echo I_MPI_ROOT not defined!
-  exit 1
-fi
-
-if [[ -z $CCL_ROOT ]]; then
-  echo CCL_ROOT not defined!
-  exit 1
-fi
-
 # Use patchelf to change SONAME for libfabric
 if [[ -z $(which patchelf) ]]; then
   echo Please install \"patchelf\"!
@@ -47,17 +37,6 @@ fi
 TARGET_DIR=./src/main/resources/lib
 
 rm -f $TARGET_DIR/*.so*
-
-cp $CCL_ROOT/lib/cpu/libccl.so.1.0 $TARGET_DIR/libccl.so.1
-
-cp $I_MPI_ROOT/libfabric/lib/libfabric.so.1 $TARGET_DIR/libfabric.so.1
-cp $I_MPI_ROOT/libfabric/lib/prov/libsockets-fi.so $TARGET_DIR
-
-# Workaround dlopen (libfabric.so) in oneCCL
-cp $I_MPI_ROOT/libfabric/lib/libfabric.so.1 $TARGET_DIR/libfabric.so
-patchelf --set-soname libfabric.so $TARGET_DIR/libfabric.so
-
-cp $I_MPI_ROOT/lib/release_mt/libmpi.so.12.0.0 $TARGET_DIR/libmpi.so.12
 
 cp $DAALROOT/lib/intel64/libJavaAPI.so.1.1 $TARGET_DIR/libJavaAPI.so
 
