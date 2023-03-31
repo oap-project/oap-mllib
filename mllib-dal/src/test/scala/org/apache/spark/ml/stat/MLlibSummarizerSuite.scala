@@ -31,7 +31,7 @@ class SummarizerSuite extends SparkFunSuite with MLlibTestSparkContext with Logg
   import testImplicits._
   import Summarizer._
   override def beforeAll(): Unit = {
-    spark.conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+    System.setProperty("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
     super.beforeAll()
   }
   private case class ExpectedMetrics(
