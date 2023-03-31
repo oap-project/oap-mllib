@@ -34,8 +34,6 @@ echo "========================================="
 echo "Cluster Testing with Spark Version: $SPARK_VERSION"
 echo "========================================="
 
-ldd $GITHUB_WORKSPACE/mllib-dal/src/main/resources/lib/libMLlibDAL.so
-
 # Build and run all examples
 ./build-all-scala.sh
 ./run-all-scala.sh
