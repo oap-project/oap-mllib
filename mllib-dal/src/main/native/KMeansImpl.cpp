@@ -267,7 +267,6 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                  .set_accuracy_threshold(tolerance);
     kmeans::train_input local_input{htable, centroids};
     auto queue = getQueue(device);
-
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
     auto t1 = std::chrono::high_resolution_clock::now();

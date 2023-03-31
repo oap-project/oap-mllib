@@ -159,6 +159,8 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
                                        ComputeDevice &device,
                                        jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
+              << std::endl;
+
     const bool isRoot = (rankId == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -176,6 +178,7 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "Correlation (native): rankid " << rankId
               << "; computing step took " << duration / 1000 << " secs"
+              << std::endl;
     if (isRoot) {
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
         std::cout << "Correlation:\n"
