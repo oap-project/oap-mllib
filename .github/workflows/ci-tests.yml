@@ -3,7 +3,7 @@ name: OAP MLlib Tests
 on: [push, pull_request]
 
 jobs:
-  local-test-GPU:
+  local-test-oneAPI_table:
     name: Local Test for Units (OneAPI Table)
     runs-on: ubuntu-20.04
     steps:

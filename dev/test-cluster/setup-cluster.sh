@@ -40,7 +40,6 @@ cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
-cp ./spark-env.sh ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 
 echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
 echo $HOST_IP > $SPARK_HOME/conf/slaves
@@ -56,11 +55,7 @@ $HADOOP_HOME/bin/hdfs namenode -format
 
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh
+$HADOOP_HOME/sbin/start-yarn.sh
 
 hadoop fs -ls /
-
-
-#start spark standalone
-$SPARK_HOME/sbin/start-all.sh
-
-jps
+yarn node -list
