@@ -269,10 +269,10 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
 
-        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
+        HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model());
-        saveHomogenTablePtrToVector(centroidsPtr);
-        return (jlong)centroidsPtr.get();
+        saveHomogenTablePtrToVector(result_matrix);
+        return (jlong)result_matrix.get();
     } else {
         return (jlong)0;
     }
