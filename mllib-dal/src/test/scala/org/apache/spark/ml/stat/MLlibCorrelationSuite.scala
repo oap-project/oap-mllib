@@ -18,6 +18,7 @@
 package org.apache.spark.ml.stat
 
 import breeze.linalg.{DenseMatrix => BDM}
+import com.intel.oap.mllib.Utils
 import org.apache.spark.{SparkConf, SparkFunSuite, TestCommon}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrices, Matrix, Vectors}
@@ -27,8 +28,8 @@ import org.apache.spark.sql.{DataFrame, Row}
 
 class MLlibCorrelationSuite extends SparkFunSuite with MLlibTestSparkContext with Logging {
   override def beforeAll(): Unit = {
+    System.setProperty("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
     super.beforeAll()
-    spark.conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
   }
 
   val xData = Array(1.0, 0.0, -2.0)
@@ -50,6 +51,7 @@ class MLlibCorrelationSuite extends SparkFunSuite with MLlibTestSparkContext wit
 
 
   test("corr(X) default, pearson") {
+
     val defaultMat = Correlation.corr(X, "features")
     val pearsonMat = Correlation.corr(X, "features", "pearson")
     // scalastyle:off
