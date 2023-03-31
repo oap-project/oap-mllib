@@ -62,8 +62,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "Correleation (native): local step took " << duration
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "Correleation (native): local step took " << duration / 1000
               << " secs" << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
@@ -89,9 +89,9 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
     t2 = std::chrono::high_resolution_clock::now();
 
     duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "Correleation (native): ccl_allgatherv took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "Correleation (native): ccl_allgatherv took "
+              << duration / 1000 << " secs" << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -126,9 +126,10 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
         covariance::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "Correlation (native): master step took " << duration
-                  << " secs" << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "Correlation (native): master step took "
+                  << duration / 1000 << " secs" << std::endl;
 
         /* Print the results */
         printNumericTable(result->get(covariance::correlation),
@@ -155,10 +156,9 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
 static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
                                        jlong pNumTabData, jint executorNum,
                                        const ccl::string &ipPort,
-                                       jint computeDeviceOrdinal,
+                                       ComputeDevice &device,
                                        jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid " << rankId
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -177,7 +177,7 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     std::cout << "Correlation (native): rankid " << rankId
-              << "; spend training times " << duration / 1000 << " secs"
+              << "; computing step took " << duration / 1000 << " secs"
               << std::endl;
     if (isRoot) {
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
@@ -187,8 +187,8 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "Correlation batch(native): spend training times "
-                  << duration / 1000 << " secs" << std::endl;
+        std::cout << "Correlation batch(native): computing step took "
+                  << duration / 1000 << " secs in end. " << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -235,7 +235,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
 #else
     case ComputeDevice::gpu: {
         doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum,
-                                   ipPortStr, computeDeviceOrdinal, resultObj);
+                                   ipPortStr, device, resultObj);
     }
 #endif
     }

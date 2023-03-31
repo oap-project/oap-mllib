@@ -48,6 +48,8 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
                                     size_t nBlocks, jobject resultObj) {
+    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
+              << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -63,9 +65,9 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "low_order_moments (native): local step took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "low_order_moments (native): local step took "
+              << duration / 1000 << " secs" << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -90,9 +92,9 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
     t2 = std::chrono::high_resolution_clock::now();
 
     duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "low_order_moments (native): ccl_gather took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "low_order_moments (native): ccl_gather took "
+              << duration / 1000 << " secs" << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -128,9 +130,10 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
         low_order_moments::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "low_order_moments (native): master step took " << duration
-                  << " secs" << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "low_order_moments (native): master step took "
+                  << duration / 1000 << " secs" << std::endl;
 
         /* Print the results */
         printNumericTable(result->get(low_order_moments::mean),
@@ -209,16 +212,13 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
 static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
                                       jlong pNumTabData, jint executorNum,
                                       const ccl::string &ipPort,
-                                      jint computeDeviceOrdinal,
+                                      ComputeDevice &device,
                                       jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid " << rankId
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-
     const auto bs_desc = basic_statistics::descriptor{};
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
@@ -230,7 +230,7 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
     std::cout << "Summarizer (native): rankid " << rankId
-              << "; spend training times " << duration / 1000 << " secs"
+              << "; computing step took " << duration / 1000 << " secs"
               << std::endl;
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
@@ -241,8 +241,8 @@ static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
         duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
                        t2 - t1)
                        .count();
-        std::cout << "Summarizer (native): spend training times "
-                  << duration / 1000 << " secs" << std::endl;
+        std::cout << "Summarizer (native): computing step took "
+                  << duration / 1000 << " secs in end. " << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -309,7 +309,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
 #else
     case ComputeDevice::gpu: {
         doSummarizerOneAPICompute(env, rankId, pNumTabData, executorNum,
-                                  ipPortStr, computeDeviceOrdinal, resultObj);
+                                  ipPortStr, device, resultObj);
     }
 #endif
     }

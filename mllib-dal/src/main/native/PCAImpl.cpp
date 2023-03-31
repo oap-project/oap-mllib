@@ -47,6 +47,8 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              int nBlocks, jobject resultObj) {
+    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
+              << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -62,8 +64,8 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << " PCA (native): Covariance local step took " << duration
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << " PCA (native): Covariance local step took " << duration / 1000
               << " secs" << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
@@ -88,9 +90,9 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
     t2 = std::chrono::high_resolution_clock::now();
 
     duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance gather to master took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "PCA (native): Covariance gather to master took "
+              << duration / 1000 << " secs" << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -125,9 +127,10 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
         covariance::ResultPtr covariance_result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "PCA (native): Covariance master step took " << duration
-                  << " secs" << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "PCA (native): Covariance master step took "
+                  << duration / 1000 << " secs" << std::endl;
 
         t1 = std::chrono::high_resolution_clock::now();
 
@@ -145,9 +148,10 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 
         t2 = std::chrono::high_resolution_clock::now();
         duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "PCA (native): master step took " << duration << " secs"
-                  << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "PCA (native): master step took " << duration / 1000
+                  << " secs" << std::endl;
 
         /* Print the results */
         pca::ResultPtr result = algorithm.getResult();
@@ -182,15 +186,12 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 #ifdef CPU_GPU_PROFILE
 static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                jint executorNum, const ccl::string &ipPort,
-                               jint computeDeviceOrdinal, jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid " << rankId
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+                               ComputeDevice &device, jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-
     const auto pca_desc = pca::descriptor{};
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
@@ -201,7 +202,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native): spend training times " << duration / 1000
+    std::cout << "PCA (native): training step took " << duration / 1000
               << " secs" << std::endl;
     if (isRoot) {
         std::cout << "Eigenvectors:\n"
@@ -212,9 +213,9 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native):  rankid " << rankId
-                  << "; spend training times in end " << duration / 1000
-                  << " secs" << std::endl;
+        std::cout << "PCA (native): rankid " << rankId
+                  << "; training step took " << duration / 1000
+                  << " secs in end. " << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -269,7 +270,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
 #else
     case ComputeDevice::gpu: {
         doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
-                           computeDeviceOrdinal, resultObj);
+                           device, resultObj);
     }
 #endif
     }
