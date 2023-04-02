@@ -32,13 +32,6 @@ check_cpu_libs() {
       exit 1
   fi
   done
-
-  if [[ -f ./$RESOURCE_PATH/libsycl.so.5 ]]; then
-    echo
-    echo GPU libs found! Please re-run \"../dev/prepare-build-deps.sh\"!
-    echo
-    exit 1
-  fi
 }
 
 check_gpu_libs() {

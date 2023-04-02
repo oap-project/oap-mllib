@@ -2,6 +2,7 @@
 
 if [ ! -d /opt/intel/oneapi ]; then
   echo "Installing oneAPI components ..."
+  sudo apt clean
   cd /tmp
   wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
   | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
