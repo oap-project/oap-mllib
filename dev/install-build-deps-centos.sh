@@ -15,7 +15,7 @@ if [ ! -f /opt/intel/oneapi ]; then
   sudo mv /tmp/oneAPI.repo /etc/yum.repos.d  
   # sudo yum groupinstall -y "Development Tools"
   # sudo yum install -y cmake
-  sudo yum install intel-basekit
+  sudo yum install -y intel-oneapi-ccl-2021.8.0 intel-oneapi-dpcpp-cpp-2023.0.0 intel-oneapi-tbb-devel-2021.8.0 intel-oneapi-dal-devel-2023.0.0 intel-oneapi-mpi-devel-2021.8.0
 else
   echo "oneAPI components already installed!"
 fi  
