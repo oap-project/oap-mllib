@@ -37,8 +37,6 @@ object KMeansExample {
       .appName(s"${this.getClass.getSimpleName}")
       .getOrCreate()
 
-    spark.sparkContext.getConf.set()
-
     if (args.length != 1) {
       println("Require data file path as input parameter")
       sys.exit(1)
