@@ -50,7 +50,7 @@ INCS := -I $(JAVA_HOME)/include \
 # Use static link if possible, TBB is only available as dynamic libs
 LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu -lccl \
         -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a  \
+        -L$(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread  \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
