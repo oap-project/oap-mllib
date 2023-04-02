@@ -10,7 +10,7 @@ trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 # install level-zero
 #$GITHUB_WORKSPACE/dev/install-level-zero-ubuntu.sh
-ls /opt/intel/oneapi
+ls -ls /opt/
 # Install dependencies for building
 $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
