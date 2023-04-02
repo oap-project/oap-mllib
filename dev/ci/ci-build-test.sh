@@ -13,7 +13,9 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh
-
+echo $TBBROOT
+echo $CCL_ROOT
+echo $DAALROOT
 #
 # Build test for CPU
 #
