@@ -19,6 +19,13 @@
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
+#include "oneapi/dal/algo/pca.hpp"
+#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"
@@ -26,15 +33,22 @@
 #include "service.h"
 
 using namespace std;
+#ifdef CPU_GPU_PROFILE
+using namespace oneapi::dal;
+#else
 using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
+#endif
 
+#ifdef CPU_ONLY_PROFILE
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
-                            ccl::communicator &comm, NumericTablePtr &pData,
-                            int nBlocks, jobject resultObj) {
+static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
+                             ccl::communicator &comm, NumericTablePtr &pData,
+                             int nBlocks, jobject resultObj) {
+    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
+              << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -50,8 +64,8 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << " PCA (native): Covariance local step took " << duration
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << " PCA (native): Covariance local step took " << duration / 1000
               << " secs" << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
@@ -76,9 +90,9 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
     t2 = std::chrono::high_resolution_clock::now();
 
     duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance gather to master took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "PCA (native): Covariance gather to master took "
+              << duration / 1000 << " secs" << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -113,9 +127,10 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
         covariance::ResultPtr covariance_result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "PCA (native): Covariance master step took " << duration
-                  << " secs" << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "PCA (native): Covariance master step took "
+                  << duration / 1000 << " secs" << std::endl;
 
         t1 = std::chrono::high_resolution_clock::now();
 
@@ -133,9 +148,10 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
 
         t2 = std::chrono::high_resolution_clock::now();
         duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "PCA (native): master step took " << duration << " secs"
-                  << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "PCA (native): master step took " << duration / 1000
+                  << " secs" << std::endl;
 
         /* Print the results */
         pca::ResultPtr result = algorithm.getResult();
@@ -165,68 +181,100 @@ static void doPCADALCompute(JNIEnv *env, jobject obj, int rankId,
                           (jlong)eigenvalues);
     }
 }
+#endif
+
+#ifdef CPU_GPU_PROFILE
+static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+                               jint executorNum, const ccl::string &ipPort,
+                               ComputeDevice &device, jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
+              << std::endl;
+    const bool isRoot = (rankId == ccl_root);
+    homogen_table htable =
+        *reinterpret_cast<const homogen_table *>(pNumTabData);
+    const auto pca_desc = pca::descriptor{};
+    auto queue = getQueue(device);
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rankId, ipPort);
+    pca::train_input local_input{htable};
+    auto t1 = std::chrono::high_resolution_clock::now();
+    const auto result_train = preview::train(comm, pca_desc, local_input);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "PCA (native): training step took " << duration / 1000
+              << " secs" << std::endl;
+    if (isRoot) {
+        std::cout << "Eigenvectors:\n"
+                  << result_train.get_eigenvectors() << std::endl;
+        std::cout << "Eigenvalues:\n"
+                  << result_train.get_eigenvalues() << std::endl;
+        t2 = std::chrono::high_resolution_clock::now();
+        duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "PCA (native): rankid " << rankId
+                  << "; training step took " << duration / 1000
+                  << " secs in end. " << std::endl;
+        // Return all eigenvalues & eigenvectors
+        // Get the class of the input object
+        jclass clazz = env->GetObjectClass(resultObj);
+        // Get Field references
+        jfieldID pcNumericTableField =
+            env->GetFieldID(clazz, "pcNumericTable", "J");
+        jfieldID explainedVarianceNumericTableField =
+            env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
+
+        HomogenTablePtr eigenvectors =
+            std::make_shared<homogen_table>(result_train.get_eigenvectors());
+        saveHomogenTablePtrToVector(eigenvectors);
+
+        HomogenTablePtr eigenvalues =
+            std::make_shared<homogen_table>(result_train.get_eigenvalues());
+        saveHomogenTablePtrToVector(eigenvalues);
+
+        env->SetLongField(resultObj, pcNumericTableField,
+                          (jlong)eigenvectors.get());
+        env->SetLongField(resultObj, explainedVarianceNumericTableField,
+                          (jlong)eigenvalues.get());
+    }
+}
+#endif
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint k, jint executor_num,
-    jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array,
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
+    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
     jobject resultObj) {
-
-    ccl::communicator &comm = getComm();
-    size_t rankId = comm.rank();
-
-    const size_t nBlocks = executor_num;
-
-    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-
-#ifdef CPU_GPU_PROFILE
-    if (use_gpu) {
-        int n_gpu = env->GetArrayLength(gpu_idx_array);
-        jint *gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
-
-        std::cout << "oneDAL (native): use GPU kernels with " << n_gpu
-                  << " GPU(s)" << std::endl;
-
-        int size = comm.size();
-        auto assigned_gpu =
-            getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
-
-        // Set SYCL context
-        cl::sycl::queue queue(assigned_gpu);
-        daal::services::SyclExecutionContext ctx(queue);
-        daal::services::Environment::getInstance()->setDefaultExecutionContext(
-            ctx);
-
-        using daal::data_management::internal::convertToSyclHomogen;
-
-        Status st;
-        NumericTablePtr pSyclHomogen =
-            convertToSyclHomogen<algorithmFPType>(*pData, st);
-        if (!st.ok()) {
-            std::cout
-                << "Failed to convert row merged table to SYCL homogen one"
-                << std::endl;
-            return 0L;
-        }
-
-        doPCADALCompute(env, obj, rankId, comm, pSyclHomogen, nBlocks,
-                        resultObj);
-
-        env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
-    } else
-#endif
-    {
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+#ifdef CPU_ONLY_PROFILE
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
+        ccl::communicator &comm = getComm();
+        NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         // Set number of threads for oneDAL to use for each rank
-        services::Environment::getInstance()->setNumberOfThreads(
-            executor_cores);
+        services::Environment::getInstance()->setNumberOfThreads(executorCores);
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-             << endl;
-
-        doPCADALCompute(env, obj, rankId, comm, pData, nBlocks, resultObj);
+        std::cout << "oneDAL (native): Number of CPU threads used "
+                  << nThreadsNew << std::endl;
+        doPCADAALCompute(env, obj, rankId, comm, pData, executorNum, resultObj);
+    }
+#else
+    case ComputeDevice::gpu: {
+        doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
+                           device, resultObj);
+    }
+#endif
     }
 
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }

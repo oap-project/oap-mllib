@@ -17,7 +17,8 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
@@ -36,51 +37,57 @@ class KMeansDALImpl(var nClusters: Int,
                    ) extends Serializable with Logging {
 
   def train(data: RDD[Vector]): MLlibKMeansModel = {
-
-    val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
+    val sparkContext = data.sparkContext
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    val coalescedTables = if (useDevice == "GPU") {
+      OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
+    } else {
+      OneDAL.rddVectorToMergedTables(data, executorNum)
+    }
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
-
-    val sparkContext = data.sparkContext
-    val useGPU = sparkContext.getConf.getBoolean("spark.oap.mllib.useGPU", false)
-
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-
-      val gpuIndices = if (useGPU) {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-
-      val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
-
-      val initCentroids = OneDAL.makeNumericTable(centers)
+      var cCentroids = 0L
       val result = new KMeansResult()
-      val cCentroids = cKMeansDALComputeWithInitCenters(
+      val tableArr = table.next()
+      val initCentroids = if (useDevice == "GPU") {
+        OneCCL.initDpcpp()
+        OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
+      } else {
+        OneCCL.init(executorNum, rank, kvsIPPort)
+        OneDAL.makeNumericTable(centers).getCNumericTable
+      }
+      cCentroids = cKMeansOneapiComputeWithInitCenters(
         tableArr,
-        initCentroids.getCNumericTable,
+        initCentroids,
         nClusters,
         tolerance,
         maxIterations,
         executorNum,
         executorCores,
-        useGPU,
-        gpuIndices,
+        computeDevice.ordinal(),
+        rank,
+        kvsIPPort,
         result
       )
 
-      val ret = if (OneCCL.isRoot()) {
-        assert(cCentroids != 0)
-        val centerVectors = OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
-        Iterator((centerVectors, result.totalCost, result.iterationNum))
-      } else {
-        Iterator.empty
+      val ret = if (rank == 0) {
+          assert(cCentroids != 0)
+          val centerVectors = if (useDevice == "GPU") {
+            OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
+              computeDevice)
+          } else {
+            OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
+          }
+
+          Iterator((centerVectors, result.totalCost, result.iterationNum))
+        } else {
+          Iterator.empty
+        }
+      if (useDevice == "CPU") {
+        OneCCL.cleanup()
       }
-
-      OneCCL.cleanup()
-
       ret
     }.collect()
 
@@ -107,15 +114,15 @@ class KMeansDALImpl(var nClusters: Int,
     parentModel
   }
 
-  // Single entry to call KMeans DAL backend with initial centers, output centers
-  @native private def cKMeansDALComputeWithInitCenters(data: Long, centers: Long,
-                                                       cluster_num: Int,
+  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long,
+                                                       centers: Long,
+                                                       clusterNum: Int,
                                                        tolerance: Double,
-                                                       iteration_num: Int,
-                                                       executor_num: Int,
-                                                       executor_cores: Int,
-                                                       useGPU: Boolean,
-                                                       gpuIndices: Array[Int],
+                                                       iterationNum: Int,
+                                                       executorNum: Int,
+                                                       executorCores: Int,
+                                                       computeDeviceOrdinal: Int,
+                                                       rankId: Int,
+                                                       ipPort: String,
                                                        result: KMeansResult): Long
-
 }

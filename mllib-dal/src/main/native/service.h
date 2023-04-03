@@ -35,15 +35,23 @@ using namespace daal::data_management;
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "error_handling.h"
+#include "oneapi/dal/table/homogen.hpp"
+
+using namespace oneapi::dal;
 
 typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
+typedef std::shared_ptr<homogen_table> HomogenTablePtr;
+
+enum class ComputeDevice { host, cpu, gpu };
+const std::string ComputeDeviceString[] = {"HOST", "CPU", "GPU"};
 
 void printNumericTable(const NumericTablePtr &dataTable,
                        const char *message = "", size_t nPrintedRows = 0,
@@ -51,6 +59,8 @@ void printNumericTable(const NumericTablePtr &dataTable,
 size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
 CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
+ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
+void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);

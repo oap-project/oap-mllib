@@ -29,12 +29,18 @@ $(info )
 $(info === Profile is $(PLATFORM_PROFILE) ===)
 $(info )
 
-CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17
+CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
+                 -I $(I_MPI_ROOT)/include \
+                 -I $(DAALROOT)/include \
+                 -I $(CMPLR_ROOT)/linux/include \
+                 -I $(CMPLR_ROOT)/linux/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON)
+  CFLAGS := $(CFLAGS_COMMON)  -I $(CCL_ROOT)/include/cpu/oneapi/
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON) -fsycl
+  CFLAGS := $(CFLAGS_COMMON) -fsycl \
+            -fsycl-device-code-split=per_kernel \
+            -I $(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/
 else
   $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
   exit 1
@@ -42,42 +48,67 @@ endif
 
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I $(CCL_ROOT)/include/cpu \
         -I $(DAALROOT)/include \
         -I ./javah \
         -I ./
 
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+  INCS := $(INCS)  -I $(CCL_ROOT)/include/cpu
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+  INCS := $(INCS) -I $(CCL_ROOT)/include/cpu_gpu_dpcpp
+else
+  $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
+  exit 1
+endif
+
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu -lccl \
-        -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a  \
-        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc
+LIBS_COMMON :=-L $(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
+        -L $(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc \
+        -L $(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
+        -L $(I_MPI_ROOT)
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  LIBS := $(LIBS_COMMON)
+      LIBS_COMMON := $(LIBS_COMMON) \
+                     -L $(CCL_ROOT)/lib/cpu -lccl
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a
+      LIBS_COMMON := $(LIBS_COMMON) \
+                     -L $(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl
+endif
+
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS) -l:libonedal_sycl.a
 endif
 
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
-  ./KMeansDALImpl.cpp \
-  ./PCADALImpl.cpp \
+  ./KMeansImpl.cpp \
+  ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
-  ./CorrelationDALImpl.cpp \
-  ./SummarizerDALImpl.cpp
+  ./CorrelationImpl.cpp \
+  ./SummarizerImpl.cpp \
+  ./oneapi/dal/HomogenTableImpl.cpp \
+  ./oneapi/dal/SimpleMetadataImpl.cpp \
+  ./oneapi/dal/ColumnAccessorImpl.cpp \
+  ./oneapi/dal/RowAccessorImpl.cpp
+
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
-  ./KMeansDALImpl.o \
-  ./PCADALImpl.o \
+  ./KMeansImpl.o \
+  ./PCAImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
-  ./CorrelationDALImpl.o \
-  ./SummarizerDALImpl.o
+  ./CorrelationImpl.o \
+  ./SummarizerImpl.o \
+  ./oneapi/dal/HomogenTableImpl.o \
+  ./oneapi/dal/SimpleMetadataImpl.o \
+  ./oneapi/dal/ColumnAccessorImpl.o  \
+  ./oneapi/dal/RowAccessorImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 
@@ -88,6 +119,7 @@ endif
 
 # Output Binary
 OUTPUT = ../../../src/main/resources/lib/libMLlibDAL.so
+
 
 all: $(OUTPUT)
 

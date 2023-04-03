@@ -16,38 +16,39 @@
 
 package com.intel.oap.mllib.stat
 
-import com.intel.oap.mllib.{OneCCL, OneDAL}
+import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.ml.linalg.{Vector}
+import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.mllib.stat.{MultivariateStatisticalDALSummary, MultivariateStatisticalSummary => Summary}
 import org.apache.spark.rdd.RDD
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import com.intel.oneapi.dal.table.Common
 
 class SummarizerDALImpl(val executorNum: Int,
                         val executorCores: Int)
   extends Serializable with Logging {
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
+    val sparkContext = data.sparkContext
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    val coalescedTables = if (useDevice == "GPU") {
+      OneDAL.rddVectorToMergedHomogenTables(data, executorNum,
+        computeDevice)
+    } else {
+      OneDAL.rddVectorToMergedTables(data, executorNum)
+    }
     val kvsIPPort = getOneCCLIPPort(data)
 
-    val sparkContext = data.sparkContext
-    val useGPU = sparkContext.getConf.getBoolean("spark.oap.mllib.useGPU", false)
-
-    val coalescedTables = OneDAL.rddVectorToMergedTables(data, executorNum)
-
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-
-      val gpuIndices = if (useGPU) {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      if (useDevice == "GPU") {
+        OneCCL.initDpcpp()
+      } else {
+        OneCCL.init(executorNum, rank, kvsIPPort)
+      }
 
       val computeStartTime = System.nanoTime()
 
@@ -56,8 +57,9 @@ class SummarizerDALImpl(val executorNum: Int,
         tableArr,
         executorNum,
         executorCores,
-        useGPU,
-        gpuIndices,
+        computeDevice.ordinal(),
+        rank,
+        kvsIPPort,
         result
       )
 
@@ -67,13 +69,37 @@ class SummarizerDALImpl(val executorNum: Int,
 
       logInfo(s"SummarizerDAL compute took ${durationCompute} secs")
 
-      val ret = if (OneCCL.isRoot()) {
+      val ret = if (rank == 0) {
 
         val convResultStartTime = System.nanoTime()
-        val meanVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.meanNumericTable))
-        val varianceVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.varianceNumericTable))
-        val maxVector= OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.maximumNumericTable))
-        val minVector = OneDAL.numericTable1xNToVector(OneDAL.makeNumericTable(result.minimumNumericTable))
+        val meanVector = if (useDevice == "GPU") {
+          OneDAL.homogenTable1xNToVector(
+            OneDAL.makeHomogenTable(result.meanNumericTable), computeDevice)
+        } else {
+          OneDAL.numericTable1xNToVector(
+            OneDAL.makeNumericTable(result.meanNumericTable))
+        }
+        val varianceVector = if (useDevice == "GPU") {
+          OneDAL.homogenTable1xNToVector(
+            OneDAL.makeHomogenTable(result.varianceNumericTable), computeDevice)
+        } else {
+          OneDAL.numericTable1xNToVector(
+            OneDAL.makeNumericTable(result.varianceNumericTable))
+        }
+        val maxVector = if (useDevice == "GPU") {
+          OneDAL.homogenTable1xNToVector(
+            OneDAL.makeHomogenTable(result.maximumNumericTable), computeDevice)
+        } else {
+          OneDAL.numericTable1xNToVector(
+            OneDAL.makeNumericTable(result.maximumNumericTable))
+        }
+        val minVector = if (useDevice == "GPU") {
+          OneDAL.homogenTable1xNToVector(
+            OneDAL.makeHomogenTable(result.minimumNumericTable), computeDevice)
+        } else {
+          OneDAL.numericTable1xNToVector(
+            OneDAL.makeNumericTable(result.minimumNumericTable))
+        }
 
         val convResultEndTime = System.nanoTime()
 
@@ -85,9 +111,9 @@ class SummarizerDALImpl(val executorNum: Int,
       } else {
         Iterator.empty
       }
-
-      OneCCL.cleanup()
-
+      if (useDevice == "CPU") {
+        OneCCL.cleanup()
+      }
       ret
     }.collect()
 
@@ -99,15 +125,19 @@ class SummarizerDALImpl(val executorNum: Int,
     val maxVector = results(0)._3
     val minVector = results(0)._4
 
-    val summary = new MultivariateStatisticalDALSummary(OldVectors.fromML(meanVector), OldVectors.fromML(varianceVector), OldVectors.fromML(maxVector), OldVectors.fromML(minVector))
+    val summary = new MultivariateStatisticalDALSummary(OldVectors.fromML(meanVector),
+                                                        OldVectors.fromML(varianceVector),
+                                                        OldVectors.fromML(maxVector),
+                                                        OldVectors.fromML(minVector))
 
     summary
   }
 
-  @native private def cSummarizerTrainDAL(data: Long,
-                                          executor_num: Int,
-                                          executor_cores: Int,
-                                          useGPU: Boolean,
-                                          gpuIndices: Array[Int],
+  @native private[mllib] def cSummarizerTrainDAL(data: Long,
+                                          executorNum: Int,
+                                          executorCores: Int,
+                                          computeDeviceOrdinal: Int,
+                                          rankId: Int,
+                                          ipPort: String,
                                           result: SummarizerResult): Long
 }

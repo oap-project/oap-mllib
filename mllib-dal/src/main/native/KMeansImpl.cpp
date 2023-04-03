@@ -15,10 +15,18 @@
  *******************************************************************************/
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
+#include "oneapi/dal/algo/kmeans.hpp"
+#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"
@@ -26,10 +34,15 @@
 #include "service.h"
 
 using namespace std;
+#ifdef CPU_GPU_PROFILE
+using namespace oneapi::dal;
+#else
 using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
+#endif
 
+#ifdef CPU_ONLY_PROFILE
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
@@ -168,12 +181,14 @@ static bool areAllCentersConverged(const NumericTablePtr &oldCenters,
     return true;
 }
 
-static jlong doKMeansDALComputeWithInitCenters(
-    JNIEnv *env, jobject obj, int rankId, ccl::communicator &comm,
-    NumericTablePtr &pData, NumericTablePtr &centroids, jint cluster_num,
-    jdouble tolerance, jint iteration_num, jint executor_num,
-    jobject resultObj) {
-
+static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
+                                 ccl::communicator &comm,
+                                 NumericTablePtr &pData,
+                                 NumericTablePtr &centroids, jint cluster_num,
+                                 jdouble tolerance, jint iteration_num,
+                                 jint executor_num, jobject resultObj) {
+    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
+              << std::endl;
     algorithmFPType totalCost;
 
     NumericTablePtr newCentroids;
@@ -199,9 +214,10 @@ static jlong doKMeansDALComputeWithInitCenters(
 
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "KMeans (native): iteration " << it << " took " << duration
-                  << " secs" << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "KMeans (native): iteration " << it << " took "
+                  << duration / 1000 << " secs" << std::endl;
     }
 
     if (rankId == ccl_root) {
@@ -226,75 +242,121 @@ static jlong doKMeansDALComputeWithInitCenters(
 
         NumericTablePtr *ret = new NumericTablePtr(centroids);
         return (jlong)ret;
-    } else
+    } else {
         return (jlong)0;
+    }
 }
-
-JNIEXPORT jlong JNICALL
-Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansDALComputeWithInitCenters(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
-    jint cluster_num, jdouble tolerance, jint iteration_num, jint executor_num,
-    jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array,
-    jobject resultObj) {
-
-    ccl::communicator &comm = getComm();
-    int rankId = comm.rank();
-
-    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-    NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
-
-    jlong ret = 0L;
-#ifdef CPU_GPU_PROFILE
-
-    if (use_gpu) {
-        int n_gpu = env->GetArrayLength(gpu_idx_array);
-        cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"
-             << endl;
-
-        jint *gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
-
-        int size = comm.size();
-        auto assigned_gpu =
-            getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
-
-        // Set SYCL context
-        cl::sycl::queue queue(assigned_gpu);
-        daal::services::SyclExecutionContext ctx(queue);
-        daal::services::Environment::getInstance()->setDefaultExecutionContext(
-            ctx);
-
-        using daal::data_management::internal::convertToSyclHomogen;
-
-        Status st;
-        NumericTablePtr pSyclHomogen =
-            convertToSyclHomogen<algorithmFPType>(*pData, st);
-        if (!st.ok()) {
-            std::cout
-                << "Failed to convert row merged table to SYCL homogen one"
-                << std::endl;
-            return 0L;
-        }
-
-        ret = doKMeansDALComputeWithInitCenters(
-            env, obj, rankId, comm, pSyclHomogen, centroids, cluster_num,
-            tolerance, iteration_num, executor_num, resultObj);
-
-        env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
-    } else
 #endif
-    {
+
+#ifdef CPU_GPU_PROFILE
+static jlong doKMeansOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+                                   jlong pNumTabCenters, jint clusterNum,
+                                   jdouble tolerance, jint iterationNum,
+                                   jint executorNum, const ccl::string &ipPort,
+                                   ComputeDevice &device, jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
+              << std::endl;
+    const bool isRoot = (rankId == ccl_root);
+    homogen_table htable =
+        *reinterpret_cast<const homogen_table *>(pNumTabData);
+    homogen_table centroids =
+        *reinterpret_cast<const homogen_table *>(pNumTabCenters);
+    const auto kmeans_desc = kmeans::descriptor<>()
+                                 .set_cluster_count(clusterNum)
+                                 .set_max_iteration_count(iterationNum)
+                                 .set_accuracy_threshold(tolerance);
+    kmeans::train_input local_input{htable, centroids};
+    auto queue = getQueue(device);
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rankId, ipPort);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    kmeans::train_result result_train =
+        preview::train(comm, kmeans_desc, local_input);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "KMeans (native): rankid  " << rankId
+              << "; training step took " << duration / 1000 << " secs"
+              << std::endl;
+    if (isRoot) {
+        std::cout << "Iteration count: " << result_train.get_iteration_count()
+                  << std::endl;
+        std::cout << "Centroids:\n"
+                  << result_train.get_model().get_centroids() << std::endl;
+        t2 = std::chrono::high_resolution_clock::now();
+        duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "KMeans (native): training step took " << duration / 1000
+                  << " secs in end. " << std::endl;
+        // Get the class of the input object
+        jclass clazz = env->GetObjectClass(resultObj);
+        // Get Field references
+        jfieldID totalCostField = env->GetFieldID(clazz, "totalCost", "D");
+        jfieldID iterationNumField =
+            env->GetFieldID(clazz, "iterationNum", "I");
+        // Set iteration num for result
+        env->SetIntField(resultObj, iterationNumField,
+                         result_train.get_iteration_count());
+        // Set cost for result
+        env->SetDoubleField(resultObj, totalCostField,
+                            result_train.get_objective_function_value());
+
+        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
+            result_train.get_model().get_centroids());
+        saveHomogenTablePtrToVector(centroidsPtr);
+        return (jlong)centroidsPtr.get();
+    } else {
+        return (jlong)0;
+    }
+}
+#endif
+
+/*
+ * Class:     com_intel_oap_mllib_clustering_KMeansDALImpl
+ * Method:    cKMeansOneapiComputeWithInitCenters
+ * Signature: (JJIDIIILcom/intel/oap/mllib/clustering/KMeansResult;)J
+ */
+JNIEXPORT jlong JNICALL
+Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
+    JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
+    jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
+    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+    jlong ret = 0L;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+#ifdef CPU_ONLY_PROFILE
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
+        ccl::communicator &comm = getComm();
+        NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+        NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
         // Set number of threads for oneDAL to use for each rank
-        services::Environment::getInstance()->setNumberOfThreads(
-            executor_cores);
+        services::Environment::getInstance()->setNumberOfThreads(executorCores);
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        cout << "oneDAL (native): use CPU kernels with " << nThreadsNew
-             << " threads" << endl;
-        ret = doKMeansDALComputeWithInitCenters(
-            env, obj, rankId, comm, pData, centroids, cluster_num, tolerance,
-            iteration_num, executor_num, resultObj);
+        std::cout << "oneDAL (native): Number of CPU threads used "
+                  << nThreadsNew << std::endl;
+        ret = doKMeansDaalCompute(env, obj, rankId, comm, pData, centroids,
+                                  clusterNum, tolerance, iterationNum,
+                                  executorNum, resultObj);
+    }
+#else
+    case ComputeDevice::gpu: {
+        ret = doKMeansOneAPICompute(env, rankId, pNumTabData, pNumTabCenters,
+                                    clusterNum, tolerance, iterationNum,
+                                    executorNum, ipPortStr, device, resultObj);
+    }
+#endif
     }
 
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return ret;
 }

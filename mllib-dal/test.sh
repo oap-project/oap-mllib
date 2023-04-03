@@ -12,20 +12,19 @@ SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
 
-if [[ -n $DAALROOT ]]; then
-  echo
-  echo ====================================================================================
-  echo WARNING: DAALROOT detected. It is recommended to test without oneAPI environment!
-  echo ====================================================================================
-  echo
+if [[ -z $DAALROOT ]]; then
+ echo DAALROOT not defined!
+ exit 1
 fi
 
-# Unset FI_PROVIDER_PATH if present otherwise may hang
-if [[ -n $FI_PROVIDER_PATH ]]; then
-  echo ====================================================================================
-  echo WARNING: FI_PROVIDER_PATH detected. Will unset FI_PROVIDER_PATH before proceeding!
-  unset FI_PROVIDER_PATH
-  echo ====================================================================================
+if [[ -z $TBBROOT ]]; then
+ echo TBBROOT not defined!
+ exit 1
+fi
+
+if [[ -z $CCL_ROOT ]]; then
+ echo CCL_ROOT not defined!
+ exit 1
 fi
 
 if [[ ! -f target/oap-mllib-$OAP_MLLIB_VERSION.jar ]]; then
@@ -47,21 +46,13 @@ fi
 export OAP_MLLIB_TESTING=true
 
 suiteArray=(
-  "clustering.MLlibKMeansSuite" \
-  "feature.MLlibPCASuite" \
-  "recommendation.MLlibALSSuite" \
-  "classification.MLlibNaiveBayesSuite" \
-  "regression.MLlibLinearRegressionSuite" \
-  "stat.MLlibCorrelationSuite" \
-  "stat.MultivariateOnlineSummarizerSuite" \
-  "oneDALSuite"
 )
 
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] <test suite name>"
+  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] [-d] <test suite name>"
   echo
   echo "-p  Supported Platform Profiles:"
     echo "    CPU_ONLY_PROFILE"
@@ -69,11 +60,12 @@ print_usage() {
   echo
 }
 
-while getopts "p:qh" opt
+while getopts "p:qd:h" opt
 do
 case $opt in
   p) PLATFORM_OPT=$OPTARG ;;
   q) MVN_NO_TRANSFER_PROGRESS=--no-transfer-progress ;;
+  d) DEVICE_OPT=$OPTARG ;;
   h | *)
      print_usage
      exit 1
@@ -83,7 +75,7 @@ done
 
 shift "$((OPTIND-1))"
 
-SUITE=$1
+SUITE=$*
 
 print_usage
 
@@ -92,6 +84,25 @@ if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_P
   echo Platform Profile should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE, but \"$PLATFORM_PROFILE\" found!
   echo
   exit 1
+fi
+
+if [ "HOST" = $DEVICE_OPT ]; then
+  suiteArray=(
+    "HomogenTableTest" \
+    "ColumnAccessorTest" \
+    "RowAccessorTest" \
+    "com.intel.oap.mllib.ConvertHomogenTableSuite"
+  )
+else
+  suiteArray=(
+    "org.apache.spark.ml.clustering.MLlibKMeansSuite" \
+    "org.apache.spark.ml.feature.MLlibPCASuite" \
+    "org.apache.spark.ml.recommendation.MLlibALSSuite" \
+    "org.apache.spark.ml.classification.MLlibNaiveBayesSuite" \
+    "org.apache.spark.ml.regression.MLlibLinearRegressionSuite" \
+    "org.apache.spark.ml.stat.MLlibCorrelationSuite" \
+    "org.apache.spark.ml.stat.MLlibSummarizerSuite"
+  )
 fi
 
 if [[ ! ${suiteArray[*]} =~ $SUITE ]]; then
@@ -107,6 +118,8 @@ source $OAP_MLLIB_ROOT/RELEASE
 export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
+echo "computeDevice : $DEVICE_OPT"
+
 echo
 echo === Testing Environments ===
 echo JAVA_HOME=$JAVA_HOME
@@ -117,13 +130,44 @@ echo ============================
 echo
 
 if [[ -z $SUITE ]]; then
-  echo
-  echo Testing ALL suites...
-  echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none test
+  for suite in ${suiteArray[*]}
+  do
+    if [[ $suite == *"com.intel.oap.mllib"* ]]; then
+      echo
+      echo Testing $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
+    elif [[ $suite == *"org.apache.spark.ml"* ]]; then
+       echo
+        echo Testing $suite ...
+        echo
+        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DcomputeDevice=$DEVICE_OPT -DfailIfNoTests=false  -DwildcardSuites=$suite test
+    else
+      echo
+      echo Testing java $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
+    fi
+  done
 else
-  echo
-  echo Testing org.apache.spark.ml.$SUITE ...
-  echo
-  mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DwildcardSuites=org.apache.spark.ml.$SUITE test
+  SUBSUITE=$(echo $SUITE | tr "," "\n")
+  for suite in ${SUBSUITE[*]}
+  do
+      if [[ $suite == *"com.intel.oap.mllib"* ]]; then
+        echo
+        echo Testing $suite ...
+        echo
+        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
+      elif [[ $suite == *"org.apache.spark.ml"* ]]; then
+         echo
+          echo Testing $suite ...
+          echo
+          mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DwildcardSuites=$suite test
+      else
+        echo
+        echo Testing java $suite ...
+        echo
+        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
+      fi
+  done
 fi

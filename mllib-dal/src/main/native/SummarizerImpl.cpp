@@ -15,10 +15,16 @@
  *******************************************************************************/
 
 #include <chrono>
-#include <iostream>
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
+#include "oneapi/dal/algo/basic_statistics.hpp"
+#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"
@@ -26,15 +32,24 @@
 #include "service.h"
 
 using namespace std;
+#ifdef CPU_GPU_PROFILE
+using namespace oneapi::dal;
+#else
 using namespace daal;
 using namespace daal::algorithms;
+using namespace daal::services;
+#endif
+
+#ifdef CPU_ONLY_PROFILE
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static void summarizer_compute(JNIEnv *env, jobject obj, int rankId,
-                               ccl::communicator &comm,
-                               const NumericTablePtr &pData, size_t nBlocks,
-                               jobject resultObj) {
+static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
+                                    ccl::communicator &comm,
+                                    const NumericTablePtr &pData,
+                                    size_t nBlocks, jobject resultObj) {
+    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
+              << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -50,9 +65,9 @@ static void summarizer_compute(JNIEnv *env, jobject obj, int rankId,
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "low_order_moments (native): local step took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "low_order_moments (native): local step took "
+              << duration / 1000 << " secs" << std::endl;
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -77,9 +92,9 @@ static void summarizer_compute(JNIEnv *env, jobject obj, int rankId,
     t2 = std::chrono::high_resolution_clock::now();
 
     duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "low_order_moments (native): ccl_gather took " << duration
-              << " secs" << std::endl;
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    std::cout << "low_order_moments (native): ccl_gather took "
+              << duration / 1000 << " secs" << std::endl;
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -115,9 +130,10 @@ static void summarizer_compute(JNIEnv *env, jobject obj, int rankId,
         low_order_moments::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "low_order_moments (native): master step took " << duration
-                  << " secs" << std::endl;
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "low_order_moments (native): master step took "
+                  << duration / 1000 << " secs" << std::endl;
 
         /* Print the results */
         printNumericTable(result->get(low_order_moments::mean),
@@ -190,62 +206,114 @@ static void summarizer_compute(JNIEnv *env, jobject obj, int rankId,
         env->SetLongField(resultObj, minimumNumericTableField, (jlong)min);
     }
 }
-
-/*
- * Class:     com_intel_oap_mllib_stat_CorrelationDALImpl
- * Method:    cCorrelationTrainDAL
- * Signature: (JJDDIILorg/apache/spark/ml/stat/CorrelationResult;)J
- */
-JNIEXPORT jlong JNICALL
-Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executor_num,
-    jint executor_cores, jboolean use_gpu, jintArray gpu_idx_array,
-    jobject resultObj) {
-
-    ccl::communicator &comm = getComm();
-    size_t rankId = comm.rank();
-    std::cout << " rankId : " << rankId << " ! " << std::endl;
-
-    const size_t nBlocks = executor_num;
-
-    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+#endif
 
 #ifdef CPU_GPU_PROFILE
+static void doSummarizerOneAPICompute(JNIEnv *env, jint rankId,
+                                      jlong pNumTabData, jint executorNum,
+                                      const ccl::string &ipPort,
+                                      ComputeDevice &device,
+                                      jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
+              << std::endl;
+    const bool isRoot = (rankId == ccl_root);
+    homogen_table htable =
+        *reinterpret_cast<const homogen_table *>(pNumTabData);
+    const auto bs_desc = basic_statistics::descriptor{};
+    auto queue = getQueue(device);
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rankId, ipPort);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    const auto result_train = preview::compute(comm, bs_desc, htable);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    std::cout << "Summarizer (native): rankid " << rankId
+              << "; computing step took " << duration / 1000 << " secs"
+              << std::endl;
+    if (isRoot) {
+        std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
+        std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
+        std::cout << "Mean:\n" << result_train.get_mean() << std::endl;
+        std::cout << "Variance:\n" << result_train.get_variance() << std::endl;
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        std::cout << "Summarizer (native): computing step took "
+                  << duration / 1000 << " secs in end. " << std::endl;
+        // Return all covariance & mean
+        jclass clazz = env->GetObjectClass(resultObj);
 
-    if (use_gpu) {
+        // Get Field references
+        jfieldID meanTableField =
+            env->GetFieldID(clazz, "meanNumericTable", "J");
+        jfieldID varianceTableField =
+            env->GetFieldID(clazz, "varianceNumericTable", "J");
+        jfieldID minimumTableField =
+            env->GetFieldID(clazz, "minimumNumericTable", "J");
+        jfieldID maximumTableField =
+            env->GetFieldID(clazz, "maximumNumericTable", "J");
 
-        int n_gpu = env->GetArrayLength(gpu_idx_array);
-        cout << "oneDAL (native): use GPU kernels with " << n_gpu << " GPU(s)"
-             << endl;
-
-        jint *gpu_indices = env->GetIntArrayElements(gpu_idx_array, 0);
-
-        int size = comm.size();
-        auto assigned_gpu =
-            getAssignedGPU(comm, size, rankId, gpu_indices, n_gpu);
-
-        // Set SYCL context
-        cl::sycl::queue queue(assigned_gpu);
-        daal::services::SyclExecutionContext ctx(queue);
-        daal::services::Environment::getInstance()->setDefaultExecutionContext(
-            ctx);
-
-        summarizer_compute(env, obj, rankId, comm, pData, nBlocks, resultObj);
-        env->ReleaseIntArrayElements(gpu_idx_array, gpu_indices, 0);
-    } else
+        HomogenTablePtr meanTable =
+            std::make_shared<homogen_table>(result_train.get_mean());
+        saveHomogenTablePtrToVector(meanTable);
+        HomogenTablePtr varianceTable =
+            std::make_shared<homogen_table>(result_train.get_variance());
+        saveHomogenTablePtrToVector(varianceTable);
+        HomogenTablePtr maxTable =
+            std::make_shared<homogen_table>(result_train.get_max());
+        saveHomogenTablePtrToVector(maxTable);
+        HomogenTablePtr minTable =
+            std::make_shared<homogen_table>(result_train.get_min());
+        saveHomogenTablePtrToVector(minTable);
+        env->SetLongField(resultObj, meanTableField, (jlong)meanTable.get());
+        env->SetLongField(resultObj, varianceTableField,
+                          (jlong)varianceTable.get());
+        env->SetLongField(resultObj, maximumTableField, (jlong)maxTable.get());
+        env->SetLongField(resultObj, minimumTableField, (jlong)minTable.get());
+    }
+}
 #endif
-    {
+
+JNIEXPORT jlong JNICALL
+Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
+    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
+    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+#ifdef CPU_ONLY_PROFILE
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
+        ccl::communicator &comm = getComm();
+
+        NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         // Set number of threads for oneDAL to use for each rank
-        services::Environment::getInstance()->setNumberOfThreads(
-            executor_cores);
+        services::Environment::getInstance()->setNumberOfThreads(executorCores);
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-             << endl;
-
-        summarizer_compute(env, obj, rankId, comm, pData, nBlocks, resultObj);
+        std::cout << "oneDAL (native): Number of CPU threads used "
+                  << nThreadsNew << std::endl;
+        doSummarizerDAALCompute(env, obj, rankId, comm, pData, executorNum,
+                                resultObj);
+    }
+#else
+    case ComputeDevice::gpu: {
+        doSummarizerOneAPICompute(env, rankId, pNumTabData, executorNum,
+                                  ipPortStr, device, resultObj);
+    }
+#endif
     }
 
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }
