@@ -22,6 +22,7 @@ ls -ls /opt/intel/oneapi/ccl/2021.8.0/include/cpu
 ls -ls /opt/intel/oneapi/ccl/2021.8.0/include/cpu/oneapi/
 sudo find / -name ccl.hpp
 
+
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh

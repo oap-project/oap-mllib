@@ -37,6 +37,7 @@ fi
 TARGET_DIR=./src/main/resources/lib
 
 rm -f $TARGET_DIR/*.so*
+
 cp $DAALROOT/lib/intel64/libJavaAPI.so.1.1 $TARGET_DIR/libJavaAPI.so
 
 cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12.8 $TARGET_DIR/libtbb.so.12
