@@ -50,7 +50,6 @@ jobs:
         run: |
           ${{github.workspace}}/dev/ci/ci-local-test.sh
   cluster-test:
-    if: ${{ false }}  # disable for now since CPU not supported in new oneAPI interfaces of oneDAL
     name: Cluster Test for Examples (CPU)
     runs-on: ubuntu-20.04
     steps:

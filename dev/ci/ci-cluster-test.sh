@@ -16,6 +16,7 @@ source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu
 echo $TBBROOT
 echo $CCL_ROOT
 echo $DAALROOT
+echo $CMPLR_ROOT
 
 
 # Prepare lib resources

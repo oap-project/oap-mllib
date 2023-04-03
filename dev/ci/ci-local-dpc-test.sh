@@ -20,6 +20,7 @@ source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu_gpu_dpcpp
 echo $TBBROOT
 echo $CCL_ROOT
 echo $DAALROOT
+echo $CMPLR_ROOT
 
 
 cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
