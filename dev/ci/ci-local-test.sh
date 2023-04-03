@@ -16,7 +16,7 @@ source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu
 echo $TBBROOT
 echo $CCL_ROOT
 echo $DAALROOT
-<<<<<<< HEAD
+
 echo $CMPLR_ROOT
 ls -ls /opt/intel/oneapi/ccl/2021.8.0/include/cpu
 ls -ls /opt/intel/oneapi/ccl/2021.8.0/include/cpu/oneapi/
