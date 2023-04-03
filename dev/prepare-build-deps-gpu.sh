@@ -23,16 +23,6 @@ if [[ -z $TBBROOT ]]; then
   exit 1
 fi
 
-if [[ -z $I_MPI_ROOT ]]; then
-  echo I_MPI_ROOT not defined!
-  exit 1
-fi
-
-if [[ -z $CCL_ROOT ]]; then
-  echo CCL_ROOT not defined!
-  exit 1
-fi
-
 # Use patchelf to change SONAME for libfabric
 if [[ -z $(which patchelf) ]]; then
   echo Please install \"patchelf\"!
@@ -48,33 +38,9 @@ TARGET_DIR=./src/main/resources/lib
 
 rm -f $TARGET_DIR/*.so*
 
-cp $CCL_ROOT/lib/cpu_gpu_dpcpp/libccl.so.1.0 $TARGET_DIR/libccl.so.1
-
-
-cp $I_MPI_ROOT/libfabric/lib/libfabric.so.1 $TARGET_DIR/libfabric.so.1
-cp $I_MPI_ROOT/libfabric/lib/prov/libsockets-fi.so $TARGET_DIR
-
-# Workaround dlopen (libfabric.so) in oneCCL
-cp $I_MPI_ROOT/libfabric/lib/libfabric.so.1 $TARGET_DIR/libfabric.so
-patchelf --set-soname libfabric.so $TARGET_DIR/libfabric.so
-
-cp $I_MPI_ROOT/lib/release_mt/libmpi.so.12.0.0 $TARGET_DIR/libmpi.so.12
-
 cp $DAALROOT/lib/intel64/libJavaAPI.so.1.1 $TARGET_DIR/libJavaAPI.so
 
-cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12.5 $TARGET_DIR/libtbb.so.12
-cp $TBBROOT/lib/intel64/gcc4.8/libtbbmalloc.so.2.5 $TARGET_DIR/libtbbmalloc.so.2
-
-# SYCL libs
-cp $CMPLR_ROOT/linux/compiler/lib/intel64_lin/libintlc.so.5 $TARGET_DIR
-cp $CMPLR_ROOT/linux/compiler/lib/intel64_lin/libsvml.so $TARGET_DIR
-
-# Workaround lib loading for JNI as libirng.so doesn't have soname
-cp $CMPLR_ROOT/linux/compiler/lib/intel64_lin/libirng.so $TARGET_DIR
-patchelf --set-soname libirng.so $TARGET_DIR/libirng.so
-
-cp $CMPLR_ROOT/linux/compiler/lib/intel64_lin/libimf.so $TARGET_DIR
-cp $CMPLR_ROOT/linux/lib/libOpenCL.so.1 $TARGET_DIR
-cp $CMPLR_ROOT/linux/lib/libsycl.so.5 $TARGET_DIR
+cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12.8 $TARGET_DIR/libtbb.so.12
+cp $TBBROOT/lib/intel64/gcc4.8/libtbbmalloc.so.2.8 $TARGET_DIR/libtbbmalloc.so.2
 
 echo oneAPI Toolkit version: $(basename $CCL_ROOT) > $TARGET_DIR/VERSION

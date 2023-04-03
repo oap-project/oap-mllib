@@ -32,14 +32,13 @@ cd $SCRIPT_DIR
 HOST_IP=$(hostname -f)
 
 sed -i "s/localhost/$HOST_IP/g" core-site.xml
-sed -i "s/localhost/$HOST_IP/g" yarn-site.xml
 
 cp ./core-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hdfs-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
-cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
+cp ./spark-env.sh ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 
 echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
 echo $HOST_IP > $SPARK_HOME/conf/slaves
@@ -55,7 +54,5 @@ $HADOOP_HOME/bin/hdfs namenode -format
 
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh
-$HADOOP_HOME/sbin/start-yarn.sh
 
 hadoop fs -ls /
-yarn node -list

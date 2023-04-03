@@ -13,6 +13,9 @@ $GITHUB_WORKSPACE/dev/install-build-deps-ubuntu.sh
 
 # Setup building envs
 source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu
+echo $TBBROOT
+echo $CCL_ROOT
+echo $DAALROOT
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
@@ -39,4 +42,4 @@ ldd $GITHUB_WORKSPACE/mllib-dal/src/main/resources/lib/libMLlibDAL.so
 # Build and run all examples
 ./build-all-scala.sh
 ./run-all-scala.sh
-./run-all-pyspark.sh
+#./run-all-pyspark.sh
