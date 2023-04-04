@@ -15,19 +15,38 @@
  *******************************************************************************/
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <vector>
+
+#ifdef CPU_GPU_PROFILE
+#include "GPU.h"
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
+#include "oneapi/dal/algo/linear_regression.hpp"
+#include "oneapi/dal/table/homogen.hpp"
+#endif
+
 
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_regression_LinearRegressionDALImpl.h"
 #include "service.h"
 
 using namespace std;
+#ifdef CPU_GPU_PROFILE
+using namespace oneapi::dal;
+#else
 using namespace daal;
 using namespace daal::algorithms;
+using namespace daal::services;
+#endif
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
+#ifdef CPU_ONLY_PROFILE
 static NumericTablePtr linear_regression_compute(int rankId,
                                                  ccl::communicator &comm,
                                                  const NumericTablePtr &pData,
@@ -242,6 +261,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         return (jlong)0;
 }
 
+#endif
+
+#ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
                                    jint executorNum, const ccl::string &ipPort,
                                    jint computeDeviceOrdinal,
@@ -252,13 +274,13 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-    homogen_table pData = *((NumericTablePtr *)pNumTabData);
-
 
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto linear_regression_desc = linear_regression::descriptor<>();
+	//todo
+	/*
     linear_regression::train_input local_input{htable};
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
@@ -276,9 +298,13 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     } else {
         return (jlong)0;
     }
+	*/
+	return (jlong)0;
 }
+#endif
 
 
+#ifdef CPU_GPU_PROFILE
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_regression_KMeansDALImpl_cLROneapiCompute(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
@@ -293,3 +319,4 @@ Java_com_intel_oap_mllib_regression_KMeansDALImpl_cLROneapiCompute(
     return ret;
 }
 
+#endif
