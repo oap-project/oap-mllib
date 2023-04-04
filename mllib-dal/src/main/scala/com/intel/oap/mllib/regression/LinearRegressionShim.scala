@@ -21,7 +21,6 @@ import com.intel.oap.mllib.Utils
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.regression.LinearRegressionModel
-import org.apache.spark.ml.regression.spark313.{LinearRegression => LinearRegressionSpark313}
 import org.apache.spark.ml.regression.spark321.{LinearRegression => LinearRegressionSpark321}
 import org.apache.spark.sql.Dataset
 import org.apache.spark.{SPARK_VERSION, SparkException}
@@ -36,7 +35,6 @@ object LinearRegressionShim extends Logging {
   def create(uid: String): LinearRegressionShim = {
     logInfo(s"Loading ALS for Spark $SPARK_VERSION")
     val linearRegression = Utils.getSparkVersion() match {
-      case "3.1.1" | "3.1.2" | "3.1.3" => new LinearRegressionSpark313(uid)
       case "3.2.0" | "3.2.1" => new LinearRegressionSpark321(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
