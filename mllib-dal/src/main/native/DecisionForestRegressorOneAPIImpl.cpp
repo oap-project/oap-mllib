@@ -23,16 +23,22 @@
 #include <vector>
 
 #ifdef CPU_GPU_PROFILE
-#include "Common.hpp"
+#include "GPU.h"
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
 
-#include "OneCCL.h"
-#include "com_intel_oap_mllib_classification_RandomForestClassifierDALImpl.h"
+#include "Communicator.hpp"
+#include "OutputHelpers.hpp"
+#include "com_intel_oap_mllib_regression_RandomForestRegressorDALImpl.h"
 #include "oneapi/dal/algo/decision_forest.hpp"
+#include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
 
 using namespace std;
 using namespace oneapi::dal;
 namespace df = oneapi::dal::decision_forest;
+const int ccl_root = 0;
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -51,7 +57,7 @@ const std::shared_ptr<
         std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>();
 
 LearningNode convertsplitToLearningNode(
-    const df::split_node_info<df::task::classification> &info,
+    const df::split_node_info<df::task::regression> &info,
     const int classCount) {
     LearningNode splitNode;
     splitNode.isLeaf = false;
@@ -70,7 +76,7 @@ LearningNode convertsplitToLearningNode(
 }
 
 LearningNode convertleafToLearningNode(
-    const df::leaf_node_info<df::task::classification> &info,
+    const df::leaf_node_info<df::task::regression> &info,
     const int classCount) {
     LearningNode leafNode;
     leafNode.isLeaf = true;
@@ -80,7 +86,7 @@ LearningNode convertleafToLearningNode(
     std::unique_ptr<double[]> arr(new double[classCount]);
     for (std::int64_t index_class = 0; index_class < classCount;
          ++index_class) {
-        arr[index_class] = info.get_probability(index_class);
+        arr[index_class] = 0.0;
     }
     leafNode.probability = std::move(arr);
     return leafNode;
@@ -94,7 +100,7 @@ struct collect_nodes {
         treesVector = vector;
         classCount = count;
     }
-    bool operator()(const df::leaf_node_info<df::task::classification> &info) {
+    bool operator()(const df::leaf_node_info<df::task::regression> &info) {
         std::string str;
         str.append("leaf");
         str.append("|");
@@ -107,14 +113,12 @@ struct collect_nodes {
         str.append(to_string(info.get_sample_count()));
 
         treesVector->push_back(convertleafToLearningNode(info, classCount));
-
         std::cout << str << std::endl;
 
-        i++;
         return true;
     }
 
-    bool operator()(const df::split_node_info<df::task::classification> &info) {
+    bool operator()(const df::split_node_info<df::task::regression> &info) {
         std::string str;
         str.append("split");
         str.append("|");
@@ -131,7 +135,6 @@ struct collect_nodes {
         treesVector->push_back(convertsplitToLearningNode(info, classCount));
 
         std::cout << str << std::endl;
-        i++;
         return true;
     }
 };
@@ -142,6 +145,7 @@ void collect_model(
     const std::shared_ptr<
         std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>
         &treeForest) {
+
     std::cout << "Number of trees: " << m.get_tree_count() << std::endl;
     for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
         std::cout << "Tree #" << i << std::endl;
@@ -150,60 +154,9 @@ void collect_model(
         m.traverse_depth_first(i, collect_nodes{myVec, classCount});
         treeForest->insert({i, myVec});
     }
-    jmethodID constructor = env->GetMethodID(leafNodeClass, "<init>", "(Ljava/lang/Long;Ljava/lang/Long;Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator)V");
-    jfieldID idField = env->GetFieldID(learningNodeClass, "id", "I");
-    jfieldID leftChildField = env->GetFieldID(learningNodeClass, "leftChild", "Lscala/Option;");
-    jfieldID rightChildField = env->GetFieldID(learningNodeClass, "rightChild", "Lscala/Option;");
-    jfieldID splitField = env->GetFieldID(learningNodeClass, "split", "Lscala/Option;");
-    jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
-    jfieldID statsField = env->GetFieldID(learningNodeClass, "stats", "Lorg/apache/spark/ml/tree/ImpurityStats;");
-
-    jobject leftChildObj = env->GetObjectField(node, leftChildId);
-    jobject rightChildObj = env->GetObjectField(node, rightChildId);
-    jboolean isLeaf = env->GetBooleanField(node, isLeafId);
-    jobject splitObj = env->GetObjectField(node, splitId);
-    jobject statsObj = env->GetObjectField(node, statsId);
-
-    // set Id
-    env->SetIntField(node, idField,
-                             nodeIndex);
-    // set isleaf
-    env->SetBooleanField(node, isLeafField,
-                            typeid(info) ==typeid(df::leaf_node_info) ? true : false);
-    // set leftChild
-    env->SetIntField(node, leftChildField,
-                                 nullptr);
-    // set rightChild
-    env->SetIntField(node, rightChildField,
-                                 nullptr);
-    // set split
-    if(!typeid(info) ==typeid(df::leaf_node_info)){
-        env->SetIntField(node, splitField,
-                                 info.get_feature_index());
-    }
-
-    // 创建ImpurityStats对象
-    jclass statsCls = env->FindClass(IMPURITY_STATS_CLASS_NAME);
-    // Get Field references
-    jfieldID gainField = env->GetFieldID(statsCls, "gain", "D"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "impurity", "D"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "impurityCalculator", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "leftImpurityCalculator", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "rightImpurityCalculator", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator"));
-
-    env->SetIntField(statsObj, gainField,
-                             0.0));
-    env->SetIntField(statsObj, impurityField,
-                         info.get_impurity());
-
-
-    jobject nodeObj = env->NewObject(learningNodeClass, constructor);
-    // 释放对象引用
-
-    return nodeObj;
 }
 
-jobject convertRFCJavaMap(
+jobject convertRFRJavaMap(
     JNIEnv *env,
     const std::shared_ptr<
         std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>
@@ -263,7 +216,7 @@ jobject convertRFCJavaMap(
 
             // Convert the probability array
             if (node.probability != nullptr) {
-                std::cout << "convertRFCJavaMap node.probability  = "
+                std::cout << "convertRFRJavaMap node.probability  = "
                           << node.probability.get()[0] << std::endl;
                 jfieldID probabilityField =
                     env->GetFieldID(learningNodeClass, "probability", "[D");
@@ -294,7 +247,7 @@ jobject convertRFCJavaMap(
         jmethodID mapPut = env->GetMethodID(
             mapClass, "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        std::cout << "convertRFCJavaMap tree id  = " << entry.first << std::endl;
+        std::cout << "convertRFRJavaMap tree id  = " << entry.first << std::endl;
         // Create a new Integer object with the value key
         jobject jKey = env->NewObject(
             env->FindClass("java/lang/Integer"), // Find the Integer class
@@ -308,41 +261,35 @@ jobject convertRFCJavaMap(
     return jMap;
 }
 
-static jobject doRFClassifierOneAPICompute(
-    JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
-    jint computeDeviceOrdinal, jint classCount, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode,
-    jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
-    jdouble minImpurityDecreaseSplitNode, jboolean bootstrap,
-    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
-    std::cout << "oneDAL (native): compute start" << std::endl;
-    const bool isRoot = (comm.get_rank() == ccl_root);
+static jobject doRFRegressorOneAPICompute(
+    JNIEnv *env, jint rankId, jlong pNumTabFeature, jlong pNumTabLabel,
+    jint executorNum, jint computeDeviceOrdinal,
+    jint treeCount, jint minObservationsLeafNode,
+    jboolean bootstrap, const ccl::string &ipPort, jobject resultObj) {
+    std::cout << "oneDAL (native): compute start , rankid = " << rankId
+              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+    const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table hFeaturetable =
         *reinterpret_cast<const homogen_table *>(pNumTabFeature);
     homogen_table hLabeltable =
         *reinterpret_cast<const homogen_table *>(pNumTabLabel);
-    std::cout << "doRFClassifierOneAPICompute get_column_count = "
+    std::cout << "doRFRegressorOneAPICompute get_column_count = "
               << hFeaturetable.get_column_count() << std::endl;
-    std::cout << "doRFClassifierOneAPICompute classCount = " << classCount
-              << std::endl;
     const auto df_desc =
-        df::descriptor<float, df::method::hist, df::task::classification>{}
-            .set_class_count(classCount)
+        df::descriptor<float, df::method::hist, df::task::regression>{}
             .set_tree_count(treeCount)
-            .set_features_per_node(numFeaturesPerNode)
+            .set_features_per_node(0)
             .set_min_observations_in_leaf_node(minObservationsLeafNode)
-            .set_min_observations_in_split_node(minObservationsSplitNode)
-            .set_min_weight_fraction_in_leaf_node(minWeightFractionLeafNode)
-            .set_min_impurity_decrease_in_split_node(
-                minImpurityDecreaseSplitNode)
-            .set_error_metric_mode(df::error_metric_mode::out_of_bag_error)
-            .set_variable_importance_mode(df::variable_importance_mode::mdi)
-            .set_infer_mode(df::infer_mode::class_responses |
-                            df::infer_mode::class_probabilities)
-            .set_voting_mode(df::voting_mode::weighted);
+            .set_error_metric_mode(
+                df::error_metric_mode::out_of_bag_error |
+                df::error_metric_mode::out_of_bag_error_per_observation)
+            .set_variable_importance_mode(df::variable_importance_mode::mdi);
 
+    auto queue = getQueue(device);
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rankId, ipPort);
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -354,12 +301,10 @@ static jobject doRFClassifierOneAPICompute(
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;
         std::cout << "Prediction results:\n"
                   << result_infer.get_responses() << std::endl;
-        std::cout << "Probabilities results:\n"
-                  << result_infer.get_probabilities() << std::endl;
 
         // convert c++ map to java hashmap
-        collect_model(env, result_train.get_model(), classCount, treeForest);
-        trees = convertRFCJavaMap(env, treeForest, classCount);
+        collect_model(env, result_train.get_model(), 0, treeForest);
+        trees = convertRFRJavaMap(env, treeForest, 0);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -367,83 +312,36 @@ static jobject doRFClassifierOneAPICompute(
         // Get Field references
         jfieldID predictionNumericTableField =
             env->GetFieldID(clazz, "predictionNumericTable", "J");
-        jfieldID probabilitiesNumericTableField =
-            env->GetFieldID(clazz, "probabilitiesNumericTable", "J");
-        jfieldID importancesNumericTableField =
-            env->GetFieldID(clazz, "importancesNumericTable", "J");
         HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
 
-        HomogenTablePtr probabilities =
-            std::make_shared<homogen_table>(result_infer.get_probabilities());
-        saveHomogenTablePtrToVector(probabilities);
-
-        HomogenTablePtr importances =
-            std::make_shared<homogen_table>(result_train.get_var_importance());
-        saveHomogenTablePtrToVector(importances);
-
         // Set prediction for result
         env->SetLongField(resultObj, predictionNumericTableField,
                           (jlong)prediction.get());
-
-        // Set probabilities for result
-        env->SetLongField(resultObj, probabilitiesNumericTableField,
-                          (jlong)probabilities.get());
-
-       // Set importances for result
-       env->SetLongField(resultObj, importancesNumericTableField,
-                         (jlong)importances.get());
     }
     return trees;
 }
 
 /*
- * Class:     com_intel_oap_mllib_classification_RandomForestClassifierDALImpl
- * Method:    cRFClassifierTrainDAL
- * Signature:
- * (JJIIIIIIIDDZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)V
+ * Class:     com_intel_oap_mllib_regression_RandomForestRegressorDALImpl
+ * Method:    cRFRegressorTrainDAL
+ * Signature: (JJIIIIIZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
  */
 JNIEXPORT jobject JNICALL
-Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
+Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint classCount,
-    jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
-    jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
-    jdouble minImpurityDecreaseSplitNode, jboolean bootstrap,
-    jintArray gpuIdxArray, jobject resultObj) {
+    jint executorNum, jint computeDeviceOrdinal, jint rankId,
+    jint treeCount, jint minObservationsLeafNode,
+    jboolean bootstrap, jstring ipPort, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
-    ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-    switch (device) {
-    case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
-                  << " GPU(s)"
-                  << " rankid " << rankId << std::endl;
-
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-
-        int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
-        jobject hashmapObj = doRFClassifierOneAPICompute(
-            env, pNumTabFeature, pNumTabLabel, executorNum,
-            computeDeviceOrdinal, classCount, treeCount, numFeaturesPerNode,
-            minObservationsLeafNode, minObservationsSplitNode,
-            minWeightFractionLeafNode, minImpurityDecreaseSplitNode, bootstrap,
-            comm, resultObj);
-        return hashmapObj;
-    }
-    }
-    return nullptr;
+    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
+    std::string ipPortStr = std::string(ipPortPtr);
+    jobject hashmapObj = doRFRegressorOneAPICompute(
+        env, rankId, pNumTabFeature, pNumTabLabel, executorNum,
+        computeDeviceOrdinal, treeCount,
+        minObservationsLeafNode, bootstrap, ipPortPtr, resultObj);
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+    return hashmapObj;
 }
 #endif

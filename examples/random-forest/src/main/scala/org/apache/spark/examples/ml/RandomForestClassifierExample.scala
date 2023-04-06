@@ -37,6 +37,7 @@ object RandomForestClassifierExample {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
+      .master("local")
       .appName("RandomForestClassifierExample")
       .config("spark.default.parallelism", 1)
       .getOrCreate()
