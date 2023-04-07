@@ -49,6 +49,7 @@ class CorrelationDALImpl(
       } else {
         OneCCL.init(executorNum, rank, kvsIPPort)
       }
+
       val computeStartTime = System.nanoTime()
 
       val result = new CorrelationResult()
