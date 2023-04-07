@@ -260,6 +260,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M3</version>
                 <configuration>
+                    <forkCount>0</forkCount>
                     <testFailureIgnore>true</testFailureIgnore>
                     <systemPropertyVariables>
                         <!--suppress UnresolvedMavenProperty -->
