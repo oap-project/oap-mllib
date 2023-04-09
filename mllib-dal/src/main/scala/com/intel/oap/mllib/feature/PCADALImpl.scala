@@ -164,7 +164,7 @@ class PCADALImpl(val k: Int,
     val numCols = table.getNumberOfColumns.toInt
     require(k <= numRows, "k should be less or equal to row number")
 
-    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, device)
+    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, numCols)
 
     // Column-major, transpose of top K rows of NumericTable
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
