@@ -2,13 +2,27 @@
 
 ##### \* Optimized Analytics Package for Spark* Platform is under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
 
-# OAP MLlib
+# Introduction
 
-## Overview
+## The Problem
 
-OAP MLlib is an optimized package to accelerate machine learning algorithms in  [Apache Spark MLlib](https://spark.apache.org/mllib).  It is compatible with Spark MLlib and leverages open source [Intel® oneAPI Data Analytics Library (oneDAL)](https://github.com/oneapi-src/oneDAL) to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source [Intel® oneAPI Collective Communications Library (oneCCL)](https://github.com/oneapi-src/oneCCL) to provide efficient communication patterns in multi-node multi-GPU clusters.
+[Apache Spark MLlib](https://spark.apache.org/mllib) is a scalable machine learning library based on Spark unified platform. It seamlessly integrates with Spark SQL, Spark Streaming and other machine learning and deep learning frameworks without additional glue code for the entire pipeline.
 
-## Compatibility
+However, JVM-based MLlib only has limited use of BLAS acceleration and Spark shuffle is also slow for communication during distributed training. It doesn't fully utilize modern CPU and GPU capabilities to achieve best performance.
+
+## OAP MLlib Solution
+
+OAP MLlib is a platform optimized package to accelerate machine learning algorithms in Apache Spark MLlib.  It is compatible with Spark MLlib and leverages open source [Intel® oneAPI Data Analytics Library (oneDAL)](https://github.com/oneapi-src/oneDAL) to provide highly optimized algorithms and get most out of CPU and GPU capabilities. It also take advantage of open source [Intel® oneAPI Collective Communications Library (oneCCL)](https://github.com/oneapi-src/oneCCL) to provide efficient communication patterns in multi-node multi-GPU clusters.
+
+## Who will use OAP MLlib
+
+This solution is intended for researchers, data scientists and enterprise users to accelerate their Spark MLlib algorithms with minimum configuration changes.
+
+# Architecture
+
+The following diagram shows the high-level architecture of OAP MLlib.
+
+![OAP MLlib Architecture](docs/images/arch.png)
 
 OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration.
 
@@ -16,33 +30,33 @@ Most of the algorithms can produce the same results that are identical with Spar
 
 For those algorithms that are not accelerated by OAP MLlib, the original Spark MLlib one will be used.
 
-## Online Documentation
+# Online Documentation
 
 You can find the all the OAP MLlib documents on the [project web page](https://oap-project.github.io/oap-mllib).
 
-## Getting Started
+# Getting Started
 
-### Java/Scala Users Preferred
+## Java/Scala Users Preferred
 
-Use a pre-built OAP MLlib JAR to get started. You can firstly download OAP package from [OAP-JARs-Tarball](https://github.com/oap-project/oap-tools/releases/download/v1.3.1/oap-1.3.1-bin.tar.gz) and extract this Tarball to get `oap-mllib-x.x.x.jar` under `oap-x.x.x-bin-spark-x.x.x/jars`.
+Use a pre-built OAP MLlib JAR to get started, you can download OAP MLlib JAR from [Release Page](https://github.com/oap-project/oap-mllib/releases/download/v1.4.0/oap-mllib-1.4.0.jar).
 
 Then you can refer to the following [Running](#running) section to try out.
 
-### Python/PySpark Users Preferred
+## Python/PySpark Users Preferred
 
 Use a pre-built JAR to get started. If you have finished [OAP Installation Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
 
 Then you can refer to the following [Running](#running) section to try out.
 
-### Building From Scratch
+## Building From Scratch
 
-You can also build the package from source code, please refer to [Building](#building) section.
+You can also build the package from source code, please refer to [Building Code](#building-code) section.
 
 ## Running
 
 ### Supported Spark Versions
 
-OAP MLlib's latest version supports multiple Spark versions as below. 
+OAP MLlib's latest version supports multiple Spark versions as below.
 
 * Apache Spark 3.1.1
 * Apache Spark 3.1.2
@@ -56,7 +70,7 @@ OAP MLlib's latest version supports multiple Spark versions as below.
 * Java JRE 8.0+ Runtime
 * Apache Spark 3.1.1, 3.1.2, 3.1.3, 3.2.0 or 3.2.1
 
-Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [here](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
+Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [Intel® oneAPI Base Toolkit System Requirements](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
 
 Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.
 
@@ -117,9 +131,9 @@ Edit related variables in "`Minimun Settings`" of `env.sh`
 
 ### PySpark Support
 
-As PySpark-based applications call their Scala couterparts, they shall be supported out-of-box. Examples can be found in the [Examples](#examples) section.
+As PySpark-based applications call their Scala counterparts, they shall be supported out-of-box. Examples can be found in the [Examples](#examples) section.
 
-## Building
+## Building Code
 
 ### Prerequisites
 
