@@ -21,6 +21,7 @@
 #include <string>
 #include <typeinfo>
 
+#ifdef CPU_GPU_PROFILE
 
 #include "com_intel_oneapi_dal_table_SimpleMetadataImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
@@ -68,3 +69,4 @@ Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType(
     return (jint)mdata.get_data_type(cindex);
 
 }
+#endif

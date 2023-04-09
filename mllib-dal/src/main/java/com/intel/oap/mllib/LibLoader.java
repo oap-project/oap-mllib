@@ -50,10 +50,6 @@ public final class LibLoader {
       return;
     }
 
-    if (!loadLibSYCL()) {
-      log.debug("SYCL libraries are not available, will load CPU libraries only.");
-    }
-    loadLibCCL();
     loadLibMLlibDAL();
 
     isLoaded = true;

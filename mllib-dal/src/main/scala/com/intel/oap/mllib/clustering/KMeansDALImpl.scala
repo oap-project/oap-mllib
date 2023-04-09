@@ -40,21 +40,32 @@ class KMeansDALImpl(var nClusters: Int,
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
+    val coalescedTables = if (useDevice == "GPU") {
+      OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
+    } else {
+      OneDAL.rddVectorToMergedTables(data, executorNum)
+    }
+
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       var cCentroids = 0L
       val result = new KMeansResult()
       val tableArr = table.next()
-      OneCCL.initDpcpp()
-      val initCentroids = OneDAL.makeHomogenTable(centers, computeDevice)
+      val initCentroids = if (useDevice == "GPU") {
+        OneCCL.initDpcpp()
+        OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
+      } else {
+        OneCCL.init(executorNum, rank, kvsIPPort)
+        OneDAL.makeNumericTable(centers).getCNumericTable
+      }
       cCentroids = cKMeansOneapiComputeWithInitCenters(
         tableArr,
-        initCentroids.getcObejct(),
+        initCentroids,
         nClusters,
         tolerance,
         maxIterations,
         executorNum,
+        executorCores,
         computeDevice.ordinal(),
         rank,
         kvsIPPort,
@@ -63,12 +74,20 @@ class KMeansDALImpl(var nClusters: Int,
 
       val ret = if (rank == 0) {
           assert(cCentroids != 0)
-          val centerVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
-            computeDevice)
+          val centerVectors = if (useDevice == "GPU") {
+            OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
+              computeDevice)
+          } else {
+            OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
+          }
+
           Iterator((centerVectors, result.totalCost, result.iterationNum))
         } else {
           Iterator.empty
         }
+      if (useDevice == "CPU") {
+        OneCCL.cleanup()
+      }
       ret
     }.collect()
 
@@ -95,11 +114,13 @@ class KMeansDALImpl(var nClusters: Int,
     parentModel
   }
 
-  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long, centers: Long,
+  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long,
+                                                       centers: Long,
                                                        clusterNum: Int,
                                                        tolerance: Double,
                                                        iterationNum: Int,
                                                        executorNum: Int,
+                                                       executorCores: Int,
                                                        computeDeviceOrdinal: Int,
                                                        rankId: Int,
                                                        ipPort: String,

@@ -3,8 +3,8 @@ name: OAP MLlib Tests
 on: [push, pull_request]
 
 jobs:
-  local-test:
-    name: Local Test for Units (CPU)
+  local-test-oneAPI_table:
+    name: Local Test for Units (OneAPI Table)
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -26,11 +26,33 @@ jobs:
       - name: Local Test
         run: |
           ${{github.workspace}}/dev/ci/ci-local-dpc-test.sh
-
+  local-test-CPU:
+    name: Local Test for Units (CPU)
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Restore cached dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            # /var/cache/apt/archives/*.deb
+            ~/.m2/repository
+            /opt/intel/oneapi
+            ~/opt
+          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2022.1.2
+          restore-keys: |
+            ${{ runner.os }}-
+      - name: Local Test
+        run: |
+          ${{github.workspace}}/dev/ci/ci-local-test.sh
   cluster-test:
     if: ${{ false }}  # disable for now since CPU not supported in new oneAPI interfaces of oneDAL
     name: Cluster Test for Examples (CPU)
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8

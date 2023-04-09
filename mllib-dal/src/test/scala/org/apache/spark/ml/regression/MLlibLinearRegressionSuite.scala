@@ -17,12 +17,12 @@
 
 package org.apache.spark.ml.regression
 
+import org.apache.spark.{SparkConf, TestCommon}
+
 import scala.collection.JavaConverters._
 import scala.util.Random
-
 import org.dmg.pmml.{OpType, PMML}
 import org.dmg.pmml.regression.{RegressionModel => PMMLRegressionModel}
-
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{DenseVector, Vector, Vectors}
@@ -36,6 +36,10 @@ import org.apache.spark.sql.{DataFrame, Row}
 class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with PMMLReadWriteTest {
 
   import testImplicits._
+  override def sparkConf: SparkConf = {
+    val conf = super.sparkConf
+    conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+  }
 
   private val seed: Int = 42
   @transient var datasetWithDenseFeature: DataFrame = _

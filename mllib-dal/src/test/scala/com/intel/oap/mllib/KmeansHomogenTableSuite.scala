@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.intel.oap.mllib
 
 import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansResult}
@@ -33,7 +49,7 @@ class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
             null, null, 0, 0);
         val result = new KMeansResult();
         val centroids = kmeansDAL.cKMeansOneapiComputeWithInitCenters(dataTable.getcObejct(), centroidsTable.getcObejct(),10, 0.001,
-            5, 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000" , result);
+            5, 1, 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000" , result);
         val resultVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(centroids), TestCommon.getComputeDevice);
         assertArrayEquals(TestCommon.convertArray(expectCentroids), TestCommon.convertArray(resultVectors), 0.000001)
     }

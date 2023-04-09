@@ -42,21 +42,30 @@ class PCADALImpl(val k: Int,
   extends Serializable with Logging {
 
   def train(data: RDD[Vector]): PCADALModel = {
-    val sparkContext = data.sparkContext
+    val normalizedData = normalizeData(data)
+    val sparkContext = normalizedData.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum,
-      computeDevice)
+    val coalescedTables = if (useDevice == "GPU") {
+      OneDAL.rddVectorToMergedHomogenTables(normalizedData, executorNum,
+        computeDevice)
+    } else {
+      OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
+    }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.initDpcpp()
-
+      if (useDevice == "GPU") {
+        OneCCL.initDpcpp()
+      } else {
+        OneCCL.init(executorNum, rank, kvsIPPort)
+      }
       val result = new PCAResult()
       cPCATrainDAL(
         tableArr,
         executorNum,
+        executorCores,
         computeDevice.ordinal(),
         rank,
         kvsIPPort,
@@ -64,16 +73,31 @@ class PCADALImpl(val k: Int,
       )
 
       val ret = if (rank == 0) {
-        val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
-        val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
-          result.explainedVarianceNumericTable)
-        val principleComponents = getPrincipleComponentsFromDAL(pcNumericTable, k, computeDevice)
-        val explainedVariance = getExplainedVarianceFromDAL(
-          explainedVarianceNumericTable, k, computeDevice)
+        val principleComponents = if (useDevice == "GPU") {
+          val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
+          getPrincipleComponentsFromOneAPI(pcNumericTable, k, computeDevice)
+        } else {
+          val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
+          getPrincipleComponentsFromDAL(pcNumericTable, k)
+        }
+
+        val explainedVariance = if (useDevice == "GPU") {
+          val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
+            result.explainedVarianceNumericTable)
+          getExplainedVarianceFromOneAPI(
+            explainedVarianceNumericTable, k, computeDevice)
+        } else {
+          val explainedVarianceNumericTable = OneDAL.makeNumericTable(
+            result.explainedVarianceNumericTable)
+          getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
+        }
 
         Iterator((principleComponents, explainedVariance))
       } else {
         Iterator.empty
+      }
+      if (useDevice == "CPU") {
+        OneCCL.cleanup()
       }
       ret
     }.collect()
@@ -91,11 +115,51 @@ class PCADALImpl(val k: Int,
     parentModel
   }
 
-  private[mllib] def getPrincipleComponentsFromDAL(table: HomogenTable,
+  // Normalize data before training
+  private def normalizeData(input: RDD[Vector]): RDD[Vector] = {
+    val vectors = input.map(OldVectors.fromML(_))
+    val scaler = new MLlibStandardScaler(withMean = true, withStd = false).fit(vectors)
+    val res = scaler.transform(vectors)
+    res.map(_.asML)
+  }
+
+  private[mllib] def getPrincipleComponentsFromOneAPI(table: HomogenTable,
                                             k: Int,
                                             device: Common.ComputeDevice): DenseMatrix = {
-    val numRows = table.getRowCount.toInt
-    val numCols = table.getColumnCount.toInt
+    require(k <= numRows, "k should be less or equal to row number")
+
+    val arrayDouble = getDoubleBufferDataFromOneAPI(table, numRows, device)
+
+    // Column-major, transpose of top K rows of NumericTable
+    new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
+  }
+
+  private[mllib] def getExplainedVarianceFromOneAPI(table_1xn: HomogenTable, k: Int,
+                                          device: Common.ComputeDevice): DenseVector = {
+    val arrayDouble = getDoubleBufferDataFromOneAPI(table_1xn, 1, device)
+    val sum = arrayDouble.sum
+    val topK = Arrays.copyOfRange(arrayDouble, 0, k)
+    for (i <- 0 until k)
+      topK(i) = topK(i) / sum
+    new DenseVector(topK)
+  }
+
+  // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
+  // so use table.getBlockOfRows instead of it.
+  private[mllib] def getDoubleBufferDataFromOneAPI(table: HomogenTable,
+                                         numRows: Int,
+                                         device: Common.ComputeDevice): Array[Double] = {
+
+    // returned DoubleBuffer is ByteByffer, need to copy as double array
+    val accessor = new RowAccessor(table.getcObejct(), device)
+    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+
+    arrayDouble
+  }
+
+  private def getPrincipleComponentsFromDAL(table: NumericTable, k: Int): DenseMatrix = {
+    val numRows = table.getNumberOfRows.toInt
+    val numCols = table.getNumberOfColumns.toInt
     require(k <= numRows, "k should be less or equal to row number")
 
     val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, device)
@@ -110,8 +174,7 @@ class PCADALImpl(val k: Int,
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
-      topK(i) = topK(i) / sum
-    new DenseVector(topK)
+      topK(i) enseVector(topK)
   }
 
   // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
@@ -127,9 +190,14 @@ class PCADALImpl(val k: Int,
     arrayDouble
   }
 
+
   // Single entry to call Correlation PCA DAL backend with parameter K
   @native private[mllib] def cPCATrainDAL(data: Long,
                                    executorNum: Int,
+<<<<<<< HEAD
+=======
+                                   executorCores: Int,
+>>>>>>> 2a044b47199b66dbe8843b22a74858428a07597d
                                    computeDeviceOrdinal: Int,
                                    rankId: Int,
                                    ipPort: String,

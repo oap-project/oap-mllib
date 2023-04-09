@@ -33,13 +33,22 @@ class CorrelationDALImpl(
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    val coalescedTables = OneDAL.rddVectorToMergedHomogenTables(data, executorNum, computeDevice)
+    val coalescedTables = if (useDevice == "GPU") {
+      OneDAL.rddVectorToMergedHomogenTables(data, executorNum,
+        computeDevice)
+    } else {
+      OneDAL.rddVectorToMergedTables(data, executorNum)
+    }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
 
       val tableArr = table.next()
-      OneCCL.initDpcpp()
+      if (useDevice == "GPU") {
+        OneCCL.initDpcpp()
+      } else {
+        OneCCL.init(executorNum, rank, kvsIPPort)
+      }
 
       val computeStartTime = System.nanoTime()
 
@@ -47,6 +56,7 @@ class CorrelationDALImpl(
       cCorrelationTrainDAL(
         tableArr,
         executorNum,
+        executorCores,
         computeDevice.ordinal(),
         rank,
         kvsIPPort,
@@ -61,9 +71,12 @@ class CorrelationDALImpl(
 
       val ret = if (rank == 0) {
         val convResultStartTime = System.nanoTime()
-        val correlationNumericTable = OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.correlationNumericTable),
-             computeDevice)
-
+        val correlationNumericTable = if (useDevice == "GPU") {
+          OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.correlationNumericTable),
+            computeDevice)
+        } else {
+          OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
+        }
         val convResultEndTime = System.nanoTime()
 
         val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
@@ -74,7 +87,9 @@ class CorrelationDALImpl(
       } else {
         Iterator.empty
       }
-
+      if (useDevice == "CPU") {
+        OneCCL.cleanup()
+      }
       ret
     }.collect()
 
@@ -88,7 +103,7 @@ class CorrelationDALImpl(
 
 
   @native private[mllib] def cCorrelationTrainDAL(data: Long,
-                                           executorNum: Int,
+                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
                                            rankId: Int,
                                            ipPort: String,

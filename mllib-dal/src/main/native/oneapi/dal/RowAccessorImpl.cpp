@@ -24,7 +24,6 @@
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
-#endif
 
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
@@ -57,14 +56,12 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
-#ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
          }
-#endif
          default: {
                return newDoubleArray;
          }
@@ -93,14 +90,12 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
-#ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
          }
-#endif
          default: {
                return newFloatArray;
          }
@@ -129,14 +124,12 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
                 row_values = acc.pull({cRowStartIndex, cRowEndIndex});
                 break;
          }
-#ifdef CPU_GPU_PROFILE
          case ComputeDevice::cpu:
          case ComputeDevice::gpu:{
                 auto queue = getQueue(device);
                 row_values = acc.pull(queue, {cRowStartIndex, cRowEndIndex});
                 break;
          }
-#endif
          default: {
                return newIntArray;
          }
@@ -145,3 +138,4 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
       env->SetIntArrayRegion(newIntArray, 0, row_values.get_count(), row_values.get_data());
       return newIntArray;
   }
+#endif
