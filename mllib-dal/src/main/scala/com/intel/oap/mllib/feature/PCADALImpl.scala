@@ -194,10 +194,7 @@ class PCADALImpl(val k: Int,
   // Single entry to call Correlation PCA DAL backend with parameter K
   @native private[mllib] def cPCATrainDAL(data: Long,
                                    executorNum: Int,
-<<<<<<< HEAD
-=======
                                    executorCores: Int,
->>>>>>> 2a044b47199b66dbe8843b22a74858428a07597d
                                    computeDeviceOrdinal: Int,
                                    rankId: Int,
                                    ipPort: String,
