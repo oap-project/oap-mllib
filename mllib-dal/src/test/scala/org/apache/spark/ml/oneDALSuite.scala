@@ -17,7 +17,6 @@
 package org.apache.spark.ml
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
-
 import com.intel.oap.mllib.OneDAL
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
 import com.intel.oneapi.dal.table.HomogenTable

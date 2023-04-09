@@ -25,10 +25,6 @@
 
 #ifdef CPU_GPU_PROFILE
 #include "GPU.h"
-<<<<<<< HEAD
-#endif
-=======
->>>>>>> 2a044b47199b66dbe8843b22a74858428a07597d
 
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL

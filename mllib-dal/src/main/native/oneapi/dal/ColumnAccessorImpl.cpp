@@ -56,7 +56,6 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cP
               col_values = acc.pull(cColumnIndex, {cRowStartIndex, cRowEndIndex});
               break;
        }
-
        case ComputeDevice::cpu:
        case ComputeDevice::gpu:{
               auto queue = getQueue(device);
