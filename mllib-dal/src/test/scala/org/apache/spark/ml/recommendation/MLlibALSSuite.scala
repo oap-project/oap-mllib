@@ -48,6 +48,12 @@ import org.apache.spark.util.Utils
 
 class MLlibALSSuite extends MLTest with DefaultReadWriteTest with Logging {
 
+  override def sparkConf: SparkConf = {
+    val conf = super.sparkConf
+    conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+  }
+
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     sc.setCheckpointDir(tempDir.getAbsolutePath)

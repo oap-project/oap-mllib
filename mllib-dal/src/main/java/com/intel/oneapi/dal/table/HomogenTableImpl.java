@@ -15,7 +15,6 @@ public class HomogenTableImpl implements HomogenTableIface {
     private long cObject;
     private TableMetadata metadata;
     private Common.ComputeDevice device;
-
     protected HomogenTableImpl(Common.ComputeDevice computeDevice) {
         super();
         this.device = computeDevice;
@@ -75,7 +74,6 @@ public class HomogenTableImpl implements HomogenTableIface {
         return cGetRowCount(this.cObject);
     }
 
-
     @Override
     public long getKind() {
         return this.cGetKind(this.cObject);
@@ -98,7 +96,6 @@ public class HomogenTableImpl implements HomogenTableIface {
     public long getPullRowsIface() {
         return 0;
     }
-
 
     @Override
     public ColumnAccessor getPullColumnIface() {

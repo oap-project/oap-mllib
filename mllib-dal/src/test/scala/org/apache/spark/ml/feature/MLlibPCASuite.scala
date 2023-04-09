@@ -17,6 +17,7 @@
 
 package org.apache.spark.ml.feature
 
+import org.apache.spark.{SparkConf, TestCommon}
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrices, Vector, Vectors}
 import org.apache.spark.ml.param.ParamsSuite
 import org.apache.spark.ml.util.TestingUtils._
@@ -28,6 +29,10 @@ import org.apache.spark.sql.Row
 class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
 
   import testImplicits._
+  override def sparkConf: SparkConf = {
+    val conf = super.sparkConf
+    conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+  }
 
   test("params") {
     ParamsSuite.checkParams(new PCA)

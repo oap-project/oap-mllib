@@ -18,17 +18,14 @@
 package org.apache.spark.ml.clustering
 
 import scala.util.Random
-
 import org.dmg.pmml.PMML
 import org.dmg.pmml.clustering.ClusteringModel
-
-import org.apache.spark.SparkException
+import org.apache.spark.{SparkConf, SparkException, TestCommon}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util.{DefaultReadWriteTest, MLTest, MLTestingUtils, PMMLReadWriteTest}
 import org.apache.spark.ml.util.TestingUtils._
-import org.apache.spark.mllib.clustering.{DistanceMeasure, KMeans => MLlibKMeans,
-  KMeansModel => MLlibKMeansModel}
+import org.apache.spark.mllib.clustering.{DistanceMeasure, KMeans => MLlibKMeans, KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vectors => MLlibVectors}
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
@@ -45,6 +42,11 @@ class MLlibKMeansSuite extends MLTest with DefaultReadWriteTest with PMMLReadWri
     super.beforeAll()
 
     dataset = KMeansSuite.generateKMeansData(spark, 50, 3, k)
+  }
+
+  override def sparkConf: SparkConf = {
+    val conf = super.sparkConf
+    conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
   }
 
   test("default parameters") {

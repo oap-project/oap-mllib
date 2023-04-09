@@ -30,16 +30,17 @@ $(info === Profile is $(PLATFORM_PROFILE) ===)
 $(info )
 
 CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
-                 -I$(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/ \
-                 -I$(I_MPI_ROOT)/include \
-                 -I$(DAALROOT)/include \
-                 -I$(CMPLR_ROOT)/linux/include \
-                 -I$(CMPLR_ROOT)/linux/include/sycl
+                 -I $(I_MPI_ROOT)/include \
+                 -I $(DAALROOT)/include \
+                 -I $(CMPLR_ROOT)/linux/include \
+                 -I $(CMPLR_ROOT)/linux/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON)
+  CFLAGS := $(CFLAGS_COMMON)  -I $(CCL_ROOT)/include/cpu/oneapi/
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON) -fsycl
+  CFLAGS := $(CFLAGS_COMMON) -fsycl \
+            -fsycl-device-code-split=per_kernel \
+            -I $(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/
 else
   $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
   exit 1
@@ -47,12 +48,20 @@ endif
 
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I $(CCL_ROOT)/include/cpu_gpu_dpcpp \
         -I $(DAALROOT)/include \
         -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
         -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
         -I ./javah \
         -I ./
+
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+  INCS := $(INCS)  -I $(CCL_ROOT)/include/cpu
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+  INCS := $(INCS) -I $(CCL_ROOT)/include/cpu_gpu_dpcpp
+else
+  $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
+  exit 1
+endif
 
 # Use static link if possible, TBB is only available as dynamic libs
 LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
@@ -73,13 +82,13 @@ endif
 
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
-  ./KMeansOneAPIImpl.cpp \
-  ./PCAOneAPIImpl.cpp \
+  ./KMeansImpl.cpp \
+  ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
   ./LinearRegressionDALImpl.cpp \
-  ./CorrelationOneAPIImpl.cpp \
-  ./SummarizerOneAPIImpl.cpp \
+  ./CorrelationImpl.cpp \
+  ./SummarizerImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
@@ -88,13 +97,13 @@ CPP_SRCS += \
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
-  ./KMeansOneAPIImpl.o \
-  ./PCAOneAPIImpl.o \
+  ./KMeansImpl.o \
+  ./PCAImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
   ./LinearRegressionDALImpl.o \
-  ./CorrelationOneAPIImpl.o \
-  ./SummarizerOneAPIImpl.o \
+  ./CorrelationImpl.o \
+  ./SummarizerImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \
