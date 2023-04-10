@@ -25,7 +25,7 @@ cd  $GITHUB_WORKSPACE/dev/tools/list-compute-devices/
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
-../dev/prepare-build-deps-gpu.sh
+../dev/prepare-build-deps.sh
 ./build.sh -p CPU_GPU_PROFILE -q
 
 ./test.sh -p CPU_GPU_PROFILE -q -d HOST

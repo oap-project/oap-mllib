@@ -24,5 +24,5 @@ cd $GITHUB_WORKSPACE/mllib-dal
 # Build test for GPU
 #
 cd $GITHUB_WORKSPACE/mllib-dal
-../dev/prepare-build-deps-gpu.sh
+../dev/prepare-build-deps.sh
 ./build.sh -p CPU_GPU_PROFILE -q
