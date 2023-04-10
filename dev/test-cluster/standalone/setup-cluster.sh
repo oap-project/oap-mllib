@@ -29,8 +29,6 @@ cd $SCRIPT_DIR
 
 HOST_IP=$(hostname -f)
 
-sed -i "s/localhost/$HOST_IP/g" core-site.xml
-
 cp ../log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-env.sh ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
