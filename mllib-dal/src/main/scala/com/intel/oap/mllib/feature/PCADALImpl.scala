@@ -178,9 +178,9 @@ class PCADALImpl(val k: Int,
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
   }
 
-  private[mllib] def getExplainedVarianceFromDAL(table_1xn: HomogenTable, k: Int,
-                                          device: Common.ComputeDevice): DenseVector = {
-    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, device)
+  private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
+    val dataNumCols = table_1xn.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, dataNumCols)
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)

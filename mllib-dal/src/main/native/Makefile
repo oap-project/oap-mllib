@@ -49,8 +49,6 @@ endif
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I $(DAALROOT)/include \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
         -I ./javah \
         -I ./
 
