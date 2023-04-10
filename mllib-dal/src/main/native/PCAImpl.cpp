@@ -24,6 +24,7 @@
 #endif
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
+#include "oneapi/dal/algo/covariance.hpp"
 #include "oneapi/dal/algo/pca.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #endif
@@ -190,19 +191,17 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cov_desc = covariance::descriptor{}.set_result_options(
-        dal::covariance::result_options::cov_matrix);
+        covariance::result_options::cov_matrix);
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
 
-    pca::train_input local_input{htable};
     auto t1 = std::chrono::high_resolution_clock::now();
-    const auto result = preview::compute(comm, cov_desc, local_input);
+    const auto result = preview::compute(comm, cov_desc, htable);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
