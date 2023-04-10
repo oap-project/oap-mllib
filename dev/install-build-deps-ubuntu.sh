@@ -8,10 +8,10 @@ if [ ! -d /opt/intel/oneapi ]; then
   | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
   echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
   sudo apt update
-  sudo apt-get install -y intel-oneapi-ccl-devel-2021.8.0 \
-                          intel-oneapi-tbb-common-devel-2021.8.0 intel-oneapi-tbb-devel-2021.8.0 \
-                          intel-oneapi-mpi-devel-2021.8.0 \
-                          intel-oneapi-dal-common-devel-2023.0.0 intel-oneapi-dal-devel-2023.0.0 \
+  sudo apt-get install -y intel-oneapi-ccl-2021.8.0 intel-oneapi-ccl-devel-2021.8.0  \
+                          intel-oneapi-tbb-2021.8.0 intel-oneapi-tbb-common-2021.8.0 intel-oneapi-tbb-common-devel-2021.8.0 intel-oneapi-tbb-devel-2021.8.0 \
+                          intel-oneapi-mpi-2021.8.0 intel-oneapi-mpi-devel-2021.8.0 \
+                          intel-oneapi-dal-2023.0.0 intel-oneapi-dal-common-2023.0.0 intel-oneapi-dal-common-devel-2023.0.0 intel-oneapi-dal-devel-2023.0.0 \
                           intel-oneapi-compiler-dpcpp-cpp-2023.0.0 intel-oneapi-compiler-dpcpp-cpp-common-2023.0.0 intel-oneapi-compiler-dpcpp-cpp-runtime-2023.0.0 intel-oneapi-dpcpp-cpp-2023.0.0
 else
   echo "oneAPI components already installed!"
