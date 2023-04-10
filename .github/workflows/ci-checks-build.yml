@@ -55,7 +55,7 @@ jobs:
         with:
           java-version: 1.8
       - name: Restore cached dependencies
-        uses: actions/cache/@v3
+        uses: actions/cache@v3
         with:
           path: |
             /var/cache/apt/archives/*.deb

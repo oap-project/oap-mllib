@@ -5,7 +5,7 @@ if [ ! -f /opt/intel/oneapi ]; then
   cd /tmp
   tee > /tmp/oneAPI.repo << EOF
 [oneAPI]
-name=Intel® oneAPI repository
+name=Intel(R) oneAPI repository
 baseurl=https://yum.repos.intel.com/oneapi
 enabled=1
 gpgcheck=1
