@@ -21,8 +21,10 @@ package org.apache.spark.examples.ml
 // $example on$
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.evaluation.RegressionEvaluator
-import org.apache.spark.ml.feature.VectorIndexer
 import org.apache.spark.ml.regression.{RandomForestRegressionModel, RandomForestRegressor}
+import org.apache.spark.ml.feature.{LabeledPoint, VectorIndexer}
+import org.apache.spark.sql.Row
+import org.apache.spark.ml.linalg.Vector
 // $example off$
 import org.apache.spark.sql.SparkSession
 
