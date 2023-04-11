@@ -7,7 +7,11 @@ source ../../../conf/env.sh
 DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
+<<<<<<< HEAD:examples/kmeans/run.sh
 APP_CLASS=org.apache.spark.examples.ml.KMeansExample
+=======
+APP_CLASS=org.apache.spark.examples.ml.RandomForestRegressorExample
+>>>>>>> rename catalog for  RF example:examples/random-forest/regression/run-gpu-standalone.sh
 
 DEVICE=GPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
