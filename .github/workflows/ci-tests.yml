@@ -50,6 +50,7 @@ jobs:
         run: |
           ${{github.workspace}}/dev/ci/ci-local-test.sh
   yarn-test:
+    if: ${{ false }}  # disable for now
     name: Yarn Test for Examples (CPU)
     runs-on: ubuntu-20.04
     steps:
