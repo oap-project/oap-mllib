@@ -35,9 +35,13 @@ object RandomForestRegressorExample {
         .appName("RandomForestRegressorExample")
         .getOrCreate()
 
+        if (args.length != 1) {
+                println("Require data file path as input parameter")
+                sys.exit(1)
+        }
         // $example on$
         // Load and parse the data file, converting it to a DataFrame.
-        val data = spark.read.format("libsvm").load("../data/sample_rf_csv_data.txt").toDF("label","features")
+        val data = spark.read.format("libsvm").load(args[0]).toDF("label","features")
         data.show(20,false)
         data.select("label","features").printSchema()
         val featuresRDD=data
