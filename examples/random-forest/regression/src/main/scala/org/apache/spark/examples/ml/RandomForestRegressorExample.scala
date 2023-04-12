@@ -41,7 +41,7 @@ object RandomForestRegressorExample {
         }
         // $example on$
         // Load and parse the data file, converting it to a DataFrame.
-        val data = spark.read.format("libsvm").load(args[0]).toDF("label","features")
+        val data = spark.read.format("libsvm").load(args(0)).toDF("label","features")
         data.show(20,false)
         data.select("label","features").printSchema()
         val featuresRDD=data
