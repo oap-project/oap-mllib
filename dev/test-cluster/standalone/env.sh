@@ -2,26 +2,29 @@
 
 # ============== Minimum Settings ============= #
 
+HOST_NAME=$(hostname -s)
 # Set Spark master
-SPARK_MASTER=yarn
-# Set Hadoop home path
-export HADOOP_HOME=$HADOOP_HOME
+SPARK_MASTER=spark://$HOST_NAME:7077
+
 # Set Spark home path
 export SPARK_HOME=$SPARK_HOME
 # Set HDFS Root, should be hdfs://xxx or file://xxx
 
-HOST_NAME=$(hostname -f)
-export HDFS_ROOT=hdfs://$HOST_NAME:8020
 # Set OAP MLlib source code root directory
-export OAP_MLLIB_ROOT=$GITHUB_WORKSPACE
+SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
+export OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
+# export OAP_MLLIB_ROOT=/path/to/oap-mllib/home
+
+# Set HDFS Root, should be hdfs://xxx or file://xxx
+export HDFS_ROOT=file://$OAP_MLLIB_ROOT/examples
+# Set OAP MLlib source code root directory
+# export OAP_MLLIB_ROOT=$GITHUB_WORKSPACE
 
 # ============================================= #
 
 # Import RELEASE envs
 source $OAP_MLLIB_ROOT/RELEASE
 
-# Set HADOOP_CONF_DIR for Spark
-export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 
 # Set JAR name & path
 OAP_MLLIB_JAR_NAME=oap-mllib-$OAP_MLLIB_VERSION.jar
@@ -45,7 +48,7 @@ SPARK_TOTAL_CORES=$((SPARK_NUM_EXECUTORS * SPARK_EXECUTOR_CORES))
 SPARK_DEFAULT_PARALLELISM=$((SPARK_TOTAL_CORES * 2))
 
 # Checks
-for dir in $SPARK_HOME $HADOOP_HOME $OAP_MLLIB_JAR
+for dir in $SPARK_HOME $OAP_MLLIB_JAR
 do
     if [[ ! -e $dir ]]; then
         echo $dir does not exist!
