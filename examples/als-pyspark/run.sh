@@ -6,6 +6,7 @@ source ../../conf/env.sh
 # The data file should be copied to $HDFS_ROOT before running examples
 DATA_FILE=$HDFS_ROOT/data/onedal_als_csr_ratings.txt
 
+DEVICE=CPU
 APP_PY=als-pyspark.py
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
@@ -17,6 +18,7 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.serializer=org.apache.spark.serializer.KryoSerializer" \
     --conf "spark.default.parallelism=$SPARK_DEFAULT_PARALLELISM" \
     --conf "spark.sql.shuffle.partitions=$SPARK_DEFAULT_PARALLELISM" \
+    --conf "spark.oap.mllib.device=$DEVICE" \
     --conf "spark.driver.extraClassPath=$SPARK_DRIVER_CLASSPATH" \
     --conf "spark.executor.extraClassPath=$SPARK_EXECUTOR_CLASSPATH" \
     --conf "spark.shuffle.reduceLocality.enabled=false" \
