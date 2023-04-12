@@ -42,5 +42,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --jars $OAP_MLLIB_JAR \
     --class $APP_CLASS \
     $APP_JAR $DATA_FILE \
-    2>&1 | tee KMeans-$(date +%m%d_%H_%M_%S).log
+    2>&1 | tee RandomForestRegressor-$(date +%m%d_%H_%M_%S).log
 
