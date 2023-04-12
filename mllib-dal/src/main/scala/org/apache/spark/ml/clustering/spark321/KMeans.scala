@@ -151,8 +151,9 @@ class KMeans @Since("1.5.0") (
       case (point: Vector, weight: Double) => point
     }
 
-    // Cache for input data
-    inputData.persist(StorageLevel.MEMORY_AND_DISK)
+    if (handlePersistence) {
+      inputData.persist(StorageLevel.MEMORY_AND_DISK)
+    }
 
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
       DistanceMeasure.EUCLIDEAN, centers, executor_num, executor_cores)

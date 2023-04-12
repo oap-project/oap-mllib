@@ -49,8 +49,6 @@ endif
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I $(DAALROOT)/include \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
         -I ./javah \
         -I ./
 
@@ -64,15 +62,18 @@ else
 endif
 
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl \
-        -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L$(DAALROOT)/lib/intel64 -l:libonedal_core.a -l:libonedal_thread.a -l:libonedal_dpc.a \
-        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
-        -L$(I_MPI_ROOT)
+LIBS_COMMON :=-L $(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
+        -L $(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc \
+        -L $(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
+        -L $(I_MPI_ROOT)
 
-ONEDAL_LIBS := -lonedal_dpc \
-               -lonedal_core \
-	       -lonedal_thread
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+      LIBS_COMMON := $(LIBS_COMMON) \
+                     -L $(CCL_ROOT)/lib/cpu -lccl
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+      LIBS_COMMON := $(LIBS_COMMON) \
+                     -L $(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl
+endif
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
