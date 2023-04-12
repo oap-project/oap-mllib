@@ -100,16 +100,16 @@ class KMeans @Since("1.5.0") (
   private def trainWithDAL(instances: RDD[(Vector, Double)],
                            handlePersistence: Boolean): KMeansModel = instrumented { instr =>
 
-    if (handlePersistence) {
-      instances.persist(StorageLevel.MEMORY_AND_DISK)
-    }
-
     val sc = instances.sparkContext
 
     val executor_num = Utils.sparkExecutorNum(sc)
     val executor_cores = Utils.sparkExecutorCores()
 
     logInfo(s"KMeansDAL fit using $executor_num Executors")
+
+    if (handlePersistence) {
+      instances.persist(StorageLevel.MEMORY_AND_DISK)
+    }
 
     val initStartTime = System.nanoTime()
 

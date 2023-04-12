@@ -674,20 +674,19 @@ object OneDAL {
     val coalescedRdd = data
       .coalesce(executorNum,
         partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-      .setName("Repartitioned for conversion")
+      .setName("coalesce data to executor number")
       .cache()
 
+    // convert RDD to HomogenTable
+    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+      val table = makeHomogenTable(it.toArray, device)
+      Iterator(table.getcObejct())
+    }.setName("HomogenTable").cache()
+    coalescedTables.count()
     // Unpersist instances RDD
     if (data.getStorageLevel != StorageLevel.NONE) {
       data.unpersist()
     }
-
-    // convert RDD to HomogenTable
-    println(s"partitionsToHomogenTables Partition Size: ${coalescedRdd.getNumPartitions} ")
-    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-      val table = makeHomogenTable(it.toArray, device)
-      Iterator(table.getcObejct())
-    }.cache()
     coalescedTables
   }
 
