@@ -29,8 +29,7 @@ fi
 check_cpu_libs() {
   # Check lib dependencies for building
   RESOURCE_PATH=src/main/resources/lib
-  LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
-    libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12)
+  LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
   for lib in ${LIBS[@]}
   do
     if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
@@ -38,21 +37,12 @@ check_cpu_libs() {
       exit 1
   fi
   done
-
-  if [[ -f ./$RESOURCE_PATH/libsycl.so.5 ]]; then
-    echo
-    echo GPU libs found! Please re-run \"../dev/prepare-build-deps.sh\"!
-    echo
-    exit 1
-  fi
 }
 
 check_gpu_libs() {
   # Check lib dependencies for building
   RESOURCE_PATH=src/main/resources/lib
-  LIBS=(libccl.so.1 libfabric.so libfabric.so.1 libJavaAPI.so libmpi.so.12 \
-    libsockets-fi.so libtbbmalloc.so.2 libtbb.so.12 libintlc.so.5 libsvml.so libirng.so libimf.so \
-    libOpenCL.so.1 libsycl.so.5)
+  LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
   for lib in ${LIBS[@]}
   do
     if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
