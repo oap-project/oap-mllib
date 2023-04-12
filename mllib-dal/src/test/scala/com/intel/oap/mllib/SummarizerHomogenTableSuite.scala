@@ -29,7 +29,7 @@ class SummarizerHomogenTableSuite extends FunctionsSuite with Logging{
         val expectMin = Array(-9.948613,-9.737347,-9.619284,-9.743521,-9.990568,-9.997300,-9.997706,-9.897363,-9.794658,-9.861839)
         val expectMax = Array(9.900860,9.869278,9.997498,9.868528,9.404993,9.768626,9.910092,9.896053,9.647098,9.971762)
 
-        val sourceData = TestCommon.readCSV("src/test/scala/data/covcormoments_dense.csv")
+        val sourceData = TestCommon.readCSV("src/test/resources/data/covcormoments_dense.csv")
 
         val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
         val summarizerDAL = new SummarizerDALImpl(1, 1)
