@@ -20,10 +20,10 @@ cd $GITHUB_WORKSPACE/mllib-dal
 ./build.sh -p CPU_ONLY_PROFILE -q
 
 # Setup cluster
-source $GITHUB_WORKSPACE/dev/test-cluster/setup-cluster.sh
+source $GITHUB_WORKSPACE/dev/test-cluster/yarn/setup-cluster.sh
 
 # Setup OAP MLlib envs
-cp $GITHUB_WORKSPACE/dev/test-cluster/env.sh $GITHUB_WORKSPACE/conf
+cp $GITHUB_WORKSPACE/dev/test-cluster/yarn/env.sh $GITHUB_WORKSPACE/conf
 cd $GITHUB_WORKSPACE/examples
 
 # Copy examples data to HDFS
