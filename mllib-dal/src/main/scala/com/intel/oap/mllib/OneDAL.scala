@@ -674,7 +674,7 @@ object OneDAL {
     val coalescedRdd = data
       .coalesce(executorNum,
         partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-      .setName("coalesce data to executor number")
+      .setName("coalescedRdd")
       .cache()
 
     // convert RDD to HomogenTable
