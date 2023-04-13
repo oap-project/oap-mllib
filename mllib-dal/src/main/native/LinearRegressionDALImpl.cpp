@@ -213,58 +213,8 @@ static NumericTablePtr ridge_regression_compute(
     return resultTable;
 }
 
-JNIEXPORT jlong JNICALL
-Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabLabel,
-    jdouble regParam, jdouble elasticNetParam, jint executor_num,
-    jint executor_cores, jobject resultObj) {
-
-    ccl::communicator &comm = getComm();
-    size_t rankId = comm.rank();
-
-    NumericTablePtr pLabel = *((NumericTablePtr *)pNumTabLabel);
-    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-
-    // Set number of threads for oneDAL to use for each rank
-    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
-
-    int nThreadsNew =
-        services::Environment::getInstance()->getNumberOfThreads();
-    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-         << endl;
-
-    NumericTablePtr resultTable;
-
-    if (regParam == 0) {
-        resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
-                                                executor_num);
-    } else {
-        resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
-                                               regParam, executor_num);
-    }
-
-    if (rankId == ccl_root) {
-        // Get the class of the result object
-        jclass clazz = env->GetObjectClass(resultObj);
-
-        // Get Field references
-        jfieldID coeffNumericTableField =
-            env->GetFieldID(clazz, "coeffNumericTable", "J");
-
-        NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
-        env->SetLongField(resultObj, coeffNumericTableField,
-                          (jlong)coeffvectors);
-
-        // intercept is already in first column of coeffvectors
-        return (jlong)coeffvectors;
-    } else
-        return (jlong)0;
-}
-
-#endif
-
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
+static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLabel,
                                    jint executorNum, const ccl::string &ipPort,
                                    jint computeDeviceOrdinal,
                                    jobject resultObj) {
@@ -275,13 +225,14 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     const bool isRoot = (rankId == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
-    homogen_table htable =
-        *reinterpret_cast<const homogen_table *>(pNumTabData);
+    homogen_table xtrain =
+        *reinterpret_cast<const homogen_table *>(pData);
+    homogen_table ytrain =
+        *reinterpret_cast<const homogen_table *>(pLabel);
+
+    linear_regression::train_input local_input{xtrain, ytrain};
 
     const auto linear_regression_desc = linear_regression::descriptor<>();
-	//todo
-	/*
-    linear_regression::train_input local_input{htable};
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
@@ -292,31 +243,110 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         jclass clazz = env->GetObjectClass(resultObj);
 
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
-            result_train.get_model());
+            result_train.get_model().get_betas());
         saveHomogenTablePtrToVector(result_matrix);
         return (jlong)result_matrix.get();
     } else {
         return (jlong)0;
     }
-	*/
-	return (jlong)0;
 }
 #endif
 
-
-#ifdef CPU_GPU_PROFILE
 JNIEXPORT jlong JNICALL
-Java_com_intel_oap_mllib_regression_KMeansDALImpl_cLROneapiCompute(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
-    jlong ret = 0L;
+Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
+    JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabLabel,
+    jdouble regParam, jdouble elasticNetParam, jint executor_num,
+    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jobject resultObj) {
+
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
-    ret = doLROneAPICompute(
-        env, rankId, pNumTabData, executorNum, ipPortStr,
-		computeDeviceOrdinal, resultObj);
+    jlong ret = 0L;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+#ifdef CPU_ONLY_PROFILE
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
+		ccl::communicator &comm = getComm();
+		size_t rankId = comm.rank();
+
+		NumericTablePtr pLabel = *((NumericTablePtr *)pNumTabLabel);
+		NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+
+		// Set number of threads for oneDAL to use for each rank
+		services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+
+		int nThreadsNew =
+			services::Environment::getInstance()->getNumberOfThreads();
+		cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
+			 << endl;
+
+		NumericTablePtr resultTable;
+
+		if (regParam == 0) {
+			resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
+													executor_num);
+		} else {
+			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
+												   regParam, executor_num);
+		}
+
+		if (rankId == ccl_root) {
+			// Get the class of the result object
+			jclass clazz = env->GetObjectClass(resultObj);
+
+			// Get Field references
+			jfieldID coeffNumericTableField =
+				env->GetFieldID(clazz, "coeffNumericTable", "J");
+
+			NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
+			env->SetLongField(resultObj, coeffNumericTableField,
+							  (jlong)coeffvectors);
+
+			// intercept is already in first column of coeffvectors
+			return (jlong)coeffvectors;
+		} else
+			return (jlong)0;
+
+    }
+#else
+    case ComputeDevice::gpu: {
+		if (regParam == 0) {
+			jlong pDatagpu = (jlong) &pData;
+			jlong pLabelgpu = (jlong) &pLabel;
+        	ret = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
+                                    executorNum, ipPortStr, device, resultObj);
+		} else {
+			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
+												   regParam, executor_num);
+			if (rankId == ccl_root) {
+				// Get the class of the result object
+				jclass clazz = env->GetObjectClass(resultObj);
+
+				// Get Field references
+				jfieldID coeffNumericTableField =
+					env->GetFieldID(clazz, "coeffNumericTable", "J");
+
+				NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
+				env->SetLongField(resultObj, coeffNumericTableField,
+								  (jlong)coeffvectors);
+
+				// intercept is already in first column of coeffvectors
+				return (jlong)coeffvectors;
+			} else
+				return (jlong)0;
+		}
+    }
+#endif
+    }
+
     env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return ret;
 }
 
 #endif
+

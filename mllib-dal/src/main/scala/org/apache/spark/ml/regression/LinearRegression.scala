@@ -233,12 +233,6 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
     shim.train(dataset)
   }
 
-  override def fit(dataset: Dataset[_]): LinearRegressionModel = {
-    val shim = LinearRegressionShim.create(uid)
-    shim.initShim(extractParamMap())
-    shim.fit(dataset)
-  }
-
   @Since("1.4.0")
   override def copy(extra: ParamMap): LinearRegression = defaultCopy(extra)
 }

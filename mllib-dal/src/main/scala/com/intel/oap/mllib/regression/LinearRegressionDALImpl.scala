@@ -28,74 +28,6 @@ import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors
 import org.apache.spark.sql.Dataset
 import org.apache.spark.rdd.RDD
 
-class LRDALImpl(
-  val executorNum: Int,
-  val executorCores: Int ) extends Serializable with Logging {
-
-  def train(labeledPoints: Dataset[_],
-              labelCol: String,
-              featuresCol: String): MLlibLinearRegressionModel = {
-
-    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-      OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
-    } else {
-      OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
-    }
-
-    val sparkContext = labeledPointsTables.sparkContext
-    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
-    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-
-    val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
-    val results = labeledPointsTables.mapPartitionsWithIndex { case (rank: Int, tables: Iterator[(Long, Long)]) =>
-      val tableArr = tables.next()
-      val (featureTabAddr, lableTabAddr) = tables.next()
-      //create an result and send to implement
-      val result = new LiRResult()
-      OneCCL.initDpcpp()
-
-      val coeffNumericTable = cLinearRegressionGPUTrainDAL(
-        featureTabAddr,
-        lableTabAddr,
-        executorNum,
-        computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
-        result
-      )
-      val ret = if (rank == 0) {
-          val coefficientArray = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(coeffNumericTable),
-            computeDevice)
-          Iterator(coefficientArray)
-        } else {
-          Iterator.empty
-        }
-      ret
-    }.collect()
-
-    // Make sure there is only one result from rank 0
-    assert(results.length == 1)
-    val coefficientVector = results(0)
-
-    val coefficientResult = coefficientVector.map(OldVectors.fromML(_)).slice(1, coefficientVector.size)
-    val interceptResult = coefficientVector.map(OldVectors.fromML(_))
-    val parentModel = new MLlibLinearRegressionModel(
-      coefficientResult(0),
-      interceptResult(0)(0))
-
-    parentModel
-  }
-
-  @native private[mllib] def cLinearRegressionGPUTrainDAL(data: Long,
-                                            label: Long,
-                                            executorNum: Int,
-                                            computeDeviceOrdinal: Int,
-                                            rankId: Int,
-                                            ipPort: String,
-                                            result: LiRResult): Long
-
-  }
-
 
 /**
  * Model fitted by [[LinearRegressionDALImpl]].
@@ -137,19 +69,32 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
               labelCol: String,
               featuresCol: String): LinearRegressionDALModel = {
 
+      val sparkContext = labeledPoints.sparkSession.sparkContext
+      val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+      val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+
       val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
-      val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-        OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+      val labeledPointsTables = if (useDevice == "GPU") {
+        OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
       } else {
-        OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+          if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+          OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+        } else {
+          OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+        }
       }
+
+
 
       val results = labeledPointsTables.mapPartitionsWithIndex {
         case (rank: Int, tables: Iterator[(Long, Long)]) =>
           val (featureTabAddr, lableTabAddr) = tables.next()
-
-          OneCCL.init(executorNum, rank, kvsIPPort)
+          if (useDevice == "GPU") {
+            OneCCL.initDpcpp()
+          } else {
+            OneCCL.init(executorNum, rank, kvsIPPort)
+          }
 
           val result = new LiRResult
           cLinearRegressionTrainDAL(
@@ -159,12 +104,19 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             elasticNetParam,
             executorNum,
             executorCores,
+            computeDevice.ordinal(),
+            rank,
+            kvsIPPort,
             result
           )
 
-          val ret = if (OneCCL.isRoot()) {
-            val coefficientArray = OneDAL.numericTableToVectors(
-              OneDAL.makeNumericTable(result.coeffNumericTable))
+          val ret = if (rank == 0) {
+            val coefficientArray = if (useDevice == "GPU") {
+                OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(result.coeffNumericTable),
+                  computeDevice)
+              } else {
+                OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.coeffNumericTable))
+              }
             Iterator(coefficientArray(0))
           } else {
             Iterator.empty
@@ -191,8 +143,11 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                     label: Long,
                                     regParam: Double,
                                     elasticNetParam: Double,
-                                    executor_num: Int,
-                                    executor_cores: Int,
+                                    executorNum: Int,
+                                    executorCores: Int,
+                                    computeDeviceOrdinal: Int,
+                                    rankId: Int,
+                                    ipPort: String,
                                     result: LiRResult): Long
 
   }
