@@ -114,21 +114,21 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_ColumnAccessor_cPull
     oneapi::dal::array<int> col_values;
     jintArray newIntArray;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-switch(device) {
-     case ComputeDevice::host:{
-            col_values = acc.pull(cColumnIndex, {cRowStartIndex, cRowEndIndex});
-            break;
-     }
-     case ComputeDevice::cpu:
-     case ComputeDevice::gpu:{
-            auto queue = getQueue(device);
-            col_values = acc.pull(queue, cColumnIndex, {cRowStartIndex, cRowEndIndex});
-            break;
-     }
-     default: {
-           return newIntArray;
-     }
-   }
+    switch(device) {
+         case ComputeDevice::host:{
+                col_values = acc.pull(cColumnIndex, {cRowStartIndex, cRowEndIndex});
+                break;
+         }
+         case ComputeDevice::cpu:
+         case ComputeDevice::gpu:{
+                auto queue = getQueue(device);
+                col_values = acc.pull(queue, cColumnIndex, {cRowStartIndex, cRowEndIndex});
+                break;
+         }
+         default: {
+               return newIntArray;
+         }
+       }
     newIntArray = env->NewIntArray(col_values.get_count());
     env->SetIntArrayRegion(newIntArray, 0, col_values.get_count(), col_values.get_data());
     return newIntArray;
