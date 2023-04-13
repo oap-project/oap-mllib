@@ -681,7 +681,7 @@ object OneDAL {
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
       val table = makeHomogenTable(it.toArray, device)
       Iterator(table.getcObejct())
-    }.setName("HomogenTable").cache()
+    }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD
     if (data.getStorageLevel != StorageLevel.NONE) {
