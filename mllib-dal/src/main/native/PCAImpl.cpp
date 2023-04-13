@@ -205,8 +205,8 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance step took " << duration / 1000 << " secs"
-              << std::endl;
+    std::cout << "PCA (native): Covariance step took " << duration / 1000
+              << " secs" << std::endl;
     if (isRoot) {
         using float_t = double;
         using method_t = pca::method::precomputed;
@@ -221,9 +221,8 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native): rankid " << rankId
-                  << "; Eigen step took " << duration / 1000
-                  << " secs in end. " << std::endl;
+        std::cout << "PCA (native): rankid " << rankId << "; Eigen step took "
+                  << duration / 1000 << " secs in end. " << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
