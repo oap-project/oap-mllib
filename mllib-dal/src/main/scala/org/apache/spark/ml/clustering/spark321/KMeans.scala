@@ -58,8 +58,6 @@ class KMeans @Since("1.5.0") (
 
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
-    System.exit(0)
-
     instr.logParams(this, featuresCol, predictionCol, k, initMode, initSteps, distanceMeasure,
       maxIter, seed, tol, weightCol)
 

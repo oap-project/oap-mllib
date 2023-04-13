@@ -21,7 +21,6 @@ package org.apache.spark.examples.ml
 
 // $example on$
 import org.apache.spark.ml.clustering.KMeans
-import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.ml.evaluation.ClusteringEvaluator
 // $example off$
 import org.apache.spark.sql.SparkSession
@@ -49,27 +48,21 @@ object KMeansExample {
     dataset.cache()
 
     // Trains a k-means model.
-    println("seem good0")
     val kmeans = new KMeans().setK(2).setSeed(1L).setInitMode("random").setMaxIter(5)
-    val lr = new LinearRegression().setMaxIter(10).setRegParam(0.3).setElasticNetParam(0.8)
-    println("seem good1")
-    val lrModel = lr.fit(dataset)
-    println("seem good2")
     val model = kmeans.fit(dataset)
-    println("seem good3")
 
     // Make predictions
-    //val predictions = model.transform(dataset)
+    val predictions = model.transform(dataset)
 
     // Evaluate clustering by computing Silhouette score
-    //val evaluator = new ClusteringEvaluator()
+    val evaluator = new ClusteringEvaluator()
 
-    //val silhouette = evaluator.evaluate(predictions)
-    println(s"Silhouette with squared euclidean distance = ")
+    val silhouette = evaluator.evaluate(predictions)
+    println(s"Silhouette with squared euclidean distance = $silhouette")
 
     // Shows the result.
     println("Cluster Centers: ")
-    //model.clusterCenters.foreach(println)
+    model.clusterCenters.foreach(println)
     // $example off$
 
     spark.stop()
