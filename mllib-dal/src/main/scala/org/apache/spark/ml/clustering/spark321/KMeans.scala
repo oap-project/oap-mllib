@@ -107,6 +107,10 @@ class KMeans @Since("1.5.0") (
 
     logInfo(s"KMeansDAL fit using $executor_num Executors")
 
+    if (handlePersistence) {
+      instances.persist(StorageLevel.MEMORY_AND_DISK)
+    }
+
     val initStartTime = System.nanoTime()
 
     val distanceMeasureInstance = DistanceMeasure.decodeFromString($(distanceMeasure))
@@ -143,12 +147,12 @@ class KMeans @Since("1.5.0") (
     val strInitMode = $(initMode)
     logInfo(f"Initialization with $strInitMode took $initTimeInSeconds%.3f seconds.")
 
-    if (handlePersistence) {
-      instances.persist(StorageLevel.MEMORY_AND_DISK)
-    }
-
     val inputData = instances.map {
       case (point: Vector, weight: Double) => point
+    }
+
+    if (handlePersistence) {
+      inputData.persist(StorageLevel.MEMORY_AND_DISK)
     }
 
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
