@@ -205,7 +205,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native): cov step took " << duration / 1000 << " secs"
+    std::cout << "PCA (native): Covariance step took " << duration / 1000 << " secs"
               << std::endl;
     if (isRoot) {
         using float_t = double;
