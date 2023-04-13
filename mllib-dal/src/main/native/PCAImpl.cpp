@@ -222,7 +222,7 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         std::cout << "PCA (native): rankid " << rankId
-                  << "; precomputed step took " << duration / 1000
+                  << "; Eigen step took " << duration / 1000
                   << " secs in end. " << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
