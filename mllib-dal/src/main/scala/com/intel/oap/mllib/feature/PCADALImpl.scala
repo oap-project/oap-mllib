@@ -124,8 +124,8 @@ class PCADALImpl(val k: Int,
   }
 
   private[mllib] def getPrincipleComponentsFromOneAPI(table: HomogenTable,
-                                            k: Int,
-                                            device: Common.ComputeDevice): DenseMatrix = {
+                                                      k: Int,
+                                                      device: Common.ComputeDevice): DenseMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
     require(k <= numRows, "k should be less or equal to row number")
