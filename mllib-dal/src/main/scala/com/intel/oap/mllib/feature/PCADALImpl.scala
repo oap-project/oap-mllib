@@ -170,7 +170,7 @@ class PCADALImpl(val k: Int,
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
   }
 
-  private[mllib] def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
+  private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
     val dataNumCols = table_1xn.getNumberOfColumns.toInt
     val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, dataNumCols)
     val sum = arrayDouble.sum
@@ -182,7 +182,7 @@ class PCADALImpl(val k: Int,
 
   // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
   // so use table.getBlockOfRows instead of it.
-  private[mllib]  def getDoubleBufferDataFromDAL(table: NumericTable,
+  private def getDoubleBufferDataFromDAL(table: NumericTable,
                                          numRows: Int,
                                          numCols: Int): Array[Double] = {
     var dataDouble: DoubleBuffer = null

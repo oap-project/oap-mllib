@@ -49,8 +49,6 @@ endif
 INCS := -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I $(DAALROOT)/include \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7 \
-        -I /opt/rh/devtoolset-7/root/usr/include/c++/7/x86_64-redhat-linux \
         -I ./javah \
         -I ./
 
@@ -78,9 +76,9 @@ else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
 endif
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  LIBS := $(LIBS_COMMON)
+  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-  LIBS := $(LIBS_COMMON) -l:libonedal_sycl.a
+  LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS) -l:libonedal_sycl.a
 endif
 
 CPP_SRCS += \
