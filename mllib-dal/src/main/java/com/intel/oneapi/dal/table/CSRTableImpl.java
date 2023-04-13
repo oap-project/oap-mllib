@@ -110,8 +110,8 @@ public class CSRTableImpl implements CSRTableIface {
     }
 
     @Override
-    public RowAccessor getPullRowsIface() {
-        return null;
+    public long getPullRowsIface() {
+        return 0;
     }
 
     @Override
@@ -120,10 +120,8 @@ public class CSRTableImpl implements CSRTableIface {
     }
 
     @Override
-    public CSRAccessor getPullCSRBlockIface() {
-        CSRAccessor accessor = new CSRAccessor(
-                cGetPullColumnIface(this.cObject), this.device);
-        return accessor;
+    public long getPullCSRBlockIface() {
+        return 0;
     }
 
     @Override
