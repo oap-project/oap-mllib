@@ -153,23 +153,19 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
 #endif
 
 #ifdef CPU_GPU_PROFILE
-static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
-                                       jlong pNumTabData, jint executorNum,
-                                       const ccl::string &ipPort,
-                                       ComputeDevice &device,
+static void doCorrelationOneAPICompute(JNIEnv *env,
+                                       jlong pNumTabData,
+                                       preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
                                        jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
+    std::cout << "oneDAL (native): GPU compute start , rankid " << comm.get_rank()
               << std::endl;
-    const bool isRoot = (rankId == ccl_root);
+    const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cor_desc = covariance::descriptor{}.set_result_options(
         covariance::result_options::cor_matrix |
         covariance::result_options::means);
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -233,8 +229,24 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     }
 #else
     case ComputeDevice::gpu: {
-        doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum,
-                                   ipPortStr, device, resultObj);
+      ccl::communicator &cclComm = getComm();
+      int rankId = cclComm.rank();
+      int nGpu = env->GetArrayLength(gpuIdxArray);
+      std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
+           << std::endl;
+
+      jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+      int size = cclComm.size();
+      ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+      auto queue =
+          getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+      ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
+      auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+              queue, size, rankId, kvs);
+      doCorrelationOneAPICompute(env, pNumTabData, comm, resultObj);
     }
 #endif
     }

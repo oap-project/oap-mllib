@@ -58,11 +58,10 @@ class KMeansDALImpl(var nClusters: Int,
       }
 
       val tableArr = table.next()
+      OneCCL.init(executorNum, rank, kvsIPPort)
       val initCentroids = if (useDevice == "GPU") {
-        OneCCL.initDpcpp()
         OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
       } else {
-        OneCCL.init(executorNum, rank, kvsIPPort)
         OneDAL.makeNumericTable(centers).getCNumericTable
       }
       cCentroids = cKMeansOneapiComputeWithInitCenters(
@@ -127,7 +126,6 @@ class KMeansDALImpl(var nClusters: Int,
                                                        executorNum: Int,
                                                        executorCores: Int,
                                                        computeDeviceOrdinal: Int,
-                                                       rankId: Int,
-                                                       ipPort: String,
+                                                       gpuIndices: Array[Int],
                                                        result: KMeansResult): Long
 }

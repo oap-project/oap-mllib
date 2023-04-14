@@ -42,7 +42,6 @@ class CorrelationDALImpl(
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-
       val tableArr = table.next()
       if (useDevice == "GPU") {
         OneCCL.initDpcpp()
