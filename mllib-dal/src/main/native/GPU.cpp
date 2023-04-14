@@ -106,7 +106,7 @@ sycl::queue getQueue(const ComputeDevice device) {
 
     switch (device) {
     case ComputeDevice::host:
-    case ComputeDevice::cpu: {
+    case ComputeDevice::cpu: {:
         std::cout << "Not implemented for HOST/CPU device, Please run on "
                      "GPU device."
                   << std::endl;

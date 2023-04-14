@@ -304,6 +304,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
         auto comm =
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
+
         doSummarizerOneAPICompute(env, pNumTabData, comm, resultObj);
     }
 #endif
