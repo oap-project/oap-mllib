@@ -57,6 +57,7 @@ class PCA @Since("1.5.0") (
     }
     if (handlePersistence) {
       inputVectors.persist(StorageLevel.MEMORY_AND_DISK)
+      inputVectors.count()
     }
     val numFeatures = inputVectors.first().size
     require($(k) <= numFeatures,
