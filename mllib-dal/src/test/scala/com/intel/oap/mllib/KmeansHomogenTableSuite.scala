@@ -50,7 +50,7 @@ class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
         val gpuIndices = Array(0)
         val result = new KMeansResult();
         val centroids = kmeansDAL.cKMeansOneapiComputeWithInitCenters(dataTable.getcObejct(), centroidsTable.getcObejct(),10, 0.001,
-            5, 1, 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000" , result);
+            5, 1, 1, TestCommon.getComputeDevice.ordinal(), gpuIndices, result);
         val resultVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(centroids), TestCommon.getComputeDevice);
         assertArrayEquals(TestCommon.convertArray(expectCentroids), TestCommon.convertArray(resultVectors), 0.000001)
     }
