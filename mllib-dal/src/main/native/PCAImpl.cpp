@@ -271,7 +271,8 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
             services::Environment::getInstance()->getNumberOfThreads();
         std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
-        doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum, resultObj);
+        doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum,
+                         resultObj);
     }
 #else
     case ComputeDevice::gpu: {
