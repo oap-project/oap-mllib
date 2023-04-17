@@ -278,14 +278,13 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
-
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
 #ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        ccl::communicator &comm = getComm();
-
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         // Set number of threads for oneDAL to use for each rank
         services::Environment::getInstance()->setNumberOfThreads(executorCores);
@@ -294,13 +293,11 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
             services::Environment::getInstance()->getNumberOfThreads();
         std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
-        doSummarizerDAALCompute(env, obj, rankId, comm, pData, executorNum,
+        doSummarizerDAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                                 resultObj);
     }
 #else
     case ComputeDevice::gpu: {
-        ccl::communicator &cclComm = getComm();
-        int rankId = cclComm.rank();
         int nGpu = env->GetArrayLength(gpuIdxArray);
         std::cout << "oneDAL (native): use GPU kernels with " << nGpu
                   << " GPU(s)"

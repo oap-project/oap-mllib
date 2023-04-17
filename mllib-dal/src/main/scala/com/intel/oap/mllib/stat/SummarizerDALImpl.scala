@@ -44,11 +44,7 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      if (useDevice == "GPU") {
-        OneCCL.initDpcpp()
-      } else {
-        OneCCL.init(executorNum, rank, kvsIPPort)
-      }
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val computeStartTime = System.nanoTime()
 

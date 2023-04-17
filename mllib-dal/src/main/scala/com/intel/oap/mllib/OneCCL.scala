@@ -40,13 +40,6 @@ object OneCCL extends Logging {
       s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
   }
 
-  def initDpcpp(): Unit = {
-    setExecutorEnv()
-    logInfo(s"oneccl init")
-    // cclParam is output from native code
-    c_initDpcpp()
-  }
-
   // Run on Executor
   def setExecutorEnv(): Unit = {
     setEnv("CCL_ATL_TRANSPORT", "ofi")
@@ -74,8 +67,6 @@ object OneCCL extends Logging {
   @native def c_getAvailPort(localIP: String): Int
 
   @native private def c_init(size: Int, rank: Int, ip_port: String, param: CCLParam): Int
-
-  @native private def c_initDpcpp(): Int
 
   @native private def c_cleanup(): Unit
 }

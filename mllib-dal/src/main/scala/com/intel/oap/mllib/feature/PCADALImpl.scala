@@ -56,11 +56,7 @@ class PCADALImpl(val k: Int,
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      if (useDevice == "GPU") {
-        OneCCL.initDpcpp()
-      } else {
-        OneCCL.init(executorNum, rank, kvsIPPort)
-      }
+      OneCCL.init(executorNum, rank, kvsIPPort)
       val result = new PCAResult()
       val gpuIndices = if (useDevice == "GPU") {
         val resources = TaskContext.get().resources()

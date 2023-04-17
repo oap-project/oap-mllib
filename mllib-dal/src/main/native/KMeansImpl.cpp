@@ -321,12 +321,13 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     jlong ret = 0L;
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
 #ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        ccl::communicator &comm = getComm();
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
         // Set number of threads for oneDAL to use for each rank
@@ -336,14 +337,12 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
             services::Environment::getInstance()->getNumberOfThreads();
         std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
-        ret = doKMeansDaalCompute(env, obj, rankId, comm, pData, centroids,
+        ret = doKMeansDaalCompute(env, obj, rankId, cclComm, pData, centroids,
                                   clusterNum, tolerance, iterationNum,
                                   executorNum, resultObj);
     }
 #else
     case ComputeDevice::gpu: {
-        ccl::communicator &cclComm = getComm();
-        int rankId = cclComm.rank();
         int nGpu = env->GetArrayLength(gpuIdxArray);
         std::cout << "oneDAL (native): use GPU kernels with " << nGpu
                   << " GPU(s)"

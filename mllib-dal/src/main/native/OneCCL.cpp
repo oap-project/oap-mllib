@@ -101,6 +101,7 @@ Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp(JNIEnv *env, jobject) {
 JNIEXPORT void JNICALL
 Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
 
+    g_kvs.pop_back();
     g_comms.pop_back();
 
     std::cerr << "OneCCL (native): cleanup" << std::endl;
