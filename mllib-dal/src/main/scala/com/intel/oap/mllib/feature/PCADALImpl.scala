@@ -97,9 +97,7 @@ class PCADALImpl(val k: Int,
       } else {
         Iterator.empty
       }
-      if (useDevice == "CPU") {
-        OneCCL.cleanup()
-      }
+      OneCCL.cleanup()
       ret
     }.collect()
 

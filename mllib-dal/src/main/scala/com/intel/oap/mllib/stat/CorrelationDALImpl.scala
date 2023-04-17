@@ -87,9 +87,7 @@ class CorrelationDALImpl(
       } else {
         Iterator.empty
       }
-      if (useDevice == "CPU") {
-        OneCCL.cleanup()
-      }
+      OneCCL.cleanup()
       ret
     }.collect()
 
