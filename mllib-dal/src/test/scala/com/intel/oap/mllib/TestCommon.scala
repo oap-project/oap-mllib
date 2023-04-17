@@ -102,7 +102,7 @@ object TestCommon {
     var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
     if(device != null) {
       device.toUpperCase match {
-        case "HOST" => computeDevice = Common.ComputeDevice.GPU
+        case "HOST" => computeDevice = Common.ComputeDevice.HOST
         case "CPU" => computeDevice = Common.ComputeDevice.CPU
         case "GPU" => computeDevice = Common.ComputeDevice.GPU
         case _ => "Invalid Device"
