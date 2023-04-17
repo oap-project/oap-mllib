@@ -34,8 +34,6 @@ class CorrelationDALImpl(
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     val coalescedTables = if (useDevice == "GPU") {
-      data.cache()
-      data.count()
       OneDAL.coalesceToHomogenTables(data, executorNum,
         computeDevice)
     } else {

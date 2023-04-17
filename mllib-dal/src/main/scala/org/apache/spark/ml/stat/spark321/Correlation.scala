@@ -74,11 +74,12 @@ class Correlation extends CorrelationShim {
       dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
       val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
-      if (handlePersistence) {
-        dataset.persist(StorageLevel.MEMORY_AND_DISK)
-      }
       val rdd = dataset.select(column).rdd.map {
         case Row(v: Vector) => v
+      }
+      if (handlePersistence) {
+        rdd.persist(StorageLevel.MEMORY_AND_DISK)
+        rdd.count()
       }
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
@@ -88,7 +89,7 @@ class Correlation extends CorrelationShim {
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
       val dataframe = dataset.sparkSession.createDataFrame(Seq(Row(matrix)).asJava, schema)
       if (handlePersistence) {
-        dataset.unpersist()
+        rdd.unpersist()
       }
       dataframe
     } else {
