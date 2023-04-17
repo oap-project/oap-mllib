@@ -48,8 +48,6 @@ class PCADALImpl(val k: Int,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     val coalescedTables = if (useDevice == "GPU") {
-      normalizedData.cache()
-      normalizedData.count()
       OneDAL.coalesceToHomogenTables(normalizedData, executorNum,
         computeDevice)
     } else {
