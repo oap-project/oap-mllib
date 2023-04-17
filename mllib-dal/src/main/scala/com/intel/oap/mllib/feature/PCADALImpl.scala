@@ -65,6 +65,7 @@ class PCADALImpl(val k: Int,
       } else {
         null
       }
+
       val result = new PCAResult()
       val gpuIndices = if (useDevice == "GPU") {
         val resources = TaskContext.get().resources()
