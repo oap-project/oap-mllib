@@ -153,12 +153,11 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
 #endif
 
 #ifdef CPU_GPU_PROFILE
-static void doCorrelationOneAPICompute(JNIEnv *env,
-                                       jlong pNumTabData,
-                                       preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-                                       jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid " << comm.get_rank()
-              << std::endl;
+static void doCorrelationOneAPICompute(
+    JNIEnv *env, jlong pNumTabData,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start " << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -171,9 +170,8 @@ static void doCorrelationOneAPICompute(JNIEnv *env,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "Correlation (native): rankid " << rankId
-              << "; computing step took " << duration / 1000 << " secs"
-              << std::endl;
+    std::cout << "Correlation (native): computing step took " << duration / 1000
+              << " secs" << std::endl;
     if (isRoot) {
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
         std::cout << "Correlation:\n"
@@ -204,11 +202,11 @@ static void doCorrelationOneAPICompute(JNIEnv *env,
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
-    std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
@@ -229,28 +227,29 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     }
 #else
     case ComputeDevice::gpu: {
-      ccl::communicator &cclComm = getComm();
-      int rankId = cclComm.rank();
-      int nGpu = env->GetArrayLength(gpuIdxArray);
-      std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
-           << std::endl;
+        ccl::communicator &cclComm = getComm();
+        int rankId = cclComm.rank();
+        int nGpu = env->GetArrayLength(gpuIdxArray);
+        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                  << " GPU(s)"
+                  << " rankid " << rankId << std::endl;
 
-      jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
-      int size = cclComm.size();
-      ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+        int size = cclComm.size();
+        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
-      auto queue =
-          getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+        auto queue =
+            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
 
-      ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
-      auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-              queue, size, rankId, kvs);
-      doCorrelationOneAPICompute(env, pNumTabData, comm, resultObj);
+        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+        auto comm =
+            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                queue, size, rankId, kvs);
+        doCorrelationOneAPICompute(env, pNumTabData, comm, resultObj);
     }
 #endif
     }
 
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }

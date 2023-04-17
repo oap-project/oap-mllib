@@ -187,8 +187,7 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
                                  NumericTablePtr &centroids, jint cluster_num,
                                  jdouble tolerance, jint iteration_num,
                                  jint executor_num, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
-              << std::endl;
+    std::cout << "oneDAL (native): CPU compute start " << std::endl;
     algorithmFPType totalCost;
 
     NumericTablePtr newCentroids;
@@ -249,13 +248,12 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
 #endif
 
 #ifdef CPU_GPU_PROFILE
-static jlong doKMeansOneAPICompute(JNIEnv *env, jlong pNumTabData,
-                                   jlong pNumTabCenters, jint clusterNum,
-                                   jdouble tolerance, jint iterationNum,
-                                   preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-                                   jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid " << comm.get_rank()
-              << std::endl;
+static jlong doKMeansOneAPICompute(
+    JNIEnv *env, jlong pNumTabData, jlong pNumTabCenters, jint clusterNum,
+    jdouble tolerance, jint iterationNum,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start " << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -272,9 +270,8 @@ static jlong doKMeansOneAPICompute(JNIEnv *env, jlong pNumTabData,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "KMeans (native): rankid  " << rankId
-              << "; training step took " << duration / 1000 << " secs"
-              << std::endl;
+    std::cout << "KMeans (native): training step took " << duration / 1000
+              << " secs" << std::endl;
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
                   << std::endl;
@@ -318,13 +315,11 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
     JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
     jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
-    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
     jlong ret = 0L;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
@@ -350,8 +345,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         ccl::communicator &cclComm = getComm();
         int rankId = cclComm.rank();
         int nGpu = env->GetArrayLength(gpuIdxArray);
-        std::cout << "oneDAL (native): use GPU kernels with " << nGpu << " GPU(s)"
-             << std::endl;
+        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                  << " GPU(s)"
+                  << " rankid " << rankId << std::endl;
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -361,16 +357,15 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
 
-        ccl::shared_ptr_class<ccl::kvs> &kvs  = getKvs();
-        auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-            queue, size, rankId, kvs);
-        ret = doKMeansOneAPICompute(env, pNumTabData, pNumTabCenters,
-                                    clusterNum, tolerance, iterationNum,
-                                    comm, resultObj);
+        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+        auto comm =
+            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                queue, size, rankId, kvs);
+        ret =
+            doKMeansOneAPICompute(env, pNumTabData, pNumTabCenters, clusterNum,
+                                  tolerance, iterationNum, comm, resultObj);
     }
 #endif
     }
-
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return ret;
 }
