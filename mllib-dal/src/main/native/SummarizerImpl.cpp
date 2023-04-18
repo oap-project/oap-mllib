@@ -48,7 +48,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
                                     size_t nBlocks, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start " << std::endl;
+    std::cout << "oneDAL (native): CPU compute start" << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -212,7 +212,7 @@ static void doSummarizerOneAPICompute(
     JNIEnv *env, jlong pNumTabData,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start " << std::endl;
+    std::cout << "oneDAL (native): GPU compute start" << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -235,7 +235,7 @@ static void doSummarizerOneAPICompute(
                        t2 - t1)
                        .count();
         std::cout << "Summarizer (native): computing step took "
-                  << duration / 1000 << " secs in end. " << std::endl;
+                  << duration / 1000 << " secs in end." << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 

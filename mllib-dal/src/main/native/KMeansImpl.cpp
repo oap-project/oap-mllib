@@ -187,7 +187,7 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
                                  NumericTablePtr &centroids, jint cluster_num,
                                  jdouble tolerance, jint iteration_num,
                                  jint executor_num, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start " << std::endl;
+    std::cout << "oneDAL (native): CPU compute start" << std::endl;
     algorithmFPType totalCost;
 
     NumericTablePtr newCentroids;
@@ -253,7 +253,7 @@ static jlong doKMeansOneAPICompute(
     jdouble tolerance, jint iterationNum,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start " << std::endl;
+    std::cout << "oneDAL (native): GPU compute start" << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -282,7 +282,7 @@ static jlong doKMeansOneAPICompute(
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         std::cout << "KMeans (native): training step took " << duration / 1000
-                  << " secs in end. " << std::endl;
+                  << " secs in end." << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references

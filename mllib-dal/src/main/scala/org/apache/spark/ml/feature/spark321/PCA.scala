@@ -51,15 +51,11 @@ class PCA @Since("1.5.0") (
   @Since("2.0.0")
   override def fit(dataset: Dataset[_]): PCAModel = {
     transformSchema(dataset.schema, logging = true)
-    val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
     val input = dataset.select($(inputCol)).rdd
     val inputVectors = input.map {
       case Row(v: Vector) => v
     }
-    if (handlePersistence) {
-      inputVectors.persist(StorageLevel.MEMORY_AND_DISK)
-      inputVectors.count()
-    }
+
     val numFeatures = inputVectors.first().size
     require($(k) <= numFeatures,
       s"source vector size $numFeatures must be no less than k=$k")
@@ -73,9 +69,6 @@ class PCA @Since("1.5.0") (
       val executor_cores = Utils.sparkExecutorCores()
       val pca = new PCADALImpl(k = $(k), executor_num, executor_cores)
       val pcaDALModel = pca.train(inputVectors)
-      if (handlePersistence) {
-        inputVectors.unpersist()
-      }
       new OldPCAModel(pcaDALModel.k, pcaDALModel.pc, pcaDALModel.explainedVariance)
     } else {
       val inputOldVectors = inputVectors.map {

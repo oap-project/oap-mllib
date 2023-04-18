@@ -56,19 +56,18 @@ class Statistics extends SummarizerShim {
       X.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported) {
       val handlePersistence = (X.getStorageLevel == StorageLevel.NONE)
+      if (handlePersistence) {
+        X.persist(StorageLevel.MEMORY_AND_DISK)
+      }
       val rdd = X.map {
         v => v.asML
-      }
-      if (handlePersistence) {
-        rdd.persist(StorageLevel.MEMORY_AND_DISK)
-        rdd.count()
       }
       val executor_num = Utils.sparkExecutorNum(X.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val summary = new SummarizerDALImpl(executor_num, executor_cores)
         .computeSummarizerMatrix(rdd)
       if (handlePersistence) {
-        rdd.unpersist()
+        X.unpersist()
       }
       summary
     } else {

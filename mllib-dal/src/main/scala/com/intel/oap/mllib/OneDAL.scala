@@ -675,6 +675,7 @@ object OneDAL {
       .coalesce(executorNum,
         partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
       .setName("coalescedRdd")
+      .cache()
 
     // convert RDD to HomogenTable
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>

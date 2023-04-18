@@ -48,7 +48,7 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              int nBlocks, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start " << std::endl;
+    std::cout << "oneDAL (native): CPU compute start" << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -188,7 +188,7 @@ static void doPCAOneAPICompute(
     JNIEnv *env, jlong pNumTabData,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start " << std::endl;
+    std::cout << "oneDAL (native): GPU compute start" << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -218,7 +218,7 @@ static void doPCAOneAPICompute(
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         std::cout << "PCA (native): Eigen step took " << duration / 1000
-                  << " secs in end. " << std::endl;
+                  << " secs in end." << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
