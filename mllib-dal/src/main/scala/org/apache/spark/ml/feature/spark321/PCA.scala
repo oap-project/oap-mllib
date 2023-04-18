@@ -30,7 +30,6 @@ import org.apache.spark.mllib.feature
 import org.apache.spark.mllib.feature.{PCAModel => OldPCAModel}
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
 import org.apache.spark.sql._
-import org.apache.spark.storage.StorageLevel
 
 /**
  * PCA trains a model to project vectors to a lower dimensional space of the top `PCA!.k`
