@@ -129,8 +129,8 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
-  def homogenTableNx1ToVector(cTable: Long, device: Common.ComputeDevice ): Vector = {
-    val columnAcc = new ColumnAccessor(cTable, device)
+  def homogenTableNx1ToVector(table: HomogenTable, device: Common.ComputeDevice ): Vector = {
+    val columnAcc = new ColumnAccessor(table.getcObejct(), device)
     val arrayDouble = columnAcc.pullDouble(0)
     Vectors.dense(arrayDouble)
   }

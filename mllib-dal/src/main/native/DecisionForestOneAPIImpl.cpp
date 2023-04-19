@@ -368,6 +368,8 @@ static jobject doRFClassifierOneAPICompute(
             env->GetFieldID(clazz, "predictionNumericTable", "J");
         jfieldID probabilitiesNumericTableField =
             env->GetFieldID(clazz, "probabilitiesNumericTable", "J");
+        jfieldID importancesNumericTableField =
+            env->GetFieldID(clazz, "importancesNumericTable", "J");
         HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
@@ -376,6 +378,10 @@ static jobject doRFClassifierOneAPICompute(
             std::make_shared<homogen_table>(result_infer.get_probabilities());
         saveHomogenTablePtrToVector(probabilities);
 
+        HomogenTablePtr importances =
+            std::make_shared<homogen_table>(result_train.get_var_importance());
+        saveHomogenTablePtrToVector(importances);
+
         // Set prediction for result
         env->SetLongField(resultObj, predictionNumericTableField,
                           (jlong)prediction.get());
@@ -383,6 +389,10 @@ static jobject doRFClassifierOneAPICompute(
         // Set probabilities for result
         env->SetLongField(resultObj, probabilitiesNumericTableField,
                           (jlong)probabilities.get());
+
+       // Set importances for result
+       env->SetLongField(resultObj, importancesNumericTableField,
+                         (jlong)importances.get());
     }
     return trees;
 }

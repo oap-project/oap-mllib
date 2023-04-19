@@ -19,6 +19,8 @@
 
 package org.apache.spark.ml.classification.spark321
 
+import org.json4s.{DefaultFormats, JNull, JObject}
+import org.json4s.JsonDSL._
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
 import java.util.{Map => JavaMap}
@@ -218,7 +220,9 @@ class RandomForestClassifier @Since("1.4.0") (
     val trees = buildTrees(treesMap, numFeatures, numClasses, metadata).map(_.asInstanceOf[DecisionTreeClassificationModel])
     instr.logNumClasses(numClasses)
     instr.logNumFeatures(numFeatures)
-    createModel(dataset, trees, numFeatures, numClasses)
+    val model = createModel(dataset, trees, numFeatures, numClasses)
+    model.featureImportances = importancesVector
+    model
   }
 
   private def buildTrees(treesMap : JavaMap[Integer,
