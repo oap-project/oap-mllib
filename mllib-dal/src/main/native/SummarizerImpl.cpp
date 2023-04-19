@@ -219,23 +219,17 @@ static void doSummarizerOneAPICompute(
     const auto bs_desc = basic_statistics::descriptor{};
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-            .count();
-    std::cout << "Summarizer (native): computing step took " << duration / 1000
-              << " secs" << std::endl;
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
         std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
         std::cout << "Mean:\n" << result_train.get_mean() << std::endl;
         std::cout << "Variance:\n" << result_train.get_variance() << std::endl;
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
                        t2 - t1)
                        .count();
         std::cout << "Summarizer (native): computing step took "
-                  << duration / 1000 << " secs in end." << std::endl;
+                  << duration / 1000 << " secs." << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 

@@ -210,7 +210,7 @@ static void doPCAOneAPICompute(
         using descriptor_t = pca::descriptor<float_t, method_t, task_t>;
         const auto pca_desc = descriptor_t().set_deterministic(true);
 
-        auto t1 = std::chrono::high_resolution_clock::now();
+        t1 = std::chrono::high_resolution_clock::now();
         const auto result_train =
             preview::train(comm, pca_desc, result.get_cov_matrix());
         t2 = std::chrono::high_resolution_clock::now();
@@ -218,7 +218,7 @@ static void doPCAOneAPICompute(
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         std::cout << "PCA (native): Eigen step took " << duration / 1000
-                  << " secs in end." << std::endl;
+                  << " secs." << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
