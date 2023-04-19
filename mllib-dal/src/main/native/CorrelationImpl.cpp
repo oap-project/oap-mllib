@@ -17,14 +17,8 @@
 #include <chrono>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
+#include "common.hpp"
 #include "oneapi/dal/algo/covariance.hpp"
-#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"

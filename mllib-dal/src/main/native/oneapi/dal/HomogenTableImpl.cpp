@@ -24,14 +24,9 @@
 #include <mutex>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
+#include "common.hpp"
 
 #include "com_intel_oneapi_dal_table_HomogenTableImpl.h"
-#include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
 
 using namespace std;
