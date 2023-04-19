@@ -25,7 +25,6 @@ import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
 import java.util.{Map => JavaMap}
 import scala.jdk.CollectionConverters._
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification.{BinaryRandomForestClassificationTrainingSummaryImpl, DecisionTreeClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl}
 
