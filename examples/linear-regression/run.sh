@@ -6,7 +6,7 @@ source ../../conf/env.sh
 # The data file should be copied to $HDFS_ROOT before running examples
 DATA_FILE=$HDFS_ROOT/data/sample_linear_regression_data.txt
 
-DEVICE=CPU
+DEVICE=GPU
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.LinearRegressionExample
 

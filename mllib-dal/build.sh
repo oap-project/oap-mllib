@@ -132,4 +132,4 @@ echo Platform Profile: $PLATFORM_PROFILE
 echo =============================
 echo
 
-mvn -X $MVN_NO_TRANSFER_PROGRESS -DskipTests clean package
+mvn  $MVN_NO_TRANSFER_PROGRESS -DskipTests clean package

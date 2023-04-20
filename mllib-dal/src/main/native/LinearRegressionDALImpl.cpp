@@ -15,6 +15,8 @@
  *******************************************************************************/
 
 #include <chrono>
+#include<unistd.h>
+
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -212,18 +214,17 @@ static NumericTablePtr ridge_regression_compute(
     }
     return resultTable;
 }
+#endif
 
 #ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLabel,
                                    jint executorNum, const ccl::string &ipPort,
-                                   jint computeDeviceOrdinal,
+                                   ComputeDevice &device,
                                    jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
+    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
-
+    std::cout << "KP native gpu run\n";
     const bool isRoot = (rankId == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
     homogen_table xtrain =
         *reinterpret_cast<const homogen_table *>(pData);
@@ -231,13 +232,25 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLab
         *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression::train_input local_input{xtrain, ytrain};
+    std::cout << "KP native gpu data done\n";
 
     const auto linear_regression_desc = linear_regression::descriptor<>();
+    std::cout << "KP native gpu desc done\n";
     auto queue = getQueue(device);
+    std::cout << "KP native gpu queue done\n";
+    std::cout << "KP rankId: " << rankId << ", executorNum: " << executorNum
+	    << ", ipPort: " << ipPort << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
+    std::cout << "KP native gpu comm done\n";
+    
+    //todo
+    unsigned int microsecond = 1000000;
+    usleep(3 * microsecond);//sleeps for 3 second
+
     linear_regression::train_result result_train =
         preview::train(comm, linear_regression_desc, local_input);
+    std::cout << "KP native gpu train done\n";
     if (isRoot) {
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -252,101 +265,45 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLab
 }
 #endif
 
-JNIEXPORT jlong JNICALL
-Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabLabel,
-    jdouble regParam, jdouble elasticNetParam, jint executor_num,
-    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
-    jobject resultObj) {
+/*
+ * Class:     com_intel_oap_mllib_regression_LinearRegressionDALImpl
+ * Method:    cLinearRegressionTrainDAL
+ * Signature: (JJDDIIIILjava/lang/String;Lcom/intel/oap/mllib/regression/LiRResult;)J
+ */
+JNIEXPORT jlong JNICALL 
+Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL
+  (JNIEnv *env, jobject obj, jlong data, jlong label, jdouble regParam,
+   jdouble elasticNetParam, jint executorNum, jint executorCores, jint computeDeviceOrdinal,
+   jint rankId, jstring ipPort, jobject result) {
 
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
+    std::cout << "KP run native\n";
 
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
     jlong ret = 0L;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
-#ifdef CPU_ONLY_PROFILE
-    case ComputeDevice::host:
-    case ComputeDevice::cpu: {
-		ccl::communicator &comm = getComm();
-		size_t rankId = comm.rank();
-
-		NumericTablePtr pLabel = *((NumericTablePtr *)pNumTabLabel);
-		NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
-
-		// Set number of threads for oneDAL to use for each rank
-		services::Environment::getInstance()->setNumberOfThreads(executor_cores);
-
-		int nThreadsNew =
-			services::Environment::getInstance()->getNumberOfThreads();
-		cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-			 << endl;
+    
+    case ComputeDevice::gpu: {
 
 		NumericTablePtr resultTable;
-
 		if (regParam == 0) {
-			resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
-													executor_num);
-		} else {
-			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
-												   regParam, executor_num);
-		}
-
-		if (rankId == ccl_root) {
-			// Get the class of the result object
-			jclass clazz = env->GetObjectClass(resultObj);
-
-			// Get Field references
-			jfieldID coeffNumericTableField =
-				env->GetFieldID(clazz, "coeffNumericTable", "J");
-
-			NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
-			env->SetLongField(resultObj, coeffNumericTableField,
-							  (jlong)coeffvectors);
-
-			// intercept is already in first column of coeffvectors
-			return (jlong)coeffvectors;
-		} else
-			return (jlong)0;
-
-    }
-#else
-    case ComputeDevice::gpu: {
-		if (regParam == 0) {
-			jlong pDatagpu = (jlong) &pData;
-			jlong pLabelgpu = (jlong) &pLabel;
+			jlong pDatagpu = (jlong) data;
+			jlong pLabelgpu = (jlong) label;
         	ret = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
-                                    executorNum, ipPortStr, device, resultObj);
+                                    executorNum, ipPortStr, device, result);
 		} else {
-			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
-												   regParam, executor_num);
-			if (rankId == ccl_root) {
-				// Get the class of the result object
-				jclass clazz = env->GetObjectClass(resultObj);
-
-				// Get Field references
-				jfieldID coeffNumericTableField =
-					env->GetFieldID(clazz, "coeffNumericTable", "J");
-
-				NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
-				env->SetLongField(resultObj, coeffNumericTableField,
-								  (jlong)coeffvectors);
-
-				// intercept is already in first column of coeffvectors
-				return (jlong)coeffvectors;
-			} else
+			//todo restructure
 				return (jlong)0;
 		}
     }
-#endif
     }
 
     env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return ret;
 }
 
-#endif
 

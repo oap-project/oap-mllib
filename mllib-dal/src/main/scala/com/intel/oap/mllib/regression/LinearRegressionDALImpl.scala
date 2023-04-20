@@ -68,6 +68,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     def train(labeledPoints: Dataset[_],
               labelCol: String,
               featuresCol: String): LinearRegressionDALModel = {
+      println("KP get into trainingn")
 
       val sparkContext = labeledPoints.sparkSession.sparkContext
       val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -85,6 +86,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         }
       }
 
+      println(useDevice)
+      println("KP readData end")
 
 
       val results = labeledPointsTables.mapPartitionsWithIndex {
