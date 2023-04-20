@@ -312,6 +312,13 @@ static jobject doRFRegressorOneAPICompute(
         // Get Field references
         jfieldID predictionNumericTableField =
             env->GetFieldID(clazz, "predictionNumericTable", "J");
+        jfieldID importancesNumericTableField =
+           env->GetFieldID(clazz, "importancesNumericTable", "J");
+
+        HomogenTablePtr importances =
+            std::make_shared<homogen_table>(result_train.get_var_importance());
+        saveHomogenTablePtrToVector(importances);
+
         HomogenTablePtr prediction =
             std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
@@ -319,6 +326,10 @@ static jobject doRFRegressorOneAPICompute(
         // Set prediction for result
         env->SetLongField(resultObj, predictionNumericTableField,
                           (jlong)prediction.get());
+
+        // Set importances for result
+        env->SetLongField(resultObj, importancesNumericTableField,
+                         (jlong)importances.get());
     }
     return trees;
 }

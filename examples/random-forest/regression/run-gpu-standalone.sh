@@ -4,14 +4,10 @@ source ../../../conf/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
+DATA_FILE=$HDFS_ROOT/data/sample_libsvm_data.txt
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
-<<<<<<< HEAD:examples/kmeans/run.sh
-APP_CLASS=org.apache.spark.examples.ml.KMeansExample
-=======
 APP_CLASS=org.apache.spark.examples.ml.RandomForestRegressorExample
->>>>>>> rename catalog for  RF example:examples/random-forest/regression/run-gpu-standalone.sh
 
 DEVICE=GPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
