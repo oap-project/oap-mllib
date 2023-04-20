@@ -15,7 +15,7 @@
  *******************************************************************************/
 
 #include <chrono>
-#include<unistd.h>
+#include <unistd.h>
 
 #include <iomanip>
 #include <iostream>
@@ -32,7 +32,6 @@
 #include "oneapi/dal/algo/linear_regression/train_types.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #endif
-
 
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_regression_LinearRegressionDALImpl.h"
@@ -218,19 +217,17 @@ static NumericTablePtr ridge_regression_compute(
 #endif
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLabel,
-                                   jint executorNum, const ccl::string &ipPort,
-                                   ComputeDevice &device,
-                                   jobject resultObj) {
+static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
+                               jlong pLabel, jint executorNum,
+                               const ccl::string &ipPort, ComputeDevice &device,
+                               jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     std::cout << "KP native gpu run\n";
     const bool isRoot = (rankId == ccl_root);
 
-    homogen_table xtrain =
-        *reinterpret_cast<const homogen_table *>(pData);
-    homogen_table ytrain =
-        *reinterpret_cast<const homogen_table *>(pLabel);
+    homogen_table xtrain = *reinterpret_cast<const homogen_table *>(pData);
+    homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression::train_input local_input{xtrain, ytrain};
     std::cout << "KP native gpu data done\n";
@@ -240,14 +237,20 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLab
     auto queue = getQueue(device);
     std::cout << "KP native gpu queue done\n";
     std::cout << "KP rankId: " << rankId << ", executorNum: " << executorNum
-	    << ", ipPort: " << ipPort << std::endl;
+              << ", ipPort: " << ipPort << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
+<<<<<<< HEAD
     std::cout << "KP native gpu comm done\n" << std::endl;
     
     //todo
+=======
+    std::cout << "KP native gpu comm done\n";
+
+    // todo
+>>>>>>> c0282113 (Format cpp)
     unsigned int microsecond = 1000000;
-    usleep(3 * microsecond);//sleeps for 3 second
+    usleep(3 * microsecond); // sleeps for 3 second
 
     std::cout << "KP training start\n" << std::endl;
     std::cout << "KP input data row: " << local_input.get_data().get_row_count() << std::endl;
@@ -280,13 +283,14 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLab
 /*
  * Class:     com_intel_oap_mllib_regression_LinearRegressionDALImpl
  * Method:    cLinearRegressionTrainDAL
- * Signature: (JJDDIIIILjava/lang/String;Lcom/intel/oap/mllib/regression/LiRResult;)J
+ * Signature:
+ * (JJDDIIIILjava/lang/String;Lcom/intel/oap/mllib/regression/LiRResult;)J
  */
-JNIEXPORT jlong JNICALL 
-Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL
-  (JNIEnv *env, jobject obj, jlong data, jlong label, jdouble regParam,
-   jdouble elasticNetParam, jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-   jint rankId, jstring ipPort, jobject result) {
+JNIEXPORT jlong JNICALL
+Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
+    JNIEnv *env, jobject obj, jlong data, jlong label, jdouble regParam,
+    jdouble elasticNetParam, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject result) {
 
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
@@ -298,24 +302,22 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong ret = 0L;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
-    
+
     case ComputeDevice::gpu: {
 
-		NumericTablePtr resultTable;
-		if (regParam == 0) {
-			jlong pDatagpu = (jlong) data;
-			jlong pLabelgpu = (jlong) label;
-        	ret = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
+        NumericTablePtr resultTable;
+        if (regParam == 0) {
+            jlong pDatagpu = (jlong)data;
+            jlong pLabelgpu = (jlong)label;
+            ret = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
                                     executorNum, ipPortStr, device, result);
-		} else {
-			//todo restructure
-				return (jlong)0;
-		}
+        } else {
+            // todo restructure
+            return (jlong)0;
+        }
     }
     }
 
     env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return ret;
 }
-
-
