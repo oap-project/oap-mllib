@@ -24,6 +24,7 @@ import org.json4s.JsonDSL._
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
 import java.util.{Map => JavaMap}
+
 import scala.jdk.CollectionConverters._
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification.{BinaryRandomForestClassificationTrainingSummaryImpl, DecisionTreeClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl}
@@ -43,6 +44,8 @@ import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => Ol
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
+
+import scala.collection.JavaConversions.mapAsScalaMap
 
 // scalastyle:off line.size.limit
 /**

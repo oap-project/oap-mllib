@@ -131,7 +131,6 @@ struct collect_nodes {
         treesVector->push_back(convertsplitToLearningNode(info, classCount));
 
         std::cout << str << std::endl;
-        i++;
         return true;
     }
 };
