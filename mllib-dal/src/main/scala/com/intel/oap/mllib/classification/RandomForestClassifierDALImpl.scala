@@ -15,11 +15,12 @@
  */
 package com.intel.oap.mllib.classification
 
-import com.google.common.collect.HashBiMap
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
+
 import org.apache.spark.annotation.Since
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.{Matrix, Vector}
@@ -28,17 +29,11 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
-import scala.collection.JavaConversions._
 
 import java.util
 import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
-
-class RandomForestClassificationModel private[mllib] (
-                           val uid: String,
-                         val _trees: Array[DecisionTreeClassificationModel],
-                         val numFeatures: Int,
-                         val numClasses: Int)
+import scala.collection.JavaConversions._
 
 class RandomForestClassifierDALImpl(val uid: String,
                                     val classCount: Int,
@@ -60,12 +55,17 @@ class RandomForestClassifierDALImpl(val uid: String,
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-      OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
-        labelCol, featuresCol, executorNum, computeDevice)
+    val labeledPointsTables = if (useDevice == "GPU") {
+      if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+        OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
+          labelCol, featuresCol, executorNum, computeDevice)
+      } else {
+        OneDAL.rddLabeledPointToSparseCSRTables(labeledPoints,
+          labelCol, featuresCol, executorNum, computeDevice)
+      }
     } else {
-      OneDAL.rddLabeledPointToSparseCSRTables(labeledPoints,
-        labelCol, featuresCol, executorNum, computeDevice)
+      throw new Exception("Random Forset didn't implemente for CPU device, " +
+        "Please run on GPU device.")
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
@@ -73,8 +73,13 @@ class RandomForestClassifierDALImpl(val uid: String,
       (rank: Int, tables: Iterator[(Long, Long)]) =>
       val (featureTabAddr, lableTabAddr) = tables.next()
 
-      OneCCL.initDpcpp()
-
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+      OneCCL.init(executorNum, rank, kvsIPPort)
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
@@ -83,14 +88,13 @@ class RandomForestClassifierDALImpl(val uid: String,
         executorNum,
         computeDevice.ordinal(),
         classCount,
-        rank,
         treeCount,
         minObservationsLeafNode,
         minObservationsSplitNode,
         minWeightFractionLeafNode,
         minImpurityDecreaseSplitNode,
         bootstrap,
-        kvsIPPort,
+        gpuIndices,
         result)
       for ( (k, v) <- hashmap) {
         logInfo(s"key: $k, value: $v")
@@ -141,18 +145,18 @@ class RandomForestClassifierDALImpl(val uid: String,
     (results(0)._1, results(0)._2, results(0)._3)
   }
 
-
-  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long, lableTabAddr: Long,
-                                             executorNum: Int,
-                                             computeDeviceOrdinal: Int,
-                                             classCount: Int,
-                                             rankId: Int,
-                                             treeCount: Int,
-                                             minObservationsLeafNode: Int,
-                                             minObservationsSplitNode: Int,
-                                             minWeightFractionLeafNode: Double,
-                                             minImpurityDecreaseSplitNode: Double,
-                                             bootstrap: Boolean,
-                                             ipPort: String,
-                                             result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
+  @native private[mllib] def cRFClassifierTrainDAL(featureData: Long,
+                                                   lableTabData: Long,
+                                                   executorNum: Int,
+                                                   computeDeviceOrdinal: Int,
+                                                   classCount: Int,
+                                                   treeCount: Int,
+                                                   minObservationsLeafNode: Int,
+                                                   minObservationsSplitNode: Int,
+                                                   minWeightFractionLeafNode: Double,
+                                                   minImpurityDecreaseSplitNode: Double,
+                                                   bootstrap: Boolean,
+                                                   gpuIndices: Array[Int],
+                                                   result: RandomForestResult):
+  java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

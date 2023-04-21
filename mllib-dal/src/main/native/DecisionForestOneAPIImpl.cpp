@@ -23,22 +23,16 @@
 #include <vector>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
+#include "Common.hpp"
 
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
-#include "com_intel_oap_mllib_classification_RandomForestClassifierDALImpl.h"
 #include "oneapi/dal/algo/decision_forest.hpp"
-#include "oneapi/dal/table/homogen.hpp"
+#include "OneCCL.h"
+#include "com_intel_oap_mllib_classification_RandomForestClassifierDALImpl.h"
 #include "service.h"
 
 using namespace std;
 using namespace oneapi::dal;
 namespace df = oneapi::dal::decision_forest;
-const int ccl_root = 0;
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -262,15 +256,15 @@ jobject convertJavaMap(
 }
 
 static jobject doRFClassifierOneAPICompute(
-    JNIEnv *env, jint rankId, jlong pNumTabFeature, jlong pNumTabLabel,
+    JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel,
     jint executorNum, jint computeDeviceOrdinal, jint classCount,
     jint treeCount, jint minObservationsLeafNode, jint minObservationsSplitNode,
     jdouble minWeightFractionLeafNode, jdouble minImpurityDecreaseSplitNode,
-    jboolean bootstrap, const ccl::string &ipPort, jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
-    const bool isRoot = (rankId == ccl_root);
+    jboolean bootstrap,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): compute start" <<std::endl;
+    const bool isRoot = (comm.get_rank() == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table hFeaturetable =
         *reinterpret_cast<const homogen_table *>(pNumTabFeature);
@@ -296,9 +290,6 @@ static jobject doRFClassifierOneAPICompute(
                             df::infer_mode::class_probabilities)
             .set_voting_mode(df::voting_mode::weighted);
 
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -353,19 +344,41 @@ static jobject doRFClassifierOneAPICompute(
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint classCount, jint rankId,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount,
     jint treeCount, jint minObservationsLeafNode, jint minObservationsSplitNode,
     jdouble minWeightFractionLeafNode, jdouble minImpurityDecreaseSplitNode,
-    jboolean bootstrap, jstring ipPort, jobject resultObj) {
+    jboolean bootstrap,  jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
-    jobject hashmapObj = doRFClassifierOneAPICompute(
-        env, rankId, pNumTabFeature, pNumTabLabel, executorNum,
-        computeDeviceOrdinal, classCount, treeCount, minObservationsLeafNode,
-        minObservationsSplitNode, minWeightFractionLeafNode,
-        minImpurityDecreaseSplitNode, bootstrap, ipPortPtr, resultObj);
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-    return hashmapObj;
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+        case ComputeDevice::gpu: {
+            int nGpu = env->GetArrayLength(gpuIdxArray);
+            std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                      << " GPU(s)"
+                      << " rankid " << rankId << std::endl;
+
+            jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+            int size = cclComm.size();
+            ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+            auto queue =
+                getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+            ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+            auto comm =
+                preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                    queue, size, rankId, kvs);
+            jobject hashmapObj = doRFClassifierOneAPICompute(
+                env, pNumTabFeature, pNumTabLabel, executorNum,
+                computeDeviceOrdinal, classCount, treeCount, minObservationsLeafNode,
+                minObservationsSplitNode, minWeightFractionLeafNode,
+                minImpurityDecreaseSplitNode, bootstrap, comm, resultObj);
+            return hashmapObj;
+        }
+      }
+    return nullptr;
 }
 #endif
