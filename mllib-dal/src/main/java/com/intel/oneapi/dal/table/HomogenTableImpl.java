@@ -15,7 +15,6 @@ public class HomogenTableImpl implements HomogenTableIface {
     private long cObject;
     private TableMetadata metadata;
     private Common.ComputeDevice device;
-
     protected HomogenTableImpl(Common.ComputeDevice computeDevice) {
         super();
         this.device = computeDevice;
@@ -94,8 +93,8 @@ public class HomogenTableImpl implements HomogenTableIface {
     }
 
     @Override
-    public RowAccessor getPullRowsIface() {
-        return null;
+    public long getPullRowsIface() {
+        return 0;
     }
 
     @Override
@@ -106,8 +105,8 @@ public class HomogenTableImpl implements HomogenTableIface {
     }
 
     @Override
-    public CSRAccessor getPullCSRBlockIface() {
-        return null;
+    public long getPullCSRBlockIface() {
+        return 0;
     }
 
     @Override

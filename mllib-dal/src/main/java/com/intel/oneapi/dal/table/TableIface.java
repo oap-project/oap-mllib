@@ -7,8 +7,8 @@ public interface TableIface {
    long getKind();
    Common.DataLayout getDataLayout();
    TableMetadata getMetaData();
-   RowAccessor getPullRowsIface();
+   long getPullRowsIface();
    ColumnAccessor getPullColumnIface();
-   CSRAccessor getPullCSRBlockIface();
+   long getPullCSRBlockIface();
    boolean hasData();
 }
