@@ -19,7 +19,7 @@
 #include <iostream>
 
 #ifdef CPU_GPU_PROFILE
-#include "common.hpp"
+#include "Common.hpp"
 #include "oneapi/dal/algo/kmeans.hpp"
 #endif
 

@@ -18,7 +18,7 @@
 #include <iostream>
 
 #ifdef CPU_GPU_PROFILE
-#include "common.hpp"
+#include "Common.hpp"
 #include "oneapi/dal/algo/covariance.hpp"
 #include "oneapi/dal/algo/pca.hpp"
 #endif

@@ -17,7 +17,7 @@
 #include <chrono>
 
 #ifdef CPU_GPU_PROFILE
-#include "common.hpp"
+#include "Common.hpp"
 #include "oneapi/dal/algo/basic_statistics.hpp"
 #endif
 

@@ -23,7 +23,7 @@
 #include <vector>
 
 #ifdef CPU_GPU_PROFILE
-#include "common.hpp"
+#include "Common.hpp"
 
 #include "com_intel_oneapi_dal_table_RowAccessor.h"
 #include "oneapi/dal/table/row_accessor.hpp"
