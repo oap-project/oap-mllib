@@ -47,12 +47,18 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
   import testImplicits._
   override def sparkConf: SparkConf = {
     val conf = super.sparkConf
+    val dir = Utils.createTempDir()
+    val discoveryScript = createTempScriptWithExpectedOutput(dir, "resourceDiscoveryScript",
+      """{"name": "gpu","addresses":["0", "1"]}""")
     conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
     conf.set("spark.oap.mllib.isTest", "true")
 
     conf
   }
 
+  protected override def createSparkSession: TestSparkSession = {
+    new TestSparkSession(new SparkContext("local[1]", "MLlibUnitTest", sparkConf))
+  }
   private var orderedLabeledPoints50_1000: RDD[LabeledPoint] = _
   private var orderedLabeledPoints5_20: RDD[LabeledPoint] = _
   private var binaryDataset: DataFrame = _

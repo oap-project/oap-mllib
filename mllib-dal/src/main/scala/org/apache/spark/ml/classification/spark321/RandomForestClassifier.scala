@@ -24,6 +24,7 @@ import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, Rand
 import java.util.{Map => JavaMap}
 import scala.jdk.CollectionConverters._
 
+import scala.jdk.CollectionConverters._
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification.{BinaryRandomForestClassificationTrainingSummaryImpl, DecisionTreeClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl}
 import org.apache.spark.ml.feature.Instance
@@ -41,6 +42,8 @@ import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => Ol
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
+
+import scala.collection.JavaConversions.mapAsScalaMap
 // scalastyle:off line.size.limit
 /**
  * <a href="http://en.wikipedia.org/wiki/Random_forest">Random Forest</a> learning algorithm for
