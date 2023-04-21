@@ -99,7 +99,7 @@ object TestCommon {
 
   def getComputeDevice: Common.ComputeDevice = {
     val device = System.getProperty("computeDevice")
-    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.GPU
+    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
     if(device != null) {
       device.toUpperCase match {
         case "HOST" => computeDevice = Common.ComputeDevice.HOST

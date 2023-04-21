@@ -17,14 +17,8 @@
 #include <chrono>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
+#include "Common.hpp"
 #include "oneapi/dal/algo/covariance.hpp"
-#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"
@@ -153,41 +147,30 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
 #endif
 
 #ifdef CPU_GPU_PROFILE
-static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
-                                       jlong pNumTabData, jint executorNum,
-                                       const ccl::string &ipPort,
-                                       ComputeDevice &device,
-                                       jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
-              << std::endl;
-    const bool isRoot = (rankId == ccl_root);
+static void doCorrelationOneAPICompute(
+    JNIEnv *env, jlong pNumTabData,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start" << std::endl;
+    const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cor_desc = covariance::descriptor{}.set_result_options(
         covariance::result_options::cor_matrix |
         covariance::result_options::means);
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "Correlation (native): rankid " << rankId
-              << "; computing step took " << duration / 1000 << " secs"
-              << std::endl;
     if (isRoot) {
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
         std::cout << "Correlation:\n"
                   << result_train.get_cor_matrix() << std::endl;
-        t2 = std::chrono::high_resolution_clock::now();
-        duration =
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         std::cout << "Correlation batch(native): computing step took "
-                  << duration / 1000 << " secs in end. " << std::endl;
+                  << duration / 1000 << " secs." << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -208,18 +191,18 @@ static void doCorrelationOneAPICompute(JNIEnv *env, jint rankId,
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
-    std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
-
+    std::cout << "oneDAL (native): use DPC++ kernels "
+              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
+              << std::endl;
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
 #ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        ccl::communicator &comm = getComm();
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         // Set number of threads for oneDAL to use for each rank
         services::Environment::getInstance()->setNumberOfThreads(executorCores);
@@ -228,17 +211,32 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
             services::Environment::getInstance()->getNumberOfThreads();
         std::cout << "oneDAL (native): Number of CPU threads used"
                   << nThreadsNew << std::endl;
-        doCorrelationDaalCompute(env, obj, rankId, comm, pData, executorNum,
+        doCorrelationDaalCompute(env, obj, rankId, cclComm, pData, executorNum,
                                  resultObj);
     }
 #else
     case ComputeDevice::gpu: {
-        doCorrelationOneAPICompute(env, rankId, pNumTabData, executorNum,
-                                   ipPortStr, device, resultObj);
+        int nGpu = env->GetArrayLength(gpuIdxArray);
+        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                  << " GPU(s)"
+                  << " rankid " << rankId << std::endl;
+
+        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+        int size = cclComm.size();
+        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+        auto queue =
+            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+        auto comm =
+            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                queue, size, rankId, kvs);
+        doCorrelationOneAPICompute(env, pNumTabData, comm, resultObj);
     }
 #endif
     }
 
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }

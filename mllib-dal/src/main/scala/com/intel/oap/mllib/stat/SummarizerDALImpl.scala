@@ -44,22 +44,23 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      if (useDevice == "GPU") {
-        OneCCL.initDpcpp()
-      } else {
-        OneCCL.init(executorNum, rank, kvsIPPort)
-      }
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val computeStartTime = System.nanoTime()
 
       val result = new SummarizerResult()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
       cSummarizerTrainDAL(
         tableArr,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
+        gpuIndices,
         result
       )
 
@@ -111,9 +112,7 @@ class SummarizerDALImpl(val executorNum: Int,
       } else {
         Iterator.empty
       }
-      if (useDevice == "CPU") {
-        OneCCL.cleanup()
-      }
+      OneCCL.cleanup()
       ret
     }.collect()
 
@@ -137,7 +136,6 @@ class SummarizerDALImpl(val executorNum: Int,
                                           executorNum: Int,
                                           executorCores: Int,
                                           computeDeviceOrdinal: Int,
-                                          rankId: Int,
-                                          ipPort: String,
+                                          gpuIndices: Array[Int],
                                           result: SummarizerResult): Long
 }

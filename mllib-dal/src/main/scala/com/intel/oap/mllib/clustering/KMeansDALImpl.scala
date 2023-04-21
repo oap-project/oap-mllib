@@ -50,12 +50,18 @@ class KMeansDALImpl(var nClusters: Int,
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       var cCentroids = 0L
       val result = new KMeansResult()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+
       val tableArr = table.next()
+      OneCCL.init(executorNum, rank, kvsIPPort)
       val initCentroids = if (useDevice == "GPU") {
-        OneCCL.initDpcpp()
         OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
       } else {
-        OneCCL.init(executorNum, rank, kvsIPPort)
         OneDAL.makeNumericTable(centers).getCNumericTable
       }
       cCentroids = cKMeansOneapiComputeWithInitCenters(
@@ -67,8 +73,7 @@ class KMeansDALImpl(var nClusters: Int,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
-        rank,
-        kvsIPPort,
+        gpuIndices,
         result
       )
 
@@ -80,14 +85,11 @@ class KMeansDALImpl(var nClusters: Int,
           } else {
             OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
           }
-
           Iterator((centerVectors, result.totalCost, result.iterationNum))
         } else {
           Iterator.empty
         }
-      if (useDevice == "CPU") {
-        OneCCL.cleanup()
-      }
+      OneCCL.cleanup()
       ret
     }.collect()
 
@@ -122,7 +124,6 @@ class KMeansDALImpl(var nClusters: Int,
                                                        executorNum: Int,
                                                        executorCores: Int,
                                                        computeDeviceOrdinal: Int,
-                                                       rankId: Int,
-                                                       ipPort: String,
+                                                       gpuIndices: Array[Int],
                                                        result: KMeansResult): Long
 }

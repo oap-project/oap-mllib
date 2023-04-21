@@ -23,7 +23,6 @@ import org.apache.spark.ml.FunctionsSuite
 import org.apache.spark.ml.linalg.Vectors
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
-
 class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
 
     test("test compute Kmeans HomogenTable") {
@@ -47,9 +46,11 @@ class KmeansHomogenTableSuite extends FunctionsSuite with Logging {
 
         val kmeansDAL = new KMeansDALImpl(0, 0, 0,
             null, null, 0, 0);
+        OneCCL.init(1, 1, "127.0.0.1_3000")
+        val gpuIndices = Array(0)
         val result = new KMeansResult();
         val centroids = kmeansDAL.cKMeansOneapiComputeWithInitCenters(dataTable.getcObejct(), centroidsTable.getcObejct(),10, 0.001,
-            5, 1, 1, TestCommon.getComputeDevice.ordinal(), 0, "127.0.0.1_3000" , result);
+            5, 1, 1, TestCommon.getComputeDevice.ordinal(), gpuIndices, result);
         val resultVectors = OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(centroids), TestCommon.getComputeDevice);
         assertArrayEquals(TestCommon.convertArray(expectCentroids), TestCommon.convertArray(resultVectors), 0.000001)
     }

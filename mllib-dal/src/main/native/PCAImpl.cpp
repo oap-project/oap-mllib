@@ -18,15 +18,9 @@
 #include <iostream>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
+#include "Common.hpp"
 #include "oneapi/dal/algo/covariance.hpp"
 #include "oneapi/dal/algo/pca.hpp"
-#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"
@@ -48,8 +42,7 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              int nBlocks, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start , rankid " << rankId
-              << std::endl;
+    std::cout << "oneDAL (native): CPU compute start" << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -185,20 +178,17 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 #endif
 
 #ifdef CPU_GPU_PROFILE
-static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
-                               jint executorNum, const ccl::string &ipPort,
-                               ComputeDevice &device, jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
-              << std::endl;
-    const bool isRoot = (rankId == ccl_root);
+static void doPCAOneAPICompute(
+    JNIEnv *env, jlong pNumTabData,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): GPU compute start" << std::endl;
+    const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cov_desc = covariance::descriptor{}.set_result_options(
         covariance::result_options::cov_matrix);
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
@@ -214,15 +204,15 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
         using descriptor_t = pca::descriptor<float_t, method_t, task_t>;
         const auto pca_desc = descriptor_t().set_deterministic(true);
 
-        auto t1 = std::chrono::high_resolution_clock::now();
+        t1 = std::chrono::high_resolution_clock::now();
         const auto result_train =
-            train(queue, pca_desc, result.get_cov_matrix());
+            preview::train(comm, pca_desc, result.get_cov_matrix());
         t2 = std::chrono::high_resolution_clock::now();
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native): rankid " << rankId << "; Eigen step took "
-                  << duration / 1000 << " secs in end. " << std::endl;
+        std::cout << "PCA (native): Eigen step took " << duration / 1000
+                  << " secs." << std::endl;
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -255,19 +245,18 @@ static void doPCAOneAPICompute(JNIEnv *env, jint rankId, jlong pNumTabData,
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint executorCores, jint computeDeviceOrdinal, jint rankId, jstring ipPort,
+    jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
 #ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        ccl::communicator &comm = getComm();
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         // Set number of threads for oneDAL to use for each rank
         services::Environment::getInstance()->setNumberOfThreads(executorCores);
@@ -276,16 +265,31 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
             services::Environment::getInstance()->getNumberOfThreads();
         std::cout << "oneDAL (native): Number of CPU threads used "
                   << nThreadsNew << std::endl;
-        doPCADAALCompute(env, obj, rankId, comm, pData, executorNum, resultObj);
+        doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum,
+                         resultObj);
     }
 #else
     case ComputeDevice::gpu: {
-        doPCAOneAPICompute(env, rankId, pNumTabData, executorNum, ipPortStr,
-                           device, resultObj);
+        int nGpu = env->GetArrayLength(gpuIdxArray);
+        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                  << " GPU(s)"
+                  << " rankid " << rankId << std::endl;
+
+        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+        int size = cclComm.size();
+        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+        auto queue =
+            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+        auto comm =
+            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                queue, size, rankId, kvs);
+        doPCAOneAPICompute(env, pNumTabData, comm, resultObj);
     }
 #endif
     }
-
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return 0;
 }
