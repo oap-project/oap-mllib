@@ -164,15 +164,15 @@ class PCADALImpl(val k: Int,
     val numCols = table.getNumberOfColumns.toInt
     require(k <= numRows, "k should be less or equal to row number")
 
-    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, device)
+    val arrayDouble = getDoubleBufferDataFromDAL(table, numRows, numCols)
 
     // Column-major, transpose of top K rows of NumericTable
     new DenseMatrix(numCols, k, arrayDouble.slice(0, numCols * k), false)
   }
 
-  private[mllib] def getExplainedVarianceFromDAL(table_1xn: HomogenTable, k: Int,
-                                          device: Common.ComputeDevice): DenseVector = {
-    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, device)
+  private def getExplainedVarianceFromDAL(table_1xn: NumericTable, k: Int): DenseVector = {
+    val dataNumCols = table_1xn.getNumberOfColumns.toInt
+    val arrayDouble = getDoubleBufferDataFromDAL(table_1xn, 1, dataNumCols)
     val sum = arrayDouble.sum
     val topK = Arrays.copyOfRange(arrayDouble, 0, k)
     for (i <- 0 until k)
@@ -182,13 +182,15 @@ class PCADALImpl(val k: Int,
 
   // table.asInstanceOf[HomogenNumericTable].getDoubleArray() would error on GPU,
   // so use table.getBlockOfRows instead of it.
-  private[mllib] def getDoubleBufferDataFromDAL(table: HomogenTable,
+  private def getDoubleBufferDataFromDAL(table: NumericTable,
                                          numRows: Int,
-                                         device: Common.ComputeDevice): Array[Double] = {
+                                         numCols: Int): Array[Double] = {
+    var dataDouble: DoubleBuffer = null
 
     // returned DoubleBuffer is ByteByffer, need to copy as double array
-    val accessor = new RowAccessor(table.getcObejct(), device)
-    val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
+    dataDouble = table.getBlockOfRows(0, numRows, dataDouble)
+    val arrayDouble: Array[Double] = new Array[Double](numRows * numCols)
+    dataDouble.get(arrayDouble)
 
     arrayDouble
   }

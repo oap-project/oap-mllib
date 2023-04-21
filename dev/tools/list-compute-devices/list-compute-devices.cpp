@@ -59,7 +59,6 @@ int main (int argc, char * argv[]) {
               "cpu     Check cpu device" << std::endl <<
               "gpu     Check gpu device" << std::endl;
     } else {
-        char* hostname = std::getenv("HOSTNAME");
         char* device = argv[1];
         int length = strlen(device);
         for (int i = 0; i < length; i++) {

@@ -302,7 +302,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetColumnCount(
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetRowCount(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getrowcount %ld \n", cTableAddr);
+    printf("HomogenTable getrowcount \n");
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     return htable.get_row_count();
 }
