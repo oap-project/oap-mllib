@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.regression
 
-import com.intel.oap.mllib.classification.RandomForestClassifierShim
 import com.intel.oap.mllib.regression.RandomForestRegressorShim
-import org.json4s.{DefaultFormats, JObject}
-import org.json4s.JsonDSL._
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param.ParamMap
@@ -34,7 +34,7 @@ import org.apache.spark.mllib.tree.model.{RandomForestModel => OldRandomForestMo
 import org.apache.spark.sql.{Column, DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
-
+// scalastyle:off line.size.limit
 /**
  * <a href="http://en.wikipedia.org/wiki/Random_forest">Random Forest</a>
  * learning algorithm for regression.

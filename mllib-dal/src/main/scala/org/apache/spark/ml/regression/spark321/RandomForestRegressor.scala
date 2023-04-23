@@ -1,3 +1,4 @@
+// scalastyle:off
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,32 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// scalastyle:on
 
 package org.apache.spark.ml.regression.spark321
 
 import com.intel.oap.mllib.Utils
+import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
 import com.intel.oap.mllib.regression.{RandomForestRegressorDALImpl, RandomForestRegressorShim}
-import com.intel.oap.mllib.classification.{RandomForestResult, LearningNode => LearningNodeDAL}
+import java.util.{Map => JavaMap}
+import scala.jdk.CollectionConverters._
 
-import java.util.{ArrayList, Map => JavaMap}
 import org.apache.spark.annotation.Since
+import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.regression.{DecisionTreeRegressionModel, RandomForestRegressionModel, Regressor}
 import org.apache.spark.ml.tree._
-import org.apache.spark.ml.tree.impl.RandomForest
-import org.apache.spark.ml.util.DefaultParamsReader.Metadata
-import org.apache.spark.ml.util.Instrumentation.instrumented
+import org.apache.spark.ml.tree.impl.{DecisionTreeMetadata, RandomForest}
 import org.apache.spark.ml.util._
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo}
-import org.apache.spark.mllib.tree.model.{RandomForestModel => OldRandomForestModel}
-import org.apache.spark.sql.functions.{col, udf}
-import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{Column, DataFrame, Dataset}
-import org.json4s.JsonDSL._
-import org.json4s.{DefaultFormats, JObject}
-
-import scala.collection.JavaConversions.mapAsScalaMap
+// scalastyle:off line.size.limit
 
 /**
  * <a href="http://en.wikipedia.org/wiki/Random_forest">Random Forest</a>
@@ -152,10 +148,28 @@ class RandomForestRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
 
 
   private def trainRandomForestRegressorDAL(dataset: Dataset[_],
-                                             instr: Instrumentation): RandomForestRegressionModel = {
+                                             instr: Instrumentation): RandomForestRegressionModel
+  = {
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     val spark = dataset.sparkSession
+    val categoricalFeatures: Map[Int, Int] =
+      MetadataUtils.getCategoricalFeatures(dataset.schema($(featuresCol)))
+
+    val instances = extractInstances(dataset)
+    val strategy =
+      super.getOldStrategy(categoricalFeatures, numClasses = 0, OldAlgo.Regression, getOldImpurity)
+    strategy.bootstrap = $(bootstrap)
+
+    instr.logDataset(instances)
+    instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, leafCol, impurity,
+      numTrees, featureSubsetStrategy, maxDepth, maxBins, maxMemoryInMB, minInfoGain,
+      minInstancesPerNode, minWeightFractionPerNode, seed, subsamplingRate, cacheNodeIds,
+      checkpointInterval, bootstrap)
+    val metadata = DecisionTreeMetadata
+      .buildMetadata(instances.retag(classOf[Instance]),
+        strategy, getNumTrees, getFeatureSubsetStrategy)
+
     import spark.implicits._
 
     val sc = spark.sparkContext
@@ -166,7 +180,7 @@ class RandomForestRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
 
     val rfDAL = new RandomForestRegressorDALImpl(uid,
       getNumTrees,
-      getMinInstancesPerNode,
+      metadata.numFeaturesPerNode,
       1,
       1,
       getMinWeightFractionPerNode,
@@ -178,9 +192,9 @@ class RandomForestRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
     val (predictionNumericTable, treesMap) = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
 
-    val numFeatures = dataset.select(${featuresCol}).head().size
+    val numFeatures = metadata.numFeatures
 
-    val trees = buildTrees(treesMap, numFeatures)
+    val trees = buildTrees(treesMap, numFeatures, metadata)
       .map(_.asInstanceOf[DecisionTreeRegressionModel])
     instr.logNumFeatures(numFeatures)
     new RandomForestRegressionModel(uid, trees, numFeatures)
@@ -188,10 +202,11 @@ class RandomForestRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
 
   private def buildTrees(treesMap : JavaMap[Integer,
     java.util.ArrayList[LearningNodeDAL]],
-                         numFeatures : Int): Array[DecisionTreeModel] = {
-    treesMap.map { case (id: Integer, nodelist: java.util.ArrayList[LearningNodeDAL])
+                         numFeatures : Int,
+                         metadata: DecisionTreeMetadata): Array[DecisionTreeModel] = {
+    treesMap.asScala.toMap.map { case (id: Integer, nodelist: java.util.ArrayList[LearningNodeDAL])
     => {
-      val rootNode = TreeUtils.buildTreeDFS(nodelist)
+      val rootNode = TreeUtils.buildTreeDFS(nodelist, metadata)
       new DecisionTreeRegressionModel(uid,
         rootNode.toNode(),
         numFeatures)

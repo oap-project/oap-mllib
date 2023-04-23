@@ -23,22 +23,16 @@
 #include <vector>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
+#include "Common.hpp"
 
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
+#include "OneCCL.h"
 #include "com_intel_oap_mllib_regression_RandomForestRegressorDALImpl.h"
 #include "oneapi/dal/algo/decision_forest.hpp"
-#include "oneapi/dal/table/homogen.hpp"
 #include "service.h"
 
 using namespace std;
 using namespace oneapi::dal;
 namespace df = oneapi::dal::decision_forest;
-const int ccl_root = 0;
 
 // Define the LearningNode struct
 struct LearningNode {
@@ -75,9 +69,9 @@ LearningNode convertsplitToLearningNode(
     return splitNode;
 }
 
-LearningNode convertleafToLearningNode(
-    const df::leaf_node_info<df::task::regression> &info,
-    const int classCount) {
+LearningNode
+convertleafToLearningNode(const df::leaf_node_info<df::task::regression> &info,
+                          const int classCount) {
     LearningNode leafNode;
     leafNode.isLeaf = true;
     leafNode.level = info.get_level();
@@ -247,7 +241,8 @@ jobject convertRFRJavaMap(
         jmethodID mapPut = env->GetMethodID(
             mapClass, "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        std::cout << "convertRFRJavaMap tree id  = " << entry.first << std::endl;
+        std::cout << "convertRFRJavaMap tree id  = " << entry.first
+                  << std::endl;
         // Create a new Integer object with the value key
         jobject jKey = env->NewObject(
             env->FindClass("java/lang/Integer"), // Find the Integer class
@@ -262,14 +257,13 @@ jobject convertRFRJavaMap(
 }
 
 static jobject doRFRegressorOneAPICompute(
-    JNIEnv *env, jint rankId, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal,
-    jint treeCount, jint minObservationsLeafNode,
-    jboolean bootstrap, const ccl::string &ipPort, jobject resultObj) {
-    std::cout << "oneDAL (native): compute start , rankid = " << rankId
-              << "; device = " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
-    const bool isRoot = (rankId == ccl_root);
+    JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
+    jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
+    jint minObservationsLeafNode, jboolean bootstrap,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jobject resultObj) {
+    std::cout << "oneDAL (native): compute start" << std::endl;
+    const bool isRoot = (comm.get_rank() == ccl_root);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table hFeaturetable =
         *reinterpret_cast<const homogen_table *>(pNumTabFeature);
@@ -280,16 +274,13 @@ static jobject doRFRegressorOneAPICompute(
     const auto df_desc =
         df::descriptor<float, df::method::hist, df::task::regression>{}
             .set_tree_count(treeCount)
-            .set_features_per_node(0)
+            .set_features_per_node(numFeaturesPerNode)
             .set_min_observations_in_leaf_node(minObservationsLeafNode)
             .set_error_metric_mode(
                 df::error_metric_mode::out_of_bag_error |
                 df::error_metric_mode::out_of_bag_error_per_observation)
             .set_variable_importance_mode(df::variable_importance_mode::mdi);
 
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -313,7 +304,7 @@ static jobject doRFRegressorOneAPICompute(
         jfieldID predictionNumericTableField =
             env->GetFieldID(clazz, "predictionNumericTable", "J");
         jfieldID importancesNumericTableField =
-           env->GetFieldID(clazz, "importancesNumericTable", "J");
+            env->GetFieldID(clazz, "importancesNumericTable", "J");
 
         HomogenTablePtr importances =
             std::make_shared<homogen_table>(result_train.get_var_importance());
@@ -329,7 +320,7 @@ static jobject doRFRegressorOneAPICompute(
 
         // Set importances for result
         env->SetLongField(resultObj, importancesNumericTableField,
-                         (jlong)importances.get());
+                          (jlong)importances.get());
     }
     return trees;
 }
@@ -337,22 +328,45 @@ static jobject doRFRegressorOneAPICompute(
 /*
  * Class:     com_intel_oap_mllib_regression_RandomForestRegressorDALImpl
  * Method:    cRFRegressorTrainDAL
- * Signature: (JJIIIIIZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
+ * Signature:
+ * (JJIIIIIZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
  */
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint rankId,
-    jint treeCount, jint minObservationsLeafNode,
-    jboolean bootstrap, jstring ipPort, jobject resultObj) {
+    jint executorNum, jint computeDeviceOrdinal, jint treeCount,
+    jint numFeaturesPerNode, jint minObservationsLeafNode, jboolean bootstrap,
+    jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
-    jobject hashmapObj = doRFRegressorOneAPICompute(
-        env, rankId, pNumTabFeature, pNumTabLabel, executorNum,
-        computeDeviceOrdinal, treeCount,
-        minObservationsLeafNode, bootstrap, ipPortPtr, resultObj);
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-    return hashmapObj;
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+    case ComputeDevice::gpu: {
+        int nGpu = env->GetArrayLength(gpuIdxArray);
+        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                  << " GPU(s)"
+                  << " rankid " << rankId << std::endl;
+
+        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+        int size = cclComm.size();
+        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+
+        auto queue =
+            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+
+        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+        auto comm =
+            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                queue, size, rankId, kvs);
+        jobject hashmapObj = doRFRegressorOneAPICompute(
+            env, pNumTabFeature, pNumTabLabel, executorNum,
+            computeDeviceOrdinal, treeCount, numFeaturesPerNode,
+            minObservationsLeafNode, bootstrap, comm, resultObj);
+        return hashmapObj;
+    }
+    }
+    return nullptr;
 }
 #endif

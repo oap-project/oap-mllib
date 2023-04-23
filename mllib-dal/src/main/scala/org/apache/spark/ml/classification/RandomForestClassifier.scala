@@ -20,8 +20,7 @@
 package org.apache.spark.ml.classification
 
 import com.intel.oap.mllib.classification.RandomForestClassifierShim
-import org.json4s.{DefaultFormats, JObject}
-import org.json4s.JsonDSL._
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
@@ -50,7 +49,7 @@ class RandomForestClassifier @Since("1.4.0") (
   extends ProbabilisticClassifier[Vector,
                                   RandomForestClassifier,
                                   org.apache.spark.ml.
-                                  classification.spark321.RandomForestClassificationModel]
+                                  classification.RandomForestClassificationModel]
     with RandomForestClassifierParams with DefaultParamsWritable {
 
   @Since("1.4.0")
@@ -141,7 +140,7 @@ class RandomForestClassifier @Since("1.4.0") (
 
   override protected def train(
                                 dataset: Dataset[_]):
-        org.apache.spark.ml.classification.spark321.RandomForestClassificationModel
+        org.apache.spark.ml.classification.RandomForestClassificationModel
   = instrumented { instr =>
     val shim = RandomForestClassifierShim.create(uid)
     shim.initShim(extractParamMap())

@@ -82,15 +82,15 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
   /////////////////////////////////////////////////////////////////////////////
 
   test("params") {
-    ParamsSuite.checkParams(new RandomForestClassifier321)
-    val model = new RandomForestClassificationModel321("rfc",
+    ParamsSuite.checkParams(new RandomForestClassifier)
+    val model = new RandomForestClassificationModel("rfc",
       Array(new DecisionTreeClassificationModel("dtc", new LeafNode(0.0, 0.0, null), 1, 2)), 2, 2)
     ParamsSuite.checkParams(model)
   }
 
   test("predictRaw and predictProbability") {
     val rdd = orderedLabeledPoints5_20
-    val rf = new RandomForestClassifier321()
+    val rf = new RandomForestClassifier()
       .setImpurity("Gini")
       .setMaxDepth(3)
       .setNumTrees(3)
@@ -114,12 +114,12 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     }
 
     ProbabilisticClassifierSuite.testPredictMethods[
-      Vector, RandomForestClassificationModel321](this, model, df)
+      Vector, RandomForestClassificationModel](this, model, df)
   }
 
   test("prediction on single instance") {
     val rdd = orderedLabeledPoints5_20
-    val rf = new RandomForestClassifier321()
+    val rf = new RandomForestClassifier()
       .setImpurity("Gini")
       .setMaxDepth(3)
       .setNumTrees(3)
@@ -137,14 +137,14 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
 
   test("Fitting without numClasses in metadata") {
     val df: DataFrame = TreeTests.featureImportanceData(sc).toDF()
-    val rf = new RandomForestClassifier321().setMaxDepth(1).setNumTrees(1)
+    val rf = new RandomForestClassifier().setMaxDepth(1).setNumTrees(1)
     rf.fit(df)
   }
 
   test("model support predict leaf index") {
     val model0 = new DecisionTreeClassificationModel("dtc", TreeTests.root0, 3, 2)
     val model1 = new DecisionTreeClassificationModel("dtc", TreeTests.root1, 3, 2)
-    val model = new RandomForestClassificationModel321("rfc", Array(model0, model1), 3, 2)
+    val model = new RandomForestClassificationModel("rfc", Array(model0, model1), 3, 2)
     model.setLeafCol("predictedLeafId")
       .setRawPredictionCol("")
       .setPredictionCol("")
@@ -162,8 +162,8 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
   }
 
   test("should support all NumericType labels and not support other types") {
-    val rf = new RandomForestClassifier321().setMaxDepth(1)
-    MLTestingUtils.checkNumericTypes[RandomForestClassificationModel321, RandomForestClassifier321](
+    val rf = new RandomForestClassifier().setMaxDepth(1)
+    MLTestingUtils.checkNumericTypes[RandomForestClassificationModel, RandomForestClassifier](
       rf, spark) { (expected, actual) =>
       TreeTests.checkEqual(expected, actual)
     }
@@ -171,7 +171,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
 
   test("tree params") {
     val rdd = orderedLabeledPoints5_20
-    val rf = new RandomForestClassifier321()
+    val rf = new RandomForestClassifier()
       .setImpurity("entropy")
       .setMaxDepth(3)
       .setNumTrees(3)
@@ -207,22 +207,22 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     )
 
     for ((numTrees, maxDepth, subsamplingRate, tol) <- testParams) {
-      val estimator = new RandomForestClassifier321()
+      val estimator = new RandomForestClassifier()
         .setNumTrees(numTrees)
         .setMaxDepth(maxDepth)
         .setSubsamplingRate(subsamplingRate)
         .setSeed(seed)
         .setMinWeightFractionPerNode(0.049)
 
-      MLTestingUtils.testArbitrarilyScaledWeights[RandomForestClassificationModel321,
-        RandomForestClassifier321](df.as[LabeledPoint], estimator,
+      MLTestingUtils.testArbitrarilyScaledWeights[RandomForestClassificationModel,
+        RandomForestClassifier](df.as[LabeledPoint], estimator,
         MLTestingUtils.modelPredictionEquals(df, _ == _, tol))
-      MLTestingUtils.testOutliersWithSmallWeights[RandomForestClassificationModel321,
-        RandomForestClassifier321](df.as[LabeledPoint], estimator,
+      MLTestingUtils.testOutliersWithSmallWeights[RandomForestClassificationModel,
+        RandomForestClassifier](df.as[LabeledPoint], estimator,
         numClasses, MLTestingUtils.modelPredictionEquals(df, _ == _, tol),
         outlierRatio = 2)
-      MLTestingUtils.testOversamplingVsWeighting[RandomForestClassificationModel321,
-        RandomForestClassifier321](df.as[LabeledPoint], estimator,
+      MLTestingUtils.testOversamplingVsWeighting[RandomForestClassificationModel,
+        RandomForestClassifier](df.as[LabeledPoint], estimator,
         MLTestingUtils.modelPredictionEquals(df, _ == _, tol), seed)
     }
   }
@@ -241,7 +241,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     val rdd = sc.parallelize(arr)
     val multinomialDataset = spark.createDataFrame(rdd)
 
-    val rf = new RandomForestClassifier321()
+    val rf = new RandomForestClassifier()
 
     val brfModel = rf.fit(binaryDataset)
     assert(brfModel.summary.isInstanceOf[BinaryRandomForestClassificationTrainingSummary])
@@ -275,7 +275,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     assert(brfSummary.asBinary.areaUnderROC ~== brfModel.summary.asBinary.areaUnderROC relTol 1e-6)
 
     // verify instance weight works
-    val rf2 = new RandomForestClassifier321()
+    val rf2 = new RandomForestClassifier()
       .setWeightCol("weight")
 
     val binaryDatasetWithWeight =
@@ -342,14 +342,14 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
 
   test("read/write") {
     def checkModelData(
-                        model: RandomForestClassificationModel321,
-                        model2: RandomForestClassificationModel321): Unit = {
+                        model: RandomForestClassificationModel,
+                        model2: RandomForestClassificationModel): Unit = {
       TreeTests.checkEqual(model, model2)
       assert(model.numFeatures === model2.numFeatures)
       assert(model.numClasses === model2.numClasses)
     }
 
-    val rf = new RandomForestClassifier321().setNumTrees(2)
+    val rf = new RandomForestClassifier().setNumTrees(2)
     val rdd = TreeTests.getTreeReadWriteData(sc)
 
     val allParamSettings = TreeTests.allParamSettings ++ Map("impurity" -> "entropy")
@@ -362,7 +362,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
 
   test("SPARK-33398: Load RandomForestClassificationModel prior to Spark 3.0") {
     val path = testFile("ml-models/rfc-2.4.7")
-    val model = RandomForestClassificationModel321.load(path)
+    val model = RandomForestClassificationModel.load(path)
     assert(model.numClasses === 2)
     assert(model.numFeatures === 692)
     assert(model.getNumTrees === 2)

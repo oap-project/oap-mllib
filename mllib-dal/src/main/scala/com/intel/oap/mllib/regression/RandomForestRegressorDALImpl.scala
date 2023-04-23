@@ -19,6 +19,7 @@ import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.classification.{LearningNode, RandomForestResult}
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.Matrix
@@ -64,7 +65,14 @@ class RandomForestRegressorDALImpl(val uid: String,
       (rank: Int, tables: Iterator[(Long, Long)]) =>
       val (featureTabAddr, lableTabAddr) = tables.next()
 
-      OneCCL.initDpcpp()
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+
+      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
@@ -73,11 +81,11 @@ class RandomForestRegressorDALImpl(val uid: String,
         lableTabAddr,
         executorNum,
         computeDevice.ordinal(),
-        rank,
         treeCount,
+        featurePerNode,
         minObservationsLeafNode,
         bootstrap,
-        kvsIPPort,
+        gpuIndices,
         result)
       for ( (k, v) <- hashmap) {
         logInfo(s"key: $k, value: $v")
@@ -126,13 +134,14 @@ class RandomForestRegressorDALImpl(val uid: String,
   }
 
 
-  @native private[mllib] def cRFRegressorTrainDAL(featureTabAddr: Long, lableTabAddr: Long,
+  @native private[mllib] def cRFRegressorTrainDAL(featureTabAddr: Long,
+                                             lableTabAddr: Long,
                                              executorNum: Int,
                                              computeDeviceOrdinal: Int,
-                                             rankId: Int,
                                              treeCount: Int,
+                                             featurePerNode: Int,
                                              minObservationsLeafNode: Int,
                                              bootstrap: Boolean,
-                                             ipPort: String,
+                                             gpuIndices: Array[Int],
                                              result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

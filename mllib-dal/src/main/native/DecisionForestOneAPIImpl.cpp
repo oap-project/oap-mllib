@@ -110,7 +110,6 @@ struct collect_nodes {
 
         std::cout << str << std::endl;
 
-        i++;
         return true;
     }
 
@@ -149,57 +148,6 @@ void collect_model(
         m.traverse_depth_first(i, collect_nodes{myVec, classCount});
         treeForest->insert({i, myVec});
     }
-    jmethodID constructor = env->GetMethodID(leafNodeClass, "<init>", "(Ljava/lang/Long;Ljava/lang/Long;Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator)V");
-    jfieldID idField = env->GetFieldID(learningNodeClass, "id", "I");
-    jfieldID leftChildField = env->GetFieldID(learningNodeClass, "leftChild", "Lscala/Option;");
-    jfieldID rightChildField = env->GetFieldID(learningNodeClass, "rightChild", "Lscala/Option;");
-    jfieldID splitField = env->GetFieldID(learningNodeClass, "split", "Lscala/Option;");
-    jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
-    jfieldID statsField = env->GetFieldID(learningNodeClass, "stats", "Lorg/apache/spark/ml/tree/ImpurityStats;");
-
-    jobject leftChildObj = env->GetObjectField(node, leftChildId);
-    jobject rightChildObj = env->GetObjectField(node, rightChildId);
-    jboolean isLeaf = env->GetBooleanField(node, isLeafId);
-    jobject splitObj = env->GetObjectField(node, splitId);
-    jobject statsObj = env->GetObjectField(node, statsId);
-
-    // set Id
-    env->SetIntField(node, idField,
-                             nodeIndex);
-    // set isleaf
-    env->SetBooleanField(node, isLeafField,
-                            typeid(info) ==typeid(df::leaf_node_info) ? true : false);
-    // set leftChild
-    env->SetIntField(node, leftChildField,
-                                 nullptr);
-    // set rightChild
-    env->SetIntField(node, rightChildField,
-                                 nullptr);
-    // set split
-    if(!typeid(info) ==typeid(df::leaf_node_info)){
-        env->SetIntField(node, splitField,
-                                 info.get_feature_index());
-    }
-
-    // 创建ImpurityStats对象
-    jclass statsCls = env->FindClass(IMPURITY_STATS_CLASS_NAME);
-    // Get Field references
-    jfieldID gainField = env->GetFieldID(statsCls, "gain", "D"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "impurity", "D"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "impurityCalculator", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "leftImpurityCalculator", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator"));
-    jfieldID impurityField = env->GetFieldID(statsCls, "rightImpurityCalculator", "Lorg.apache.spark.mllib.tree.impurity.ImpurityCalculator"));
-
-    env->SetIntField(statsObj, gainField,
-                             0.0));
-    env->SetIntField(statsObj, impurityField,
-                         info.get_impurity());
-
-
-    jobject nodeObj = env->NewObject(learningNodeClass, constructor);
-    // 释放对象引用
-
-    return nodeObj;
 }
 
 jobject convertRFCJavaMap(
@@ -293,7 +241,8 @@ jobject convertRFCJavaMap(
         jmethodID mapPut = env->GetMethodID(
             mapClass, "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        std::cout << "convertRFCJavaMap tree id  = " << entry.first << std::endl;
+        std::cout << "convertRFCJavaMap tree id  = " << entry.first
+                  << std::endl;
         // Create a new Integer object with the value key
         jobject jKey = env->NewObject(
             env->FindClass("java/lang/Integer"), // Find the Integer class
@@ -390,9 +339,9 @@ static jobject doRFClassifierOneAPICompute(
         env->SetLongField(resultObj, probabilitiesNumericTableField,
                           (jlong)probabilities.get());
 
-       // Set importances for result
-       env->SetLongField(resultObj, importancesNumericTableField,
-                         (jlong)importances.get());
+        // Set importances for result
+        env->SetLongField(resultObj, importancesNumericTableField,
+                          (jlong)importances.get());
     }
     return trees;
 }

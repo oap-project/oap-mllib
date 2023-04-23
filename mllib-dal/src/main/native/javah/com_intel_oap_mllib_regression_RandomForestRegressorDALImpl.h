@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (JJIIIIIZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
  */
 JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL
-  (JNIEnv *, jobject, jlong, jlong, jint, jint, jint, jint, jint, jboolean, jstring, jobject);
+  (JNIEnv *, jobject, jlong, jlong, jint, jint, jint, jint, jint, jboolean, jintArray, jobject);
 
 #ifdef __cplusplus
 }
