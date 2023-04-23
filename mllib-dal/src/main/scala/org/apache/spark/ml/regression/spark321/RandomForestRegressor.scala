@@ -33,6 +33,7 @@ import org.apache.spark.ml.regression.{DecisionTreeRegressionModel, RandomForest
 import org.apache.spark.ml.tree._
 import org.apache.spark.ml.tree.impl.{DecisionTreeMetadata, RandomForest}
 import org.apache.spark.ml.util._
+import org.apache.spark.ml.util.Instrumentation.instrumented
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo}
 import org.apache.spark.sql.{Column, DataFrame, Dataset}
 // scalastyle:off line.size.limit
