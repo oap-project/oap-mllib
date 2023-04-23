@@ -21,7 +21,7 @@ package org.apache.spark.ml.tree
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
 
 import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
-import org.apache.spark.mllib.tree.impurity.GiniCalculator
+import org.apache.spark.mllib.tree.impurity.{GiniCalculator, VarianceCalculator}
 import org.apache.spark.mllib.tree.model.ImpurityStats
 import scala.collection.mutable
 
@@ -63,7 +63,12 @@ object TreeUtils {
       val ln: LearningNodeDAL = nodes.get(i)
       i += 1
 
-      val impurityCalculator = new GiniCalculator(ln.probability, ln.sampleCount)
+      val impurityCalculator = if (metadata.impurity == "gini") {
+        new GiniCalculator(ln.probability, ln.sampleCount)
+      } else {
+        new VarianceCalculator(ln.probability, ln.sampleCount)
+      }
+
       val impurityStats = new ImpurityStats(0, ln.impurity, impurityCalculator, null, null)
       val node = LearningNode.apply(0, ln.isLeaf, impurityStats)
       node.split = if (!ln.isLeaf) {

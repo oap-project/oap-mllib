@@ -209,8 +209,8 @@ class RandomForestRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
     => {
       val rootNode = TreeUtils.buildTreeDFS(nodelist, metadata)
       new DecisionTreeRegressionModel(uid,
-        rootNode.toNode(),
-        numFeatures)
+                                      rootNode.toNode(),
+                                      numFeatures)
     }
     }.toArray
   }
