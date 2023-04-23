@@ -20,15 +20,12 @@
 package org.apache.spark.ml.classification.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.classification.{RandomForestClassifierDALImpl, RandomForestClassifierShim, RandomForestResult, LearningNode => LearningNodeDAL}
-
-import java.util.{ArrayList, Map => JavaMap}
-import org.json4s.{DefaultFormats, JObject}
-import org.json4s.JsonDSL._
-
+import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
+import java.util.{Map => JavaMap}
 import scala.jdk.CollectionConverters._
+
 import org.apache.spark.annotation.Since
-import org.apache.spark.ml.classification.{BinaryClassificationSummary, BinaryRandomForestClassificationTrainingSummaryImpl, ClassificationSummary, DecisionTreeClassificationModel, ProbabilisticClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl, TrainingSummary}
+import org.apache.spark.ml.classification.{BinaryRandomForestClassificationTrainingSummaryImpl, DecisionTreeClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl}
 import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
@@ -45,7 +42,6 @@ import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
 
-import scala.collection.JavaConversions.mapAsScalaMap
 // scalastyle:off line.size.limit
 
 /**
@@ -154,7 +150,12 @@ class RandomForestClassifier @Since("1.4.0") (
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     val model = if (Utils.isOAPEnabled() && isPlatformSupported) {
-      trainRandomForestClassifierDAL(dataset, instr)
+      // Spark ML Random Forest implemented 'entropy' and 'gini', but OneDAL only implemented 'gini' criterion.
+      if (impurity == "gini") {
+        trainRandomForestClassifierDAL(dataset, instr)
+      } else {
+        trainDiscreteImpl(dataset, instr)
+      }
     } else {
       trainDiscreteImpl(dataset, instr)
     }
@@ -214,7 +215,7 @@ class RandomForestClassifier @Since("1.4.0") (
 
     val numFeatures = metadata.numFeatures
 
-    val trees = buildTrees(treesMap, numFeatures, numClasses).map(_.asInstanceOf[DecisionTreeClassificationModel])
+    val trees = buildTrees(treesMap, numFeatures, numClasses, metadata).map(_.asInstanceOf[DecisionTreeClassificationModel])
     instr.logNumClasses(numClasses)
     instr.logNumFeatures(numFeatures)
     createModel(dataset, trees, numFeatures, numClasses)
@@ -223,10 +224,11 @@ class RandomForestClassifier @Since("1.4.0") (
   private def buildTrees(treesMap : JavaMap[Integer,
                          java.util.ArrayList[LearningNodeDAL]],
                          numFeatures : Int,
-                         numClasses : Int): Array[DecisionTreeModel] = {
-    treesMap.map { case (id: Integer, nodelist: java.util.ArrayList[LearningNodeDAL])
+                         numClasses : Int,
+                         metadata: DecisionTreeMetadata): Array[DecisionTreeModel] = {
+    treesMap.asScala.toMap.map { case (id: Integer, nodelist: java.util.ArrayList[LearningNodeDAL])
       => {
-        val rootNode = TreeUtils.buildTreeDFS(nodelist)
+        val rootNode = TreeUtils.buildTreeDFS(nodelist, metadata)
         new DecisionTreeClassificationModel(uid,
                                             rootNode.toNode(),
                                             numFeatures,

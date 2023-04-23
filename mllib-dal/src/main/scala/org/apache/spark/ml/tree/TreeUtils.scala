@@ -19,17 +19,18 @@
 package org.apache.spark.ml.tree
 
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
-import scala.collection.mutable
 
+import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
 import org.apache.spark.mllib.tree.impurity.GiniCalculator
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
 object TreeUtils {
-  def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL]) : LearningNode = {
+  def buildTreeDFS(nodes : java.util.ArrayList[LearningNodeDAL],
+                   metadata: DecisionTreeMetadata) : LearningNode = {
     if (nodes.isEmpty) {
       return null
     }
-    val rootNode = buildTree(nodes)
+    val rootNode = buildTree(nodes, metadata)
     calculateGainAndImpurityStats(rootNode)
     traverseDFS(rootNode)
     rootNode
@@ -49,7 +50,8 @@ object TreeUtils {
     }
   }
 
-  private def buildTree(nodes : java.util.ArrayList[LearningNodeDAL]): LearningNode = {
+  private def buildTree(nodes : java.util.ArrayList[LearningNodeDAL],
+                        metadata: DecisionTreeMetadata): LearningNode = {
     var i = 0
 
     def buildTreeDF(): LearningNode = {
@@ -60,7 +62,11 @@ object TreeUtils {
       val impurityStats = new ImpurityStats(0, ln.impurity, impurityCalculator, null, null)
       val node = LearningNode.apply(0, ln.isLeaf, impurityStats)
       node.split = if (!ln.isLeaf) {
-        Some(new ContinuousSplit(ln.splitIndex, ln.splitValue))
+        if (metadata.isContinuous(ln.splitIndex)) {
+          Some(new ContinuousSplit(ln.splitIndex, ln.splitValue))
+        } else {
+          Some(new CategoricalSplit(ln.splitIndex, Array(), metadata.featureArity(ln.splitIndex)))
+        }
       } else {
         None
       }
