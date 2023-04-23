@@ -257,8 +257,8 @@ jobject convertJavaMap(
 
 static jobject doRFClassifierOneAPICompute(
     JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint classCount,
-    jint treeCount, jint minObservationsLeafNode, jint minObservationsSplitNode,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount, jint treeCount,
+    jint numFeaturesPerNode, jint minObservationsLeafNode, jint minObservationsSplitNode,
     jdouble minWeightFractionLeafNode, jdouble minImpurityDecreaseSplitNode,
     jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
@@ -278,7 +278,7 @@ static jobject doRFClassifierOneAPICompute(
         df::descriptor<float, df::method::hist, df::task::classification>{}
             .set_class_count(classCount)
             .set_tree_count(treeCount)
-            .set_features_per_node(hFeaturetable.get_column_count())
+            .set_features_per_node(numFeaturesPerNode)
             .set_min_observations_in_leaf_node(minObservationsLeafNode)
             .set_min_observations_in_split_node(minObservationsSplitNode)
             .set_min_weight_fraction_in_leaf_node(minWeightFractionLeafNode)
@@ -344,8 +344,8 @@ static jobject doRFClassifierOneAPICompute(
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint classCount,
-    jint treeCount, jint minObservationsLeafNode, jint minObservationsSplitNode,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount, jint treeCount, jint numFeaturesPerNode,
+    jint minObservationsLeafNode, jint minObservationsSplitNode,
     jdouble minWeightFractionLeafNode, jdouble minImpurityDecreaseSplitNode,
     jboolean bootstrap,  jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
@@ -372,8 +372,8 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
                 preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                     queue, size, rankId, kvs);
             jobject hashmapObj = doRFClassifierOneAPICompute(
-                env, pNumTabFeature, pNumTabLabel, executorNum,
-                computeDeviceOrdinal, classCount, treeCount, minObservationsLeafNode,
+                env, pNumTabFeature, pNumTabLabel, executorNum, computeDeviceOrdinal,
+                classCount, treeCount, numFeaturesPerNode, minObservationsLeafNode,
                 minObservationsSplitNode, minWeightFractionLeafNode,
                 minImpurityDecreaseSplitNode, bootstrap, comm, resultObj);
             return hashmapObj;

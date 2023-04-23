@@ -33,7 +33,7 @@ import org.apache.spark.ml.feature.Instance
 import org.apache.spark.ml.linalg.{DenseVector, SparseVector, Vector, Vectors}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.tree.{DecisionTreeModel, TreeClassifierParams, TreeEnsembleModel, _}
-import org.apache.spark.ml.tree.impl.RandomForest
+import org.apache.spark.ml.tree.impl.{DecisionTreeMetadata, RandomForest}
 import org.apache.spark.ml.util._
 import org.apache.spark.ml.util.{Identifiable, MetadataUtils}
 import org.apache.spark.ml.util.DefaultParamsReader.Metadata
@@ -167,13 +167,32 @@ class RandomForestClassifier @Since("1.4.0") (
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     val spark = dataset.sparkSession
+    val categoricalFeatures: Map[Int, Int] =
+      MetadataUtils.getCategoricalFeatures(dataset.schema($(featuresCol)))
+    val numClasses: Int = getNumClasses(dataset)
+
+    if (isDefined(thresholds)) {
+      require($(thresholds).length == numClasses, this.getClass.getSimpleName +
+        ".train() called with non-matching numClasses and thresholds.length." +
+        s" numClasses=$numClasses, but thresholds has length ${$(thresholds).length}")
+    }
+    val instances = extractInstances(dataset, numClasses)
+    val strategy =
+      super.getOldStrategy(categoricalFeatures, numClasses, OldAlgo.Classification, getOldImpurity)
+    strategy.bootstrap = $(bootstrap)
+
+    instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, probabilityCol,
+      rawPredictionCol, leafCol, impurity, numTrees, featureSubsetStrategy, maxDepth, maxBins,
+      maxMemoryInMB, minInfoGain, minInstancesPerNode, minWeightFractionPerNode, seed,
+      subsamplingRate, thresholds, cacheNodeIds, checkpointInterval, bootstrap)
+    val metadata = DecisionTreeMetadata
+      .buildMetadata(instances.retag(classOf[Instance]), strategy, getNumTrees, getFeatureSubsetStrategy)
     import spark.implicits._
 
     val sc = spark.sparkContext
 
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
-    val numClasses: Int = getNumClasses(dataset)
 
     val initStartTime = System.nanoTime()
     println(s"trainRandomForestClassifierDAL numClasses : " + numClasses)
@@ -181,7 +200,7 @@ class RandomForestClassifier @Since("1.4.0") (
     val rfDAL = new RandomForestClassifierDALImpl(uid,
       numClasses,
       getNumTrees,
-      getMinInstancesPerNode,
+      metadata.numFeaturesPerNode,
       1,
       1,
       getMinWeightFractionPerNode,
@@ -193,7 +212,7 @@ class RandomForestClassifier @Since("1.4.0") (
     val (probabilitiesNumericTable, predictionNumericTable, treesMap) = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
 
-    val numFeatures = dataset.select(${featuresCol}).head().size
+    val numFeatures = metadata.numFeatures
 
     val trees = buildTrees(treesMap, numFeatures, numClasses).map(_.asInstanceOf[DecisionTreeClassificationModel])
     instr.logNumClasses(numClasses)
