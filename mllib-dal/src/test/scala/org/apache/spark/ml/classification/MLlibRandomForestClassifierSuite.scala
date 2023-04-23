@@ -56,9 +56,10 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     conf
   }
 
-  protected override def createSparkSession: TestSparkSession = {
+  override def createSparkSession: TestSparkSession = {
     new TestSparkSession(new SparkContext("local[1]", "MLlibUnitTest", sparkConf))
   }
+
   private var orderedLabeledPoints50_1000: RDD[LabeledPoint] = _
   private var orderedLabeledPoints5_20: RDD[LabeledPoint] = _
   private var binaryDataset: DataFrame = _
