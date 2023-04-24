@@ -61,10 +61,9 @@ LearningNode convertsplitToLearningNode(
     splitNode.impurity = info.get_impurity();
     splitNode.sampleCount = info.get_sample_count();
     std::unique_ptr<double[]> arr(new double[classCount]);
-    for (std::int64_t index_class = 0; index_class < classCount;
-         ++index_class) {
-        arr[index_class] = 0.0;
-    }
+    arr[0] = info.get_sample_count();
+    arr[1] = 0.0;
+    arr[2] = 0.0;
     splitNode.probability = std::move(arr);
     return splitNode;
 }
@@ -78,10 +77,9 @@ convertleafToLearningNode(const df::leaf_node_info<df::task::regression> &info,
     leafNode.impurity = info.get_impurity();
     leafNode.sampleCount = info.get_sample_count();
     std::unique_ptr<double[]> arr(new double[classCount]);
-    for (std::int64_t index_class = 0; index_class < classCount;
-         ++index_class) {
-        arr[index_class] = 0.0;
-    }
+    arr[0] = info.get_sample_count();
+    arr[1] = info.get_sample_count() * info.get_label();
+    arr[2] = info.get_sample_count() * info.get_label() * info.get_label();
     leafNode.probability = std::move(arr);
     return leafNode;
 }
@@ -294,8 +292,10 @@ static jobject doRFRegressorOneAPICompute(
                   << result_infer.get_responses() << std::endl;
 
         // convert c++ map to java hashmap
-        collect_model(env, result_train.get_model(), 0, treeForest);
-        trees = convertRFRJavaMap(env, treeForest, 0);
+        jint statsSize = 3; // spark create VarianceCalculator needs array of
+                            // sufficient statistics
+        collect_model(env, result_train.get_model(), statsSize, treeForest);
+        trees = convertRFRJavaMap(env, treeForest, statsSize);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
