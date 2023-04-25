@@ -265,64 +265,63 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-	bool useGPU = false;
-	if (device == ComputeDevice::gpu && regParam == 0){
-		useGPU = true;
-	}
-	NumericTablePtr resultTable;
+    bool useGPU = false;
+    if (device == ComputeDevice::gpu && regParam == 0) {
+        useGPU = true;
+    }
+    NumericTablePtr resultTable;
     jlong resultptr = 0L;
     jlong ret = 0L;
-	if (useGPU){
+    if (useGPU) {
 #ifdef CPU_GPU_PROFILE
-		jlong pDatagpu = (jlong)data;
-		jlong pLabelgpu = (jlong)label;
-		resultptr = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
-								executorNum, ipPortStr, device, resultObj);
+        jlong pDatagpu = (jlong)data;
+        jlong pLabelgpu = (jlong)label;
+        resultptr =
+            doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu, executorNum,
+                              ipPortStr, device, resultObj);
 #endif
-	}
-	else {
+    } else {
 #ifdef CPU_ONLY_PROFILE
-    ccl::communicator &comm = getComm();
-    size_t rankId = comm.rank();
+        ccl::communicator &comm = getComm();
+        size_t rankId = comm.rank();
 
-    NumericTablePtr pLabel = *((NumericTablePtr *)label);
-    NumericTablePtr pData = *((NumericTablePtr *)data);
+        NumericTablePtr pLabel = *((NumericTablePtr *)label);
+        NumericTablePtr pData = *((NumericTablePtr *)data);
 
-    // Set number of threads for oneDAL to use for each rank
-    services::Environment::getInstance()->setNumberOfThreads(executorCores);
+        // Set number of threads for oneDAL to use for each rank
+        services::Environment::getInstance()->setNumberOfThreads(executorCores);
 
-    int nThreadsNew =
-        services::Environment::getInstance()->getNumberOfThreads();
-    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-         << endl;
-		if (regParam == 0) {
-			resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
-													executorNum);
-		} else {
-			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
-												   regParam, executorNum);
-		}
+        int nThreadsNew =
+            services::Environment::getInstance()->getNumberOfThreads();
+        cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
+             << endl;
+        if (regParam == 0) {
+            resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
+                                                    executorNum);
+        } else {
+            resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
+                                                   regParam, executorNum)
+        }
 
-		NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
-		resultptr = (jlong)coeffvectors;
+        NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
+        resultptr = (jlong)coeffvectors;
 #endif
-	}
+    }
 
-	if (rankId == ccl_root) {
-		// Get the class of the result object
-		jclass clazz = env->GetObjectClass(resultObj);
-		// Get Field references
-		jfieldID coeffNumericTableField =
-			env->GetFieldID(clazz, "coeffNumericTable", "J");
+    if (rankId == ccl_root) {
+        // Get the class of the result object
+        jclass clazz = env->GetObjectClass(resultObj);
+        // Get Field references
+        jfieldID coeffNumericTableField =
+            env->GetFieldID(clazz, "coeffNumericTable", "J");
 
-		env->SetLongField(resultObj, coeffNumericTableField, resultptr);
+        env->SetLongField(resultObj, coeffNumericTableField, resultptr);
 
-		// intercept is already in first column of coeffvectors
-		ret = resultptr;
-	} else {
-		ret = (jlong)0;
-	}
-	env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-	return ret;
-
+        // intercept is already in first column of coeffvectors
+        ret = resultptr;
+    } else {
+        ret = (jlong)0;
+    }
+    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+    return ret;
 }
