@@ -68,7 +68,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     def train(labeledPoints: Dataset[_],
               labelCol: String,
               featuresCol: String): LinearRegressionDALModel = {
-      println("KP get into trainingn")
 
       val sparkContext = labeledPoints.sparkSession.sparkContext
       val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -78,14 +77,12 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
       val labeledPointsTables = if (useDevice == "GPU") {
           if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-            println("KP labelCol")
             println(labeledPoints.select(labelCol).count())
-            println("KP featuresCol")
             println(labeledPoints.select(featuresCol).count())
 
             OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
           } else {
-            println("KP Sparse data format is not supported")
+            //todo sparse table is not supported
             OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
           }
       } else {
@@ -97,7 +94,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       }
 
       println(useDevice)
-      println("KP readData end")
 
 
       val results = labeledPointsTables.mapPartitionsWithIndex {
@@ -140,7 +136,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           ret
       }.collect()
 
-      println("KP result end")
       // Make sure there is only one result from rank 0
       assert(results.length == 1)
 
