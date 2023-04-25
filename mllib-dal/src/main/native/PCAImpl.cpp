@@ -267,6 +267,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
                   << nThreadsNew << std::endl;
         doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                          resultObj);
+        break;
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
@@ -278,7 +279,6 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -289,6 +289,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
                 queue, size, rankId, kvs);
         doPCAOneAPICompute(env, pNumTabData, comm, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }

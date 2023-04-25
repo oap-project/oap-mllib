@@ -326,6 +326,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         ret = doKMeansDaalCompute(env, obj, rankId, cclComm, pData, centroids,
                                   clusterNum, tolerance, iterationNum,
                                   executorNum, resultObj);
+        break;
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
@@ -337,7 +338,6 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -351,6 +351,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
                                   tolerance, iterationNum, comm, resultObj);
 
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }

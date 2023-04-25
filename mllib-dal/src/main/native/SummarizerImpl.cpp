@@ -279,6 +279,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
                   << nThreadsNew << std::endl;
         doSummarizerDAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                                 resultObj);
+        break;
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
@@ -290,7 +291,6 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -301,6 +301,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
                 queue, size, rankId, kvs);
         doSummarizerOneAPICompute(env, pNumTabData, comm, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }
