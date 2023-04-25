@@ -256,7 +256,7 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
     JNIEnv *env, jobject obj, jlong data, jlong label, jdouble regParam,
     jdouble elasticNetParam, jint executorNum, jint executorCores,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject result) {
+    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
 
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
