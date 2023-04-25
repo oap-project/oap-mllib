@@ -95,7 +95,7 @@ jobs:
             ${{ runner.os }}-
       - name: Cluster Test
         run: |
-          ${{github.workspace}}/dev/ci/ci-standalone-CPU_ONLY_PROFILE-test.sh
+          ${{github.workspace}}/dev/ci/ci-standalone-CPU-ONLY-PROFILE-test.sh
   standalone-CPU-GPU-PROFILE-test:
     name: Standalone CPU_GPU_PROFILE Test for Examples
     runs-on: ubuntu-20.04
