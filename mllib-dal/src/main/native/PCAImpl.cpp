@@ -288,6 +288,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         doPCAOneAPICompute(env, pNumTabData, comm, resultObj);
+        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
     }
 #endif
     }
