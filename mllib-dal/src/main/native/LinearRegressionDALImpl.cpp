@@ -240,18 +240,8 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
               << ", ipPort: " << ipPort << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-<<<<<<< HEAD
     std::cout << "KP native gpu comm done\n" << std::endl;
     
-    //todo
-=======
-    std::cout << "KP native gpu comm done\n";
-
-    // todo
->>>>>>> c0282113 (Format cpp)
-    unsigned int microsecond = 1000000;
-    usleep(3 * microsecond); // sleeps for 3 second
-
     std::cout << "KP training start\n" << std::endl;
     std::cout << "KP input data row: " << local_input.get_data().get_row_count() << std::endl;
     std::cout << "KP input label row: " << local_input.get_responses().get_row_count() << std::endl;
