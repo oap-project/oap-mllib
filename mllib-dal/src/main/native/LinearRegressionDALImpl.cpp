@@ -223,48 +223,24 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
                                jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
-    std::cout << "KP native gpu run\n";
     const bool isRoot = (rankId == ccl_root);
 
     homogen_table xtrain = *reinterpret_cast<const homogen_table *>(pData);
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression::train_input local_input{xtrain, ytrain};
-    std::cout << "KP native gpu data done\n";
-
     const auto linear_regression_desc = linear_regression::descriptor<>();
-    std::cout << "KP native gpu desc done\n";
     auto queue = getQueue(device);
-    std::cout << "KP native gpu queue done\n";
-    std::cout << "KP rankId: " << rankId << ", executorNum: " << executorNum
-              << ", ipPort: " << ipPort << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-    std::cout << "KP native gpu comm done\n" << std::endl;
-    
-    std::cout << "KP training start\n" << std::endl;
-    std::cout << "KP input data row: " << local_input.get_data().get_row_count() << std::endl;
-    std::cout << "KP input label row: " << local_input.get_responses().get_row_count() << std::endl;
-    std::cout << "KP input label column: " << local_input.get_responses().get_column_count() << std::endl;
-    std::cout << "KP xtrain:\n";
-    std::cout << xtrain << std::endl;
-    std::cout << "KP ytrain:\n";
-    std::cout << ytrain << std::endl;
-
     linear_regression::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
-    std::cout << "KP native gpu train done\n";
     if (isRoot) {
-
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model().get_betas());
         saveHomogenTablePtrToVector(result_matrix);
-	std::cout << "KP result\n" << result_train.get_model().get_betas() << std::endl;
-    	std::cout << "KP return result root\n";
-
         return (jlong)result_matrix.get();
     } else {
-    	std::cout << "KP return normal zero\n";
         return (jlong)0;
     }
 }
@@ -285,29 +261,51 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
-    std::cout << "KP run native\n";
 
     const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
     std::string ipPortStr = std::string(ipPortPtr);
-    jlong ret = 0L;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-    switch (device) {
+	bool useGPU = false;
+	if (device == ComputeDevice::gpu && regParam == 0){
+		useGPU = true;
+	}
+	NumericTablePtr resultTable;
+    jlong resultptr = 0L;
+    jlong ret = 0L;
+	if (useGPU){
+		jlong pDatagpu = (jlong)data;
+		jlong pLabelgpu = (jlong)label;
+		resultptr = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
+								executorNum, ipPortStr, device, result);
+	}
+	else {
+		if (regParam == 0) {
+			resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
+													executor_num);
+		} else {
+			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
+												   regParam, executor_num);
+		}
 
-    case ComputeDevice::gpu: {
+		NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
+		resultptr = (jlong)coeffvectors;
+	}
 
-        NumericTablePtr resultTable;
-        if (regParam == 0) {
-            jlong pDatagpu = (jlong)data;
-            jlong pLabelgpu = (jlong)label;
-            ret = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
-                                    executorNum, ipPortStr, device, result);
-        } else {
-            // todo restructure
-            return (jlong)0;
-        }
-    }
-    }
+	if (rankId == ccl_root) {
+		// Get the class of the result object
+		jclass clazz = env->GetObjectClass(resultObj);
+		// Get Field references
+		jfieldID coeffNumericTableField =
+			env->GetFieldID(clazz, "coeffNumericTable", "J");
 
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
-    return ret;
+		env->SetLongField(resultObj, coeffNumericTableField, resultptr);
+
+		// intercept is already in first column of coeffvectors
+		ret = resultptr;
+	} else {
+		ret = (jlong)0;
+	}
+	env->ReleaseStringUTFChars(ipPort, ipPortPtr);
+	return ret;
+
 }
