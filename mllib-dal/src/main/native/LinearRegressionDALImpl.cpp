@@ -279,6 +279,19 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 								executorNum, ipPortStr, device, result);
 	}
 	else {
+    ccl::communicator &comm = getComm();
+    size_t rankId = comm.rank();
+
+    NumericTablePtr pLabel = *((NumericTablePtr *)pNumTabLabel);
+    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+
+    // Set number of threads for oneDAL to use for each rank
+    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+
+    int nThreadsNew =
+        services::Environment::getInstance()->getNumberOfThreads();
+    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
+         << endl;
 		if (regParam == 0) {
 			resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
 													executor_num);
