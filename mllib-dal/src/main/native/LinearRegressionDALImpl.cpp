@@ -273,10 +273,12 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong resultptr = 0L;
     jlong ret = 0L;
 	if (useGPU){
+#ifdef CPU_GPU_PROFILE
 		jlong pDatagpu = (jlong)data;
 		jlong pLabelgpu = (jlong)label;
 		resultptr = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
 								executorNum, ipPortStr, device, resultObj);
+#endif
 	}
 	else {
 #ifdef CPU_ONLY_PROFILE
@@ -295,10 +297,10 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
          << endl;
 		if (regParam == 0) {
 			resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
-													executor_num);
+													executorNum);
 		} else {
 			resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
-												   regParam, executor_num);
+												   regParam, executorNum)
 		}
 
 		NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
