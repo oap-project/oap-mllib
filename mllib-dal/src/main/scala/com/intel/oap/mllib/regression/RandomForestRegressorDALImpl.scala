@@ -66,8 +66,12 @@ class RandomForestRegressorDALImpl(val uid: String,
       val (featureTabAddr, lableTabAddr) = tables.next()
 
       val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
+        if (sparkContext.getConf.getBoolean("spark.oap.mllib.isuite", false)) {
+          Array(0)
+        } else {
+          val resources = TaskContext.get().resources()
+          resources("gpu").addresses.map(_.toInt)
+        }
       } else {
         null
       }
