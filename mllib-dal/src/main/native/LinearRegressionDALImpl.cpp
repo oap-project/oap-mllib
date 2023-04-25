@@ -40,11 +40,10 @@
 using namespace std;
 #ifdef CPU_GPU_PROFILE
 using namespace oneapi::dal;
-#else
+#endif
 using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
-#endif
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
