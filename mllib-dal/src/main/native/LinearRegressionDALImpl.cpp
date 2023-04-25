@@ -40,10 +40,11 @@
 using namespace std;
 #ifdef CPU_GPU_PROFILE
 using namespace oneapi::dal;
-#endif
+#else
 using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
+#endif
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
@@ -275,17 +276,18 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 		jlong pDatagpu = (jlong)data;
 		jlong pLabelgpu = (jlong)label;
 		resultptr = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
-								executorNum, ipPortStr, device, result);
+								executorNum, ipPortStr, device, resultObj);
 	}
 	else {
+#ifdef CPU_ONLY_PROFILE
     ccl::communicator &comm = getComm();
     size_t rankId = comm.rank();
 
-    NumericTablePtr pLabel = *((NumericTablePtr *)pNumTabLabel);
-    NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
+    NumericTablePtr pLabel = *((NumericTablePtr *)label);
+    NumericTablePtr pData = *((NumericTablePtr *)data);
 
     // Set number of threads for oneDAL to use for each rank
-    services::Environment::getInstance()->setNumberOfThreads(executor_cores);
+    services::Environment::getInstance()->setNumberOfThreads(executorCores);
 
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
@@ -301,6 +303,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
 		NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
 		resultptr = (jlong)coeffvectors;
+#endif
 	}
 
 	if (rankId == ccl_root) {
