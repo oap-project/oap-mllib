@@ -74,7 +74,7 @@ jobs:
         run: |
           ${{github.workspace}}/dev/ci/ci-yarn-test.sh
   standalone-CPU_ONLY_PROFILE-test:
-    name: Standalone Test for Examples
+    name: Standalone CPU_ONLY_PROFILE Test for Examples
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -96,8 +96,8 @@ jobs:
       - name: Cluster Test
         run: |
           ${{github.workspace}}/dev/ci/ci-standalone-CPU_ONLY_PROFILE-test.sh
-standalone-CPU_GPU_PROFILE-test:
-    name: Standalone Test for Examples
+  standalone-CPU_GPU_PROFILE-test:
+    name: Standalone CPU_GPU_PROFILE Test for Examples
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
