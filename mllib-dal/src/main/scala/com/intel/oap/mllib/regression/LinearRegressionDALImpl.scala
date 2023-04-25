@@ -77,7 +77,17 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
       val labeledPointsTables = if (useDevice == "GPU") {
-        OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
+          if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+            println("KP labelCol")
+            println(labeledPoints.select(labelCol).count())
+            println("KP featuresCol")
+            println(labeledPoints.select(featuresCol).count())
+
+            OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
+          } else {
+            println("KP Sparse data format is not supported")
+            OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
+          }
       } else {
           if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
           OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
@@ -99,8 +109,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             OneCCL.init(executorNum, rank, kvsIPPort)
           }
 
-          val result = new LiRResult
-          cLinearRegressionTrainDAL(
+          val result = new LiRResult()
+          val cbeta = cLinearRegressionTrainDAL(
             featureTabAddr,
             lableTabAddr,
             regParam,
@@ -115,20 +125,22 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
           val ret = if (rank == 0) {
             val coefficientArray = if (useDevice == "GPU") {
-                OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(result.coeffNumericTable),
+                OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cbeta),
                   computeDevice)
               } else {
-                OneDAL.numericTableToVectors(OneDAL.makeNumericTable(result.coeffNumericTable))
+                OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cbeta))
               }
             Iterator(coefficientArray(0))
           } else {
             Iterator.empty
           }
-
-          OneCCL.cleanup()
+          if (useDevice == "CPU") {
+            OneCCL.cleanup()
+          }
           ret
       }.collect()
 
+      println("KP result end")
       // Make sure there is only one result from rank 0
       assert(results.length == 1)
 

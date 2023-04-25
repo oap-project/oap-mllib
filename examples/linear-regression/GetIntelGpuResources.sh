@@ -17,4 +17,4 @@
 #ADDRS="0","1","2","3","4","5","6","7"
 #echo {\"name\": \"gpu\", \"addresses\":[\"$ADDRS\"]}
 
-echo {\"name\": \"gpu\", \"addresses\":[\"0\"]}
+echo {\"name\": \"gpu\", \"addresses\":[\"0\",\"1\",\"2\",\"3\"]}

@@ -18,8 +18,10 @@
 // scalastyle:off println
 package org.apache.spark.examples.ml
 
+import org.apache.spark.sql.Row
+import org.apache.spark.ml.linalg.Vector
 import scopt.OptionParser
-
+import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -110,6 +112,14 @@ object LinearRegressionExample {
     val training = spark.read.format("libsvm")
       .load(params.input).toDF("label", "features").repartition(4)
 
+    training.select("label","features").printSchema()
+    val featuresRDD=training
+      .select("label","features").rdd.map{
+        case Row(label:Double,feature:Vector)=>new LabeledPoint(label,feature.toDense)
+      }
+      import spark.implicits._
+      val df=featuresRDD.toDF("label","features")
+      df.show(false)
     val lir = new LinearRegression()
       .setFeaturesCol("features")
       .setLabelCol("label")
@@ -120,7 +130,7 @@ object LinearRegressionExample {
 
     // Train the model
     val startTime = System.nanoTime()
-    val lirModel = lir.fit(training)
+    val lirModel = lir.fit(df)
     val elapsedTime = (System.nanoTime() - startTime) / 1e9
     println(s"Training time: $elapsedTime seconds")    
 

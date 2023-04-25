@@ -29,6 +29,7 @@
 #include "Communicator.hpp"
 #include "OutputHelpers.hpp"
 #include "oneapi/dal/algo/linear_regression.hpp"
+#include "oneapi/dal/algo/linear_regression/train_types.hpp"
 #include "oneapi/dal/table/homogen.hpp"
 #endif
 
@@ -242,24 +243,35 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData, jlong pLab
 	    << ", ipPort: " << ipPort << std::endl;
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-    std::cout << "KP native gpu comm done\n";
+    std::cout << "KP native gpu comm done\n" << std::endl;
     
     //todo
     unsigned int microsecond = 1000000;
     usleep(3 * microsecond);//sleeps for 3 second
 
+    std::cout << "KP training start\n" << std::endl;
+    std::cout << "KP input data row: " << local_input.get_data().get_row_count() << std::endl;
+    std::cout << "KP input label row: " << local_input.get_responses().get_row_count() << std::endl;
+    std::cout << "KP input label column: " << local_input.get_responses().get_column_count() << std::endl;
+    std::cout << "KP xtrain:\n";
+    std::cout << xtrain << std::endl;
+    std::cout << "KP ytrain:\n";
+    std::cout << ytrain << std::endl;
+
     linear_regression::train_result result_train =
-        preview::train(comm, linear_regression_desc, local_input);
+        preview::train(comm, linear_regression_desc, xtrain, ytrain);
     std::cout << "KP native gpu train done\n";
     if (isRoot) {
-        // Get the class of the input object
-        jclass clazz = env->GetObjectClass(resultObj);
 
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model().get_betas());
         saveHomogenTablePtrToVector(result_matrix);
+	std::cout << "KP result\n" << result_train.get_model().get_betas() << std::endl;
+    	std::cout << "KP return result root\n";
+
         return (jlong)result_matrix.get();
     } else {
+    	std::cout << "KP return normal zero\n";
         return (jlong)0;
     }
 }
