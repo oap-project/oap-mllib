@@ -300,7 +300,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
                                                     executorNum);
         } else {
             resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
-                                                   regParam, executorNum)
+                                                   regParam, executorNum);
         }
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
