@@ -73,8 +73,31 @@ jobs:
       - name: Cluster Test
         run: |
           ${{github.workspace}}/dev/ci/ci-yarn-test.sh
-  standalone-test:
-    name: Standalone Test for Examples (CPU)
+  standalone-CPU_ONLY_PROFILE-test:
+    name: Standalone Test for Examples
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Restore cached dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            #/var/cache/apt/archives/*.deb
+            ~/.m2/repository
+            /opt/intel/oneapi
+            ~/opt
+          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2023.0.0
+          restore-keys: |
+            ${{ runner.os }}-
+      - name: Cluster Test
+        run: |
+          ${{github.workspace}}/dev/ci/ci-standalone-test.sh
+standalone-CPU_GPU_PROFILE-test:
+    name: Standalone Test for Examples
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
