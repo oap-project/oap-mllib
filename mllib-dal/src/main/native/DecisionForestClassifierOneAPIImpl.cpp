@@ -95,40 +95,14 @@ struct collect_nodes {
         classCount = count;
     }
     bool operator()(const df::leaf_node_info<df::task::classification> &info) {
-        std::string str;
-        str.append("leaf");
-        str.append("|");
-        str.append(to_string(info.get_level()));
-        str.append("|");
-        str.append(to_string(info.get_response()));
-        str.append("|");
-        str.append(to_string(info.get_impurity()));
-        str.append("|");
-        str.append(to_string(info.get_sample_count()));
-
         treesVector->push_back(convertleafToLearningNode(info, classCount));
-        std::cout << str << std::endl;
 
         return true;
     }
 
     bool operator()(const df::split_node_info<df::task::classification> &info) {
-        std::string str;
-        str.append("split");
-        str.append("|");
-        str.append(to_string(info.get_level()));
-        str.append("|");
-        str.append(to_string(info.get_feature_index()));
-        str.append("|");
-        str.append(to_string(info.get_feature_value()));
-        str.append("|");
-        str.append(to_string(info.get_impurity()));
-        str.append("|");
-        str.append(to_string(info.get_sample_count()));
-
         treesVector->push_back(convertsplitToLearningNode(info, classCount));
 
-        std::cout << str << std::endl;
         return true;
     }
 };
@@ -142,7 +116,6 @@ void collect_model(
 
     std::cout << "Number of trees: " << m.get_tree_count() << std::endl;
     for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
-        std::cout << "Tree #" << i << std::endl;
         std::shared_ptr<std::vector<LearningNode>> myVec =
             std::make_shared<std::vector<LearningNode>>();
         m.traverse_depth_first(i, collect_nodes{myVec, classCount});
@@ -210,8 +183,6 @@ jobject convertJavaMap(
 
             // Convert the probability array
             if (node.probability != nullptr) {
-                std::cout << "convertJavaMap node.probability  = "
-                          << node.probability.get()[0] << std::endl;
                 jfieldID probabilityField =
                     env->GetFieldID(learningNodeClass, "probability", "[D");
                 jdoubleArray jProbability = env->NewDoubleArray(classCount);
@@ -260,8 +231,8 @@ static jobject doRFClassifierOneAPICompute(
     jint computeDeviceOrdinal, jint classCount, jint treeCount,
     jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
-    jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth,
-    jlong seed, jint maxBins, jboolean bootstrap,
+    jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
+    jint maxBins, jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
     std::cout << "oneDAL (native): compute start" << std::endl;
@@ -350,9 +321,9 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jint executorNum, jint computeDeviceOrdinal, jint classCount,
     jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
-    jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth,
-    jlong seed, jint maxBins, jboolean bootstrap,
-    jintArray gpuIdxArray, jobject resultObj) {
+    jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
+    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
+    jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
@@ -381,8 +352,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             computeDeviceOrdinal, classCount, treeCount, numFeaturesPerNode,
             minObservationsLeafNode, minObservationsSplitNode,
             minWeightFractionLeafNode, minImpurityDecreaseSplitNode,
-            maxTreeDepth, seed, maxBins, bootstrap,
-            comm, resultObj);
+            maxTreeDepth, seed, maxBins, bootstrap, comm, resultObj);
         return hashmapObj;
     }
     }

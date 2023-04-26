@@ -162,7 +162,6 @@ class RandomForestClassifier @Since("1.4.0") (
     model
   }
 
-
   private def trainRandomForestClassifierDAL(dataset: Dataset[_],
                        instr: Instrumentation): RandomForestClassificationModel = {
     instr.logPipelineStage(this)

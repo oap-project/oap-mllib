@@ -108,12 +108,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         bootstrap,
         gpuIndices,
         result)
-      for ( (k, v) <- hashmap) {
-        logInfo(s"key: $k, value: $v")
-        for ( l <- v) {
-          logInfo(l.toString)
-        }
-      }
+
       val computeEndTime = System.nanoTime()
 
       val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
@@ -144,15 +139,6 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-
-    val hashmap = results(0)._3
-    val myScalaMap = hashmap.mapValues(_.toSet)
-    for ( (k, v) <- myScalaMap) {
-      println(s"key: $k, value: $v")
-      for ( l <- v) {
-           println(l.toString)
-      }
-    }
 
     (results(0)._1, results(0)._2, results(0)._3)
   }

@@ -77,8 +77,9 @@ object RandomForestClassifierExample {
       .setFeaturesCol("features")
       .setNumTrees(1)
       .setSeed(777L)
-      .setBootstrap(false).setImpurity()
+      .setBootstrap(false)
 
+    rf.getClass.read
     // Convert indexed labels back to original labels.
     val labelConverter = new IndexToString()
       .setInputCol("prediction")

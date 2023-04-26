@@ -32,7 +32,6 @@ object TreeUtils {
     }
     val rootNode = buildTree(nodes, metadata)
     calculateGainAndImpurityStats(rootNode)
-    traverseDFS(rootNode)
     rootNode
   }
 
