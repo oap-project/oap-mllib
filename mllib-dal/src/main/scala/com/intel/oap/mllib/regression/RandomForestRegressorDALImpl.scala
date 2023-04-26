@@ -42,6 +42,9 @@ class RandomForestRegressorDALImpl(val uid: String,
                                     val minImpurityDecreaseSplitNode: Double,
                                     val executorNum: Int,
                                     val executorCores: Int,
+                                    val maxTreeDepth: Int,
+                                    val seed: Long,
+                                    val maxbins: Int,
                                     val bootstrap: Boolean) extends Serializable with Logging {
 
   def train(labeledPoints: Dataset[_],
@@ -52,6 +55,7 @@ class RandomForestRegressorDALImpl(val uid: String,
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    val isuite = sparkContext.getConf.getBoolean("spark.oap.mllib.isuite", false)
     val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
       OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
         labelCol, featuresCol, executorNum, computeDevice)
@@ -66,7 +70,7 @@ class RandomForestRegressorDALImpl(val uid: String,
       val (featureTabAddr, lableTabAddr) = tables.next()
 
       val gpuIndices = if (useDevice == "GPU") {
-        if (sparkContext.getConf.getBoolean("spark.oap.mllib.isuite", false)) {
+        if (isuite) {
           Array(0)
         } else {
           val resources = TaskContext.get().resources()
@@ -88,6 +92,9 @@ class RandomForestRegressorDALImpl(val uid: String,
         treeCount,
         featurePerNode,
         minObservationsLeafNode,
+        maxTreeDepth,
+        seed,
+        maxbins,
         bootstrap,
         gpuIndices,
         result)
@@ -145,6 +152,9 @@ class RandomForestRegressorDALImpl(val uid: String,
                                              treeCount: Int,
                                              featurePerNode: Int,
                                              minObservationsLeafNode: Int,
+                                             maxTreeDepth: Int,
+                                             seed: Long,
+                                             maxbins: Int,
                                              bootstrap: Boolean,
                                              gpuIndices: Array[Int],
                                              result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]

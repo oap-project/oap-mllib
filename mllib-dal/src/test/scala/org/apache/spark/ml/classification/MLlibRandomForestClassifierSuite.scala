@@ -85,7 +85,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
   }
 
   test("predictRaw and predictProbability") {
-    val rdd = orderedLabeledPoints5_20
+    val rdd = orderedLabeledPoints5_20.repartition(4)
     val rf = new RandomForestClassifier()
       .setImpurity("Gini")
       .setMaxDepth(3)
@@ -95,6 +95,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     val numClasses = 2
 
     val df: DataFrame = TreeTests.setMetadata(rdd, categoricalFeatures, numClasses)
+    df.show()
     val model = rf.fit(df)
 
     MLTestingUtils.checkCopyAndUids(rf, model)

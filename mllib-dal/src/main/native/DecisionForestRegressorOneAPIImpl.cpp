@@ -257,7 +257,9 @@ jobject convertRFRJavaMap(
 static jobject doRFRegressorOneAPICompute(
     JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
     jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
-    jint minObservationsLeafNode, jboolean bootstrap,
+    jint minObservationsLeafNode,
+    jint maxTreeDepth, jlong seed, jint maxbins,
+    jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
     std::cout << "oneDAL (native): compute start" << std::endl;
@@ -274,6 +276,8 @@ static jobject doRFRegressorOneAPICompute(
             .set_tree_count(treeCount)
             .set_features_per_node(numFeaturesPerNode)
             .set_min_observations_in_leaf_node(minObservationsLeafNode)
+            .set_max_tree_depth(maxTreeDepth)
+            .set_max_bins(maxbins)
             .set_error_metric_mode(
                 df::error_metric_mode::out_of_bag_error |
                 df::error_metric_mode::out_of_bag_error_per_observation)
@@ -331,11 +335,14 @@ static jobject doRFRegressorOneAPICompute(
  * Signature:
  * (JJIIIIIZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
  */
+
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
     jint executorNum, jint computeDeviceOrdinal, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode, jboolean bootstrap,
+    jint numFeaturesPerNode, jint minObservationsLeafNode,
+    jint maxTreeDepth, jlong seed, jint maxbins,
+    jboolean bootstrap,
     jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     ccl::communicator &cclComm = getComm();
@@ -351,7 +358,6 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -363,7 +369,8 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
         jobject hashmapObj = doRFRegressorOneAPICompute(
             env, pNumTabFeature, pNumTabLabel, executorNum,
             computeDeviceOrdinal, treeCount, numFeaturesPerNode,
-            minObservationsLeafNode, bootstrap, comm, resultObj);
+            minObservationsLeafNode, maxTreeDepth, seed, maxbins, bootstrap,
+            comm, resultObj);
         return hashmapObj;
     }
     }
