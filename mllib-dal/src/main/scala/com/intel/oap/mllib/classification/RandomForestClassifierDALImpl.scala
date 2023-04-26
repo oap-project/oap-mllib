@@ -133,7 +133,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       } else {
         Iterator.empty
       }
-
+      OneCCL.cleanup()
       ret
     }.collect()
 

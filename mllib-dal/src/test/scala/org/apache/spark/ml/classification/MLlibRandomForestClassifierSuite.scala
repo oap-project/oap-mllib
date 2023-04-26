@@ -56,7 +56,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
   private var orderedLabeledPoints50_1000: RDD[LabeledPoint] = _
   private var orderedLabeledPoints5_20: RDD[LabeledPoint] = _
   private var binaryDataset: DataFrame = _
-  private val seed = 777 // used oneadl defaulr seed, Because onedal RF set seed was errer
+  private val seed = 42
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -69,7 +69,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     binaryDataset = generateSVMInput(0.01, Array[Double](-1.5, 1.0), 1000, seed).toDF()
 
   }
-
+  
   /////////////////////////////////////////////////////////////////////////////
   // Tests calling train()
   /////////////////////////////////////////////////////////////////////////////
@@ -194,9 +194,9 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     val numClasses = 2
     // (numTrees, maxDepth, subsamplingRate, fractionInTol)
     val testParams = Seq(
-      (20, 5, 1.0, 0.96),
-      (20, 10, 1.0, 0.96),
-      (20, 10, 0.95, 0.96)
+      (1, 5, 1.0, 0.96),
+      (1, 10, 1.0, 0.96),
+      (1, 10, 0.95, 0.96)
     )
 
     for ((numTrees, maxDepth, subsamplingRate, tol) <- testParams) {
@@ -214,9 +214,9 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
         RandomForestClassifier](df.as[LabeledPoint], estimator,
         numClasses, MLTestingUtils.modelPredictionEquals(df, _ == _, tol),
         outlierRatio = 2)
-//      MLTestingUtils.testOversamplingVsWeighting[RandomForestClassificationModel,
-//        RandomForestClassifier](df.as[LabeledPoint], estimator,
-//        MLTestingUtils.modelPredictionEquals(df, _ == _, tol), seed)
+      MLTestingUtils.testOversamplingVsWeighting[RandomForestClassificationModel,
+        RandomForestClassifier](df.as[LabeledPoint], estimator,
+        MLTestingUtils.modelPredictionEquals(df, _ == _, tol), seed)
     }
   }
 
