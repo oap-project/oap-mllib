@@ -41,20 +41,15 @@ import org.apache.spark.util.Utils
 /**
  * Test suite for [[RandomForestClassifier]].
  */
-class RandomForestClassifierSuite extends MLTest with DefaultReadWriteTest {
+class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest {
 
   import RandomForestClassifierSuite.compareAPIs
   import testImplicits._
   override def sparkConf: SparkConf = {
     val conf = super.sparkConf
-    val dir = Utils.createTempDir()
-    val discoveryScript = createTempScriptWithExpectedOutput(dir, "resourceDiscoveryScript",
-      """{"name": "gpu","addresses":["0", "1"]}""")
     conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
-    conf.set(WORKER_GPU_ID.amountConf, "2")
-    conf.set(WORKER_GPU_ID.discoveryScriptConf, discoveryScript)
-    conf.set(TASK_GPU_ID.amountConf, "1")
-    conf.set(EXECUTOR_GPU_ID.amountConf, "1")
+    conf.set("spark.oap.mllib.isuite", "true")
+
     conf
   }
 
@@ -143,31 +138,6 @@ class RandomForestClassifierSuite extends MLTest with DefaultReadWriteTest {
     rf.fit(df)
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Tests of feature importance
-  /////////////////////////////////////////////////////////////////////////////
-//  test("Feature importance with toy data") {
-//    val numClasses = 2
-//    val rf = new RandomForestClassifier()
-//      .setImpurity("Gini")
-//      .setMaxDepth(3)
-//      .setNumTrees(3)
-//      .setFeatureSubsetStrategy("all")
-//      .setSubsamplingRate(1.0)
-//      .setSeed(123)
-//
-//    // In this data, feature 1 is very important.
-//    val data: RDD[LabeledPoint] = TreeTests.featureImportanceData(sc)
-//    val categoricalFeatures = Map.empty[Int, Int]
-//    val df: DataFrame = TreeTests.setMetadata(data, categoricalFeatures, numClasses)
-//
-//    val importances = rf.fit(df).featureImportances
-//    val mostImportantFeature = importances.argmax
-//    assert(mostImportantFeature === 1)
-//    assert(importances.toArray.sum === 1.0)
-//    assert(importances.toArray.forall(_ >= 0.0))
-//  }
-
   test("model support predict leaf index") {
     val model0 = new DecisionTreeClassificationModel("dtc", TreeTests.root0, 3, 2)
     val model1 = new DecisionTreeClassificationModel("dtc", TreeTests.root1, 3, 2)
@@ -234,6 +204,7 @@ class RandomForestClassifierSuite extends MLTest with DefaultReadWriteTest {
     )
 
     for ((numTrees, maxDepth, subsamplingRate, tol) <- testParams) {
+      val seed = 777 // used oneadl defaulr seed, Because onedal RF set seed was errer
       val estimator = new RandomForestClassifier()
         .setNumTrees(numTrees)
         .setMaxDepth(maxDepth)

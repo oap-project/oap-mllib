@@ -260,7 +260,8 @@ static jobject doRFClassifierOneAPICompute(
     jint computeDeviceOrdinal, jint classCount, jint treeCount,
     jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
-    jdouble minImpurityDecreaseSplitNode, jboolean bootstrap,
+    jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth,
+    jlong seed, jint maxBins, jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
     std::cout << "oneDAL (native): compute start" << std::endl;
@@ -288,7 +289,9 @@ static jobject doRFClassifierOneAPICompute(
             .set_variable_importance_mode(df::variable_importance_mode::mdi)
             .set_infer_mode(df::infer_mode::class_responses |
                             df::infer_mode::class_probabilities)
-            .set_voting_mode(df::voting_mode::weighted);
+            .set_voting_mode(df::voting_mode::weighted)
+            .set_max_tree_depth(maxTreeDepth)
+            .set_max_bins(maxBins);
 
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
@@ -347,7 +350,8 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jint executorNum, jint computeDeviceOrdinal, jint classCount,
     jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
-    jdouble minImpurityDecreaseSplitNode, jboolean bootstrap,
+    jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth,
+    jlong seed, jint maxBins, jboolean bootstrap,
     jintArray gpuIdxArray, jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     ccl::communicator &cclComm = getComm();
@@ -376,7 +380,8 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             env, pNumTabFeature, pNumTabLabel, executorNum,
             computeDeviceOrdinal, classCount, treeCount, numFeaturesPerNode,
             minObservationsLeafNode, minObservationsSplitNode,
-            minWeightFractionLeafNode, minImpurityDecreaseSplitNode, bootstrap,
+            minWeightFractionLeafNode, minImpurityDecreaseSplitNode,
+            maxTreeDepth, seed, maxBins, bootstrap,
             comm, resultObj);
         return hashmapObj;
     }

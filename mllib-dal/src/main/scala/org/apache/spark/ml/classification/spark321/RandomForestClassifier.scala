@@ -151,7 +151,7 @@ class RandomForestClassifier @Since("1.4.0") (
       dataset.sparkSession.sparkContext)
     val model = if (Utils.isOAPEnabled() && isPlatformSupported) {
       // Spark ML Random Forest implemented 'entropy' and 'gini', but OneDAL only implemented 'gini' criterion.
-      if (impurity == "gini") {
+      if (getImpurity == "gini") {
         trainRandomForestClassifierDAL(dataset, instr)
       } else {
         trainDiscreteImpl(dataset, instr)
@@ -208,6 +208,9 @@ class RandomForestClassifier @Since("1.4.0") (
       0.0,
       executorNum,
       executorCores,
+      getMaxDepth,
+      getSeed,
+      getMaxBins,
       getBootstrap)
 
     val (probabilitiesNumericTable, predictionNumericTable, treesMap) = rfDAL.train(dataset, ${labelCol}, ${featuresCol})

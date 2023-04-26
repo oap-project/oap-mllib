@@ -90,7 +90,7 @@ CPP_SRCS += \
   ./LinearRegressionImpl.cpp \
   ./CorrelationImpl.cpp \
   ./SummarizerImpl.cpp \
-  ./DecisionForestOneAPIImpl.cpp \
+  ./DecisionForestClassifierOneAPIImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
@@ -108,7 +108,7 @@ OBJS += \
   ./LinearRegressionImpl.o \
   ./CorrelationImpl.o \
   ./SummarizerImpl.o \
-  ./DecisionForestOneAPIImpl.o \
+  ./DecisionForestClassifierOneAPIImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \

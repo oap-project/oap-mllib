@@ -45,6 +45,9 @@ class RandomForestClassifierDALImpl(val uid: String,
                                     val minImpurityDecreaseSplitNode: Double,
                                     val executorNum: Int,
                                     val executorCores: Int,
+                                    val maxTreeDepth: Int,
+                                    val seed: Long,
+                                    val maxBins: Int,
                                     val bootstrap: Boolean) extends Serializable with Logging {
 
   def train(labeledPoints: Dataset[_],
@@ -54,6 +57,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val isuite = sparkContext.getConf.getBoolean("spark.oap.mllib.isuite", false)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     val labeledPointsTables = if (useDevice == "GPU") {
       if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
@@ -74,8 +78,12 @@ class RandomForestClassifierDALImpl(val uid: String,
       val (featureTabAddr, lableTabAddr) = tables.next()
 
       val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
+        if (isuite) {
+           Array(0)
+        } else {
+          val resources = TaskContext.get().resources()
+          resources("gpu").addresses.map(_.toInt)
+        }
       } else {
         null
       }
@@ -94,6 +102,9 @@ class RandomForestClassifierDALImpl(val uid: String,
         minObservationsSplitNode,
         minWeightFractionLeafNode,
         minImpurityDecreaseSplitNode,
+        maxTreeDepth,
+        seed,
+        maxBins,
         bootstrap,
         gpuIndices,
         result)
@@ -157,6 +168,9 @@ class RandomForestClassifierDALImpl(val uid: String,
                                                    minObservationsSplitNode: Int,
                                                    minWeightFractionLeafNode: Double,
                                                    minImpurityDecreaseSplitNode: Double,
+                                                   maxTreeDepth: Int,
+                                                   seed: Long,
+                                                   maxBins: Int,
                                                    bootstrap: Boolean,
                                                    gpuIndices: Array[Int],
                                                    result: RandomForestResult):
