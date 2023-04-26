@@ -44,7 +44,7 @@ object KMeansExample {
 
     // $example on$
     // Loads data.
-    val dataset = spark.read.format("libsvm").load(args(0)).repartition(4)
+    val dataset = spark.read.format("libsvm").load(args(0))
     dataset.cache()
 
     // Trains a k-means model.
