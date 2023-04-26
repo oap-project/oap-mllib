@@ -9,6 +9,30 @@ extern "C" {
 #endif
 /*
  * Class:     com_intel_oap_mllib_OneCCL__
+ * Method:    c_init
+ * Signature: (IILjava/lang/String;Lcom/intel/oap/mllib/CCLParam;)I
+ */
+JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init
+  (JNIEnv *, jobject, jint, jint, jstring, jobject);
+
+/*
+ * Class:     com_intel_oap_mllib_OneCCL__
+ * Method:    c_initDpcpp
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_intel_oap_mllib_OneCCL__
+ * Method:    c_cleanup
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_intel_oap_mllib_OneCCL__
  * Method:    isRoot
  * Signature: ()Z
  */
@@ -38,30 +62,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_setEnv
  */
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1getAvailPort
   (JNIEnv *, jobject, jstring);
-
-/*
- * Class:     com_intel_oap_mllib_OneCCL__
- * Method:    c_init
- * Signature: (IILjava/lang/String;Lcom/intel/oap/mllib/CCLParam;)I
- */
-JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init
-  (JNIEnv *, jobject, jint, jint, jstring, jobject);
-
-/*
- * Class:     com_intel_oap_mllib_OneCCL__
- * Method:    c_initDpcpp
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp
-  (JNIEnv *, jobject);
-
-/*
- * Class:     com_intel_oap_mllib_OneCCL__
- * Method:    c_cleanup
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup
-  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
