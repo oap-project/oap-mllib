@@ -39,16 +39,15 @@
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
-using namespace oneapi::dal;
-#else
-using namespace daal;
-using namespace daal::algorithms;
-using namespace daal::services;
+namespace linear_regression_gpu = oneapi::dal::linear_regression;
 #endif
+using namespace daal;
+using namespace daal::services;
+namespace linear_regression_cpu = daal::algorithms::linear_regression;
+namespace ridge_regression_cpu = daal::algorithms::ridge_regression;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-#ifdef CPU_ONLY_PROFILE
 static NumericTablePtr linear_regression_compute(int rankId,
                                                  ccl::communicator &comm,
                                                  const NumericTablePtr &pData,
@@ -56,11 +55,11 @@ static NumericTablePtr linear_regression_compute(int rankId,
                                                  size_t nBlocks) {
     using daal::byte;
 
-    linear_regression::training::Distributed<step1Local> localAlgorithm;
+    linear_regression_cpu::training::Distributed<step1Local> localAlgorithm;
 
     /* Pass a training data set and dependent values to the algorithm */
-    localAlgorithm.input.set(linear_regression::training::data, pData);
-    localAlgorithm.input.set(linear_regression::training::dependentVariables,
+    localAlgorithm.input.set(linear_regression_cpu::training::data, pData);
+    localAlgorithm.input.set(linear_regression_cpu::training::dependentVariables,
                              pLabel);
 
     /* Train the multiple linear regression model on local nodes */
@@ -91,7 +90,7 @@ static NumericTablePtr linear_regression_compute(int rankId,
     if (rankId == ccl_root) {
         /* Create an algorithm object to build the final multiple linear
          * regression model on the master node */
-        linear_regression::training::Distributed<step2Master> masterAlgorithm;
+        linear_regression_cpu::training::Distributed<step2Master> masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
             /* Deserialize partial results from step 1 */
@@ -99,16 +98,16 @@ static NumericTablePtr linear_regression_compute(int rankId,
                                            perNodeArchLength * i,
                                        perNodeArchLength);
 
-            linear_regression::training::PartialResultPtr
+            linear_regression_cpu::training::PartialResultPtr
                 dataForStep2FromStep1 =
-                    linear_regression::training::PartialResultPtr(
-                        new linear_regression::training::PartialResult());
+                    linear_regression_cpu::training::PartialResultPtr(
+                        new linear_regression_cpu::training::PartialResult());
             dataForStep2FromStep1->deserialize(dataArch);
 
             /* Set the local multiple linear regression model as input for the
              * master-node algorithm */
             masterAlgorithm.input.add(
-                linear_regression::training::partialModels,
+                linear_regression_cpu::training::partialModels,
                 dataForStep2FromStep1);
         }
 
@@ -118,10 +117,10 @@ static NumericTablePtr linear_regression_compute(int rankId,
         masterAlgorithm.finalizeCompute();
 
         /* Retrieve the algorithm results */
-        linear_regression::training::ResultPtr trainingResult =
+        linear_regression_cpu::training::ResultPtr trainingResult =
             masterAlgorithm.getResult();
         resultTable =
-            trainingResult->get(linear_regression::training::model)->getBeta();
+            trainingResult->get(linear_regression_cpu::training::model)->getBeta();
 
         printNumericTable(resultTable,
                           "Linear Regression first 20 columns of "
@@ -140,12 +139,12 @@ static NumericTablePtr ridge_regression_compute(
     NumericTablePtr ridgeParams(new HomogenNumericTable<double>(
         1, 1, NumericTable::doAllocate, regParam));
 
-    ridge_regression::training::Distributed<step1Local> localAlgorithm;
+    ridge_regression_cpu::training::Distributed<step1Local> localAlgorithm;
     localAlgorithm.parameter.ridgeParameters = ridgeParams;
 
     /* Pass a training data set and dependent values to the algorithm */
-    localAlgorithm.input.set(ridge_regression::training::data, pData);
-    localAlgorithm.input.set(ridge_regression::training::dependentVariables,
+    localAlgorithm.input.set(ridge_regression_cpu::training::data, pData);
+    localAlgorithm.input.set(ridge_regression_cpu::training::dependentVariables,
                              pLabel);
 
     /* Train the multiple ridge regression model on local nodes */
@@ -177,7 +176,7 @@ static NumericTablePtr ridge_regression_compute(
     if (rankId == ccl_root) {
         /* Create an algorithm object to build the final multiple ridge
          * regression model on the master node */
-        ridge_regression::training::Distributed<step2Master> masterAlgorithm;
+        ridge_regression_cpu::training::Distributed<step2Master> masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
             /* Deserialize partial results from step 1 */
@@ -185,14 +184,14 @@ static NumericTablePtr ridge_regression_compute(
                                            perNodeArchLength * i,
                                        perNodeArchLength);
 
-            ridge_regression::training::PartialResultPtr dataForStep2FromStep1 =
-                ridge_regression::training::PartialResultPtr(
-                    new ridge_regression::training::PartialResult());
+            ridge_regression_cpu::training::PartialResultPtr dataForStep2FromStep1 =
+                ridge_regression_cpu::training::PartialResultPtr(
+                    new ridge_regression_cpu::training::PartialResult());
             dataForStep2FromStep1->deserialize(dataArch);
 
             /* Set the local multiple ridge regression model as input for the
              * master-node algorithm */
-            masterAlgorithm.input.add(ridge_regression::training::partialModels,
+            masterAlgorithm.input.add(ridge_regression_cpu::training::partialModels,
                                       dataForStep2FromStep1);
         }
 
@@ -202,10 +201,10 @@ static NumericTablePtr ridge_regression_compute(
         masterAlgorithm.finalizeCompute();
 
         /* Retrieve the algorithm results */
-        ridge_regression::training::ResultPtr trainingResult =
+        ridge_regression_cpu::training::ResultPtr trainingResult =
             masterAlgorithm.getResult();
         resultTable =
-            trainingResult->get(ridge_regression::training::model)->getBeta();
+            trainingResult->get(ridge_regression_cpu::training::model)->getBeta();
 
         printNumericTable(resultTable,
                           "Ridge Regression first 20 columns of "
@@ -214,7 +213,6 @@ static NumericTablePtr ridge_regression_compute(
     }
     return resultTable;
 }
-#endif
 
 #ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
@@ -228,12 +226,12 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
     homogen_table xtrain = *reinterpret_cast<const homogen_table *>(pData);
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
-    linear_regression::train_input local_input{xtrain, ytrain};
-    const auto linear_regression_desc = linear_regression::descriptor<>();
+    linear_regression_gpu::train_input local_input{xtrain, ytrain};
+    const auto linear_regression_desc = linear_regression_gpu::descriptor<>();
     auto queue = getQueue(device);
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, executorNum, rankId, ipPort);
-    linear_regression::train_result result_train =
+    linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
     if (isRoot) {
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
@@ -281,7 +279,6 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
                               ipPortStr, device, resultObj);
 #endif
     } else {
-#ifdef CPU_ONLY_PROFILE
         ccl::communicator &comm = getComm();
         size_t rankId = comm.rank();
 
@@ -305,7 +302,6 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
         resultptr = (jlong)coeffvectors;
-#endif
     }
 
     if (rankId == ccl_root) {
