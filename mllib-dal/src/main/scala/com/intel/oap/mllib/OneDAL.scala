@@ -20,7 +20,6 @@ import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable
 import com.intel.daal.services.DaalContext
 import org.apache.spark.{Partition, SparkContext, SparkException}
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
-import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, PartitionGroup, RDD}
 import org.apache.spark.storage.StorageLevel
 
@@ -31,6 +30,7 @@ import com.intel.oneapi.dal.table.Common.ComputeDevice
 import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor, Table}
 import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
+import org.apache.spark.ml.feature.LabeledPoint
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
@@ -44,7 +44,7 @@ import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future}
-import scala.sys.exit
+import scala.sys.{exit, props}
 
 
 object OneDAL {
@@ -484,65 +484,83 @@ object OneDAL {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
+    val numberCores: Int  = labeledPoints.sparkSession.sparkContext.getConf.getInt("spark.executor.cores", 1)
 
     val spark = SparkSession.active
     import spark.implicits._
+    val labeledPointsrdd = labeledPoints.rdd
 
     // Repartition to executorNum if not enough partitions
-    val dataForConversion = if (labeledPoints.rdd.getNumPartitions < executorNum) {
-      labeledPoints.repartition(executorNum).cache()
+    val dataForConversion = if (labeledPointsrdd.getNumPartitions < executorNum) {
+      logger.info(s"Repartition to executorNum if not enough partitions")
+      val rePartitions = labeledPoints.repartition(executorNum).cache()
+      rePartitions.count()
+      rePartitions
     } else {
       labeledPoints
     }
 
-    val tables = dataForConversion.select(labelCol, featuresCol)
-      .toDF().mapPartitions { it: Iterator[Row] =>
-      val rows = it.toArray
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(dataForConversion.select(featuresCol).rdd.map{ row =>
+      val vector = row.getAs[Vector](0)
+      vector
+    })
 
-      val features = rows.map {
-        case Row(label: Double, features: Vector) => features
-      }
+    // Filter out empty partitions, if there is no such rdd, coalesce will report an error
+    // "No partitions or no locations for partitions found".
+    // TODO: ML-312: Improve ExecutorInProcessCoalescePartitioner
+    val nonEmptyPartitions = dataForConversion.select(labelCol, featuresCol).toDF().rdd.mapPartitionsWithIndex {
+      (index: Int, it: Iterator[Row]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
+    }.filter {
+      _._1 > 0
+    }.flatMap {
+      entry => entry._3
+    }
 
-      val labels = rows.map {
-        case Row(label: Double, features: Vector) => label
-      }
-
-      if (features.size == 0) {
-        Iterator()
-      } else {
-        val numColumns = features(0).size
-
-        val featuresTable: Table = if (features(0).isInstanceOf[DenseVector]) {
-          vectorsToDenseHomogenTable(features.toIterator, features.length, numColumns, device)
-        } else {
-          throw new Exception("Oneapi didn't implement sparse dataset")
-        }
-
-        val labelsTable = doubleArrayToHomogenTable(labels, device)
-
-        Iterator((featuresTable.getcObejct(), labelsTable.getcObejct()))
-      }
-    }.cache()
-
-    tables.count()
-
-    // Coalesce partitions belonging to the same executor
-    val coalescedTables = tables.rdd.coalesce(executorNum,
+    val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      .setName("coalescedRdd")
 
-    val mergedTables = coalescedTables.mapPartitions { iter =>
-      val mergedFeatures = new HomogenTable(device)
-      val mergedLabels = new HomogenTable(device)
-      iter.foreach { case (featureAddr, labelAddr) =>
-        mergedFeatures.addHomogenTable(featureAddr)
-        mergedLabels.addHomogenTable(labelAddr)
+    // convert RDD to HomogenTable
+    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Row]) =>
+      val list = it.toList
+      val subRowCount: Int = list.size / numberCores
+      val labeledPointsList: ListBuffer[Future[(Array[Double], Array[Double])]] =
+        new ListBuffer[Future[(Array[Double], Array[Double])]]()
+      val numRows = list.size
+      val numCols = list(0).getAs[Vector](1).toArray.size
+      val labelsArray = new Array[Double](numRows)
+      val featuresArray = new Array[Double](numRows * numCols)
+      for ( i <- 0 until  numberCores) {
+        val f = Future {
+          val iter = list.iterator
+          val slice = if (i == numberCores - 1) {
+            iter.slice(subRowCount * i, numRows * numCols)
+          } else {
+            iter.slice(subRowCount * i, subRowCount * i + subRowCount)
+          }
+          slice.toArray.zipWithIndex.map { case (row, index) =>
+            val length = row.getAs[Vector](1).toArray.length
+            System.arraycopy(row.getAs[Vector](1).toArray, 0, featuresArray, subRowCount * numCols * i + length * index, length)
+            labelsArray(subRowCount * i +  index) = row.getAs[Double](0)
+          }
+          (labelsArray, featuresArray)
+        }
+        labeledPointsList += f
+
+        val result = Future.sequence(labeledPointsList)
+        Await.result(result, Duration.Inf)
       }
-      Iterator((mergedFeatures.getcObejct(), mergedLabels.getcObejct()))
-    }.cache()
+      val labelsTable = new HomogenTable(numRows.toLong, 1, labelsArray,
+        device)
+      val featuresTable = new HomogenTable(numRows.toLong, numCols.toLong, featuresArray,
+        device)
 
-    mergedTables.count()
+      Iterator((featuresTable.getcObejct(), labelsTable.getcObejct()))
+    }.setName("coalescedTables").cache()
 
-    mergedTables
+   coalescedTables.count()
+   coalescedTables
   }
 
 
