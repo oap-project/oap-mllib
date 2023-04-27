@@ -174,10 +174,10 @@ object RandomForestClassifier extends DefaultParamsReadable[RandomForestClassifi
  */
 @Since("1.4.0")
 class RandomForestClassificationModel private[ml] (
-                                                    @Since("1.5.0") override val uid: String,
-                                                    private val _trees: Array[DecisionTreeClassificationModel],
-                                                    @Since("1.6.0") override val numFeatures: Int,
-                                                    @Since("1.5.0") override val numClasses: Int)
+        @Since("1.5.0") override val uid: String,
+        private val _trees: Array[DecisionTreeClassificationModel],
+        @Since("1.6.0") override val numFeatures: Int,
+        @Since("1.5.0") override val numClasses: Int)
   extends ProbabilisticClassificationModel[Vector, RandomForestClassificationModel]
     with RandomForestClassifierParams with TreeEnsembleModel[DecisionTreeClassificationModel]
     with MLWritable with Serializable
@@ -448,11 +448,11 @@ sealed trait BinaryRandomForestClassificationTrainingSummary extends
  * @param objectiveHistory objective function (scaled loss + regularization) at each iteration.
  */
 private class RandomForestClassificationTrainingSummaryImpl(
-                                                             predictions: DataFrame,
-                                                             predictionCol: String,
-                                                             labelCol: String,
-                                                             weightCol: String,
-                                                             override val objectiveHistory: Array[Double])
+           predictions: DataFrame,
+           predictionCol: String,
+           labelCol: String,
+           weightCol: String,
+           override val objectiveHistory: Array[Double])
   extends RandomForestClassificationSummaryImpl(
     predictions, predictionCol, labelCol, weightCol)
     with RandomForestClassificationTrainingSummary
@@ -485,12 +485,12 @@ private class RandomForestClassificationSummaryImpl(
  * @param objectiveHistory objective function (scaled loss + regularization) at each iteration.
  */
 private class BinaryRandomForestClassificationTrainingSummaryImpl(
-                                                                   predictions: DataFrame,
-                                                                   scoreCol: String,
-                                                                   predictionCol: String,
-                                                                   labelCol: String,
-                                                                   weightCol: String,
-                                                                   override val objectiveHistory: Array[Double])
+           predictions: DataFrame,
+           scoreCol: String,
+           predictionCol: String,
+           labelCol: String,
+           weightCol: String,
+           override val objectiveHistory: Array[Double])
   extends BinaryRandomForestClassificationSummaryImpl(
     predictions, scoreCol, predictionCol, labelCol, weightCol)
     with BinaryRandomForestClassificationTrainingSummary
