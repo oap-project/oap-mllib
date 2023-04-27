@@ -127,8 +127,8 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jintArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable int init \n");
-    jboolean isCopy = true;
-    jint *fData = env->GetIntArrayElements(cData, &isCopy);
+    jboolean isCopy = JNI_FALSE;
+    jint *fData = static_cast<jint *>(env->GetPrimitiveArrayCritical(cData, &isCopy));
     const std::vector<sycl::event> dependencies = {};
     HomogenTablePtr tablePtr;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -150,12 +150,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
              break;
        }
        default: {
-             env->ReleaseIntArrayElements(cData, fData, 0);
+             env->ReleasePrimitiveArrayCritical(cData, fData, 0);
              return 0;
        }
     }
     saveHomogenTablePtrToVector(tablePtr);
-    env->ReleaseIntArrayElements(cData, fData, 1);
+    env->ReleasePrimitiveArrayCritical(cData, fData, 0);
     return (jlong)tablePtr.get();
 }
 
@@ -168,8 +168,8 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jfloatArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable float init \n");
-    jboolean isCopy = true;
-    jfloat *fData = env->GetFloatArrayElements(cData, &isCopy);
+    jboolean isCopy = JNI_FALSE;
+    jfloat *fData = static_cast<jfloat *>(env->GetPrimitiveArrayCritical(cData, &isCopy));
     const std::vector<sycl::event> dependencies = {};
     HomogenTablePtr tablePtr;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -191,12 +191,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
              break;
          }
          default: {
-             env->ReleaseFloatArrayElements(cData, fData, 0);
+             env->ReleasePrimitiveArrayCritical(cData, fData, 0);
              return 0;
          }
     }
     saveHomogenTablePtrToVector(tablePtr);
-    env->ReleaseFloatArrayElements(cData, fData, 1);
+    env->ReleasePrimitiveArrayCritical(cData, fData, 0);
     return (jlong)tablePtr.get();
 }
 /*
@@ -208,8 +208,8 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jdoubleArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable double init \n");
-    jboolean isCopy = true;
-    jdouble *fData = env->GetDoubleArrayElements(cData, &isCopy);
+    jboolean isCopy = JNI_FALSE;
+    jdouble *fData = static_cast<jdouble *>(env->GetPrimitiveArrayCritical(cData, &isCopy));
     const std::vector<sycl::event> dependencies = {};
     HomogenTablePtr tablePtr;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -231,12 +231,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
              break;
          }
          default: {
-             env->ReleaseDoubleArrayElements(cData, fData, 0);
+             env->ReleasePrimitiveArrayCritical(cData, fData, 0);
              return 0;
          }
     }
      saveHomogenTablePtrToVector(tablePtr);
-     env->ReleaseDoubleArrayElements(cData, fData, 1);
+     env->ReleasePrimitiveArrayCritical(cData, fData, 0);
      return (jlong)tablePtr.get();
 }
 
@@ -249,8 +249,8 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlongArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
     printf("HomogenTable long init \n");
-    jboolean isCopy = true;
-    jlong *fData = env->GetLongArrayElements(cData, &isCopy);
+    jboolean isCopy = JNI_FALSE;
+    jlong *fData = static_cast<jlong *>(env->GetPrimitiveArrayCritical(cData, &isCopy));
     const std::vector<sycl::event> dependencies = {};
     HomogenTablePtr tablePtr;
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -272,12 +272,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
              break;
          }
          default: {
-             env->ReleaseLongArrayElements(cData, fData, 0);
+             env->ReleasePrimitiveArrayCritical(cData, fData, 0);
              return 0;
          }
     }
      saveHomogenTablePtrToVector(tablePtr);
-     env->ReleaseLongArrayElements(cData, fData, 1);
+     env->ReleasePrimitiveArrayCritical(cData, fData, 0);
      return (jlong)tablePtr.get();
 }
 
