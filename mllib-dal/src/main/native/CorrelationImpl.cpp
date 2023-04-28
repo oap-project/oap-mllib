@@ -27,14 +27,12 @@
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
-using namespace oneapi::dal;
-#else
-using namespace daal;
-using namespace daal::algorithms;
-using namespace daal::services;
+namespace covariance_gpu = oneapi::dal::covariance;
 #endif
+using namespace daal;
+using namespace daal::services;
+namespace covariance_cpu = daal::algorithms::covariance;
 
-#ifdef CPU_ONLY_PROFILE
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
@@ -46,10 +44,10 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
 
     const bool isRoot = (rankId == ccl_root);
 
-    covariance::Distributed<step1Local, algorithmFPType> localAlgorithm;
+    covariance_cpu::Distributed<step1Local, algorithmFPType> localAlgorithm;
 
     /* Set the input data set to the algorithm */
-    localAlgorithm.input.set(covariance::data, pData);
+    localAlgorithm.input.set(covariance_cpu::data, pData);
 
     /* Compute covariance */
     localAlgorithm.compute();
@@ -89,7 +87,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
-        covariance::Distributed<step2Master, algorithmFPType> masterAlgorithm;
+        covariance_cpu::Distributed<step2Master, algorithmFPType>
+            masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
             /* Deserialize partial results from step 1 */
@@ -97,19 +96,19 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
                                            perNodeArchLength * i,
                                        perNodeArchLength);
 
-            covariance::PartialResultPtr dataForStep2FromStep1(
-                new covariance::PartialResult());
+            covariance_cpu::PartialResultPtr dataForStep2FromStep1(
+                new covariance_cpu::PartialResult());
             dataForStep2FromStep1->deserialize(dataArch);
 
             /* Set local partial results as input for the master-node algorithm
              */
-            masterAlgorithm.input.add(covariance::partialResults,
+            masterAlgorithm.input.add(covariance_cpu::partialResults,
                                       dataForStep2FromStep1);
         }
 
         /* Set the parameter to choose the type of the output matrix */
         masterAlgorithm.parameter.outputMatrixType =
-            covariance::correlationMatrix;
+            covariance_cpu::correlationMatrix;
 
         /* Merge and finalizeCompute covariance decomposition on the master node
          */
@@ -117,7 +116,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
         masterAlgorithm.finalizeCompute();
 
         /* Retrieve the algorithm results */
-        covariance::ResultPtr result = masterAlgorithm.getResult();
+        covariance_cpu::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
@@ -126,7 +125,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
                   << duration / 1000 << " secs" << std::endl;
 
         /* Print the results */
-        printNumericTable(result->get(covariance::correlation),
+        printNumericTable(result->get(covariance_cpu::correlation),
                           "Correlation first 20 columns of "
                           "correlation matrix:",
                           1, 20);
@@ -138,13 +137,12 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, int rankId,
             env->GetFieldID(clazz, "correlationNumericTable", "J");
 
         NumericTablePtr *correlation =
-            new NumericTablePtr(result->get(covariance::correlation));
+            new NumericTablePtr(result->get(covariance_cpu::correlation));
 
         env->SetLongField(resultObj, correlationNumericTableField,
                           (jlong)correlation);
     }
 }
-#endif
 
 #ifdef CPU_GPU_PROFILE
 static void doCorrelationOneAPICompute(
@@ -156,9 +154,9 @@ static void doCorrelationOneAPICompute(
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto cor_desc = covariance::descriptor{}.set_result_options(
-        covariance::result_options::cor_matrix |
-        covariance::result_options::means);
+    const auto cor_desc = covariance_gpu::descriptor{}.set_result_options(
+        covariance_gpu::result_options::cor_matrix |
+        covariance_gpu::result_options::means);
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
@@ -200,7 +198,6 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
-#ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
@@ -213,8 +210,9 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
                   << nThreadsNew << std::endl;
         doCorrelationDaalCompute(env, obj, rankId, cclComm, pData, executorNum,
                                  resultObj);
+        break;
     }
-#else
+#ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
         std::cout << "oneDAL (native): use GPU kernels with " << nGpu
@@ -224,7 +222,6 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -234,9 +231,10 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         doCorrelationOneAPICompute(env, pNumTabData, comm, resultObj);
+        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }
-
     return 0;
 }

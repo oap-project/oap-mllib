@@ -74,7 +74,7 @@ jobs:
         run: |
           ${{github.workspace}}/dev/ci/ci-yarn-test.sh
   standalone-test:
-    name: Standalone Test for Examples (CPU)
+    name: Standalone CPU_GPU_PROFILE Test for Examples (CPU)
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3

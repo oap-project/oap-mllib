@@ -29,14 +29,12 @@
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
-using namespace oneapi::dal;
-#else
-using namespace daal;
-using namespace daal::algorithms;
-using namespace daal::services;
+namespace kmeans_gpu = oneapi::dal::kmeans;
 #endif
+using namespace daal;
+using namespace daal::services;
+namespace kmeans_cpu = daal::algorithms::kmeans;
 
-#ifdef CPU_ONLY_PROFILE
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
@@ -75,11 +73,12 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
     centroids->deserialize(outArch);
 
     /* Create an algorithm to compute k-means on local nodes */
-    kmeans::Distributed<step1Local, algorithmFPType> localAlgorithm(nClusters);
+    kmeans_cpu::Distributed<step1Local, algorithmFPType> localAlgorithm(
+        nClusters);
 
     /* Set the input data set to the algorithm */
-    localAlgorithm.input.set(kmeans::data, pData);
-    localAlgorithm.input.set(kmeans::inputCentroids, centroids);
+    localAlgorithm.input.set(kmeans_cpu::data, pData);
+    localAlgorithm.input.set(kmeans_cpu::inputCentroids, centroids);
 
     /* Compute k-means */
     localAlgorithm.compute();
@@ -108,7 +107,7 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
 
     if (isRoot) {
         /* Create an algorithm to compute k-means on the master node */
-        kmeans::Distributed<step2Master, algorithmFPType> masterAlgorithm(
+        kmeans_cpu::Distributed<step2Master, algorithmFPType> masterAlgorithm(
             nClusters);
 
         for (size_t i = 0; i < nBlocks; i++) {
@@ -116,13 +115,13 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
             OutputDataArchive dataArch(&serializedData[perNodeArchLength * i],
                                        perNodeArchLength);
 
-            kmeans::PartialResultPtr dataForStep2FromStep1(
-                new kmeans::PartialResult());
+            kmeans_cpu::PartialResultPtr dataForStep2FromStep1(
+                new kmeans_cpu::PartialResult());
             dataForStep2FromStep1->deserialize(dataArch);
 
             /* Set local partial results as input for the master-node algorithm
              */
-            masterAlgorithm.input.add(kmeans::partialResults,
+            masterAlgorithm.input.add(kmeans_cpu::partialResults,
                                       dataForStep2FromStep1);
         }
 
@@ -131,11 +130,11 @@ static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
         masterAlgorithm.finalizeCompute();
 
         ret_cost = masterAlgorithm.getResult()
-                       ->get(kmeans::objectiveFunction)
+                       ->get(kmeans_cpu::objectiveFunction)
                        ->getValue<algorithmFPType>(0, 0);
 
         /* Retrieve the algorithm results */
-        return masterAlgorithm.getResult()->get(kmeans::centroids);
+        return masterAlgorithm.getResult()->get(kmeans_cpu::centroids);
     }
     return NumericTablePtr();
 }
@@ -239,7 +238,6 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
         return (jlong)0;
     }
 }
-#endif
 
 #ifdef CPU_GPU_PROFILE
 static jlong doKMeansOneAPICompute(
@@ -253,13 +251,13 @@ static jlong doKMeansOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
-    const auto kmeans_desc = kmeans::descriptor<>()
+    const auto kmeans_desc = kmeans_gpu::descriptor<>()
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);
-    kmeans::train_input local_input{htable, centroids};
+    kmeans_gpu::train_input local_input{htable, centroids};
     auto t1 = std::chrono::high_resolution_clock::now();
-    kmeans::train_result result_train =
+    kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
@@ -314,7 +312,6 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
-#ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
@@ -329,8 +326,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         ret = doKMeansDaalCompute(env, obj, rankId, cclComm, pData, centroids,
                                   clusterNum, tolerance, iterationNum,
                                   executorNum, resultObj);
+        break;
     }
-#else
+#ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
         std::cout << "oneDAL (native): use GPU kernels with " << nGpu
@@ -340,7 +338,6 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -352,6 +349,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         ret =
             doKMeansOneAPICompute(env, pNumTabData, pNumTabCenters, clusterNum,
                                   tolerance, iterationNum, comm, resultObj);
+
+        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }

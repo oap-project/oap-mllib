@@ -28,13 +28,10 @@
 using namespace std;
 #ifdef CPU_GPU_PROFILE
 using namespace oneapi::dal;
-#else
+#endif
 using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
-#endif
-
-#ifdef CPU_ONLY_PROFILE
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
@@ -199,7 +196,6 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
         env->SetLongField(resultObj, minimumNumericTableField, (jlong)min);
     }
 }
-#endif
 
 #ifdef CPU_GPU_PROFILE
 static void doSummarizerOneAPICompute(
@@ -271,7 +267,6 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
-#ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
@@ -284,8 +279,9 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
                   << nThreadsNew << std::endl;
         doSummarizerDAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                                 resultObj);
+        break;
     }
-#else
+#ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
         std::cout << "oneDAL (native): use GPU kernels with " << nGpu
@@ -295,7 +291,6 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -305,9 +300,10 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         doSummarizerOneAPICompute(env, pNumTabData, comm, resultObj);
+        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }
-
     return 0;
 }

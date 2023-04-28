@@ -32,11 +32,12 @@ $(info )
 CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I $(I_MPI_ROOT)/include \
                  -I $(DAALROOT)/include \
+                 -I $(CCL_ROOT)/include/cpu/oneapi/ \
                  -I $(CMPLR_ROOT)/linux/include \
                  -I $(CMPLR_ROOT)/linux/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  CFLAGS := $(CFLAGS_COMMON)  -I $(CCL_ROOT)/include/cpu/oneapi/
+  CFLAGS := $(CFLAGS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CFLAGS := $(CFLAGS_COMMON) -fsycl \
             -fsycl-device-code-split=per_kernel \
@@ -46,14 +47,15 @@ else
   exit 1
 endif
 
-INCS := -I $(JAVA_HOME)/include \
+INCS := -I $(CCL_ROOT)/include/cpu \
+        -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
         -I $(DAALROOT)/include \
         -I ./javah \
         -I ./
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
-  INCS := $(INCS)  -I $(CCL_ROOT)/include/cpu
+  INCS := $(INCS)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   INCS := $(INCS) -I $(CCL_ROOT)/include/cpu_gpu_dpcpp
 else
@@ -62,17 +64,15 @@ else
 endif
 
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON :=-L $(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
-        -L $(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc \
-        -L $(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
-        -L $(I_MPI_ROOT)
+LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu -lccl \
+        -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
+        -L$(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc \
+        -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
+        -L$(I_MPI_ROOT)
 
-ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
       LIBS_COMMON := $(LIBS_COMMON) \
-                     -L $(CCL_ROOT)/lib/cpu -lccl
-else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
-      LIBS_COMMON := $(LIBS_COMMON) \
-                     -L $(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl
+                     -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl
 endif
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)

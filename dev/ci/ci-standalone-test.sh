@@ -17,7 +17,7 @@ source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
 ../dev/prepare-build-deps.sh
-./build.sh -p CPU_ONLY_PROFILE -q
+./build.sh -p CPU_GPU_PROFILE -q
 
 # Setup cluster
 source $GITHUB_WORKSPACE/dev/test-cluster/standalone/setup-cluster.sh

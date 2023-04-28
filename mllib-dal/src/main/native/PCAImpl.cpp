@@ -29,14 +29,14 @@
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
-using namespace oneapi::dal;
-#else
-using namespace daal;
-using namespace daal::algorithms;
-using namespace daal::services;
+namespace pca_gpu = oneapi::dal::pca;
+namespace covariance_gpu = oneapi::dal::covariance;
 #endif
+using namespace daal;
+using namespace daal::services;
+namespace pca_cpu = daal::algorithms::pca;
+namespace covariance_cpu = daal::algorithms::covariance;
 
-#ifdef CPU_ONLY_PROFILE
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
 static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
@@ -48,10 +48,10 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 
     const bool isRoot = (rankId == ccl_root);
 
-    covariance::Distributed<step1Local, algorithmFPType> localAlgorithm;
+    covariance_cpu::Distributed<step1Local, algorithmFPType> localAlgorithm;
 
     /* Set the input data set to the algorithm */
-    localAlgorithm.input.set(covariance::data, pData);
+    localAlgorithm.input.set(covariance_cpu::data, pData);
 
     /* Compute covariance for PCA*/
     localAlgorithm.compute();
@@ -90,7 +90,8 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
-        covariance::Distributed<step2Master, algorithmFPType> masterAlgorithm;
+        covariance_cpu::Distributed<step2Master, algorithmFPType>
+            masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
             /* Deserialize partial results from step 1 */
@@ -98,19 +99,19 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
                                            perNodeArchLength * i,
                                        perNodeArchLength);
 
-            covariance::PartialResultPtr dataForStep2FromStep1(
-                new covariance::PartialResult());
+            covariance_cpu::PartialResultPtr dataForStep2FromStep1(
+                new covariance_cpu::PartialResult());
             dataForStep2FromStep1->deserialize(dataArch);
 
             /* Set local partial results as input for the master-node algorithm
              */
-            masterAlgorithm.input.add(covariance::partialResults,
+            masterAlgorithm.input.add(covariance_cpu::partialResults,
                                       dataForStep2FromStep1);
         }
 
         /* Set the parameter to choose the type of the output matrix */
         masterAlgorithm.parameter.outputMatrixType =
-            covariance::covarianceMatrix;
+            covariance_cpu::covarianceMatrix;
 
         /* Merge and finalizeCompute covariance decomposition on the master node
          */
@@ -118,7 +119,8 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
         masterAlgorithm.finalizeCompute();
 
         /* Retrieve the algorithm results */
-        covariance::ResultPtr covariance_result = masterAlgorithm.getResult();
+        covariance_cpu::ResultPtr covariance_result =
+            masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
@@ -130,12 +132,12 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
 
         /* Create an algorithm for principal component analysis using the
          * correlation method*/
-        pca::Batch<algorithmFPType> algorithm;
+        pca_cpu::Batch<algorithmFPType> algorithm;
 
         /* Set the algorithm input data*/
-        algorithm.input.set(pca::correlation,
-                            covariance_result->get(covariance::covariance));
-        algorithm.parameter.resultsToCompute = pca::eigenvalue;
+        algorithm.input.set(pca_cpu::correlation,
+                            covariance_result->get(covariance_cpu::covariance));
+        algorithm.parameter.resultsToCompute = pca_cpu::eigenvalue;
 
         /* Compute results of the PCA algorithm*/
         algorithm.compute();
@@ -148,11 +150,11 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
                   << " secs" << std::endl;
 
         /* Print the results */
-        pca::ResultPtr result = algorithm.getResult();
-        printNumericTable(result->get(pca::eigenvalues),
+        pca_cpu::ResultPtr result = algorithm.getResult();
+        printNumericTable(result->get(pca_cpu::eigenvalues),
                           "First 10 eigenvalues with first 20 dimensions:", 10,
                           20);
-        printNumericTable(result->get(pca::eigenvectors),
+        printNumericTable(result->get(pca_cpu::eigenvectors),
                           "First 10 eigenvectors with first 20 dimensions:", 10,
                           20);
 
@@ -166,16 +168,15 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
             env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
 
         NumericTablePtr *eigenvalues =
-            new NumericTablePtr(result->get(pca::eigenvalues));
+            new NumericTablePtr(result->get(pca_cpu::eigenvalues));
         NumericTablePtr *eigenvectors =
-            new NumericTablePtr(result->get(pca::eigenvectors));
+            new NumericTablePtr(result->get(pca_cpu::eigenvectors));
 
         env->SetLongField(resultObj, pcNumericTableField, (jlong)eigenvectors);
         env->SetLongField(resultObj, explainedVarianceNumericTableField,
                           (jlong)eigenvalues);
     }
 }
-#endif
 
 #ifdef CPU_GPU_PROFILE
 static void doPCAOneAPICompute(
@@ -187,8 +188,8 @@ static void doPCAOneAPICompute(
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto cov_desc = covariance::descriptor{}.set_result_options(
-        covariance::result_options::cov_matrix);
+    const auto cov_desc = covariance_gpu::descriptor{}.set_result_options(
+        covariance_gpu::result_options::cov_matrix);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
@@ -199,9 +200,9 @@ static void doPCAOneAPICompute(
               << " secs" << std::endl;
     if (isRoot) {
         using float_t = double;
-        using method_t = pca::method::precomputed;
-        using task_t = pca::task::dim_reduction;
-        using descriptor_t = pca::descriptor<float_t, method_t, task_t>;
+        using method_t = pca_gpu::method::precomputed;
+        using task_t = pca_gpu::task::dim_reduction;
+        using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;
         const auto pca_desc = descriptor_t().set_deterministic(true);
 
         t1 = std::chrono::high_resolution_clock::now();
@@ -254,7 +255,6 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
-#ifdef CPU_ONLY_PROFILE
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
@@ -267,8 +267,9 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
                   << nThreadsNew << std::endl;
         doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                          resultObj);
+        break;
     }
-#else
+#ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
         std::cout << "oneDAL (native): use GPU kernels with " << nGpu
@@ -278,7 +279,6 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
         int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
 
         auto queue =
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
@@ -288,6 +288,8 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         doPCAOneAPICompute(env, pNumTabData, comm, resultObj);
+        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        break;
     }
 #endif
     }
