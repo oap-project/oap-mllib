@@ -22,15 +22,8 @@
 #include <vector>
 
 #ifdef CPU_GPU_PROFILE
-#include "GPU.h"
-#ifndef ONEDAL_DATA_PARALLEL
-#define ONEDAL_DATA_PARALLEL
-#endif
-#include "Communicator.hpp"
-#include "OutputHelpers.hpp"
+#include "Common.hpp"
 #include "oneapi/dal/algo/linear_regression.hpp"
-#include "oneapi/dal/algo/linear_regression/train_types.hpp"
-#include "oneapi/dal/table/homogen.hpp"
 #endif
 
 #include "OneCCL.h"
