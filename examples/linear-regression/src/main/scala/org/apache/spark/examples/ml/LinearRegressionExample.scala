@@ -110,7 +110,7 @@ object LinearRegressionExample {
     println(s"LinearRegressionExample with parameters:\n$params")
 
     val training = spark.read.format("libsvm")
-      .load(params.input).toDF("label", "features").repartition(4)
+      .load(params.input).toDF("label", "features")
 
     training.select("label","features").printSchema()
     val featuresRDD=training
