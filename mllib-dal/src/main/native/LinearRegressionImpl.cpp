@@ -214,12 +214,17 @@ static NumericTablePtr ridge_regression_compute(
 
 #ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(
-    JNIEnv *env, jint rankId, jlong pData, jlong pLabel, jint executorNum,
-    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    JNIEnv *env, int rankId, ccl::communicator &cclComm, sycl::queue &queue, jlong pData, jlong pLabel, jint executorNum,
     jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
+
+    int size = cclComm.size();
+    ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+    auto comm =
+    preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, size, rankId, kvs);
 
     homogen_table xtrain = *reinterpret_cast<const homogen_table *>(pData);
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
@@ -273,19 +278,14 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
                   << " GPU(s)"
                   << " rankid " << rankId << std::endl;
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-
         int size = cclComm.size();
-        auto queue =
+        auto queue = 
             getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
-
+ 
         jlong pDatagpu = (jlong)data;
         jlong pLabelgpu = (jlong)label;
-        resultptr = doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu,
-                                      executorNum, comm, resultObj);
+        resultptr = doLROneAPICompute(env, rankId, cclComm, queue, pDatagpu, pLabelgpu,
+                                      executorNum, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 #endif
     } else {
