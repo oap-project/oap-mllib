@@ -99,13 +99,16 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       val results = labeledPointsTables.mapPartitionsWithIndex {
         case (rank: Int, tables: Iterator[(Long, Long)]) =>
           val (featureTabAddr, lableTabAddr) = tables.next()
-          if (useDevice == "GPU") {
-            OneCCL.initDpcpp()
+          OneCCL.init(executorNum, rank, kvsIPPort)
+          val result = new LiRResult()
+
+          val gpuIndices = if (useDevice == "GPU") {
+            val resources = TaskContext.get().resources()
+            resources("gpu").addresses.map(_.toInt)
           } else {
-            OneCCL.init(executorNum, rank, kvsIPPort)
+            null
           }
 
-          val result = new LiRResult()
           val cbeta = cLinearRegressionTrainDAL(
             featureTabAddr,
             lableTabAddr,
@@ -114,8 +117,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             executorNum,
             executorCores,
             computeDevice.ordinal(),
-            rank,
-            kvsIPPort,
+            gpuIndices,
             result
           )
 
@@ -130,9 +132,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           } else {
             Iterator.empty
           }
-          if (useDevice == "CPU") {
-            OneCCL.cleanup()
-          }
+          OneCCL.cleanup()
           ret
       }.collect()
 
@@ -156,8 +156,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                     executorNum: Int,
                                     executorCores: Int,
                                     computeDeviceOrdinal: Int,
-                                    rankId: Int,
-                                    ipPort: String,
+                                    gpuIndices: Array[Int],
                                     result: LiRResult): Long
 
   }
