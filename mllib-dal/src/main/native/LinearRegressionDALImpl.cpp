@@ -210,7 +210,7 @@ static NumericTablePtr ridge_regression_compute(
 #ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
                                jlong pLabel, jint executorNum,
-                               const ccl::string &ipPort, ComputeDevice &device,
+                               preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
                                jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
@@ -221,9 +221,7 @@ static jlong doLROneAPICompute(JNIEnv *env, jint rankId, jlong pData,
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc = linear_regression_gpu::descriptor<>();
-    auto queue = getQueue(device);
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, ipPort);
+    
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
     if (isRoot) {
@@ -247,14 +245,15 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
     JNIEnv *env, jobject obj, jlong data, jlong label, jdouble regParam,
     jdouble elasticNetParam, jint executorNum, jint executorCores,
-    jint computeDeviceOrdinal, jint rankId, jstring ipPort, jobject resultObj) {
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
 
     std::cout << "oneDAL (native): use DPC++ kernels "
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
 
-    const char *ipPortPtr = env->GetStringUTFChars(ipPort, 0);
-    std::string ipPortStr = std::string(ipPortPtr);
+    ccl::communicator &cclComm = getComm();
+    int rankId = cclComm.rank();
+
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     bool useGPU = false;
     if (device == ComputeDevice::gpu && regParam == 0) {
@@ -262,19 +261,30 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     }
     NumericTablePtr resultTable;
     jlong resultptr = 0L;
-    jlong ret = 0L;
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
+        int nGpu = env->GetArrayLength(gpuIdxArray);
+        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
+                  << " GPU(s)"
+                  << " rankid " << rankId << std::endl;
+        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+
+        int size = cclComm.size();
+        auto queue =
+            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
+        auto comm =
+            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+                queue, size, rankId, kvs);
+
         jlong pDatagpu = (jlong)data;
         jlong pLabelgpu = (jlong)label;
         resultptr =
             doLROneAPICompute(env, rankId, pDatagpu, pLabelgpu, executorNum,
-                              ipPortStr, device, resultObj);
+                              comm, resultObj);
+        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 #endif
     } else {
-        ccl::communicator &comm = getComm();
-        size_t rankId = comm.rank();
-
         NumericTablePtr pLabel = *((NumericTablePtr *)label);
         NumericTablePtr pData = *((NumericTablePtr *)data);
 
@@ -286,10 +296,10 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
              << endl;
         if (regParam == 0) {
-            resultTable = linear_regression_compute(rankId, comm, pData, pLabel,
+            resultTable = linear_regression_compute(rankId, cclComm, pData, pLabel,
                                                     executorNum);
         } else {
-            resultTable = ridge_regression_compute(rankId, comm, pData, pLabel,
+            resultTable = ridge_regression_compute(rankId, cclComm, pData, pLabel,
                                                    regParam, executorNum);
         }
 
@@ -297,6 +307,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         resultptr = (jlong)coeffvectors;
     }
 
+    jlong ret = 0L;
     if (rankId == ccl_root) {
         // Get the class of the result object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -311,6 +322,5 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     } else {
         ret = (jlong)0;
     }
-    env->ReleaseStringUTFChars(ipPort, ipPortPtr);
     return ret;
 }
