@@ -19,6 +19,7 @@ package com.intel.oap.mllib.regression
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
+import org.apache.spark.SparkException
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
@@ -79,8 +80,11 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
           OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         } else {
+          val msg = s"Sparse table is not supported now."
           //todo sparse table is not supported
-          OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
+          
+          logError(msg)
+          throw new SparkException(msg)
         }
     } else {
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
