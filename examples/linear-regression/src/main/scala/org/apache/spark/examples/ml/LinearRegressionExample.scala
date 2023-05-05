@@ -112,13 +112,13 @@ object LinearRegressionExample {
     val training = spark.read.format("libsvm")
       .load(params.input).toDF("label", "features")
 
-    training.select("label","features").printSchema()
+    training.select("label", "features").printSchema()
     val featuresRDD=training
-      .select("label","features").rdd.map{
-        case Row(label:Double,feature:Vector)=>new LabeledPoint(label,feature.toDense)
+      .select("label", "features").rdd.map{
+        case Row(label:Double, feature:Vector)=>new LabeledPoint(label, feature.toDense)
       }
       import spark.implicits._
-      val df=featuresRDD.toDF("label","features")
+      val df=featuresRDD.toDF("label", "features")
       df.show(false)
     val lir = new LinearRegression()
       .setFeaturesCol("features")
