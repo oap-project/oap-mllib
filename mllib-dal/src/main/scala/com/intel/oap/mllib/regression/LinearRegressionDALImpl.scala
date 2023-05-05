@@ -57,100 +57,100 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                val executorCores: Int)
   extends Serializable with Logging {
 
-    require(regParam >= 0.0, s"regParam cannot be negative: $regParam")
-    require(elasticNetParam >= 0.0 && elasticNetParam <= 1.0,
-      s"elasticNetParam must be in [0, 1]: $elasticNetParam")
+  require(regParam >= 0.0, s"regParam cannot be negative: $regParam")
+  require(elasticNetParam >= 0.0 && elasticNetParam <= 1.0,
+  s"elasticNetParam must be in [0, 1]: $elasticNetParam")
 
-    /**
-      * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
-      */
+  /**
+    * Creates a [[LinearRegressionDALModel]] from an RDD of [[Vector]]s.
+    */
 
-    def train(labeledPoints: Dataset[_],
-              labelCol: String,
-              featuresCol: String): LinearRegressionDALModel = {
+  def train(labeledPoints: Dataset[_],
+            labelCol: String,
+            featuresCol: String): LinearRegressionDALModel = {
 
-      val sparkContext = labeledPoints.sparkSession.sparkContext
-      val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
-      val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    val sparkContext = labeledPoints.sparkSession.sparkContext
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
-      val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+    val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
-      val labeledPointsTables = if (useDevice == "GPU") {
-          if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-            OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
-          } else {
-            //todo sparse table is not supported
-            OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
-          }
-      } else {
-          if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-          OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+    val labeledPointsTables = if (useDevice == "GPU") {
+        if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+          OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         } else {
-          OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+          //todo sparse table is not supported
+          OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         }
+    } else {
+        if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+        OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+      } else {
+        OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
       }
-
-      val results = labeledPointsTables.mapPartitionsWithIndex {
-        case (rank: Int, tables: Iterator[(Long, Long)]) =>
-          val (featureTabAddr, lableTabAddr) = tables.next()
-          OneCCL.init(executorNum, rank, kvsIPPort)
-          val result = new LiRResult()
-
-          val gpuIndices = if (useDevice == "GPU") {
-            val resources = TaskContext.get().resources()
-            resources("gpu").addresses.map(_.toInt)
-          } else {
-            null
-          }
-
-          val cbeta = cLinearRegressionTrainDAL(
-            featureTabAddr,
-            lableTabAddr,
-            regParam,
-            elasticNetParam,
-            executorNum,
-            executorCores,
-            computeDevice.ordinal(),
-            gpuIndices,
-            result
-          )
-
-          val ret = if (rank == 0) {
-            val coefficientArray = if (useDevice == "GPU") {
-                OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cbeta),
-                  computeDevice)
-              } else {
-                OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cbeta))
-              }
-            Iterator(coefficientArray(0))
-          } else {
-            Iterator.empty
-          }
-          OneCCL.cleanup()
-          ret
-      }.collect()
-
-      // Make sure there is only one result from rank 0
-      assert(results.length == 1)
-
-      val coefficientVector = results(0)
-
-      val parentModel = new LinearRegressionDALModel(
-        new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
-        coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
-
-      parentModel
     }
 
-    // Single entry to call Linear Regression DAL backend with parameters
-    @native private def cLinearRegressionTrainDAL(data: Long,
-                                    label: Long,
-                                    regParam: Double,
-                                    elasticNetParam: Double,
-                                    executorNum: Int,
-                                    executorCores: Int,
-                                    computeDeviceOrdinal: Int,
-                                    gpuIndices: Array[Int],
-                                    result: LiRResult): Long
+    val results = labeledPointsTables.mapPartitionsWithIndex {
+      case (rank: Int, tables: Iterator[(Long, Long)]) =>
+        val (featureTabAddr, lableTabAddr) = tables.next()
+        OneCCL.init(executorNum, rank, kvsIPPort)
+        val result = new LiRResult()
+
+        val gpuIndices = if (useDevice == "GPU") {
+          val resources = TaskContext.get().resources()
+          resources("gpu").addresses.map(_.toInt)
+        } else {
+          null
+        }
+
+        val cbeta = cLinearRegressionTrainDAL(
+          featureTabAddr,
+          lableTabAddr,
+          regParam,
+          elasticNetParam,
+          executorNum,
+          executorCores,
+          computeDevice.ordinal(),
+          gpuIndices,
+          result
+        )
+
+        val ret = if (rank == 0) {
+          val coefficientArray = if (useDevice == "GPU") {
+              OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cbeta),
+                computeDevice)
+            } else {
+              OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cbeta))
+            }
+          Iterator(coefficientArray(0))
+        } else {
+          Iterator.empty
+        }
+        OneCCL.cleanup()
+        ret
+    }.collect()
+
+    // Make sure there is only one result from rank 0
+    assert(results.length == 1)
+
+    val coefficientVector = results(0)
+
+    val parentModel = new LinearRegressionDALModel(
+      new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
+      coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
+
+    parentModel
+  }
+
+  // Single entry to call Linear Regression DAL backend with parameters
+  @native private def cLinearRegressionTrainDAL(data: Long,
+                                  label: Long,
+                                  regParam: Double,
+                                  elasticNetParam: Double,
+                                  executorNum: Int,
+                                  executorCores: Int,
+                                  computeDeviceOrdinal: Int,
+                                  gpuIndices: Array[Int],
+                                  result: LiRResult): Long
 
   }
