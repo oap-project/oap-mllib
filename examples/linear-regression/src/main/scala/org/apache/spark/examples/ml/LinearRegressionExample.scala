@@ -115,7 +115,7 @@ object LinearRegressionExample {
     training.select("label", "features").printSchema()
     val featuresRDD = training
       .select("label", "features").rdd.map{
-        case Row(label:Double, feature:Vector) => new LabeledPoint(label, feature.toDense)
+        case Row(label: Double, feature: Vector) => new LabeledPoint(label, feature.toDense)
       }
       import spark.implicits._
       val df = featuresRDD.toDF("label", "features")
