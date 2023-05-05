@@ -77,9 +77,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
       val labeledPointsTables = if (useDevice == "GPU") {
           if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-            println(labeledPoints.select(labelCol).count())
-            println(labeledPoints.select(featuresCol).count())
-
             OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
           } else {
             //todo sparse table is not supported
@@ -92,9 +89,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
         }
       }
-
-      println(useDevice)
-
 
       val results = labeledPointsTables.mapPartitionsWithIndex {
         case (rank: Int, tables: Iterator[(Long, Long)]) =>
