@@ -80,7 +80,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
           OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         } else {
-          val msg = s"Sparse table is not supported now."
+          val msg = s"OAPMLlib: Sparse table is not supported for gpu now."
           //todo sparse table is not supported
           
           logError(msg)
