@@ -64,8 +64,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
           labelCol, featuresCol, executorNum, computeDevice)
       } else {
-        OneDAL.rddLabeledPointToSparseCSRTables(labeledPoints,
-          labelCol, featuresCol, executorNum, computeDevice)
+        throw new Exception("Oneapi didn't implement sparse dataset")
       }
     } else {
       throw new Exception("Random Forset didn't implemente for CPU device, " +

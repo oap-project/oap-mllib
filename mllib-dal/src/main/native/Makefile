@@ -94,9 +94,7 @@ CPP_SRCS += \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
-  ./oneapi/dal/RowAccessorImpl.cpp \
-  ./oneapi/dal/CSRAccessorImpl.cpp \
-  ./oneapi/dal/CSRTableImpl.cpp
+  ./oneapi/dal/RowAccessorImpl.cpp
 
 
 OBJS += \
@@ -112,9 +110,7 @@ OBJS += \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \
-  ./oneapi/dal/RowAccessorImpl.o \
-  ./oneapi/dal/CSRAccessorImpl.o \
-  ./oneapi/dal/CSRTableImpl.o
+  ./oneapi/dal/RowAccessorImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 
