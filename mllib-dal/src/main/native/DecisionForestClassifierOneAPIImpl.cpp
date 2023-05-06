@@ -34,102 +34,137 @@ using namespace std;
 using namespace oneapi::dal;
 namespace df = oneapi::dal::decision_forest;
 
-// Define the LearningNode struct
-struct LearningNode {
-    constexpr LearningNode(){};
-    int level = 0;
-    double impurity = 0.0;
-    int splitIndex = 0;
-    double splitValue = 0.0;
-    bool isLeaf = false;
-    std::unique_ptr<double[]> probability = nullptr;
-    int sampleCount = 0;
-};
-const std::shared_ptr<
-    std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>
-    treeForest = std::make_shared<
-        std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>();
+void generateSplitLearningNode(
+    JNIEnv *env, const df::split_node_info<df::task::classification> &info,
+    const int classCount, jobject jList, jclass listClass,
+    jclass learningNodeClass, jmethodID learningNodeConstructor) {
+    jobject jNode = env->NewObject(learningNodeClass, learningNodeConstructor);
 
-LearningNode convertsplitToLearningNode(
-    const df::split_node_info<df::task::classification> &info,
-    const int classCount) {
-    LearningNode splitNode;
-    splitNode.isLeaf = false;
-    splitNode.level = info.get_level();
-    splitNode.splitIndex = info.get_feature_index();
-    splitNode.splitValue = info.get_feature_value();
-    splitNode.impurity = info.get_impurity();
-    splitNode.sampleCount = info.get_sample_count();
-    std::unique_ptr<double[]> arr(new double[classCount]);
-    for (std::int64_t index_class = 0; index_class < classCount;
-         ++index_class) {
-        arr[index_class] = 0.0;
+    // Set the fields of the Java LearningNode object using JNI
+    // functions
+    jfieldID levelField = env->GetFieldID(learningNodeClass, "level", "I");
+    env->SetIntField(jNode, levelField, info.get_level());
+
+    jfieldID impurityField =
+        env->GetFieldID(learningNodeClass, "impurity", "D");
+    env->SetDoubleField(jNode, impurityField, info.get_impurity());
+
+    jfieldID splitIndexField =
+        env->GetFieldID(learningNodeClass, "splitIndex", "I");
+    env->SetIntField(jNode, splitIndexField, info.get_feature_index());
+
+    jfieldID splitValueField =
+        env->GetFieldID(learningNodeClass, "splitValue", "D");
+    env->SetDoubleField(jNode, splitValueField, info.get_feature_value());
+
+    jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
+    env->SetBooleanField(jNode, isLeafField, false);
+
+    // Convert the probability array
+    jfieldID probabilityField =
+        env->GetFieldID(learningNodeClass, "probability", "[D");
+    jdoubleArray jProbability = env->NewDoubleArray(classCount);
+    // call the native method to get the values
+    jdouble *elements = env->GetDoubleArrayElements(jProbability, nullptr);
+    // Do something with the array elements
+    for (int i = 0; i < classCount; i++) {
+        elements[i] = 0.0;
     }
-    splitNode.probability = std::move(arr);
-    return splitNode;
+    env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
+    env->SetObjectField(jNode, probabilityField, jProbability);
+
+    jfieldID sampleCountField =
+        env->GetFieldID(learningNodeClass, "sampleCount", "I");
+    env->SetIntField(jNode, sampleCountField, info.get_sample_count());
+
+    // Add the LearningNode object to the ArrayList
+    jmethodID listAdd =
+        env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+    env->CallBooleanMethod(jList, listAdd, jNode);
 }
 
-LearningNode convertleafToLearningNode(
-    const df::leaf_node_info<df::task::classification> &info,
-    const int classCount) {
-    LearningNode leafNode;
-    leafNode.isLeaf = true;
-    leafNode.level = info.get_level();
-    leafNode.impurity = info.get_impurity();
-    leafNode.sampleCount = info.get_sample_count();
-    std::unique_ptr<double[]> arr(new double[classCount]);
-    for (std::int64_t index_class = 0; index_class < classCount;
-         ++index_class) {
-        arr[index_class] = info.get_probability(index_class);
+void generateLeafLearningNode(
+    JNIEnv *env, const df::leaf_node_info<df::task::classification> &info,
+    const int classCount, jobject jList, jclass listClass,
+    jclass learningNodeClass, jmethodID learningNodeConstructor) {
+    jobject jNode = env->NewObject(learningNodeClass, learningNodeConstructor);
+
+    // Set the fields of the Java LearningNode object using JNI
+    // functions
+    jfieldID levelField = env->GetFieldID(learningNodeClass, "level", "I");
+    env->SetIntField(jNode, levelField, info.get_level());
+
+    jfieldID impurityField =
+        env->GetFieldID(learningNodeClass, "impurity", "D");
+    env->SetDoubleField(jNode, impurityField, info.get_impurity());
+
+    jfieldID splitIndexField =
+        env->GetFieldID(learningNodeClass, "splitIndex", "I");
+    env->SetIntField(jNode, splitIndexField, 0);
+
+    jfieldID splitValueField =
+        env->GetFieldID(learningNodeClass, "splitValue", "D");
+    env->SetDoubleField(jNode, splitValueField, 0.0);
+
+    jfieldID isLeafField = env->GetFieldID(learningNodeClass, "isLeaf", "Z");
+    env->SetBooleanField(jNode, isLeafField, true);
+
+    // Convert the probability array
+    jfieldID probabilityField =
+        env->GetFieldID(learningNodeClass, "probability", "[D");
+    jdoubleArray jProbability = env->NewDoubleArray(classCount);
+    // call the native method to get the values
+    jdouble *elements = env->GetDoubleArrayElements(jProbability, nullptr);
+    // Do something with the array elements
+    for (int i = 0; i < classCount; i++) {
+        elements[i] = info.get_probability(i);
     }
-    leafNode.probability = std::move(arr);
-    return leafNode;
+    env->SetDoubleArrayRegion(jProbability, 0, classCount, elements);
+    env->SetObjectField(jNode, probabilityField, jProbability);
+
+    jfieldID sampleCountField =
+        env->GetFieldID(learningNodeClass, "sampleCount", "I");
+    env->SetIntField(jNode, sampleCountField, info.get_sample_count());
+
+    // Add the LearningNode object to the ArrayList
+    jmethodID listAdd =
+        env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
+    env->CallBooleanMethod(jList, listAdd, jNode);
 }
 
 struct collect_nodes {
-    std::shared_ptr<std::vector<LearningNode>> treesVector;
+    JNIEnv *env;
     jint classCount;
-    collect_nodes(const std::shared_ptr<std::vector<LearningNode>> &vector,
-                  int count) {
-        treesVector = vector;
-        classCount = count;
+    jobject jList;
+    jclass listClass;
+    jclass learningNodeClass;
+    jmethodID learningNodeConstructor;
+    collect_nodes(JNIEnv *env, int count, jobject jList, jclass listClass,
+                  jclass learningNodeClass, jmethodID learningNodeConstructor) {
+        this->env = env;
+        this->classCount = count;
+        this->jList = jList;
+        this->listClass = listClass;
+        this->learningNodeClass = learningNodeClass;
+        this->learningNodeConstructor = learningNodeConstructor;
     }
     bool operator()(const df::leaf_node_info<df::task::classification> &info) {
-        treesVector->push_back(convertleafToLearningNode(info, classCount));
-
+        generateLeafLearningNode(env, info, classCount, jList, listClass,
+                                 learningNodeClass, learningNodeConstructor);
         return true;
     }
 
     bool operator()(const df::split_node_info<df::task::classification> &info) {
-        treesVector->push_back(convertsplitToLearningNode(info, classCount));
-
+        generateSplitLearningNode(env, info, classCount, jList, listClass,
+                                  learningNodeClass, learningNodeConstructor);
         return true;
     }
 };
 
 template <typename Task>
-void collect_model(
-    JNIEnv *env, const df::model<Task> &m, const jint classCount,
-    const std::shared_ptr<
-        std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>
-        &treeForest) {
+jobject collect_model(JNIEnv *env, const df::model<Task> &m,
+                      const jint classCount) {
 
-    std::cout << "Number of trees: " << m.get_tree_count() << std::endl;
-    for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
-        std::shared_ptr<std::vector<LearningNode>> myVec =
-            std::make_shared<std::vector<LearningNode>>();
-        m.traverse_depth_first(i, collect_nodes{myVec, classCount});
-        treeForest->insert({i, myVec});
-    }
-}
-
-jobject convertJavaMap(
-    JNIEnv *env,
-    const std::shared_ptr<
-        std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>
-        map,
-    const jint classCount) {
-    std::cout << "convert map to HashMap " << std::endl;
     // Create a new Java HashMap object
     jclass mapClass = env->FindClass("java/util/HashMap");
     jmethodID mapConstructor = env->GetMethodID(mapClass, "<init>", "()V");
@@ -145,84 +180,29 @@ jobject convertJavaMap(
     jmethodID learningNodeConstructor =
         env->GetMethodID(learningNodeClass, "<init>", "()V");
 
-    // Iterate over the C++ map and add each entry to the Java map
-    for (const auto &entry : *map) {
+    std::cout << "Number of trees: " << m.get_tree_count() << std::endl;
+    for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
         std::cout
             << "Iterate over the C++ map and add each entry to the Java map"
             << std::endl;
         // Create a new Java ArrayList to hold the LearningNode objects
         jobject jList = env->NewObject(listClass, listConstructor);
-
-        // Iterate over the LearningNode objects and add each one to the
-        // ArrayList
-        for (const auto &node : *entry.second) {
-            jobject jNode =
-                env->NewObject(learningNodeClass, learningNodeConstructor);
-
-            // Set the fields of the Java LearningNode object using JNI
-            // functions
-            jfieldID levelField =
-                env->GetFieldID(learningNodeClass, "level", "I");
-            env->SetIntField(jNode, levelField, node.level);
-
-            jfieldID impurityField =
-                env->GetFieldID(learningNodeClass, "impurity", "D");
-            env->SetDoubleField(jNode, impurityField, node.impurity);
-
-            jfieldID splitIndexField =
-                env->GetFieldID(learningNodeClass, "splitIndex", "I");
-            env->SetIntField(jNode, splitIndexField, node.splitIndex);
-
-            jfieldID splitValueField =
-                env->GetFieldID(learningNodeClass, "splitValue", "D");
-            env->SetDoubleField(jNode, splitValueField, node.splitValue);
-
-            jfieldID isLeafField =
-                env->GetFieldID(learningNodeClass, "isLeaf", "Z");
-            env->SetBooleanField(jNode, isLeafField, node.isLeaf);
-
-            // Convert the probability array
-            if (node.probability != nullptr) {
-                jfieldID probabilityField =
-                    env->GetFieldID(learningNodeClass, "probability", "[D");
-                jdoubleArray jProbability = env->NewDoubleArray(classCount);
-                // call the native method to get the values
-                jdouble *elements =
-                    env->GetDoubleArrayElements(jProbability, nullptr);
-                // Do something with the array elements
-                for (int i = 0; i < classCount; i++) {
-                    elements[i] = node.probability.get()[i];
-                }
-                env->SetDoubleArrayRegion(jProbability, 0, classCount,
-                                          elements);
-                env->SetObjectField(jNode, probabilityField, jProbability);
-            }
-
-            jfieldID sampleCountField =
-                env->GetFieldID(learningNodeClass, "sampleCount", "I");
-            env->SetIntField(jNode, sampleCountField, node.sampleCount);
-
-            // Add the LearningNode object to the ArrayList
-            jmethodID listAdd =
-                env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
-            env->CallBooleanMethod(jList, listAdd, jNode);
-        }
-
+        m.traverse_depth_first(i, collect_nodes{env, classCount, jList,
+                                                listClass, learningNodeClass,
+                                                learningNodeConstructor});
         // Add the ArrayList to the Java map
         jmethodID mapPut = env->GetMethodID(
             mapClass, "put",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        std::cout << "convertJavaMap tree id  = " << entry.first << std::endl;
+        std::cout << "convertJavaMap tree id  = " << i << std::endl;
         // Create a new Integer object with the value key
         jobject jKey = env->NewObject(
             env->FindClass("java/lang/Integer"), // Find the Integer class
             env->GetMethodID(env->FindClass("java/lang/Integer"), "<init>",
                              "(I)V"), // Get the constructor method
-            (jint) static_cast<jint>(entry.first));
+            (jint) static_cast<jint>(i));
         env->CallObjectMethod(jMap, mapPut, jKey, jList);
     }
-    std::cout << "convert map to HashMap end " << std::endl;
-
     return jMap;
 }
 
@@ -237,7 +217,6 @@ static jobject doRFClassifierOneAPICompute(
     jobject resultObj) {
     std::cout << "oneDAL (native): compute start" << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table hFeaturetable =
         *reinterpret_cast<const homogen_table *>(pNumTabFeature);
     homogen_table hLabeltable =
@@ -269,7 +248,7 @@ static jobject doRFClassifierOneAPICompute(
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
-    if (comm.get_rank() == 0) {
+    if (isRoot) {
         std::cout << "Variable importance results:\n"
                   << result_train.get_var_importance() << std::endl;
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;
@@ -278,9 +257,8 @@ static jobject doRFClassifierOneAPICompute(
         std::cout << "Probabilities results:\n"
                   << result_infer.get_probabilities() << std::endl;
 
-        // convert c++ map to java hashmap
-        collect_model(env, result_train.get_model(), classCount, treeForest);
-        trees = convertJavaMap(env, treeForest, classCount);
+        // convert to java hashmap
+        trees = collect_model(env, result_train.get_model(), classCount);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);

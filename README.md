@@ -126,7 +126,7 @@ Edit related variables in "`Minimun Settings`" of `env.sh`
 ```bash
     $ cd examples/kmeans
     $ ./build.sh
-    $ ./run.sh
+    $ ./run-gpu-standalone.sh
 ```
 
 ### PySpark Support
