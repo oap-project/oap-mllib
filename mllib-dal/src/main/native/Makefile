@@ -87,7 +87,7 @@ CPP_SRCS += \
   ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
   ./NaiveBayesDALImpl.cpp \
-  ./LinearRegressionDALImpl.cpp \
+  ./LinearRegressionImpl.cpp \
   ./CorrelationImpl.cpp \
   ./SummarizerImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
@@ -102,7 +102,7 @@ OBJS += \
   ./PCAImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
   ./NaiveBayesDALImpl.o \
-  ./LinearRegressionDALImpl.o \
+  ./LinearRegressionImpl.o \
   ./CorrelationImpl.o \
   ./SummarizerImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
