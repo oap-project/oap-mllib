@@ -18,47 +18,29 @@ package com.intel.oap.mllib
 
 import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
-import org.apache.spark.SparkContext
+import org.apache.spark.{Partition, SparkContext, SparkException, TaskContext}
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
-import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, PartitionGroup, RDD, SparkUtils}
 import org.apache.spark.storage.StorageLevel
+
 import java.lang
 import java.nio.DoubleBuffer
 import java.util.logging.{Level, Logger}
-
 import com.intel.oneapi.dal.table.Common.ComputeDevice
 import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
 
 import scala.collection.mutable.ArrayBuffer
-
-import com.intel.daal.data_management.data.{
-  CSRNumericTable,
-  HomogenNumericTable,
-  Matrix => DALMatrix,
-  NumericTable,
-  RowMergedNumericTable
-}
+import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
 import com.intel.oneapi.dal.table.{ColumnAccessor, Common, HomogenTable, RowAccessor}
-
-import org.apache.spark.ml.linalg.{
-  DenseMatrix,
-  DenseVector,
-  Matrix,
-  SparseVector,
-  Vector,
-  Vectors
-}
-import org.apache.spark.mllib.linalg.{
-  DenseMatrix => OldDenseMatrix,
-  Matrix => OldMatrix,
-  Vector => OldVector
-}
-import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
+import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
+import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
+import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
+
+import scala.collection.mutable
 
 object OneDAL {
 
@@ -235,6 +217,16 @@ object OneDAL {
 
   def makeHomogenTable(cData: Long): HomogenTable = {
     val table = new HomogenTable(cData)
+
+    table
+  }
+
+  def makeHomogenTable(array: Array[Double],
+                       numRows: Long,
+                       numCols: Long,
+                       device: Common.ComputeDevice): HomogenTable = {
+    val table = new HomogenTable(numRows, numCols, array,
+      device)
 
     table
   }
@@ -670,18 +662,25 @@ object OneDAL {
 
   def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
-    // Coalesce partitions belonging to the same executor
-    val coalescedRdd = data
-      .coalesce(executorNum,
-        partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-      .setName("coalescedRdd")
-
-    // convert RDD to HomogenTable
-    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-      val table = makeHomogenTable(it.toArray, device)
+    val mapping = SparkUtils.getMapping(data)
+    val rowcount = SparkUtils.computeEachExecutorDataSize(data, mapping)
+    val coalescedTables = data.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+         val array = SparkUtils.computeAndCreateArray(mapping, rowcount, index)
+         val numCols = it.toArray.head.size
+         val numRows: Int = it.toArray.size
+         val vector = it.next()
+         val executorId = mapping.get(index).toString
+         val partitionIndex = executorId.substring(executorId.lastIndexOf("_")).toInt
+         for ((value, i) <- vector.toArray.zipWithIndex) {
+          array(partitionIndex * vector.toArray.length + i) = value
+         }
+         Iterator((array, numCols, numRows))
+    }.mapPartitions { it =>
+      val (array, numCols, numRows) = it.next()
+      val table = makeHomogenTable(array, numRows, numCols, device)
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
-    coalescedTables.count()
+
     // Unpersist instances RDD
     if (data.getStorageLevel != StorageLevel.NONE) {
       data.unpersist()
