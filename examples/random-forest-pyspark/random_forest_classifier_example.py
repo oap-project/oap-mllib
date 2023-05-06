@@ -18,8 +18,12 @@
 """
 Random Forest Classifier Example.
 """
+from __future__ import print_function
+import sys
+
 # $example on$
 from pyspark.ml import Pipeline
+from pyspark.ml.functions import array_to_vector
 from pyspark.mllib.util import MLUtils
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.ml.classification import RandomForestClassifier
@@ -27,6 +31,7 @@ from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 # $example off$
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, split
 
 if __name__ == "__main__":
     spark = SparkSession \
@@ -34,13 +39,21 @@ if __name__ == "__main__":
         .appName("RandomForestClassifierExample") \
         .getOrCreate()
 
-    # if (len(sys.argv) != 2) :
-    #     print("Require data file path as input parameter")
-    #     sys.exit(1)
+    if (len(sys.argv) != 3) :
+        print("Require data file path as input parameter")
+        sys.exit(1)
     # $example on$
     # Load and parse the data file, converting it to a DataFrame.
-    # dataset = spark.sparkContext.objectFile(sys.argv[1])
-    data = MLUtils.loadLabeledPoints(spark.sparkContext, "../data/sample_dense_data.txt").toDF()
+    train_data = spark.read.option("quote", " ").csv(sys.argv[1]).toDF("features")
+    train_data = train_data.select(split(col("features"), ",").alias("features"))
+    train_data = train_data.withColumn("features", col("features").cast("array<double>"))
+    train_data = train_data.withColumn("features", array_to_vector(col("features")))
+    train_data.show()
+    label_data = spark.read.csv(sys.argv[2]).toDF("label")
+    label_data.show()
+    #
+    data = label_data.join(train_data)
+    # data = MLUtils.loadLabeledPoints(spark.sparkContext, "../data/sample_dense_data.txt").toDF()
     data.show()
     # Index labels, adding metadata to the label column.
     # Fit on whole dataset to include all labels in index.

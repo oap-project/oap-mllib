@@ -48,7 +48,7 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
   override def sparkConf: SparkConf = {
     val conf = super.sparkConf
     conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
-    conf.set("spark.oap.mllib.isuite", "true")
+    conf.set("spark.oap.mllib.isTest", "true")
 
     conf
   }
