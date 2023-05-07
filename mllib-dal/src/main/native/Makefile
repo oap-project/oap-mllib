@@ -29,7 +29,7 @@ $(info )
 $(info === Profile is $(PLATFORM_PROFILE) ===)
 $(info )
 
-CFLAGS_COMMON := -g -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
+CFLAGS_COMMON := -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I $(I_MPI_ROOT)/include \
                  -I $(DAALROOT)/include \
                  -I $(CCL_ROOT)/include/cpu/oneapi/ \

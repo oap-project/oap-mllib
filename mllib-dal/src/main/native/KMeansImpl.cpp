@@ -37,7 +37,7 @@ namespace kmeans_cpu = daal::algorithms::kmeans;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static NumericTablePtr kmeans_compute(int rankId, ccl::communicator &comm,
+static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
                                       const NumericTablePtr &pData,
                                       const NumericTablePtr &initialCentroids,
                                       size_t nClusters, size_t nBlocks,
@@ -174,7 +174,7 @@ static bool areAllCentersConverged(const NumericTablePtr &oldCenters,
     return true;
 }
 
-static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, int rankId,
+static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
                                  ccl::communicator &comm,
                                  NumericTablePtr &pData,
                                  NumericTablePtr &centroids, jint cluster_num,
@@ -354,6 +354,10 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         break;
     }
 #endif
+    default: {
+        std::cout << "no supported device!" << std::endl;
+        exit(-1);
+    }
     }
     return ret;
 }

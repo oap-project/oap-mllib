@@ -41,7 +41,7 @@ namespace ridge_regression_cpu = daal::algorithms::ridge_regression;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static NumericTablePtr linear_regression_compute(int rankId,
+static NumericTablePtr linear_regression_compute(size_t rankId,
                                                  ccl::communicator &comm,
                                                  const NumericTablePtr &pData,
                                                  const NumericTablePtr &pLabel,
@@ -126,7 +126,7 @@ static NumericTablePtr linear_regression_compute(int rankId,
 }
 
 static NumericTablePtr ridge_regression_compute(
-    int rankId, ccl::communicator &comm, const NumericTablePtr &pData,
+    size_t rankId, ccl::communicator &comm, const NumericTablePtr &pData,
     const NumericTablePtr &pLabel, double regParam, size_t nBlocks) {
 
     using daal::byte;
@@ -213,7 +213,7 @@ static NumericTablePtr ridge_regression_compute(
 }
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, int rankId,
+static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
                                ccl::communicator &cclComm, sycl::queue &queue,
                                jlong pData, jlong pLabel, jint executorNum,
                                jobject resultObj) {
@@ -262,7 +262,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
               << std::endl;
 
     ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
+    size_t rankId = cclComm.rank();
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     bool useGPU = false;
