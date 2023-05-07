@@ -45,7 +45,6 @@ using namespace daal::data_management;
 #include "oneapi/dal/table/homogen.hpp"
 
 using namespace oneapi::dal;
-using namespace oneapi::dal::detail;
 
 typedef double algorithmFpType;
 typedef std::vector<daal::byte> ByteBuffer;
