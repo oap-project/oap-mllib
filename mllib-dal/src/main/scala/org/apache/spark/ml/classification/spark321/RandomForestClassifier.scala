@@ -212,7 +212,7 @@ class RandomForestClassifier @Since("1.4.0") (
       getMaxBins,
       getBootstrap)
 
-    val (probabilitiesNumericTable, predictionNumericTable, treesMap) = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
+    val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
 
     val numFeatures = metadata.numFeatures

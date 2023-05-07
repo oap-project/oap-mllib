@@ -18,7 +18,6 @@ package com.intel.oap.mllib.classification
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -52,8 +51,7 @@ class RandomForestClassifierDALImpl(val uid: String,
 
   def train(labeledPoints: Dataset[_],
             labelCol: String,
-            featuresCol: String): (Matrix, Matrix,
-                                   util.Map[Integer, util.ArrayList[LearningNode]]) = {
+            featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -116,20 +114,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       logInfo(s"RandomForestClassifierDAL compute took ${durationCompute} secs")
 
       val ret = if (rank == 0) {
-        val convResultStartTime = System.nanoTime()
-        val probabilitiesNumericTable = OneDAL.homogenTableToMatrix(
-          OneDAL.makeHomogenTable(result.probabilitiesNumericTable),
-          computeDevice)
-        val predictionNumericTable = OneDAL.homogenTableToMatrix(
-          OneDAL.makeHomogenTable(result.predictionNumericTable),
-          computeDevice)
-        val convResultEndTime = System.nanoTime()
-
-        val durationCovResult = (convResultEndTime - convResultStartTime).toDouble / 1E9
-
-        logInfo(s"RandomForestClassifierDAL result conversion took ${durationCovResult} secs")
-
-        Iterator((probabilitiesNumericTable, predictionNumericTable, hashmap))
+        Iterator( hashmap)
       } else {
         Iterator.empty
       }
@@ -140,11 +125,11 @@ class RandomForestClassifierDALImpl(val uid: String,
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
-    (results(0)._1, results(0)._2, results(0)._3)
+    results(0)
   }
 
-  @native private[mllib] def cRFClassifierTrainDAL(featureData: Long,
-                                                   lableTabData: Long,
+  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
+                                                   lableTabAddr: Long,
                                                    executorNum: Int,
                                                    computeDeviceOrdinal: Int,
                                                    classCount: Int,
