@@ -48,9 +48,7 @@ if __name__ == "__main__":
     train_data = train_data.select(split(col("features"), ",").alias("features"))
     train_data = train_data.withColumn("features", col("features").cast("array<double>"))
     train_data = train_data.withColumn("features", array_to_vector(col("features")))
-    train_data.show()
     label_data = spark.read.csv(sys.argv[2]).toDF("label")
-    label_data.show()
     #
     data = label_data.join(train_data)
     # data = MLUtils.loadLabeledPoints(spark.sparkContext, "../data/sample_dense_data.txt").toDF()
@@ -93,7 +91,7 @@ if __name__ == "__main__":
     print("Test Error = %g" % (1.0 - accuracy))
 
     rfModel = model.stages[2]
-    print(rfModel)  # summary only
+    print(rfModel.toDebugString)  # summary only
     # $example off$
 
     spark.stop()
