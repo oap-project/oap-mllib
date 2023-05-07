@@ -149,38 +149,12 @@ struct collect_nodes {
         this->learningNodeConstructor = learningNodeConstructor;
     }
     bool operator()(const df::leaf_node_info<df::task::classification> &info) {
-        std::string str;
-        str.append("leaf");
-        str.append("|" );
-        str.append(to_string(info.get_level()));
-        str.append("|" );
-        str.append(to_string(info.get_response()));
-        str.append("|" );
-        str.append(to_string(info.get_impurity()));
-        str.append("|" );
-        str.append(to_string(info.get_sample_count()));
-
-        std::cout << str << std::endl;
         generateLeafLearningNode(env, info, classCount, jList, listClass,
                                  learningNodeClass, learningNodeConstructor);
         return true;
     }
 
     bool operator()(const df::split_node_info<df::task::classification> &info) {
-        std::string str;
-        str.append("split");
-        str.append("|" );
-        str.append(to_string(info.get_level()));
-        str.append("|" );
-        str.append(to_string(info.get_feature_index()));
-        str.append("|" );
-        str.append(to_string(info.get_feature_value()));
-        str.append("|" );
-        str.append(to_string(info.get_impurity()));
-        str.append("|" );
-        str.append(to_string(info.get_sample_count()));
-
-        std::cout << str << std::endl;
         generateSplitLearningNode(env, info, classCount, jList, listClass,
                                   learningNodeClass, learningNodeConstructor);
         return true;
