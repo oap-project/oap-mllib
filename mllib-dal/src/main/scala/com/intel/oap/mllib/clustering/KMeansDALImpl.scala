@@ -61,6 +61,8 @@ class KMeansDALImpl(var nClusters: Int,
       }
 
       val tableArr = table.next()
+      logInfo(s"coalescedTables.mapPartitionsWithIndex  tableArr: ${tableArr}")
+
       OneCCL.init(executorNum, rank, kvsIPPort)
       val initCentroids = if (useDevice == "GPU") {
         OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()

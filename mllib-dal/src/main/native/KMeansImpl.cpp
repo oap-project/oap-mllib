@@ -249,8 +249,10 @@ static jlong doKMeansOneAPICompute(
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
+    std::cout << "oneDAL (native): htable" << htable << std::endl;
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
+    std::cout << "oneDAL (native): centroids" << centroids << std::endl;
     const auto kmeans_desc = kmeans_gpu::descriptor<>()
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
