@@ -662,17 +662,27 @@ object OneDAL {
 
   def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
-    logger.info(s"coalesceToHomogenTables $executorNum executors")
-    val sc = data.sparkContext
+    require(executorNum > 0)
 
-    val mapping = SparkUtils.getMapping(data)
+    logger.info(s"Processing partitions with $executorNum executors")
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (data.getNumPartitions < executorNum) {
+      data.repartition(executorNum).setName("Repartitioned for conversion").cache()
+    } else {
+      data
+    }
+
+    val sc = dataForConversion.sparkContext
+
+    val mapping = SparkUtils.getMapping(dataForConversion)
     val bcMapping = sc.broadcast(mapping)
 
     println(s"coalesceToHomogenTables mapping")
     for((k, v) <- mapping) {
       println(s"key: $k, value: $v")
     }
-    val rowcount = SparkUtils.computeEachExecutorDataSize(data, mapping)
+    val rowcount = SparkUtils.computeEachExecutorDataSize(dataForConversion, mapping)
     val bcRowcount = sc.broadcast(rowcount)
 
     println(s"coalesceToHomogenTables rowcount")
@@ -680,11 +690,11 @@ object OneDAL {
       println(s"key: $k, value: $v")
     }
     logger.info(s"coalesceToHomogenTables merge table start")
-    println(data.getNumPartitions)
+    println(dataForConversion.getNumPartitions)
     // Get dimensions for each partition
-    val partitionDims = Utils.getPartitionDims(data)
+    val partitionDims = Utils.getPartitionDims(dataForConversion)
 
-    val coalescedTables = data.mapPartitionsWithIndex{
+    val coalescedTables = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
         logger.info(s"coalescedTables it length ${it.length}")
         logger.info(s"coalescedTables it size ${it.size}")
@@ -722,9 +732,9 @@ object OneDAL {
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD
-    if (data.getStorageLevel != StorageLevel.NONE) {
-      data.unpersist()
-    }
+//    if (data.getStorageLevel != StorageLevel.NONE) {
+//      data.unpersist()
+//    }
     println(coalescedTables.getNumPartitions)
     coalescedTables
   }
