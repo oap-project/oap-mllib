@@ -15,6 +15,7 @@
  */
 package org.apache.spark.rdd
 
+import com.intel.oap.mllib.OneDAL.logger
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.{Partition, SparkContext, SparkException, TaskContext}
 import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
@@ -25,6 +26,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object SparkUtils {
   def getMapping(prev: RDD[_]) : mutable.HashMap[Int, String] = {
+    println(s"getMapping")
     val map = new mutable.HashMap[String, mutable.HashSet[Partition]]()
     val partitionMapping = mutable.HashMap[Int, String]()
     prev.partitions.foreach(p => {
@@ -51,11 +53,15 @@ object SparkUtils {
       throw new SparkException(
         "ExecutorInProcessCoalescePartitioner: No partitions or no locations for partitions found.")
     }
+    for((k, v) <- partitionMapping) {
+      println(s"key: $k, value: $v")
+    }
     partitionMapping
   }
 
   def computeEachExecutorDataSize(prev: RDD[_], mapping: mutable.HashMap[Int, String])
   : RDD[(String, Int)] = {
+    println(s"computeEachExecutorDataSize")
     // Get the partition size and create the array accordingly
     val executorSize = prev.mapPartitionsWithIndex((partitionId, iter) => {
       val rowcount = iter.length
@@ -65,14 +71,18 @@ object SparkUtils {
       val executorID = value.substring(0, value.lastIndexOf("_"))
       (executorID, iter._2)
     }).reduceByKey(_ + _)
+    println(s"computeEachExecutorDataSize print rdd")
+    executorSize.foreach(println)
     executorSize
   }
 
   def computeAndCreateArray(mapping: mutable.HashMap[Int, String],
                             executorSize: RDD[(String, Int)],
                             partitionId: Int): Array[Double] = {
+    println(s"computeAndCreateArray merge table start")
     @transient lazy val array: Array[Double] = {
       val executorId: String = mapping.get(partitionId).getOrElse(null)
+      println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
       val result = executorSize.mapPartitions { iter =>
           var rowcount = 0
           while (iter.hasNext) {
@@ -88,6 +98,8 @@ object SparkUtils {
       // Make sure there is only one result from rank 0
       assert(result.length == 1)
       val rowcount: Int = result(0)
+      println(s"computeAndCreateArray @transient lazy val executorId: ${executorId} ," +
+        s"executor rowcount: ${rowcount}")
       val executorArray: Array[Double] = new Array[Double](rowcount)
       executorArray
     }

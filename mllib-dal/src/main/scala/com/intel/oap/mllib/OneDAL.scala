@@ -662,8 +662,12 @@ object OneDAL {
 
   def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
+    logger.info(s"coalesceToHomogenTables $executorNum executors")
+
     val mapping = SparkUtils.getMapping(data)
     val rowcount = SparkUtils.computeEachExecutorDataSize(data, mapping)
+    logger.info(s"coalesceToHomogenTables merge table start")
+
     val coalescedTables = data.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
          val array = SparkUtils.computeAndCreateArray(mapping, rowcount, index)
          val numCols = it.toArray.head.size
