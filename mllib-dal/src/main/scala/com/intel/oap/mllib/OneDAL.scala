@@ -680,15 +680,14 @@ object OneDAL {
       println(s"key: $k, value: $v")
     }
     logger.info(s"coalesceToHomogenTables merge table start")
-    data.foreach(println)
     println(data.getNumPartitions)
     // Get dimensions for each partition
     val partitionDims = Utils.getPartitionDims(data)
 
     val coalescedTables = data.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
-        val numCols: Long  = partitionDims(index)._1
-        val numRows: Long = partitionDims(index)._2
+        val numRows: Long = partitionDims(index)._1
+        val numCols: Long  = partitionDims(index)._2
         val array: Array[Double] = SparkUtils.computeAndCreateArray(bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         val executorId = bcMapping.value(index)
