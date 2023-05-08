@@ -694,11 +694,14 @@ object OneDAL {
         logger.info(s"coalescedTables executorId ${executorId}")
         val partitionIndex = executorId.substring(executorId.lastIndexOf("_") + 1).toInt
         logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
+        logger.info(s"coalescedTables it ${it.size}")
         it.foreach { vector =>
+          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
             array(partitionIndex * vector.toArray.length + i) = value
           }
         }
+        logger.info(s"coalescedTables array ${array.toList.toString()}")
 
         Iterator((array, numCols, numRows))
     }.map { entry =>
