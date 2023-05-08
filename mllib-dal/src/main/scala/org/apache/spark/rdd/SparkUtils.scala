@@ -20,7 +20,7 @@ import org.apache.spark.{Partition, SparkContext, SparkException, TaskContext}
 import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 import org.apache.spark.sql.SparkSession
 
-import scala.collection.mutable
+import scala.collection.{breakOut, mutable}
 import scala.collection.mutable.ArrayBuffer
 
 object SparkUtils {
@@ -61,7 +61,7 @@ object SparkUtils {
       val rowcount = iter.length
       Iterator((partitionId, rowcount))
     }).map(iter => {
-      val value : String = mapping.get(iter._1).getOrElse()
+      val value : String = mapping.get(iter._1).getOrElse(null)
       val executorID = value.substring(0, value.lastIndexOf("_"))
       (executorID, iter._2)
     }).reduceByKey(_ + _)
@@ -72,13 +72,14 @@ object SparkUtils {
                             executorSize: RDD[(String, Int)],
                             partitionId: Int): Array[Double] = {
     @transient lazy val array: Array[Double] = {
-      val executorId: String = mapping.get(partitionId).getOrElse()
+      val executorId: String = mapping.get(partitionId).getOrElse(null)
       val result = executorSize.mapPartitions { iter =>
-          val rowcount = while (iter.hasNext) {
+          var rowcount = 0
+          while (iter.hasNext) {
             val (key, value) = iter.next()
             val id = executorId.substring(0, executorId.lastIndexOf("_"))
             if (key.equals(id)) {
-              return value
+              rowcount = value
             }
           }
           Iterator(rowcount)
