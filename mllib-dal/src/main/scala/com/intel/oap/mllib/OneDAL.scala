@@ -708,7 +708,7 @@ object OneDAL {
       val table = makeHomogenTable(array, numRows, numCols, device)
       table.getcObejct()
     }.setName("coalescedTables").cache()
-
+    coalescedTables.count()
     // Unpersist instances RDD
     if (data.getStorageLevel != StorageLevel.NONE) {
       data.unpersist()

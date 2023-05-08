@@ -40,13 +40,16 @@ class KMeansDALImpl(var nClusters: Int,
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    var startTime = System.nanoTime()
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum, computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-
+    logInfo(s"KMeansDALImpl data conversion took time : ${System.nanoTime() - startTime}")
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+
+    startTime = System.nanoTime()
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       var cCentroids = 0L
       val result = new KMeansResult()
@@ -92,6 +95,8 @@ class KMeansDALImpl(var nClusters: Int,
       OneCCL.cleanup()
       ret
     }.collect()
+
+    logInfo(s"KMeansDALImpl training took time : ${System.nanoTime() - startTime}")
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
