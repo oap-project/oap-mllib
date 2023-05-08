@@ -35,7 +35,7 @@ using namespace daal::services;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, int rankId,
+static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
                                     size_t nBlocks, jobject resultObj) {
@@ -304,6 +304,10 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
         break;
     }
 #endif
+    default: {
+        std::cout << "no supported device!" << std::endl;
+        exit(-1);
+    }
     }
     return 0;
 }

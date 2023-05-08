@@ -39,9 +39,9 @@ namespace covariance_cpu = daal::algorithms::covariance;
 
 typedef double algorithmFPType; /* Algorithm floating-point type */
 
-static void doPCADAALCompute(JNIEnv *env, jobject obj, int rankId,
+static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
-                             int nBlocks, jobject resultObj) {
+                             size_t nBlocks, jobject resultObj) {
     std::cout << "oneDAL (native): CPU compute start" << std::endl;
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -252,7 +252,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
               << "; device " << ComputeDeviceString[computeDeviceOrdinal]
               << std::endl;
     ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
+    size_t rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::host:
@@ -292,6 +292,10 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         break;
     }
 #endif
+    default: {
+        std::cout << "no supported device!" << std::endl;
+        exit(-1);
+    }
     }
     return 0;
 }

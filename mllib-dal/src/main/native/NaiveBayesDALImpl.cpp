@@ -26,8 +26,8 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
     Profiler profiler("NaiveBayes");
 #endif
 
-    auto rankId = comm.rank();
-    auto nBlocks = comm.size();
+    size_t rankId = comm.rank();
+    size_t nBlocks = comm.size();
 
     /* Create an algorithm object to train the Naive Bayes model based on the
      * local-node data */
@@ -127,7 +127,7 @@ Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     jint class_num, jint executor_num, jint executor_cores, jobject resultObj) {
 
     ccl::communicator &comm = getComm();
-    auto rankId = comm.rank();
+    size_t rankId = comm.rank();
 
     NumericTablePtr featuresTab = *((NumericTablePtr *)pFeaturesTab);
     NumericTablePtr labelsTab = *((NumericTablePtr *)pLabelsTab);

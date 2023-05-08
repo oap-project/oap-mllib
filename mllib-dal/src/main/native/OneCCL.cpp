@@ -31,7 +31,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
 
-extern const int ccl_root = 0;
+extern const size_t ccl_root = 0;
 
 static const int CCL_IP_LEN = 128;
 static std::list<std::string> local_host_ips;
