@@ -665,14 +665,19 @@ object OneDAL {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
+    logger.info(s"Processing partitions with ${data.getNumPartitions} partitions")
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
-      val reData = data.repartition(executorNum).setName("Repartitioned for conversion").cache()
-      reData.count()
-      reData
+      logger.info(s"Repartition to executorNum if not enough partitions")
+      data.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
       data
+    }
+
+    if (data.getNumPartitions < executorNum) {
+      logger.info(s"dataForConversion count")
+      dataForConversion.count()
     }
     val sc = dataForConversion.sparkContext
 
