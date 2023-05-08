@@ -663,32 +663,58 @@ object OneDAL {
   def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
     logger.info(s"coalesceToHomogenTables $executorNum executors")
+    val sc = data.sparkContext
 
     val mapping = SparkUtils.getMapping(data)
-    val rowcount = SparkUtils.computeEachExecutorDataSize(data, mapping)
-    logger.info(s"coalesceToHomogenTables merge table start")
+    val bcMapping = sc.broadcast(mapping)
 
-    val coalescedTables = data.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-         val array = SparkUtils.computeAndCreateArray(mapping, rowcount, index)
-         val numCols = it.toArray.head.size
-         val numRows: Int = it.toArray.size
-         val vector = it.next()
-         val executorId = mapping.get(index).toString
-         val partitionIndex = executorId.substring(executorId.lastIndexOf("_")).toInt
-         for ((value, i) <- vector.toArray.zipWithIndex) {
-          array(partitionIndex * vector.toArray.length + i) = value
-         }
-         Iterator((array, numCols, numRows))
-    }.mapPartitions { it =>
-      val (array, numCols, numRows) = it.next()
+    println(s"coalesceToHomogenTables mapping")
+    for((k, v) <- mapping) {
+      println(s"key: $k, value: $v")
+    }
+    val rowcount = SparkUtils.computeEachExecutorDataSize(data, mapping)
+    val bcRowcount = sc.broadcast(rowcount)
+
+    println(s"coalesceToHomogenTables rowcount")
+    for((k, v) <- rowcount) {
+      println(s"key: $k, value: $v")
+    }
+    logger.info(s"coalesceToHomogenTables merge table start")
+    data.foreach(println)
+    println(data.getNumPartitions)
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(data)
+
+    val coalescedTables = data.mapPartitionsWithIndex{
+      (index: Int, it: Iterator[Vector]) =>
+        val numCols: Long  = partitionDims(index)._1
+        val numRows: Long = partitionDims(index)._2
+        val array: Array[Double] = SparkUtils.computeAndCreateArray(bcMapping, bcRowcount, index)
+        logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+        val executorId = bcMapping.value(index)
+        logger.info(s"coalescedTables executorId ${executorId}")
+        val partitionIndex = executorId.substring(executorId.lastIndexOf("_") + 1).toInt
+        logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
+        it.foreach { vector =>
+          for ((value, i) <- vector.toArray.zipWithIndex) {
+            array(partitionIndex * vector.toArray.length + i) = value
+          }
+        }
+
+        Iterator((array, numCols, numRows))
+    }.map { entry =>
+      val array = entry._1
+      val numCols = entry._2
+      val numRows = entry._3
       val table = makeHomogenTable(array, numRows, numCols, device)
-      Iterator(table.getcObejct())
+      table.getcObejct()
     }.setName("coalescedTables").cache()
 
     // Unpersist instances RDD
     if (data.getStorageLevel != StorageLevel.NONE) {
       data.unpersist()
     }
+    println(coalescedTables.getNumPartitions)
     coalescedTables
   }
 

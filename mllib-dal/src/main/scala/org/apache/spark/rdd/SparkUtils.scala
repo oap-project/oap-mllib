@@ -16,6 +16,7 @@
 package org.apache.spark.rdd
 
 import com.intel.oap.mllib.OneDAL.logger
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.{Partition, SparkContext, SparkException, TaskContext}
 import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
@@ -60,7 +61,7 @@ object SparkUtils {
   }
 
   def computeEachExecutorDataSize(prev: RDD[_], mapping: mutable.HashMap[Int, String])
-  : RDD[(String, Int)] = {
+  : Map[String, Int] = {
     println(s"computeEachExecutorDataSize")
     // Get the partition size and create the array accordingly
     val executorSize = prev.mapPartitionsWithIndex((partitionId, iter) => {
@@ -69,39 +70,25 @@ object SparkUtils {
     }).map(iter => {
       val value : String = mapping.get(iter._1).getOrElse(null)
       val executorID = value.substring(0, value.lastIndexOf("_"))
+      println(s"computeEachExecutorDataSize value : ${value}, executorID : ${executorID}")
       (executorID, iter._2)
     }).reduceByKey(_ + _)
-    println(s"computeEachExecutorDataSize print rdd")
     executorSize.foreach(println)
-    executorSize
-  }
+    println(s"computeEachExecutorD:qataSize print rdd")
+    executorSize.collect().toMap
+}
 
-  def computeAndCreateArray(mapping: mutable.HashMap[Int, String],
-                            executorSize: RDD[(String, Int)],
+  def computeAndCreateArray(bcMapping: Broadcast[mutable.HashMap[Int, String]],
+                            bcRowcount: Broadcast[Map[String, Int]],
                             partitionId: Int): Array[Double] = {
     println(s"computeAndCreateArray merge table start")
     @transient lazy val array: Array[Double] = {
-      val executorId: String = mapping.get(partitionId).getOrElse(null)
+      val executorId: String = bcMapping.value(partitionId)
+      val id = executorId.substring(0, executorId.lastIndexOf("_"))
       println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
-      val result = executorSize.mapPartitions { iter =>
-          var rowcount = 0
-          while (iter.hasNext) {
-            val (key, value) = iter.next()
-            val id = executorId.substring(0, executorId.lastIndexOf("_"))
-            if (key.equals(id)) {
-              rowcount = value
-            }
-          }
-          Iterator(rowcount)
-      }.collect()
-
-      // Make sure there is only one result from rank 0
-      assert(result.length == 1)
-      val rowcount: Int = result(0)
-      println(s"computeAndCreateArray @transient lazy val executorId: ${executorId} ," +
-        s"executor rowcount: ${rowcount}")
-      val executorArray: Array[Double] = new Array[Double](rowcount)
-      executorArray
+      val rowcount = bcRowcount.value(id)
+      println(s"computeAndCreateArray @transient lazy val rowcount: ${rowcount}")
+      new Array[Double](rowcount)
     }
     array
   }
