@@ -696,12 +696,6 @@ object OneDAL {
 
     val coalescedTables = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
-        logger.info(s"coalescedTables it length ${it.length}")
-        logger.info(s"coalescedTables it size ${it.size}")
-
-        it.toArray.foreach { vector =>
-          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
-        }
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = SparkUtils.computeAndCreateArray(numCols, bcMapping, bcRowcount, index)
@@ -713,11 +707,10 @@ object OneDAL {
         logger.info(s"coalescedTables executorId ${executorId}")
         val partitionIndex = executorId.substring(executorId.lastIndexOf("_") + 1).toInt
         logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
-        logger.info(s"coalescedTables it length ${it.length}")
-        it.toArray.foreach { vector =>
+        for ((vector, index) <- it.toArray.zipWithIndex) {
           logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
-            array(partitionIndex * vector.toArray.length + i) = value
+            array(partitionIndex * vector.toArray.length + numCols * index + i) = value
           }
         }
         logger.info(s"coalescedTables array ${array.toList.toString()}")
