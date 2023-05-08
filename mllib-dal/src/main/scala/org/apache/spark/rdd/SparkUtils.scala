@@ -78,7 +78,8 @@ object SparkUtils {
     executorSize.collect().toMap
 }
 
-  def computeAndCreateArray(bcMapping: Broadcast[mutable.HashMap[Int, String]],
+  def computeAndCreateArray(numCols: Int,
+                            bcMapping: Broadcast[mutable.HashMap[Int, String]],
                             bcRowcount: Broadcast[Map[String, Int]],
                             partitionId: Int): Array[Double] = {
     println(s"computeAndCreateArray merge table start")
@@ -88,7 +89,7 @@ object SparkUtils {
       println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
       val rowcount = bcRowcount.value(id)
       println(s"computeAndCreateArray @transient lazy val rowcount: ${rowcount}")
-      new Array[Double](rowcount)
+      new Array[Double](numCols * rowcount)
     }
     array
   }
