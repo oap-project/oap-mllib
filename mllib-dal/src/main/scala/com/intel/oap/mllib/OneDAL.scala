@@ -668,11 +668,12 @@ object OneDAL {
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
-      data.repartition(executorNum).setName("Repartitioned for conversion").cache()
+      val reData = data.repartition(executorNum).setName("Repartitioned for conversion").cache()
+      reData.count()
+      reData
     } else {
       data
     }
-
     val sc = dataForConversion.sparkContext
 
     val mapping = SparkUtils.getMapping(dataForConversion)
