@@ -710,10 +710,10 @@ object OneDAL {
           logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
             logger.info(s"coalescedTables vector value : ${value}")
-            logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * index + i}")
+            logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * itIndex + i}")
             array(partitionIndex * vector.toArray.length + numCols * itIndex + i) = value
-            itIndex += 1
           }
+          itIndex += 1
         }
 //        for ((vector, index) <- it.toArray.zipWithIndex) {
 //          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
