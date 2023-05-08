@@ -74,7 +74,7 @@ object SparkUtils {
       (executorID, iter._2)
     }).reduceByKey(_ + _)
     executorSize.foreach(println)
-    println(s"computeEachExecutorD:qataSize print rdd")
+    println(s"computeEachExecutorDataSize print rdd")
     executorSize.collect().toMap
 }
 
@@ -88,7 +88,7 @@ object SparkUtils {
       val id = executorId.substring(0, executorId.lastIndexOf("_"))
       println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
       val rowcount = bcRowcount.value(id)
-      println(s"computeAndCreateArray @transient lazy val rowcount: ${rowcount}")
+      println(s"computeAndCreateArray @transient lazy val rowcount: ${numCols * rowcount}")
       new Array[Double](numCols * rowcount)
     }
     array
