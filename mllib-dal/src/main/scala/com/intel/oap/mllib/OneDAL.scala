@@ -710,6 +710,8 @@ object OneDAL {
         for ((vector, index) <- it.toArray.zipWithIndex) {
           logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
+            logger.info(s"coalescedTables vector value : ${value}")
+            logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * index + i}")
             array(partitionIndex * vector.toArray.length + numCols * index + i) = value
           }
         }
@@ -725,9 +727,9 @@ object OneDAL {
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD
-//    if (data.getStorageLevel != StorageLevel.NONE) {
-//      data.unpersist()
-//    }
+    if (data.getStorageLevel != StorageLevel.NONE) {
+      data.unpersist()
+    }
     println(coalescedTables.getNumPartitions)
     coalescedTables
   }
