@@ -700,21 +700,29 @@ object OneDAL {
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = SparkUtils.computeAndCreateArray(numCols, bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
-        it.toArray.foreach { vector =>
-          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
-        }
         val executorId = bcMapping.value(index)
         logger.info(s"coalescedTables executorId ${executorId}")
         val partitionIndex = executorId.substring(executorId.lastIndexOf("_") + 1).toInt
         logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
-        for ((vector, index) <- it.toArray.zipWithIndex) {
+        var itIndex = 0;
+        while(it.hasNext) {
+          val vector = it.next()
           logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
             logger.info(s"coalescedTables vector value : ${value}")
             logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * index + i}")
-            array(partitionIndex * vector.toArray.length + numCols * index + i) = value
+            array(partitionIndex * vector.toArray.length + numCols * itIndex + i) = value
+            itIndex += 1
           }
         }
+//        for ((vector, index) <- it.toArray.zipWithIndex) {
+//          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
+//          for ((value, i) <- vector.toArray.zipWithIndex) {
+//            logger.info(s"coalescedTables vector value : ${value}")
+//            logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * index + i}")
+//            array(partitionIndex * vector.toArray.length + numCols * index + i) = value
+//          }
+//        }
         logger.info(s"coalescedTables array ${array.toList.toString()}")
 
         Iterator((array, numCols, numRows))
