@@ -675,10 +675,9 @@ object OneDAL {
       data
     }
 
-    if (data.getNumPartitions < executorNum) {
-      logger.info(s"dataForConversion count")
-      dataForConversion.count()
-    }
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(dataForConversion)
+
     val sc = dataForConversion.sparkContext
 
     val mapping = SparkUtils.getMapping(dataForConversion)
@@ -697,8 +696,6 @@ object OneDAL {
     }
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
-    // Get dimensions for each partition
-    val partitionDims = Utils.getPartitionDims(dataForConversion)
 
     val coalescedTables = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
@@ -721,14 +718,6 @@ object OneDAL {
           }
           itIndex += 1
         }
-//        for ((vector, index) <- it.toArray.zipWithIndex) {
-//          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
-//          for ((value, i) <- vector.toArray.zipWithIndex) {
-//            logger.info(s"coalescedTables vector value : ${value}")
-//            logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * index + i}")
-//            array(partitionIndex * vector.toArray.length + numCols * index + i) = value
-//          }
-//        }
         logger.info(s"coalescedTables array ${array.toList.toString()}")
 
         Iterator((array, numCols, numRows))
