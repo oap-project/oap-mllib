@@ -114,7 +114,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       logInfo(s"RandomForestClassifierDAL compute took ${durationCompute} secs")
 
       val ret = if (rank == 0) {
-        Iterator( hashmap)
+        Iterator(hashmap)
       } else {
         Iterator.empty
       }
