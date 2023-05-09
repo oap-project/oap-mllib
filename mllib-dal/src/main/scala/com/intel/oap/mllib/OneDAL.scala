@@ -670,7 +670,10 @@ object OneDAL {
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
-      data.repartition(executorNum).setName("Repartitioned for conversion").cache()
+      val reData = data.repartition(executorNum).setName("Repartitioned for conversion")
+      reData.cache()
+      reData.count()
+      reData
     } else {
       data
     }
