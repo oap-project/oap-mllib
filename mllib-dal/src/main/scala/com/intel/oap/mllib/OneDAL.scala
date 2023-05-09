@@ -686,17 +686,17 @@ object OneDAL {
     val mapping = SparkUtils.getMapping(dataForConversion)
     val bcMapping = sc.broadcast(mapping)
 
-    println(s"coalesceToHomogenTables mapping")
-    for((k, v) <- mapping) {
-      println(s"key: $k, value: $v")
-    }
+//    println(s"coalesceToHomogenTables mapping")
+//    for((k, v) <- mapping) {
+//      println(s"key: $k, value: $v")
+//    }
     val rowcount = SparkUtils.computeEachExecutorDataSize(dataForConversion, mapping)
     val bcRowcount = sc.broadcast(rowcount)
 
-    println(s"coalesceToHomogenTables rowcount")
-    for((k, v) <- rowcount) {
-      println(s"key: $k, value: $v")
-    }
+//    println(s"coalesceToHomogenTables rowcount")
+//    for((k, v) <- rowcount) {
+//      println(s"key: $k, value: $v")
+//    }
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
@@ -713,15 +713,11 @@ object OneDAL {
         var itIndex = 0;
         while(it.hasNext) {
           val vector = it.next()
-          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
-            logger.info(s"coalescedTables vector value : ${value}")
-            logger.info(s"coalescedTables array index : ${partitionIndex * vector.toArray.length + numCols * itIndex + i}")
             array(partitionIndex * vector.toArray.length + numCols * itIndex + i) = value
           }
           itIndex += 1
         }
-        logger.info(s"coalescedTables array ${array.toList.toString()}")
 
         Iterator((array, numCols, numRows))
     }.map { entry =>
