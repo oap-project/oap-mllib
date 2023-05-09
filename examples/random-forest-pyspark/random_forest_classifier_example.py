@@ -22,37 +22,34 @@ from __future__ import print_function
 import sys
 
 # $example on$
+from pyspark import Row
 from pyspark.ml import Pipeline
-from pyspark.ml.functions import array_to_vector
-from pyspark.mllib.util import MLUtils
-from pyspark.mllib.regression import LabeledPoint
+from pyspark.ml.functions import vector_to_array
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 # $example off$
+from pyspark.ml.linalg import DenseVector
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, split
 
 if __name__ == "__main__":
     spark = SparkSession \
         .builder \
+        .master('local') \
         .appName("RandomForestClassifierExample") \
         .getOrCreate()
 
-    if (len(sys.argv) != 3) :
+    if (len(sys.argv) != 2) :
         print("Require data file path as input parameter")
         sys.exit(1)
     # $example on$
     # Load and parse the data file, converting it to a DataFrame.
-    train_data = spark.read.option("quote", " ").csv(sys.argv[1]).toDF("features")
-    train_data = train_data.select(split(col("features"), ",").alias("features"))
-    train_data = train_data.withColumn("features", col("features").cast("array<double>"))
-    train_data = train_data.withColumn("features", array_to_vector(col("features")))
-    label_data = spark.read.csv(sys.argv[2]).toDF("label")
-    #
-    data = label_data.join(train_data)
-    # data = MLUtils.loadLabeledPoints(spark.sparkContext, "../data/sample_dense_data.txt").toDF()
+    data_sparse = spark.read.format("libsvm").load(sys.argv[1]).toDF("label", "features_sparse")
+    data = data_sparse.rdd.map(lambda x: Row(label=x[0], features=DenseVector(x[1].toArray()))).toDF()
+    data.printSchema()
     data.show()
+
     # Index labels, adding metadata to the label column.
     # Fit on whole dataset to include all labels in index.
     labelIndexer = StringIndexer(inputCol="label", outputCol="indexedLabel").fit(data)

@@ -4,8 +4,7 @@ source ../../conf/env.sh
 
 # CSV data is the same as in Spark example "ml/pca_example.py"
 # The data file should be copied to $HDFS_ROOT before running examples
-TRAIN_DATA_FILE=$HDFS_ROOT/data/df_classification_train_data.csv
-LABEL_DATA_FILE=$HDFS_ROOT/data/df_classification_label_data.csv
+DATA_FILE=$HDFS_ROOT/data/sample_libsvm_data.txt
 
 DEVICE=GPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
@@ -35,5 +34,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
-    $APP_PY $TRAIN_DATA_FILE $LABEL_DATA_FILE \
+    $APP_PY DATA_FILE \
     2>&1 | tee random_forest_classifier-$(date +%m%d_%H_%M_%S).log

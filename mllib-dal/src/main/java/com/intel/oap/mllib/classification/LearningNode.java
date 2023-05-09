@@ -19,13 +19,13 @@ public class LearningNode implements Serializable {
                         "isLeaf is %s; " +
                         "probability size is %s;" +
                         "sampleCount is %s;",
-                new Integer(level) == null ? "null" : level,
-                new Double(impurity) == null ? "null" : impurity,
-                new Integer(splitIndex) == null ? "null" : splitIndex,
-                new Double(splitValue) == null ? "null" : splitValue,
-                new Boolean(isLeaf) == null ? "null" : isLeaf,
+                new Integer(level),
+                new Double(impurity),
+                new Integer(splitIndex),
+                new Double(splitValue),
+                new Boolean(isLeaf),
                 probability == null ? "null" : probability.length,
-                new Integer(sampleCount) == null ? "null" : sampleCount);
+                new Integer(sampleCount));
 
         return str;
     }
