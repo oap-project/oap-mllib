@@ -21,8 +21,10 @@ import scala.collection.mutable
 
 object ExecutorSharedArray {
   @transient private var sharedArray: Array[Double] = _
+  @transient private var rowcount: Int = _
+  @transient private var numcols: Int = _
 
-  def getSharedArray(numCols: Int,
+  def createSharedArray(numCols: Int,
                      bcMapping: Broadcast[mutable.HashMap[Int, String]],
                      bcRowcount: Broadcast[Map[String, Int]],
                      partitionId: Int): Array[Double] = {
@@ -34,13 +36,31 @@ object ExecutorSharedArray {
           val executorId: String = bcMapping.value(partitionId)
           val id = executorId.substring(0, executorId.lastIndexOf("_"))
           println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
-          val rowcount = bcRowcount.value(id)
+          rowcount = bcRowcount.value(id)
+          numcols = numCols
           println(s"computeAndCreateArray @transient lazy val rowcount: ${rowcount}")
-          println(s"computeAndCreateArray @transient lazy val array size : ${numCols * rowcount}")
-          sharedArray = new Array[Double](numCols * rowcount)
+          println(s"computeAndCreateArray @transient lazy val array size : ${numcols * rowcount}")
+          sharedArray = new Array[Double](numcols * rowcount)
         }
       }
     }
     sharedArray
+  }
+
+  def getSharedArray(): Array[Double] = {
+    println(s"computeAndCreateArray sharedArray")
+    if (sharedArray == null) {
+      println(s"computeAndCreateArray sharedArray empty")
+      Array.empty
+    }
+    sharedArray
+  }
+
+  def getRowCount(): Int = {
+    rowcount
+  }
+
+  def getNumCols(): Int = {
+    numcols
   }
 }

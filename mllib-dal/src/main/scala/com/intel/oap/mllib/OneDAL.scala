@@ -700,11 +700,11 @@ object OneDAL {
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
-    val groupRDD = dataForConversion.mapPartitionsWithIndex{
+    val coalescedRdd = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
-        val array: Array[Double] = ExecutorSharedArray.getSharedArray(numCols, bcMapping, bcRowcount, index)
+        val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         val preferredId = bcMapping.value(index)
         logger.info(s"coalescedTables preferredId ${preferredId}")
@@ -722,34 +722,19 @@ object OneDAL {
           }
           itIndex += 1
         }
+        Iterator(Tuple3(array, numCols, rowcount))
+    }.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
-        Iterator(Tuple4(array, executorId, numCols, rowcount))
-    }.map { entry =>
-      val array: Array[Double] = entry._1
-      val executorId: String = entry._2
-      val numCols: Long = entry._3
-      val numRows: Long = entry._4
-      (executorId, (array, numCols, numRows))
-    }.aggregateByKey((Array.empty[Double], 0L, 0L))(
-      (acc, value) => if (acc._1.isEmpty) value else acc,
-      (acc1, acc2) => if (acc1._1.isEmpty) acc2 else acc1
-    ).values
-    groupRDD.count()
-    println("groupRDD.getNumPartitions")
-    println(groupRDD.getNumPartitions)
-    val coalescedTables = groupRDD.mapPartitions{ partition =>
-      println(s"groupRDD.mapPartitions")
-      val result = if (partition.hasNext) {
-        val (array, numCols, numRows) = partition.next()
-        println(s"groupRDD array ${array.length}")
-        println(s"groupRDD numCols ${numCols}")
-        println(s"groupRDD numRows ${numRows}")
-        val table : HomogenTable = OneDAL.makeHomogenTable(array, numRows, numCols, device)
-        Iterator(table.getcObejct())
-      } else {
-        Iterator.empty
-      }
-      result
+    val coalescedTables = coalescedRdd.mapPartitions{ partition =>
+      val (array, numCols, rowcount) = partition.next()
+      println(s"coalescedTables.array : ${array.length}")
+      println(s"coalescedTables.numCols : ${numCols}")
+      println(s"coalescedTables.numRows ${rowcount}")
+      val table : HomogenTable = OneDAL.makeHomogenTable(array, rowcount, numCols, device)
+      println(s"coalescedTables.table ${table.getcObejct()}")
+
+      Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD
