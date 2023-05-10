@@ -686,17 +686,17 @@ object OneDAL {
     val mapping = SparkUtils.getMapping(dataForConversion)
     val bcMapping = sc.broadcast(mapping)
 
-//    println(s"coalesceToHomogenTables mapping")
-//    for((k, v) <- mapping) {
-//      println(s"key: $k, value: $v")
-//    }
+    println(s"coalesceToHomogenTables mapping")
+    for((k, v) <- mapping) {
+      println(s"key: $k, value: $v")
+    }
     val rowcount = SparkUtils.computeEachExecutorDataSize(dataForConversion, mapping)
     val bcRowcount = sc.broadcast(rowcount)
 
-//    println(s"coalesceToHomogenTables rowcount")
-//    for((k, v) <- rowcount) {
-//      println(s"key: $k, value: $v")
-//    }
+    println(s"coalesceToHomogenTables rowcount")
+    for((k, v) <- rowcount) {
+      println(s"key: $k, value: $v")
+    }
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
