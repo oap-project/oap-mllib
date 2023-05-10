@@ -21,14 +21,12 @@ Random Forest Classifier Example.
 from __future__ import print_function
 import sys
 
-# $example on$
 from pyspark import Row
 from pyspark.ml import Pipeline
 from pyspark.ml.functions import vector_to_array
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-# $example off$
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, split
@@ -36,14 +34,13 @@ from pyspark.sql.functions import col, split
 if __name__ == "__main__":
     spark = SparkSession \
         .builder \
-        .master('local') \
         .appName("RandomForestClassifierExample") \
         .getOrCreate()
 
     if (len(sys.argv) != 2) :
         print("Require data file path as input parameter")
         sys.exit(1)
-    # $example on$
+
     # Load and parse the data file, converting it to a DataFrame.
     data_sparse = spark.read.format("libsvm").load(sys.argv[1]).toDF("label", "features_sparse")
     data = data_sparse.rdd.map(lambda x: Row(label=x[0], features=DenseVector(x[1].toArray()))).toDF()
@@ -88,7 +85,6 @@ if __name__ == "__main__":
     print("Test Error = %g" % (1.0 - accuracy))
 
     rfModel = model.stages[2]
-    print(rfModel.toDebugString)  # summary only
-    # $example off$
+    print(rfModel.toDebugString)  # summary only    
 
     spark.stop()
