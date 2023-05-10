@@ -61,40 +61,43 @@ class KMeansDALImpl(var nClusters: Int,
       } else {
         null
       }
-      while (table.hasNext) {
-        OneCCL.init(executorNum, rank, kvsIPPort)
-        val tableArr = table.next()
-        logInfo(s"coalescedTables.mapPartitionsWithIndex  tableArr: ${tableArr}")
-        val initCentroids = if (useDevice == "GPU") {
-          OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
-        } else {
-          OneDAL.makeNumericTable(centers).getCNumericTable
-        }
-        cCentroids = cKMeansOneapiComputeWithInitCenters(
-          tableArr,
-          initCentroids,
-          nClusters,
-          tolerance,
-          maxIterations,
-          executorNum,
-          executorCores,
-          computeDevice.ordinal(),
-          gpuIndices,
-          result
-        )
 
-        if (rank == 0) {
+      val tableArr = table.next()
+      logInfo(s"coalescedTables.mapPartitionsWithIndex  tableArr: ${tableArr}")
+
+      OneCCL.init(executorNum, rank, kvsIPPort)
+      val initCentroids = if (useDevice == "GPU") {
+        OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
+      } else {
+        OneDAL.makeNumericTable(centers).getCNumericTable
+      }
+      cCentroids = cKMeansOneapiComputeWithInitCenters(
+        tableArr,
+        initCentroids,
+        nClusters,
+        tolerance,
+        maxIterations,
+        executorNum,
+        executorCores,
+        computeDevice.ordinal(),
+        gpuIndices,
+        result
+      )
+
+      val ret = if (rank == 0) {
           assert(cCentroids != 0)
-          centerVectors = if (useDevice == "GPU") {
+          val centerVectors = if (useDevice == "GPU") {
             OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
               computeDevice)
           } else {
             OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
           }
+          Iterator((centerVectors, result.totalCost, result.iterationNum))
+        } else {
+          Iterator.empty
         }
-        OneCCL.cleanup()
-      }
-      Iterator((centerVectors, result.totalCost, result.iterationNum))
+      OneCCL.cleanup()
+      ret
     }.collect()
 
     logInfo(s"KMeansDALImpl training took time :" +
