@@ -74,6 +74,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
+    val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
+
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
     val labeledPointsTables = if (useDevice == "GPU") {
@@ -101,8 +103,12 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
-          val resources = TaskContext.get().resources()
-          resources("gpu").addresses.map(_.toInt)
+          if (isTest) {
+            Array(0)
+          } else {
+            val resources = TaskContext.get().resources()
+            resources("gpu").addresses.map(_.toInt)
+          }
         } else {
           null
         }

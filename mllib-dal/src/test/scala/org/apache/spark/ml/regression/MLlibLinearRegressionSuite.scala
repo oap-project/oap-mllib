@@ -17,6 +17,8 @@
 
 package org.apache.spark.ml.regression
 
+import com.intel.oneapi.dal.table.Common
+
 import org.apache.spark.{SparkConf, TestCommon}
 
 import scala.collection.JavaConverters._
@@ -38,7 +40,10 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
   import testImplicits._
   override def sparkConf: SparkConf = {
     val conf = super.sparkConf
-    conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+    conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
+    conf.set("spark.oap.mllib.isTest", "true")
+
+    conf
   }
 
   private val seed: Int = 42
