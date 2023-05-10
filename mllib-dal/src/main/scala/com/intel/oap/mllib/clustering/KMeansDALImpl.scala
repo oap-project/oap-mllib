@@ -61,9 +61,8 @@ class KMeansDALImpl(var nClusters: Int,
       } else {
         null
       }
-
-      OneCCL.init(executorNum, rank, kvsIPPort)
       while (table.hasNext) {
+        OneCCL.init(executorNum, rank, kvsIPPort)
         val tableArr = table.next()
         logInfo(s"coalescedTables.mapPartitionsWithIndex  tableArr: ${tableArr}")
         val initCentroids = if (useDevice == "GPU") {
@@ -93,8 +92,8 @@ class KMeansDALImpl(var nClusters: Int,
             OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
           }
         }
+        OneCCL.cleanup()
       }
-      OneCCL.cleanup()
       Iterator((centerVectors, result.totalCost, result.iterationNum))
     }.collect()
 
