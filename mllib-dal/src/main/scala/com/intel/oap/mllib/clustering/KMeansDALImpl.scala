@@ -46,7 +46,8 @@ class KMeansDALImpl(var nClusters: Int,
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-    logInfo(s"KMeansDALImpl data conversion took time : ${System.nanoTime() - startTime}")
+    logInfo(s"KMeansDALImpl data conversion took time : " +
+      s"${ (System.nanoTime() - startTime) / 1000000 }")
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     startTime = System.nanoTime()
@@ -98,7 +99,8 @@ class KMeansDALImpl(var nClusters: Int,
       ret
     }.collect()
 
-    logInfo(s"KMeansDALImpl training took time : ${System.nanoTime() - startTime}")
+    logInfo(s"KMeansDALImpl training took time :" +
+      s" ${(System.nanoTime() - startTime) / 1000000 }")
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

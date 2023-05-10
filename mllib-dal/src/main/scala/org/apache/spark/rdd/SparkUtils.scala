@@ -26,26 +26,26 @@ import scala.collection.{breakOut, mutable}
 import scala.collection.mutable.ArrayBuffer
 
 object SparkUtils {
-  def getMapping(prev: RDD[_]) : mutable.HashMap[Int, String] = {
+  def getMapping(prev: RDD[_]): mutable.HashMap[Int, String] = {
     println(s"getMapping")
     val map = new mutable.HashMap[String, mutable.HashSet[Partition]]()
     val partitionMapping = mutable.HashMap[Int, String]()
     prev.partitions.foreach(p => {
       val loc = prev.context.getPreferredLocs(prev, p.index)
       loc.foreach {
-        case location : ExecutorCacheTaskLocation =>
+        case location: ExecutorCacheTaskLocation =>
           val execLoc = "executor_" + location.host + "_" + location.executorId
           val partValue = map.getOrElse(execLoc, new mutable.HashSet[Partition]())
           partValue.add(p)
           map.put(execLoc, partValue)
-        case _ : TaskLocation =>
+        case _: TaskLocation =>
           throw new SparkException("ExecutorInProcessCoalescePartitioner: Invalid task location!")
       }
     })
     map.foreach(x => {
       val list = x._2.toList.sortWith(_.index < _.index)
       var index = 0
-      list.foreach( partitionId => {
+      list.foreach(partitionId => {
         partitionMapping.put(partitionId.index, x._1 + "_" + index)
         index += 1
       })
@@ -54,7 +54,7 @@ object SparkUtils {
       throw new SparkException(
         "ExecutorInProcessCoalescePartitioner: No partitions or no locations for partitions found.")
     }
-    for((k, v) <- partitionMapping) {
+    for ((k, v) <- partitionMapping) {
       println(s"key: $k, value: $v")
     }
     partitionMapping
@@ -68,7 +68,7 @@ object SparkUtils {
       val rowcount = iter.length
       Iterator((partitionId, rowcount))
     }).map(iter => {
-      val value : String = mapping.get(iter._1).getOrElse(null)
+      val value: String = mapping.get(iter._1).getOrElse(null)
       val executorID = value.substring(0, value.lastIndexOf("_"))
       println(s"computeEachExecutorDataSize value : ${value}, executorID : ${executorID}")
       (executorID, iter._2)
@@ -76,21 +76,37 @@ object SparkUtils {
     executorSize.foreach(println)
     println(s"computeEachExecutorDataSize print rdd")
     executorSize.collect().toMap
-}
+  }
 
   def computeAndCreateArray(numCols: Int,
                             bcMapping: Broadcast[mutable.HashMap[Int, String]],
                             bcRowcount: Broadcast[Map[String, Int]],
-                            partitionId: Int): Array[Double] = {
+                            partitionId: Int): ThreadLocal[Array[Double]] = {
     println(s"computeAndCreateArray merge table start")
-    @transient lazy val array: Array[Double] = {
-      val executorId: String = bcMapping.value(partitionId)
-      val id = executorId.substring(0, executorId.lastIndexOf("_"))
-      println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
-      val rowcount = bcRowcount.value(id)
-      println(s"computeAndCreateArray @transient lazy val rowcount: ${numCols * rowcount}")
-      new Array[Double](numCols * rowcount)
+    //    @transient lazy val array: Array[Double] = {
+    //      val executorId: String = bcMapping.value(partitionId)
+    //      val id = executorId.substring(0, executorId.lastIndexOf("_"))
+    //      println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
+    //      val rowcount = bcRowcount.value(id)
+    //      println(s"computeAndCreateArray @transient lazy val rowcount: ${numCols * rowcount}")
+    //      new Array[Double](numCols * rowcount)
+    //    }
+    //    println(s"computeAndCreateArray @transient lazy val rowcount: ${array.toString}")
+    //    array
+
+    @transient lazy val sharedArray = new ThreadLocal[Array[Double]] {
+      override def initialValue(): Array[Double] = {
+        // Create an array of size 10 that will be shared among tasks in this executor
+        val executorId: String = bcMapping.value(partitionId)
+        val id = executorId.substring(0, executorId.lastIndexOf("_"))
+        println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
+        val rowcount = bcRowcount.value(id)
+        println(s"computeAndCreateArray @transient lazy val rowcount: ${rowcount}")
+        println(s"computeAndCreateArray @transient lazy val array size: ${numCols * rowcount}")
+
+        new Array[Double](numCols * rowcount)
+      }
     }
-    array
+    sharedArray
   }
 }

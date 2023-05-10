@@ -704,7 +704,7 @@ object OneDAL {
       (index: Int, it: Iterator[Vector]) =>
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
-        val array: Array[Double] = SparkUtils.computeAndCreateArray(numCols, bcMapping, bcRowcount, index)
+        val array: Array[Double] = SparkUtils.computeAndCreateArray(numCols, bcMapping, bcRowcount, index).get()
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         val executorId = bcMapping.value(index)
         logger.info(s"coalescedTables executorId ${executorId}")
