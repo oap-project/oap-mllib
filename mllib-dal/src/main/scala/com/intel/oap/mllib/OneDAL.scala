@@ -21,7 +21,7 @@ import com.intel.daal.services.DaalContext
 import org.apache.spark.{Partition, SparkContext, SparkException, TaskContext}
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
-import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, PartitionGroup, RDD, SparkUtils}
+import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, PartitionGroup, RDD, SparkUtils, ExecutorSharedArray}
 import org.apache.spark.storage.StorageLevel
 
 import java.lang
@@ -704,7 +704,7 @@ object OneDAL {
       (index: Int, it: Iterator[Vector]) =>
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
-        val array: Array[Double] = SparkUtils.computeAndCreateArray(numCols, bcMapping, bcRowcount, index).get()
+        val array: Array[Double] = ExecutorSharedArray.getSharedArray(numCols, bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         val executorId = bcMapping.value(index)
         logger.info(s"coalescedTables executorId ${executorId}")
