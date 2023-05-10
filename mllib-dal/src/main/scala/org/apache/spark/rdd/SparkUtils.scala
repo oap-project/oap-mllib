@@ -46,6 +46,7 @@ object SparkUtils {
       val list = x._2.toList.sortWith(_.index < _.index)
       var index = 0
       list.foreach(partitionId => {
+        // executor_host_executorId_rankId
         partitionMapping.put(partitionId.index, x._1 + "_" + index)
         index += 1
       })

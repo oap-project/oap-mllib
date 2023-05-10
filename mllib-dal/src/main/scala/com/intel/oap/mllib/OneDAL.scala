@@ -700,15 +700,19 @@ object OneDAL {
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
-    val coalescedTables = dataForConversion.mapPartitionsWithIndex{
+    val groupRDD = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = ExecutorSharedArray.getSharedArray(numCols, bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
-        val executorId = bcMapping.value(index)
+        val preferredId = bcMapping.value(index)
+        logger.info(s"coalescedTables preferredId ${preferredId}")
+        val executorId = preferredId.substring(0, preferredId.lastIndexOf("_"))
         logger.info(s"coalescedTables executorId ${executorId}")
-        val partitionIndex = executorId.substring(executorId.lastIndexOf("_") + 1).toInt
+        val rowcount = bcRowcount.value(executorId)
+        logger.info(s"coalescedTables rowcount ${rowcount}")
+        val partitionIndex = preferredId.substring(preferredId.lastIndexOf("_") + 1).toInt
         logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
         var itIndex = 0;
         while(it.hasNext) {
@@ -719,19 +723,40 @@ object OneDAL {
           itIndex += 1
         }
 
-        Iterator((array, numCols, numRows))
+        Iterator(Tuple4(array, executorId, numCols, rowcount))
     }.map { entry =>
-      val array = entry._1
-      val numCols = entry._2
-      val numRows = entry._3
-      val table = makeHomogenTable(array, numRows, numCols, device)
-      table.getcObejct()
+      val array: Array[Double] = entry._1
+      val executorId: String = entry._2
+      val numCols: Long = entry._3
+      val numRows: Long = entry._4
+      (executorId, (array, numCols, numRows))
+    }.aggregateByKey((Array.empty[Double], 0L, 0L))(
+      (acc, value) => if (acc._1.isEmpty) value else acc,
+      (acc1, acc2) => if (acc1._1.isEmpty) acc2 else acc1
+    )
+    println("groupRDD.getNumPartitions")
+    println(groupRDD.getNumPartitions)
+    val coalescedTables = groupRDD.mapPartitions{ partition =>
+      println(s"groupRDD.mapPartitions")
+      val result = if (partition.hasNext) {
+        val (executorId, (array, numCols, numRows)) = partition.next()
+        println(s"groupRDD executorId ${executorId}")
+        println(s"groupRDD array ${array.length}")
+        println(s"groupRDD numCols ${numCols}")
+        println(s"groupRDD numRows ${numRows}")
+        val table : HomogenTable = OneDAL.makeHomogenTable(array, numRows, numCols, device)
+        Iterator(table.getcObejct())
+      } else {
+        Iterator.empty
+      }
+      result
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD
     if (data.getStorageLevel != StorageLevel.NONE) {
       data.unpersist()
     }
+    println("coalescedTables.getNumPartitions")
     println(coalescedTables.getNumPartitions)
     coalescedTables
   }

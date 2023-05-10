@@ -53,6 +53,7 @@ class KMeansDALImpl(var nClusters: Int,
     startTime = System.nanoTime()
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       var cCentroids = 0L
+      var centerVectors: Array[Vector] = null
       val result = new KMeansResult()
       val gpuIndices = if (useDevice == "GPU") {
         val resources = TaskContext.get().resources()
@@ -61,42 +62,40 @@ class KMeansDALImpl(var nClusters: Int,
         null
       }
 
-      val tableArr = table.next()
-      logInfo(s"coalescedTables.mapPartitionsWithIndex  tableArr: ${tableArr}")
-
       OneCCL.init(executorNum, rank, kvsIPPort)
-      val initCentroids = if (useDevice == "GPU") {
-        OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
-      } else {
-        OneDAL.makeNumericTable(centers).getCNumericTable
-      }
-      cCentroids = cKMeansOneapiComputeWithInitCenters(
-        tableArr,
-        initCentroids,
-        nClusters,
-        tolerance,
-        maxIterations,
-        executorNum,
-        executorCores,
-        computeDevice.ordinal(),
-        gpuIndices,
-        result
-      )
+      while (table.hasNext) {
+        val tableArr = table.next()
+        logInfo(s"coalescedTables.mapPartitionsWithIndex  tableArr: ${tableArr}")
+        val initCentroids = if (useDevice == "GPU") {
+          OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
+        } else {
+          OneDAL.makeNumericTable(centers).getCNumericTable
+        }
+        cCentroids = cKMeansOneapiComputeWithInitCenters(
+          tableArr,
+          initCentroids,
+          nClusters,
+          tolerance,
+          maxIterations,
+          executorNum,
+          executorCores,
+          computeDevice.ordinal(),
+          gpuIndices,
+          result
+        )
 
-      val ret = if (rank == 0) {
+        if (rank == 0) {
           assert(cCentroids != 0)
-          val centerVectors = if (useDevice == "GPU") {
+          centerVectors = if (useDevice == "GPU") {
             OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
               computeDevice)
           } else {
             OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
           }
-          Iterator((centerVectors, result.totalCost, result.iterationNum))
-        } else {
-          Iterator.empty
         }
+      }
       OneCCL.cleanup()
-      ret
+      Iterator((centerVectors, result.totalCost, result.iterationNum))
     }.collect()
 
     logInfo(s"KMeansDALImpl training took time :" +
