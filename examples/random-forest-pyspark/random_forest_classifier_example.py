@@ -32,9 +32,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, split
 
 if __name__ == "__main__":
-    spark = SparkSession \
-        .builder \
-        .appName("RandomForestClassifierExample") \
+    spark = SparkSession\
+        .builder\
+        .appName("RandomForestClassifierExample")\
         .getOrCreate()
 
     if (len(sys.argv) != 2) :
