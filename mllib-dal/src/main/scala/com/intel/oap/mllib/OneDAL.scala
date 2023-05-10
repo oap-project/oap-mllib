@@ -733,14 +733,14 @@ object OneDAL {
     }.aggregateByKey((Array.empty[Double], 0L, 0L))(
       (acc, value) => if (acc._1.isEmpty) value else acc,
       (acc1, acc2) => if (acc1._1.isEmpty) acc2 else acc1
-    )
+    ).values
+    groupRDD.count()
     println("groupRDD.getNumPartitions")
     println(groupRDD.getNumPartitions)
     val coalescedTables = groupRDD.mapPartitions{ partition =>
       println(s"groupRDD.mapPartitions")
       val result = if (partition.hasNext) {
-        val (executorId, (array, numCols, numRows)) = partition.next()
-        println(s"groupRDD executorId ${executorId}")
+        val (array, numCols, numRows) = partition.next()
         println(s"groupRDD array ${array.length}")
         println(s"groupRDD numCols ${numCols}")
         println(s"groupRDD numRows ${numRows}")
