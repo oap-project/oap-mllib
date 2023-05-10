@@ -723,7 +723,9 @@ object OneDAL {
           itIndex += 1
         }
         Iterator(Tuple3(array, numCols, rowcount))
-    }.coalesce(executorNum,
+    }.cache()
+    coalescedRdd.count()
+    coalescedRdd.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
     val coalescedTables = coalescedRdd.mapPartitions{ partition =>
