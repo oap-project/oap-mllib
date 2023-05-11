@@ -47,13 +47,12 @@ class KMeansDALImpl(var nClusters: Int,
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
     logInfo(s"KMeansDALImpl data conversion took time : " +
-      s"${ (System.nanoTime() - startTime) / 1000000000 }")
+      s"${ (System.nanoTime() - startTime) / 1e9 }")
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     startTime = System.nanoTime()
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       var cCentroids = 0L
-      var centerVectors: Array[Vector] = null
       val result = new KMeansResult()
       val gpuIndices = if (useDevice == "GPU") {
         val resources = TaskContext.get().resources()
@@ -101,7 +100,7 @@ class KMeansDALImpl(var nClusters: Int,
     }.collect()
 
     logInfo(s"KMeansDALImpl training took time :" +
-      s" ${(System.nanoTime() - startTime) / 1000000000 }")
+      s" ${(System.nanoTime() - startTime) / 1e9 }")
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

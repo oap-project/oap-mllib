@@ -746,7 +746,7 @@ object OneDAL {
     }
     conversionRdd.count()
     logger.info(s"conversionRdd copy partition data to continuous array took times:" +
-      s" ${(System.nanoTime() - startTime) / 1000000000 }")
+      s" ${(System.nanoTime() - startTime) / 1e9 }")
 
     startTime = System.nanoTime()
     val coalescedRdd = conversionRdd.coalesce(executorNum,
@@ -757,13 +757,24 @@ object OneDAL {
 //      println(s"coalescedTables.array : ${array.length}")
 //      println(s"coalescedTables.numCols : ${numCols}")
 //      println(s"coalescedTables.numRows ${rowcount}")
+      var i = 0
+      var str = null
+      for (v <- array ) {
+        if (i <= 100) {
+          str += v.toString + " "
+          i += 1
+        }
+      }
+
+      println(s"coalescedTables str ${str}")
+
       val table : HomogenTable = OneDAL.makeHomogenTable(array, rowcount, numCols, device)
 //      println(s"coalescedTables.table ${table.getcObejct()}")
 
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
     coalescedTables.count()
-    logger.info(s"coalescedTables took times: ${(System.nanoTime() - startTime) / 1000000000 }")
+    logger.info(s"coalescedTables took times: ${(System.nanoTime() - startTime) / 1e9 }")
 
 //    println("coalescedTables.getNumPartitions")
 //    println(coalescedTables.getNumPartitions)
