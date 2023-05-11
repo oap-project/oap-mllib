@@ -250,6 +250,9 @@ static jlong doKMeansOneAPICompute(
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     std::cout << "oneDAL (native): htable" << htable << std::endl;
+    std::cout << "oneDAL (native): htable rowcount" << htable.get_column_count() << std::endl;
+    std::cout << "oneDAL (native): htable rowcount" << htable.get_row_count() << std::endl;
+
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
     std::cout << "oneDAL (native): centroids" << centroids << std::endl;

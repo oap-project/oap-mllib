@@ -670,7 +670,7 @@ object OneDAL {
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
-      val reData = data.repartition(executorNum).setName("Repartitioned for conversion")
+      val reData = data.repartition(executorNum * 2).setName("Repartitioned for conversion")
       reData.cache()
       reData.count()
       reData
@@ -700,7 +700,7 @@ object OneDAL {
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
-    val convertdRdd = dataForConversion.mapPartitionsWithIndex{
+    val conversionRdd = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
@@ -724,8 +724,8 @@ object OneDAL {
         }
         Iterator(Tuple3(array, numCols, rowcount))
     }.cache()
-    convertdRdd.count()
-    val coalescedRdd = convertdRdd.coalesce(executorNum,
+    conversionRdd.count()
+    val coalescedRdd = conversionRdd.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
     val coalescedTables = coalescedRdd.mapPartitions{ partition =>
