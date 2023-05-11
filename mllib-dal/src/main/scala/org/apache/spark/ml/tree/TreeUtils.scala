@@ -19,14 +19,10 @@
 package org.apache.spark.ml.tree
 
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
-
-import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
-import org.apache.spark.mllib.tree.impurity.{Gini, GiniCalculator, ImpurityCalculator, Variance, VarianceCalculator}
-import org.apache.spark.mllib.tree.model.ImpurityStats
 import scala.collection.mutable
 
 import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
-import org.apache.spark.mllib.tree.impurity.GiniCalculator
+import org.apache.spark.mllib.tree.impurity.{Gini, GiniCalculator, ImpurityCalculator, Variance, VarianceCalculator}
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
 object TreeUtils {
