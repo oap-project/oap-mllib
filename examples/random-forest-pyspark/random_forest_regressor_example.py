@@ -18,12 +18,10 @@
 """
 Random Forest Regressor Example.
 """
-# $example on$
 from pyspark.ml import Pipeline
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.feature import VectorIndexer
 from pyspark.ml.evaluation import RegressionEvaluator
-# $example off$
 from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
@@ -36,7 +34,6 @@ if __name__ == "__main__":
         print("Require data file path as input parameter")
         sys.exit(1)
 
-    # $example on$
     # Load and parse the data file, converting it to a DataFrame.
     data_sparse = spark.read.format("libsvm").load(sys.argv[1]).toDF("label", "features_sparse")
     data = data_sparse.rdd.map(lambda x: Row(label=x[0], features=DenseVector(x[1].toArray()))).toDF()
@@ -74,6 +71,5 @@ if __name__ == "__main__":
 
     rfModel = model.stages[1]
     print(rfModel)  # summary only
-    # $example off$
 
     spark.stop()

@@ -97,7 +97,6 @@ CPP_SRCS += \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
   ./oneapi/dal/RowAccessorImpl.cpp
 
-
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
   ./KMeansImpl.o \
@@ -116,7 +115,6 @@ OBJS += \
 
 DEFINES=-D$(PLATFORM_PROFILE)
 
-
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CPP_SRCS += ./GPU.cpp
   OBJS += ./GPU.o
@@ -124,7 +122,6 @@ endif
 
 # Output Binary
 OUTPUT = ../../../src/main/resources/lib/libMLlibDAL.so
-
 
 all: $(OUTPUT)
 

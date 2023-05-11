@@ -333,6 +333,10 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             maxTreeDepth, seed, maxBins, bootstrap, comm, resultObj);
         return hashmapObj;
     }
+    default: {
+        std::cout << "no supported device!" << std::endl;
+        exit(-1);
+    }
     }
     return nullptr;
 }

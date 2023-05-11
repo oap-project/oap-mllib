@@ -344,7 +344,7 @@ static jobject doRFRegressorOneAPICompute(
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
-    if (comm.get_rank() == 0) {
+    if (isRoot) {
         std::cout << "Variable importance results:\n"
                   << result_train.get_var_importance() << std::endl;
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;
@@ -426,6 +426,10 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
             minObservationsLeafNode, maxTreeDepth, seed, maxbins, bootstrap,
             comm, resultObj);
         return hashmapObj;
+    }
+    default: {
+        std::cout << "no supported device!" << std::endl;
+        exit(-1);
     }
     }
     return nullptr;

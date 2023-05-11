@@ -15,17 +15,6 @@ public class Common {
             return values[ordinal];
         }
     }
-
-    // Type of csr indexing, currently it's implemented only `one_based` indexing
-    public enum CSRIndexing {
-        ONE_BASED, ZERO_BASED;
-        private static final CSRIndexing[] values = values();
-        public static CSRIndexing get(int ordinal) {
-            return values[ordinal];
-        }
-
-    }
-
     public enum DataType {
         INT8, INT16, INT32, INT64, UINT8,
         UINT16, UINT32, UINT64, FLOAT32, FLOAT64, BFLOAT16;
