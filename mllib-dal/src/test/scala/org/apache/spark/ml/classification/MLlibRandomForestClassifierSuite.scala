@@ -43,6 +43,7 @@ import org.apache.spark.util.Utils
  */
 class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest {
 
+  import RandomForestClassifierSuite.compareAPIs
   import testImplicits._
   override def sparkConf: SparkConf = {
     val conf = super.sparkConf

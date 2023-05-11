@@ -46,10 +46,7 @@ import org.apache.spark.sql.types.StructType
 @Since("1.4.0")
 class RandomForestClassifier @Since("1.4.0") (
                                                @Since("1.4.0") override val uid: String)
-  extends ProbabilisticClassifier[Vector,
-                                  RandomForestClassifier,
-                                  org.apache.spark.ml.
-                                  classification.RandomForestClassificationModel]
+  extends ProbabilisticClassifier[Vector, RandomForestClassifier, RandomForestClassificationModel]
     with RandomForestClassifierParams with DefaultParamsWritable {
 
   @Since("1.4.0")
@@ -139,8 +136,7 @@ class RandomForestClassifier @Since("1.4.0") (
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
   override protected def train(
-                                dataset: Dataset[_]):
-        org.apache.spark.ml.classification.RandomForestClassificationModel
+                                dataset: Dataset[_]): RandomForestClassificationModel
   = instrumented { instr =>
     val shim = RandomForestClassifierShim.create(uid)
     shim.initShim(extractParamMap())

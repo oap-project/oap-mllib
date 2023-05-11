@@ -192,7 +192,9 @@ class RandomForestClassifier @Since("1.4.0") (
 
     val executorNum = Utils.sparkExecutorNum(sc)
     val executorCores = Utils.sparkExecutorCores()
+
     val initStartTime = System.nanoTime()
+    println(s"trainRandomForestClassifierDAL numClasses : " + numClasses)
 
     val rfDAL = new RandomForestClassifierDALImpl(uid,
       numClasses,
@@ -211,12 +213,13 @@ class RandomForestClassifier @Since("1.4.0") (
 
     val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
+
     val numFeatures = metadata.numFeatures
+
     val trees = buildTrees(treesMap, numFeatures, numClasses, metadata).map(_.asInstanceOf[DecisionTreeClassificationModel])
     instr.logNumClasses(numClasses)
     instr.logNumFeatures(numFeatures)
-    val model = createModel(dataset, trees, numFeatures, numClasses)
-    model
+    createModel(dataset, trees, numFeatures, numClasses)
   }
 
   private def buildTrees(treesMap : JavaMap[Integer,
@@ -315,3 +318,4 @@ object RandomForestClassifier extends DefaultParamsReadable[RandomForestClassifi
   @Since("2.0.0")
   override def load(path: String): RandomForestClassifier = super.load(path)
 }
+

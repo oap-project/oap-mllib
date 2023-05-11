@@ -15,11 +15,9 @@
  */
 package com.intel.oap.mllib.classification
 
-import com.google.common.collect.HashBiMap
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -30,7 +28,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
-import scala.collection.JavaConversions._
 
 import java.util
 import java.util.{ArrayList, Map}
@@ -127,6 +124,7 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
+
     results(0)
   }
 
