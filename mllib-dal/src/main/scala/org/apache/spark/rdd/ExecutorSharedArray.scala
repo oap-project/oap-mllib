@@ -44,6 +44,7 @@ object ExecutorSharedArray {
         }
       }
     }
+    println(s"computeAndCreateArray merge table end")
     sharedArray
   }
 

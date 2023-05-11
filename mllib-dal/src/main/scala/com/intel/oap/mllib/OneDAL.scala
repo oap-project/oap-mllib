@@ -702,10 +702,13 @@ object OneDAL {
 
     val conversionRdd = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
+        logger.info(s"Partition index: $index")
+        println(s"Partition index: $index")
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         val preferredId = bcMapping.value(index)
         logger.info(s"coalescedTables preferredId ${preferredId}")
         val executorId = preferredId.substring(0, preferredId.lastIndexOf("_"))
@@ -723,7 +726,7 @@ object OneDAL {
           itIndex += 1
         }
         Iterator(Tuple3(array, numCols, rowcount))
-    }.cache()
+    }.setName("conversionRdd").cache()
     conversionRdd.count()
     val coalescedRdd = conversionRdd.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
