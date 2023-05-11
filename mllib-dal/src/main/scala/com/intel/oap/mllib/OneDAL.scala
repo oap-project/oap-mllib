@@ -700,7 +700,7 @@ object OneDAL {
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
-    val coalescedRdd = dataForConversion.mapPartitionsWithIndex{
+    val convertdRdd = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
@@ -724,8 +724,8 @@ object OneDAL {
         }
         Iterator(Tuple3(array, numCols, rowcount))
     }.cache()
-    coalescedRdd.count()
-    coalescedRdd.coalesce(executorNum,
+    convertdRdd.count()
+    val coalescedRdd = convertdRdd.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
     val coalescedTables = coalescedRdd.mapPartitions{ partition =>
