@@ -28,7 +28,7 @@ object ExecutorSharedArray {
                      bcMapping: Broadcast[mutable.HashMap[Int, String]],
                      bcRowcount: Broadcast[Map[String, Int]],
                      partitionId: Int): Array[Double] = {
-    println(s"computeAndCreateArray merge table start")
+//    println(s"computeAndCreateArray merge table start")
     if (sharedArray == null) {
       synchronized {
         if (sharedArray == null) {
@@ -44,24 +44,7 @@ object ExecutorSharedArray {
         }
       }
     }
-    println(s"computeAndCreateArray merge table end")
+//    println(s"computeAndCreateArray merge table end")
     sharedArray
-  }
-
-  def getSharedArray(): Array[Double] = {
-    println(s"computeAndCreateArray sharedArray")
-    if (sharedArray == null) {
-      println(s"computeAndCreateArray sharedArray empty")
-      Array.empty
-    }
-    sharedArray
-  }
-
-  def getRowCount(): Int = {
-    rowcount
-  }
-
-  def getNumCols(): Int = {
-    numcols
   }
 }
