@@ -721,7 +721,7 @@ object OneDAL {
         // compute each partition array start index
         var startIndex = 0
         for (i <- 0 until partitionIndex) {
-          val partitionIndex = mapping.find(_._2 == (executorId + "_" + i)).map(_._1)
+          val partitionIndex = mapping.find(_._2 == (executorId + "_" + i)).map(_._1).getOrElse(0)
           startIndex += partitionDims(partitionIndex)._1 * partitionDims(partitionIndex)._2
         }
         logger.info(s"coalescedTables startIndex ${startIndex}")
