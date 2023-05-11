@@ -35,7 +35,7 @@ using namespace oneapi::dal;
 namespace df = oneapi::dal::decision_forest;
 
 void generateSplitLearningNode(
-    JNIEnv *env, const df::split_node_info<df::task::classification> &info,
+    JNIEnv *env, const df::split_node_info<df::task::regression> &info,
     const int classCount, jobject jList, jclass listClass,
     jclass learningNodeClass, jmethodID learningNodeConstructor) {
     jobject jNode = env->NewObject(learningNodeClass, learningNodeConstructor);
@@ -84,7 +84,7 @@ void generateSplitLearningNode(
 }
 
 void generateLeafLearningNode(
-    JNIEnv *env, const df::leaf_node_info<df::task::classification> &info,
+    JNIEnv *env, const df::leaf_node_info<df::task::regression> &info,
     const int classCount, jobject jList, jclass listClass,
     jclass learningNodeClass, jmethodID learningNodeConstructor) {
     jobject jNode = env->NewObject(learningNodeClass, learningNodeConstructor);
@@ -148,13 +148,13 @@ struct collect_nodes {
         this->learningNodeClass = learningNodeClass;
         this->learningNodeConstructor = learningNodeConstructor;
     }
-    bool operator()(const df::leaf_node_info<df::task::classification> &info) {
+    bool operator()(const df::leaf_node_info<df::task::regression> &info) {
         generateLeafLearningNode(env, info, classCount, jList, listClass,
                                  learningNodeClass, learningNodeConstructor);
         return true;
     }
 
-    bool operator()(const df::split_node_info<df::task::classification> &info) {
+    bool operator()(const df::split_node_info<df::task::regression> &info) {
         generateSplitLearningNode(env, info, classCount, jList, listClass,
                                   learningNodeClass, learningNodeConstructor);
         return true;
@@ -162,8 +162,8 @@ struct collect_nodes {
 };
 
 template <typename Task>
-void collect_model(JNIEnv *env, const df::model<Task> &m,
-                   const jint classCount) {
+jobject collect_model(JNIEnv *env, const df::model<Task> &m,
+                      const jint classCount) {
     // Create a new Java HashMap object
     jclass mapClass = env->FindClass("java/util/HashMap");
     jmethodID mapConstructor = env->GetMethodID(mapClass, "<init>", "()V");
@@ -205,112 +205,6 @@ void collect_model(JNIEnv *env, const df::model<Task> &m,
     return jMap;
 }
 
-jobject convertRFRJavaMap(
-    JNIEnv *env,
-    const std::shared_ptr<
-        std::map<std::int64_t, std::shared_ptr<std::vector<LearningNode>>>>
-        map,
-    const jint classCount) {
-    std::cout << "convert map to HashMap " << std::endl;
-    // Create a new Java HashMap object
-    jclass mapClass = env->FindClass("java/util/HashMap");
-    jmethodID mapConstructor = env->GetMethodID(mapClass, "<init>", "()V");
-    jobject jMap = env->NewObject(mapClass, mapConstructor);
-
-    // Get the List class and its constructor
-    jclass listClass = env->FindClass("java/util/ArrayList");
-    jmethodID listConstructor = env->GetMethodID(listClass, "<init>", "()V");
-
-    // Get the LearningNode class and its constructor
-    jclass learningNodeClass =
-        env->FindClass("com/intel/oap/mllib/classification/LearningNode");
-    jmethodID learningNodeConstructor =
-        env->GetMethodID(learningNodeClass, "<init>", "()V");
-
-    // Iterate over the C++ map and add each entry to the Java map
-    for (const auto &entry : *map) {
-        std::cout
-            << "Iterate over the C++ map and add each entry to the Java map"
-            << std::endl;
-        // Create a new Java ArrayList to hold the LearningNode objects
-        jobject jList = env->NewObject(listClass, listConstructor);
-
-        // Iterate over the LearningNode objects and add each one to the
-        // ArrayList
-        for (const auto &node : *entry.second) {
-            jobject jNode =
-                env->NewObject(learningNodeClass, learningNodeConstructor);
-
-            // Set the fields of the Java LearningNode object using JNI
-            // functions
-            jfieldID levelField =
-                env->GetFieldID(learningNodeClass, "level", "I");
-            env->SetIntField(jNode, levelField, node.level);
-
-            jfieldID impurityField =
-                env->GetFieldID(learningNodeClass, "impurity", "D");
-            env->SetDoubleField(jNode, impurityField, node.impurity);
-
-            jfieldID splitIndexField =
-                env->GetFieldID(learningNodeClass, "splitIndex", "I");
-            env->SetIntField(jNode, splitIndexField, node.splitIndex);
-
-            jfieldID splitValueField =
-                env->GetFieldID(learningNodeClass, "splitValue", "D");
-            env->SetDoubleField(jNode, splitValueField, node.splitValue);
-
-            jfieldID isLeafField =
-                env->GetFieldID(learningNodeClass, "isLeaf", "Z");
-            env->SetBooleanField(jNode, isLeafField, node.isLeaf);
-
-            // Convert the probability array
-            if (node.probability != nullptr) {
-                std::cout << "convertRFRJavaMap node.probability  = "
-                          << node.probability.get()[0] << std::endl;
-                jfieldID probabilityField =
-                    env->GetFieldID(learningNodeClass, "probability", "[D");
-                jdoubleArray jProbability = env->NewDoubleArray(classCount);
-                // call the native method to get the values
-                jdouble *elements =
-                    env->GetDoubleArrayElements(jProbability, nullptr);
-                // Do something with the array elements
-                for (int i = 0; i < classCount; i++) {
-                    elements[i] = node.probability.get()[i];
-                }
-                env->SetDoubleArrayRegion(jProbability, 0, classCount,
-                                          elements);
-                env->SetObjectField(jNode, probabilityField, jProbability);
-            }
-
-            jfieldID sampleCountField =
-                env->GetFieldID(learningNodeClass, "sampleCount", "I");
-            env->SetIntField(jNode, sampleCountField, node.sampleCount);
-
-            // Add the LearningNode object to the ArrayList
-            jmethodID listAdd =
-                env->GetMethodID(listClass, "add", "(Ljava/lang/Object;)Z");
-            env->CallBooleanMethod(jList, listAdd, jNode);
-        }
-
-        // Add the ArrayList to the Java map
-        jmethodID mapPut = env->GetMethodID(
-            mapClass, "put",
-            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        std::cout << "convertRFRJavaMap tree id  = " << entry.first
-                  << std::endl;
-        // Create a new Integer object with the value key
-        jobject jKey = env->NewObject(
-            env->FindClass("java/lang/Integer"), // Find the Integer class
-            env->GetMethodID(env->FindClass("java/lang/Integer"), "<init>",
-                             "(I)V"), // Get the constructor method
-            (jint) static_cast<jint>(entry.first));
-        env->CallObjectMethod(jMap, mapPut, jKey, jList);
-    }
-    std::cout << "convert map to HashMap end " << std::endl;
-
-    return jMap;
-}
-
 static jobject doRFRegressorOneAPICompute(
     JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
     jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
@@ -320,7 +214,6 @@ static jobject doRFRegressorOneAPICompute(
     jobject resultObj) {
     std::cout << "oneDAL (native): compute start" << std::endl;
     const bool isRoot = (comm.get_rank() == ccl_root);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     homogen_table hFeaturetable =
         *reinterpret_cast<const homogen_table *>(pNumTabFeature);
     homogen_table hLabeltable =
