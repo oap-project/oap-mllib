@@ -93,7 +93,7 @@ if [ "HOST" = $DEVICE_OPT ]; then
     "RowAccessorTest" \
     "com.intel.oap.mllib.ConvertHomogenTableSuite"
   )
-else
+elif [ "CPU" = $DEVICE_OPT ]; then
   suiteArray=(
     "org.apache.spark.ml.clustering.MLlibKMeansSuite" \
     "org.apache.spark.ml.feature.MLlibPCASuite" \
@@ -103,6 +103,13 @@ else
     "org.apache.spark.ml.stat.MLlibCorrelationSuite" \
     "org.apache.spark.ml.stat.MLlibSummarizerSuite"
   )
+elif [ "GPU" = $DEVICE_OPT ]; then
+  suiteArray=(
+    "org.apache.spark.ml.regression.MLlibLinearRegressionSuite"
+  )
+else
+  echo Error: $DEVICE_OPT is not supported!
+  exit 1
 fi
 
 if [[ ! ${suiteArray[*]} =~ $SUITE ]]; then

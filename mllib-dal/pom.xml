@@ -274,6 +274,9 @@
                 <configuration>
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
+		    <systemProperties>
+                        <computeDevice>${computeDevice}</computeDevice>
+                    </systemProperties>
                     <filereports>test-reports.txt</filereports>
                 </configuration>
                 <executions>

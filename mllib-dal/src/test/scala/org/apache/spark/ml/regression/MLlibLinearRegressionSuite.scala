@@ -39,9 +39,15 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
 
   import testImplicits._
   override def sparkConf: SparkConf = {
+    val device = TestCommon.getComputeDevice.toString
+    println("KP: %s", device)
     val conf = super.sparkConf
-    conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
-    conf.set("spark.oap.mllib.isTest", "true")
+    if (device == "GPU") {
+      conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
+      conf.set("spark.oap.mllib.isTest", "true")
+    } else {
+      conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+    }
 
     conf
   }
