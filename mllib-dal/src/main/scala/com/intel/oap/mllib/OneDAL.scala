@@ -709,6 +709,7 @@ object OneDAL {
         val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
         logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+        // executor_host_executorId_rankId
         val preferredId = bcMapping.value(index)
         logger.info(s"coalescedTables preferredId ${preferredId}")
         val executorId = preferredId.substring(0, preferredId.lastIndexOf("_"))
@@ -717,14 +718,20 @@ object OneDAL {
         logger.info(s"coalescedTables rowcount ${rowcount}")
         val partitionIndex = preferredId.substring(preferredId.lastIndexOf("_") + 1).toInt
         logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
+        var startIndex = 0
+        for (i <- 0 to partitionIndex) {
+          val partitionIndex = mapping.find(_._2 == (executorId + "_" + i)).map(_._1)
+          startIndex += partitionDims(partitionIndex)._1 * partitionDims(partitionIndex)._2
+        }
+        logger.info(s"coalescedTables startIndex ${startIndex}")
         var itIndex = 0;
         while(it.hasNext) {
           val vector = it.next()
           logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
-            logger.info(s"coalescedTables array index ${partitionIndex * vector.toArray.length + numCols * itIndex + i}")
+            logger.info(s"coalescedTables array index ${startIndex + numCols * itIndex + i}")
             logger.info(s"coalescedTables array value ${value}")
-            array(partitionIndex * vector.toArray.length + numCols * itIndex + i) = value
+            array(startIndex + numCols * itIndex + i) = value
           }
           itIndex += 1
         }
