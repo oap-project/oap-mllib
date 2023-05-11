@@ -686,45 +686,46 @@ object OneDAL {
     val mapping = SparkUtils.getMapping(dataForConversion)
     val bcMapping = sc.broadcast(mapping)
 
-    println(s"coalesceToHomogenTables mapping")
+//    println(s"coalesceToHomogenTables mapping")
 //    for((k, v) <- mapping) {
 //      println(s"key: $k, value: $v")
 //    }
     val rowcount = SparkUtils.computeEachExecutorDataSize(dataForConversion, mapping)
     val bcRowcount = sc.broadcast(rowcount)
 
-    println(s"coalesceToHomogenTables rowcount")
+//    println(s"coalesceToHomogenTables rowcount")
 //    for((k, v) <- rowcount) {
 //      println(s"key: $k, value: $v")
 //    }
-    logger.info(s"coalesceToHomogenTables merge table start")
-    println(dataForConversion.getNumPartitions)
+//    logger.info(s"coalesceToHomogenTables merge table start")
+//    println(dataForConversion.getNumPartitions)
 
+    var startTime = System.nanoTime()
     val conversionRdd = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
-        logger.info(s"Partition index: $index")
-        println(s"Partition index: $index")
+//        logger.info(s"Partition index: $index")
+//        println(s"Partition index: $index")
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
-        logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
-        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+//        logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+//        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         // executor_host_executorId_rankId
         val preferredId = bcMapping.value(index)
-        logger.info(s"coalescedTables preferredId ${preferredId}")
+//        logger.info(s"coalescedTables preferredId ${preferredId}")
         val executorId = preferredId.substring(0, preferredId.lastIndexOf("_"))
-        logger.info(s"coalescedTables executorId ${executorId}")
+//        logger.info(s"coalescedTables executorId ${executorId}")
         val rowcount = bcRowcount.value(executorId)
-        logger.info(s"coalescedTables rowcount ${rowcount}")
+//        logger.info(s"coalescedTables rowcount ${rowcount}")
         val partitionIndex = preferredId.substring(preferredId.lastIndexOf("_") + 1).toInt
-        logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
+//        logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
         // compute each partition array start index
         var startIndex = 0
         for (i <- 0 until partitionIndex) {
           val partitionIndex = mapping.find(_._2 == (executorId + "_" + i)).map(_._1).getOrElse(0)
           startIndex += partitionDims(partitionIndex)._1 * partitionDims(partitionIndex)._2
         }
-        logger.info(s"coalescedTables startIndex ${startIndex}")
+//        logger.info(s"coalescedTables startIndex ${startIndex}")
         var itIndex = 0;
         while(it.hasNext) {
           val vector = it.next()
@@ -737,7 +738,6 @@ object OneDAL {
           itIndex += 1
         }
 //        logger.info(s"coalescedTables array ${array.toList.toString()}")
-
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
     // Unpersist instances RDD
@@ -745,25 +745,28 @@ object OneDAL {
       data.unpersist()
     }
     conversionRdd.count()
+    logger.info(s"conversionRdd copy partition data to continuous array took times:" +
+      s" ${(System.nanoTime() - startTime) / 1000000000 }")
 
-
+    startTime = System.nanoTime()
     val coalescedRdd = conversionRdd.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
     val coalescedTables = coalescedRdd.mapPartitions{ partition =>
       val (array, numCols, rowcount) = partition.next()
-      println(s"coalescedTables.array : ${array.length}")
-      println(s"coalescedTables.numCols : ${numCols}")
-      println(s"coalescedTables.numRows ${rowcount}")
+//      println(s"coalescedTables.array : ${array.length}")
+//      println(s"coalescedTables.numCols : ${numCols}")
+//      println(s"coalescedTables.numRows ${rowcount}")
       val table : HomogenTable = OneDAL.makeHomogenTable(array, rowcount, numCols, device)
-      println(s"coalescedTables.table ${table.getcObejct()}")
+//      println(s"coalescedTables.table ${table.getcObejct()}")
 
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
     coalescedTables.count()
+    logger.info(s"coalescedTables took times: ${(System.nanoTime() - startTime) / 1000000000 }")
 
-    println("coalescedTables.getNumPartitions")
-    println(coalescedTables.getNumPartitions)
+//    println("coalescedTables.getNumPartitions")
+//    println(coalescedTables.getNumPartitions)
     coalescedTables
   }
 
