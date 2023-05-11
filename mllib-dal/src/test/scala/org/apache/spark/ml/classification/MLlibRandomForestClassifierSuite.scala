@@ -69,7 +69,6 @@ class MLlibRandomForestClassifierSuite extends MLTest with DefaultReadWriteTest 
     binaryDataset = generateSVMInput(0.01, Array[Double](-1.5, 1.0), 1000, seed).toDF()
 
   }
-
   
   /////////////////////////////////////////////////////////////////////////////
   // Tests calling train()
