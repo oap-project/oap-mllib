@@ -720,11 +720,16 @@ object OneDAL {
         var itIndex = 0;
         while(it.hasNext) {
           val vector = it.next()
+          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
+            logger.info(s"coalescedTables array index ${partitionIndex * vector.toArray.length + numCols * itIndex + i}")
+            logger.info(s"coalescedTables array value ${value}")
             array(partitionIndex * vector.toArray.length + numCols * itIndex + i) = value
           }
           itIndex += 1
         }
+        logger.info(s"coalescedTables array ${array.toList.toString()}")
+
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
     conversionRdd.count()
