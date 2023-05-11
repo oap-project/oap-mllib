@@ -55,9 +55,9 @@ object SparkUtils {
       throw new SparkException(
         "ExecutorInProcessCoalescePartitioner: No partitions or no locations for partitions found.")
     }
-    for ((k, v) <- partitionMapping) {
-      println(s"key: $k, value: $v")
-    }
+//    for ((k, v) <- partitionMapping) {
+//      println(s"key: $k, value: $v")
+//    }
     partitionMapping
   }
 

@@ -687,16 +687,16 @@ object OneDAL {
     val bcMapping = sc.broadcast(mapping)
 
     println(s"coalesceToHomogenTables mapping")
-    for((k, v) <- mapping) {
-      println(s"key: $k, value: $v")
-    }
+//    for((k, v) <- mapping) {
+//      println(s"key: $k, value: $v")
+//    }
     val rowcount = SparkUtils.computeEachExecutorDataSize(dataForConversion, mapping)
     val bcRowcount = sc.broadcast(rowcount)
 
     println(s"coalesceToHomogenTables rowcount")
-    for((k, v) <- rowcount) {
-      println(s"key: $k, value: $v")
-    }
+//    for((k, v) <- rowcount) {
+//      println(s"key: $k, value: $v")
+//    }
     logger.info(s"coalesceToHomogenTables merge table start")
     println(dataForConversion.getNumPartitions)
 
@@ -728,19 +728,25 @@ object OneDAL {
         var itIndex = 0;
         while(it.hasNext) {
           val vector = it.next()
-          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
+//          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
-            logger.info(s"coalescedTables array index ${startIndex + numCols * itIndex + i}")
-            logger.info(s"coalescedTables array value ${value}")
+//            logger.info(s"coalescedTables array index ${startIndex + numCols * itIndex + i}")
+//            logger.info(s"coalescedTables array value ${value}")
             array(startIndex + numCols * itIndex + i) = value
           }
           itIndex += 1
         }
-        logger.info(s"coalescedTables array ${array.toList.toString()}")
+//        logger.info(s"coalescedTables array ${array.toList.toString()}")
 
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
+    // Unpersist instances RDD
+    if (data.getStorageLevel != StorageLevel.NONE) {
+      data.unpersist()
+    }
     conversionRdd.count()
+
+
     val coalescedRdd = conversionRdd.coalesce(executorNum,
       partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
 
@@ -755,10 +761,7 @@ object OneDAL {
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
     coalescedTables.count()
-    // Unpersist instances RDD
-    if (data.getStorageLevel != StorageLevel.NONE) {
-      data.unpersist()
-    }
+
     println("coalescedTables.getNumPartitions")
     println(coalescedTables.getNumPartitions)
     coalescedTables
