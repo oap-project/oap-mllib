@@ -37,11 +37,6 @@ import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 
-class RandomForestClassificationModel private[mllib] (
-                           val uid: String,
-                         val _trees: Array[DecisionTreeClassificationModel],
-                         val numFeatures: Int,
-                         val numClasses: Int)
 class RandomForestClassifierDALImpl(val uid: String,
                                     val classCount: Int,
                                     val treeCount: Int,
@@ -61,7 +56,6 @@ class RandomForestClassifierDALImpl(val uid: String,
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
-    println(labeledPoints.rdd.getNumPartitions)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     // used run Random Forest unit test
@@ -79,7 +73,6 @@ class RandomForestClassifierDALImpl(val uid: String,
         "Please run on GPU device.")
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
-    val numFeatures = labeledPoints.select(featuresCol).head().size
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -116,12 +109,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         bootstrap,
         gpuIndices,
         result)
-      for ( (k, v) <- hashmap) {
-        logInfo(s"key: $k, value: $v")
-        for ( l <- v) {
-          logInfo(l.toString)
-        }
-      }
+
       val computeEndTime = System.nanoTime()
 
       val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9

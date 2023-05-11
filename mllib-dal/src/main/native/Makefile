@@ -91,13 +91,11 @@ CPP_SRCS += \
   ./CorrelationImpl.cpp \
   ./SummarizerImpl.cpp \
   ./DecisionForestClassifierImpl.cpp \
-  ./DecisionForestRegressorOneAPIImpl.cpp \
+  ./DecisionForestRegressorImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
-  ./oneapi/dal/RowAccessorImpl.cpp \
-  ./oneapi/dal/CSRAccessorImpl.cpp \
-  ./oneapi/dal/CSRTableImpl.cpp
+  ./oneapi/dal/RowAccessorImpl.cpp
 
 
 OBJS += \
@@ -110,13 +108,11 @@ OBJS += \
   ./CorrelationImpl.o \
   ./SummarizerImpl.o \
   ./DecisionForestClassifierImpl.o \
-  ./DecisionForestRegressorOneAPIImpl.o \
+  ./DecisionForestRegressorImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \
-  ./oneapi/dal/RowAccessorImpl.o \
-  ./oneapi/dal/CSRAccessorImpl.o \
-  ./oneapi/dal/CSRTableImpl.o
+  ./oneapi/dal/RowAccessorImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 

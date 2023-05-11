@@ -193,7 +193,7 @@ class RandomForestRegressor @Since("1.4.0") (@Since("1.4.0") override val uid: S
       getMaxBins,
       getBootstrap)
 
-    val (predictionNumericTable, treesMap) = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
+    val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
 
 
     val numFeatures = metadata.numFeatures

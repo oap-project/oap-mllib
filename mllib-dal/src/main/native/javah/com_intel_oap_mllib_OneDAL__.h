@@ -63,14 +63,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTabl
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble
   (JNIEnv *, jobject, jdoubleArray, jlongArray, jlongArray, jlong, jlong);
 
-/*
- * Class:     com_intel_oap_mllib_OneDAL__
- * Method:    cConvertCPPMapToHashMap
- * Signature: (J)Ljava/lang/Object;
- */
-JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cConvertCPPMapToHashMap
-  (JNIEnv *, jobject, jlong);
-
 #ifdef __cplusplus
 }
 #endif

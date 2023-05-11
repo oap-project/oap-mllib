@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ../../../conf/env.sh
+source ../../conf/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
 # The data file should be copied to $HDFS_ROOT before running examples

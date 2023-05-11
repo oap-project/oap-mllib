@@ -28,11 +28,6 @@ import org.apache.spark.sql.Dataset
 import java.util
 import scala.collection.JavaConversions._
 
-class RandomForestRegressorModel private[mllib] (
-                           val uid: String,
-                         val _trees: Array[DecisionTreeClassificationModel],
-                         val numFeatures: Int)
-
 class RandomForestRegressorDALImpl(val uid: String,
                                     val treeCount: Int,
                                     val featurePerNode: Int,
@@ -49,19 +44,23 @@ class RandomForestRegressorDALImpl(val uid: String,
 
   def train(labeledPoints: Dataset[_],
             labelCol: String,
-            featuresCol: String): (Matrix,
-                                   util.Map[Integer, util.ArrayList[LearningNode]]) = {
+            featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
     logInfo(s"RandomForestRegressorDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    val isuite = sparkContext.getConf.getBoolean("spark.oap.mllib.isuite", false)
-    val labeledPointsTables = if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-      OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
-        labelCol, featuresCol, executorNum, computeDevice)
+    // used run Random Forest unit test
+    val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
+    val labeledPointsTables = if (useDevice == "GPU") {
+      if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
+        OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
+          labelCol, featuresCol, executorNum, computeDevice)
+      } else {
+        throw new Exception("Oneapi didn't implement sparse dataset")
+      }
     } else {
-      OneDAL.rddLabeledPointToSparseCSRTables(labeledPoints,
-        labelCol, featuresCol, executorNum, computeDevice)
+      throw new Exception("Random Forset didn't implemente for CPU device, " +
+        "Please run on GPU device.")
     }
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
@@ -70,7 +69,7 @@ class RandomForestRegressorDALImpl(val uid: String,
       val (featureTabAddr, lableTabAddr) = tables.next()
 
       val gpuIndices = if (useDevice == "GPU") {
-        if (isuite) {
+        if (isTest) {
           Array(0)
         } else {
           val resources = TaskContext.get().resources()
@@ -98,12 +97,7 @@ class RandomForestRegressorDALImpl(val uid: String,
         bootstrap,
         gpuIndices,
         result)
-      for ( (k, v) <- hashmap) {
-        logInfo(s"key: $k, value: $v")
-        for ( l <- v) {
-          logInfo(l.toString)
-        }
-      }
+
       val computeEndTime = System.nanoTime()
 
       val durationCompute = (computeEndTime - computeStartTime).toDouble / 1E9
@@ -132,18 +126,8 @@ class RandomForestRegressorDALImpl(val uid: String,
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
-    val hashmap = results(0)._2
-    val myScalaMap = hashmap.mapValues(_.toSet)
-    for ( (k, v) <- myScalaMap) {
-      println(s"key: $k, value: $v")
-      for ( l <- v) {
-           println(l.toString)
-      }
-    }
-
-    (results(0)._1, results(0)._2)
+    results(0)._2
   }
-
 
   @native private[mllib] def cRFRegressorTrainDAL(featureTabAddr: Long,
                                              lableTabAddr: Long,
