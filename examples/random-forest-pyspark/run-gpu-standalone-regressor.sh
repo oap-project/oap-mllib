@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
 
-source ../../../conf/env.sh
+source ../../conf/env.sh
 
-# Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
+# CSV data is the same as in Spark example "ml/pca_example.py"
 # The data file should be copied to $HDFS_ROOT before running examples
 DATA_FILE=$HDFS_ROOT/data/sample_libsvm_data.txt
-
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
-APP_CLASS=org.apache.spark.examples.ml.RandomForestRegressorExample
 
 DEVICE=GPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
 WORKER_GPU_AMOUNT=4
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
+APP_PY=random_forest_regressor_example.py
 
-# Should run in standalone mode
+
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
@@ -36,7 +34,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
-    --class $APP_CLASS \
-    $APP_JAR $DATA_FILE \
-    2>&1 | tee RandomForestRegressor-$(date +%m%d_%H_%M_%S).log
-
+    $APP_PY DATA_FILE \
+    2>&1 | tee random_forest_regressor-$(date +%m%d_%H_%M_%S).log

@@ -257,8 +257,7 @@ jobject convertRFRJavaMap(
 static jobject doRFRegressorOneAPICompute(
     JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
     jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
-    jint minObservationsLeafNode,
-    jint maxTreeDepth, jlong seed, jint maxbins,
+    jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
     jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
@@ -340,10 +339,9 @@ JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
     jint executorNum, jint computeDeviceOrdinal, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode,
-    jint maxTreeDepth, jlong seed, jint maxbins,
-    jboolean bootstrap,
-    jintArray gpuIdxArray, jobject resultObj) {
+    jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
+    jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
+    jobject resultObj) {
     std::cout << "oneDAL (native): use DPC++ kernels " << std::endl;
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
