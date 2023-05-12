@@ -15,6 +15,7 @@ public class HomogenTableImpl implements HomogenTableIface {
     private long cObject;
     private TableMetadata metadata;
     private Common.ComputeDevice device;
+
     protected HomogenTableImpl(Common.ComputeDevice computeDevice) {
         super();
         this.device = computeDevice;

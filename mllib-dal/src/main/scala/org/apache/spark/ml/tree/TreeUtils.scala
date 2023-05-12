@@ -19,9 +19,10 @@
 package org.apache.spark.ml.tree
 
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}
+import scala.collection.mutable
 
 import org.apache.spark.ml.tree.impl.DecisionTreeMetadata
-import org.apache.spark.mllib.tree.impurity.GiniCalculator
+import org.apache.spark.mllib.tree.impurity.{Gini, GiniCalculator, ImpurityCalculator, Variance, VarianceCalculator}
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
 object TreeUtils {
@@ -57,7 +58,13 @@ object TreeUtils {
       val ln: LearningNodeDAL = nodes.get(i)
       i += 1
 
-      val impurityCalculator = new GiniCalculator(ln.probability, ln.sampleCount)
+      val impurityCalculator: ImpurityCalculator = metadata.impurity match {
+        case Gini => new GiniCalculator(ln.probability, ln.sampleCount)
+        case Variance => new VarianceCalculator(ln.probability, ln.sampleCount)
+        case _ => throw new IllegalArgumentException(s"Bad impurity parameter: " +
+          s"${metadata.impurity}")
+      }
+
       val impurityStats = new ImpurityStats(0, ln.impurity, impurityCalculator, null, null)
       val node = LearningNode.apply(0, ln.isLeaf, impurityStats)
       node.split = if (!ln.isLeaf) {
