@@ -22,6 +22,7 @@ import org.apache.spark.{Partition, SparkContext, SparkException, TaskContext}
 import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 import org.apache.spark.sql.SparkSession
 
+import scala.collection.immutable.Map
 import scala.collection.{breakOut, mutable}
 import scala.collection.mutable.ArrayBuffer
 
@@ -61,20 +62,21 @@ object SparkUtils {
     partitionMapping
   }
 
-  def computeEachExecutorDataSize(prev: RDD[_], mapping: mutable.HashMap[Int, String])
-  : Map[String, Int] = {
+  def computeEachExecutorDataSize(rowcountMapping: Map[Int, (Int, Int)],
+                                  mapping: mutable.HashMap[Int, String])
+  : mutable.HashMap[String, Int] = {
     println(s"computeEachExecutorDataSize")
-    // Get the partition size and create the array accordingly
-    val executorSize = prev.mapPartitionsWithIndex((partitionId, iter) => {
-      val rowcount = iter.length
-      Iterator((partitionId, rowcount))
-    }).map(iter => {
-      val value: String = mapping.get(iter._1).getOrElse(null)
-      val executorID = value.substring(0, value.lastIndexOf("_"))
-      println(s"computeEachExecutorDataSize value : ${value}, executorID : ${executorID}")
-      (executorID, iter._2)
-    }).reduceByKey(_ + _)
-    println(s"computeEachExecutorDataSize print rdd")
-    executorSize.collect().toMap
+    val executorDataSizeMapping = mutable.HashMap[String, Int]()
+    val mappedMap = rowcountMapping.map { case (key1, value1) =>
+      val value2 = mapping.getOrElse(key1, "default")
+      key1 -> (value1, value2)
+    }.foreach { case (key, (value1, value2)) =>
+      println(s"Key: $key, Value1: $value1, Value2: $value2")
+      val executorID = value2.substring(0, value2.lastIndexOf("_"))
+      var rowNum: Int = executorDataSizeMapping.get(executorID).getOrElse(0)
+      rowNum += value1._2
+      executorDataSizeMapping.put(executorID, rowNum)
+    }
+    executorDataSizeMapping
   }
 }

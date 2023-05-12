@@ -26,7 +26,7 @@ object ExecutorSharedArray {
 
   def createSharedArray(numCols: Int,
                      bcMapping: Broadcast[mutable.HashMap[Int, String]],
-                     bcRowcount: Broadcast[Map[String, Int]],
+                     bcRowcount: Broadcast[mutable.HashMap[String, Int]],
                      partitionId: Int): Array[Double] = {
 //    println(s"computeAndCreateArray merge table start")
     if (sharedArray == null) {
