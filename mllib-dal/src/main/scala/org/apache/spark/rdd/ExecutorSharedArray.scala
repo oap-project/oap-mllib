@@ -28,7 +28,6 @@ object ExecutorSharedArray {
                      bcMapping: Broadcast[mutable.HashMap[Int, String]],
                      bcRowcount: Broadcast[mutable.HashMap[String, Int]],
                      partitionId: Int): Array[Double] = {
-//    println(s"computeAndCreateArray merge table start")
     if (sharedArray == null) {
       synchronized {
         if (sharedArray == null) {
@@ -44,7 +43,6 @@ object ExecutorSharedArray {
         }
       }
     }
-//    println(s"computeAndCreateArray merge table end")
     sharedArray
   }
 }

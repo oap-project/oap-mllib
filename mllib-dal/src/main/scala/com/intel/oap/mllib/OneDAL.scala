@@ -686,58 +686,34 @@ object OneDAL {
     val mapping = SparkUtils.getMapping(dataForConversion)
     val bcMapping = sc.broadcast(mapping)
 
-//    println(s"coalesceToHomogenTables mapping")
-//    for((k, v) <- mapping) {
-//      println(s"key: $k, value: $v")
-//    }
     val rowcount = SparkUtils.computeEachExecutorDataSize(partitionDims, mapping)
     val bcRowcount = sc.broadcast(rowcount)
-
-    println(s"coalesceToHomogenTables rowcount")
-    for((k, v) <- rowcount) {
-      println(s"key: $k, value: $v")
-    }
-//    logger.info(s"coalesceToHomogenTables merge table start")
-//    println(dataForConversion.getNumPartitions)
 
     var startTime = System.nanoTime()
     val conversionRdd = dataForConversion.mapPartitionsWithIndex{
       (index: Int, it: Iterator[Vector]) =>
-//        logger.info(s"Partition index: $index")
-//        println(s"Partition index: $index")
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
-//        logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
-        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         // executor_host_executorId_rankId
         val preferredId = bcMapping.value(index)
-//        logger.info(s"coalescedTables preferredId ${preferredId}")
         val executorId = preferredId.substring(0, preferredId.lastIndexOf("_"))
-//        logger.info(s"coalescedTables executorId ${executorId}")
         val rowcount = bcRowcount.value(executorId)
-//        logger.info(s"coalescedTables rowcount ${rowcount}")
         val partitionIndex = preferredId.substring(preferredId.lastIndexOf("_") + 1).toInt
-//        logger.info(s"coalescedTables partitionIndex ${partitionIndex}")
         // compute each partition array start index
         var startIndex = 0
         for (i <- 0 until partitionIndex) {
           val partitionIndex = mapping.find(_._2 == (executorId + "_" + i)).map(_._1).getOrElse(0)
           startIndex += partitionDims(partitionIndex)._1 * partitionDims(partitionIndex)._2
         }
-//        logger.info(s"coalescedTables startIndex ${startIndex}")
         var itIndex = 0;
         while(it.hasNext) {
           val vector = it.next()
-//          logger.info(s"coalescedTables vector ${vector.toArray.toList.toString()}")
           for ((value, i) <- vector.toArray.zipWithIndex) {
-//            logger.info(s"coalescedTables array index ${startIndex + numCols * itIndex + i}")
-//            logger.info(s"coalescedTables array value ${value}")
             array(startIndex + numCols * itIndex + i) = value
           }
           itIndex += 1
         }
-//        logger.info(s"coalescedTables array ${array.toList.toString()}")
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
     conversionRdd.count()
@@ -745,16 +721,11 @@ object OneDAL {
       s" ${(System.nanoTime() - startTime) / 1e9 }")
 
     startTime = System.nanoTime()
-//    val coalescedRdd = conversionRdd.coalesce(executorNum)
-
     val coalescedTables = conversionRdd.coalesce(executorNum).mapPartitions{ partition =>
       val (array, numCols, rowcount) = partition.next()
-      println(s"coalescedTables.array : ${array.length}")
-      //      println(s"coalescedTables.numCols : ${numCols}")
-//      println(s"coalescedTables.numRows ${rowcount}")
-
+      var startTime = System.nanoTime()
       val table : HomogenTable = OneDAL.makeHomogenTable(array, rowcount, numCols, device)
-//      println(s"coalescedTables.table ${table.getcObejct()}")
+      println(s"makeHomogenTable took times: ${(System.nanoTime() - startTime) / 1e9 }")
 
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
@@ -764,8 +735,6 @@ object OneDAL {
     if (data.getStorageLevel != StorageLevel.NONE) {
       data.unpersist()
     }
-//    println("coalescedTables.getNumPartitions")
-//    println(coalescedTables.getNumPartitions)
     coalescedTables
   }
 
