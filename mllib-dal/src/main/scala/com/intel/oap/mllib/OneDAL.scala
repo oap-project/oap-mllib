@@ -740,7 +740,7 @@ object OneDAL {
 //        logger.info(s"coalescedTables array ${array.toList.toString()}")
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
-//    conversionRdd.count()
+    conversionRdd.count()
     logger.info(s"conversionRdd copy partition data to continuous array took times:" +
       s" ${(System.nanoTime() - startTime) / 1e9 }")
 
