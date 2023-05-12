@@ -740,15 +740,14 @@ object OneDAL {
 //        logger.info(s"coalescedTables array ${array.toList.toString()}")
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
-    conversionRdd.count()
+//    conversionRdd.count()
     logger.info(s"conversionRdd copy partition data to continuous array took times:" +
       s" ${(System.nanoTime() - startTime) / 1e9 }")
 
     startTime = System.nanoTime()
-    val coalescedRdd = conversionRdd.coalesce(executorNum,
-      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+//    val coalescedRdd = conversionRdd.coalesce(executorNum)
 
-    val coalescedTables = coalescedRdd.mapPartitions{ partition =>
+    val coalescedTables = conversionRdd.coalesce(executorNum).mapPartitions{ partition =>
       val (array, numCols, rowcount) = partition.next()
       println(s"coalescedTables.array : ${array.length}")
       //      println(s"coalescedTables.numCols : ${numCols}")
