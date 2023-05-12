@@ -78,6 +78,7 @@ shift "$((OPTIND-1))"
 SUITE=$*
 
 print_usage
+echo $SUITE
 
 if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_PROFILE) ]]; then
   echo
@@ -160,21 +161,22 @@ else
   SUBSUITE=$(echo $SUITE | tr "," "\n")
   for suite in ${SUBSUITE[*]}
   do
-      if [[ $suite == *"com.intel.oap.mllib"* ]]; then
-        echo
-        echo Testing $suite ...
-        echo
-        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
-      elif [[ $suite == *"org.apache.spark.ml"* ]]; then
-         echo
-          echo Testing $suite ...
-          echo
-          mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DwildcardSuites=$suite test
-      else
-        echo
-        echo Testing java $suite ...
-        echo
-        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
-      fi
+    echo $suite
+    if [[ $suite == *"com.intel.oap.mllib"* ]]; then
+      echo
+      echo Testing $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
+    elif [[ $suite == *"org.apache.spark.ml"* ]]; then
+      echo
+      echo Testing $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DcomputeDevice=$DEVICE_OPT -DfailIfNoTests=false  -DwildcardSuites=$suite test
+    else
+      echo
+      echo Testing java $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
+    fi
   done
 fi

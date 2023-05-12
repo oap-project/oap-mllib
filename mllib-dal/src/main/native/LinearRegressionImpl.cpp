@@ -230,7 +230,7 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
-    const auto linear_regression_desc = linear_regression_gpu::descriptor<>();
+    const auto linear_regression_desc = linear_regression_gpu::descriptor<>(false);
 
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
