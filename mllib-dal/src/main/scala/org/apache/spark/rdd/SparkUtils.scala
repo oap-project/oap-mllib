@@ -74,7 +74,7 @@ object SparkUtils {
       println(s"Key: $key, Value1: $value1, Value2: $value2")
       val executorID = value2.substring(0, value2.lastIndexOf("_"))
       var rowNum: Int = executorDataSizeMapping.get(executorID).getOrElse(0)
-      rowNum += value1._2
+      rowNum += value1._1
       executorDataSizeMapping.put(executorID, rowNum)
     }
     executorDataSizeMapping
