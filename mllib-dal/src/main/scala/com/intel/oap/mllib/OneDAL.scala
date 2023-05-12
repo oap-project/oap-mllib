@@ -670,7 +670,7 @@ object OneDAL {
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
-      val reData = data.repartition(executorNum * 2).setName("Repartitioned for conversion")
+      val reData = data.repartition(executorNum).setName("Repartitioned for conversion")
       reData.cache()
       reData.count()
       reData
@@ -686,8 +686,17 @@ object OneDAL {
     val mapping = SparkUtils.getMapping(dataForConversion)
     val bcMapping = sc.broadcast(mapping)
 
+    println(s"coalesceToHomogenTables mapping")
+    for((k, v) <- mapping) {
+      println(s"key: $k, value: $v")
+    }
     val rowcount = SparkUtils.computeEachExecutorDataSize(partitionDims, mapping)
     val bcRowcount = sc.broadcast(rowcount)
+
+    println(s"coalesceToHomogenTables rowcount")
+    for((k, v) <- rowcount) {
+      println(s"key: $k, value: $v")
+    }
 
     var startTime = System.nanoTime()
     val conversionRdd = dataForConversion.mapPartitionsWithIndex{
@@ -695,11 +704,16 @@ object OneDAL {
         val numRows: Int = partitionDims(index)._1
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
+        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         // executor_host_executorId_rankId
         val preferredId = bcMapping.value(index)
+        println(s"coalescedTables preferredId ${preferredId}")
         val executorId = preferredId.substring(0, preferredId.lastIndexOf("_"))
+        println(s"coalescedTables executorId ${executorId}")
         val rowcount = bcRowcount.value(executorId)
+        println(s"coalescedTables rowcount ${rowcount}")
         val partitionIndex = preferredId.substring(preferredId.lastIndexOf("_") + 1).toInt
+        println(s"coalescedTables partitionIndex ${partitionIndex}")
         // compute each partition array start index
         var startIndex = 0
         for (i <- 0 until partitionIndex) {
