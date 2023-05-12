@@ -334,7 +334,8 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
         return hashmapObj;
     }
     default: {
-        std::cout << "no supported device!" << std::endl;
+        std::cout << "RandomForest (native): The compute device "
+                  << "is not supported!" << std::endl;
         exit(-1);
     }
     }
