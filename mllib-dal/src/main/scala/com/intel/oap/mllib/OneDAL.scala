@@ -751,20 +751,8 @@ object OneDAL {
     val coalescedTables = coalescedRdd.mapPartitions{ partition =>
       val (array, numCols, rowcount) = partition.next()
       println(s"coalescedTables.array : ${array.length}")
-      println(s"coalescedTables.array string : ${array.toList.toString()}")
-
       //      println(s"coalescedTables.numCols : ${numCols}")
 //      println(s"coalescedTables.numRows ${rowcount}")
-      var i = 0
-      var str = " "
-      for (v <- array ) {
-        if (i <= 100 && i < array.length) {
-          str += v.toString + " "
-          i += 1
-        }
-      }
-
-      println(s"coalescedTables str ${str}")
 
       val table : HomogenTable = OneDAL.makeHomogenTable(array, rowcount, numCols, device)
 //      println(s"coalescedTables.table ${table.getcObejct()}")
