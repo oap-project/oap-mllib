@@ -74,7 +74,6 @@ object SparkUtils {
       println(s"computeEachExecutorDataSize value : ${value}, executorID : ${executorID}")
       (executorID, iter._2)
     }).reduceByKey(_ + _)
-    executorSize.foreach(println)
     println(s"computeEachExecutorDataSize print rdd")
     executorSize.collect().toMap
   }

@@ -709,7 +709,7 @@ object OneDAL {
         val numCols: Int  = partitionDims(index)._2
         val array: Array[Double] = ExecutorSharedArray.createSharedArray(numCols, bcMapping, bcRowcount, index)
 //        logger.info(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
-//        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
+        println(s"Partition index: $index, numCols: $numCols, numRows: $numRows")
         // executor_host_executorId_rankId
         val preferredId = bcMapping.value(index)
 //        logger.info(s"coalescedTables preferredId ${preferredId}")
@@ -740,10 +740,6 @@ object OneDAL {
 //        logger.info(s"coalescedTables array ${array.toList.toString()}")
         Iterator(Tuple3(array, numCols, rowcount))
     }.setName("conversionRdd").cache()
-    // Unpersist instances RDD
-    if (data.getStorageLevel != StorageLevel.NONE) {
-      data.unpersist()
-    }
     conversionRdd.count()
     logger.info(s"conversionRdd copy partition data to continuous array took times:" +
       s" ${(System.nanoTime() - startTime) / 1e9 }")
@@ -763,7 +759,7 @@ object OneDAL {
       var str = " "
       for (v <- array ) {
         if (i <= 100 && i < array.length) {
-          str= v.toString + " "
+          str += v.toString + " "
           i += 1
         }
       }
@@ -777,7 +773,10 @@ object OneDAL {
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     logger.info(s"coalescedTables took times: ${(System.nanoTime() - startTime) / 1e9 }")
-
+    // Unpersist instances RDD
+    if (data.getStorageLevel != StorageLevel.NONE) {
+      data.unpersist()
+    }
 //    println("coalescedTables.getNumPartitions")
 //    println(coalescedTables.getNumPartitions)
     coalescedTables
