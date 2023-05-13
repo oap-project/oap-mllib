@@ -70,8 +70,12 @@ object SparkUtils {
     }.foreach { case (key, (value1, value2)) =>
       println(s"Key: $key, Value1: $value1, Value2: $value2")
       val executorID = value2.substring(0, value2.lastIndexOf("_"))
+      println(s"executorID: $executorID")
       var rowNum: Int = executorDataSizeMapping.get(executorID).getOrElse(0)
+      println(s"rowNum: $rowNum")
+      println(s"value1._1: $value1._1")
       rowNum += value1._1
+      println(s"rowNum: $rowNum")
       executorDataSizeMapping.put(executorID, rowNum)
     }
     executorDataSizeMapping
