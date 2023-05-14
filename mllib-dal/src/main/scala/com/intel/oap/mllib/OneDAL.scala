@@ -729,7 +729,8 @@ object OneDAL {
           itIndex += 1
         }
         Iterator(Tuple3(array, numCols, rowcount))
-    }
+    }.setName("conversionRdd").cache()
+    conversionRdd.count()
     logger.info(s"conversionRdd copy partition data to continuous array took times:" +
       s" ${(System.nanoTime() - startTime) / 1e9 }")
 
