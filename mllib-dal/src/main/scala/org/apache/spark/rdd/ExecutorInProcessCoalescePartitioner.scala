@@ -42,8 +42,9 @@ class ExecutorInProcessCoalescePartitioner
     })
     map.foreach(x => {
       val pg = new PartitionGroup(Some(x._1))
-      val list = x._2.toList.sortWith(_.index < _.index);
-      list.foreach(part => pg.partitions += part)
+      if (x._2.toList.size > 1) {
+        pg.partitions += x._2.toList(0)
+      }
       groupArr += pg
     })
     if (groupArr.length == 0) {

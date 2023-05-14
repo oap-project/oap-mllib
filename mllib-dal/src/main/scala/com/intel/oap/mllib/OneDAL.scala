@@ -735,7 +735,8 @@ object OneDAL {
       s" ${(System.nanoTime() - startTime) / 1e9 }")
 
     startTime = System.nanoTime()
-    val coalescedTables = conversionRdd.coalesce(executorNum).mapPartitions{ partition =>
+    val coalescedTables = conversionRdd.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner())).mapPartitions{ partition =>
       val (array, numCols, rowcount) = partition.next()
       var startTime = System.nanoTime()
       val table : HomogenTable = OneDAL.makeHomogenTable(array, rowcount, numCols, device)
