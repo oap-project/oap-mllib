@@ -73,7 +73,7 @@ object SparkUtils {
       println(s"executorID: $executorID")
       var rowNum: Int = executorDataSizeMapping.get(executorID).getOrElse(0)
       println(s"rowNum: $rowNum")
-      println(s"value1._1: $value1._1")
+      println(s"value1._1: ${value1._1}")
       rowNum += value1._1
       println(s"rowNum: $rowNum")
       executorDataSizeMapping.put(executorID, rowNum)
