@@ -21,8 +21,6 @@ import scala.collection.mutable
 
 object ExecutorSharedArray {
   @transient private var sharedArray: Array[Double] = _
-  @transient private var rowcount: Int = _
-  @transient private var numcols: Int = _
 
   def createSharedArray(numCols: Int,
                      bcMapping: Broadcast[mutable.HashMap[Int, String]],
@@ -35,11 +33,10 @@ object ExecutorSharedArray {
           val executorId: String = bcMapping.value(partitionId)
           val id = executorId.substring(0, executorId.lastIndexOf("_"))
           println(s"computeAndCreateArray @transient lazy val executorId: ${executorId}")
-          rowcount = bcRowcount.value(id)
-          numcols = numCols
+          val rowcount = bcRowcount.value(id)
           println(s"computeAndCreateArray @transient lazy val rowcount: ${rowcount}")
-          println(s"computeAndCreateArray @transient lazy val array size : ${numcols * rowcount}")
-          sharedArray = new Array[Double](numcols * rowcount)
+          println(s"computeAndCreateArray @transient lazy val array size : ${numCols * rowcount}")
+          sharedArray = new Array[Double](numCols * rowcount)
         }
       }
     }

@@ -16,13 +16,13 @@
 
 package org.apache.spark.rdd
 
+import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
+import org.apache.spark.{Partition, SparkException}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-import org.apache.spark.{Partition, SparkException}
-import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
-
-class ExecutorInProcessCoalescePartitioner
+class ExecutorInProcessCoalescePartitionerV2
   extends PartitionCoalescer with Serializable {
 
   def coalesce(maxPartitions: Int, prev: RDD[_]): Array[PartitionGroup] = {
@@ -42,8 +42,14 @@ class ExecutorInProcessCoalescePartitioner
     })
     map.foreach(x => {
       val pg = new PartitionGroup(Some(x._1))
-      val list = x._2.toList.sortWith(_.index < _.index);
-      list.foreach(part => pg.partitions += part)
+      if (x._2.toList.size > 1) {
+        println(s"ExecutorInProcessCoalescePartitioner x._2.toList(0) ${x._2.toList(0)}")
+        println(s"ExecutorInProcessCoalescePartitioner x._2.toList(0) " +
+          s"${x._2.toList(0).getClass.getName}")
+        pg.partitions += x._2.toList(0)
+        println(s"ExecutorInProcessCoalescePartitioner partitions ${pg.partitions.toList}")
+
+      }
       groupArr += pg
     })
     if (groupArr.length == 0) {
