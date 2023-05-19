@@ -4,20 +4,20 @@ source ../../conf/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_linear_regression_data.txt) and put in examples/data
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=$HDFS_ROOT/data/sample_linear_regression_data.txt
+DATA_FILE=/home/kunpengj/data/LinearRegression/YearPredictionMSD
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.LinearRegressionExample
 
 DEVICE=GPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
-WORKER_GPU_AMOUNT=4
+WORKER_GPU_AMOUNT=1
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
 
 # Should run in standalone mode
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
-    --num-executors $SPARK_NUM_EXECUTORS \
+    --num-executors 1 \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \
     --driver-memory $SPARK_DRIVER_MEMORY \
@@ -27,7 +27,9 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.sql.shuffle.partitions=$SPARK_DEFAULT_PARALLELISM" \
     --conf "spark.driver.extraClassPath=$SPARK_DRIVER_CLASSPATH" \
     --conf "spark.executor.extraClassPath=$SPARK_EXECUTOR_CLASSPATH" \
-    --conf "spark.oap.mllib.device=$DEVICE" \
+    --conf "spark.oap.mllib.enabled=true" \
+    --conf "spark.oap.mllib.device=GPU" \
+    --conf "spark.oap.mllib.isTest=false" \
     --conf "spark.worker.resourcesFile=$RESOURCE_FILE" \
     --conf "spark.worker.resource.gpu.amount=$WORKER_GPU_AMOUNT" \
     --conf "spark.executor.resource.gpu.amount=$EXECUTOR_GPU_AMOUNT" \

@@ -82,9 +82,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
           OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         } else {
-          val msg = s"OAPMLlib: Sparse table is not supported for gpu now."
-          //todo sparse table is not supported
-          
+          val msg = s"OAPMLlib: Sparse table is not supported for GPU now."
           logError(msg)
           throw new SparkException(msg)
         }
@@ -94,6 +92,13 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       } else {
         OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
       }
+    }
+
+    //OAP-MLlib: Only normal linear regression is supported for GPU currently
+    if (useDevice == "GPU" && regParam != 0){
+      val msg = s"OAPMLlib: Only normal linear regression is supported for GPU now."
+      logError(msg)
+      throw new SparkException(msg)
     }
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
@@ -116,6 +121,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val cbeta = cLinearRegressionTrainDAL(
           featureTabAddr,
           lableTabAddr,
+          fitIntercept,
           regParam,
           elasticNetParam,
           executorNum,
@@ -155,6 +161,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   // Single entry to call Linear Regression DAL backend with parameters
   @native private def cLinearRegressionTrainDAL(data: Long,
                                   label: Long,
+                                  fitIntercept: Boolean,
                                   regParam: Double,
                                   elasticNetParam: Double,
                                   executorNum: Int,

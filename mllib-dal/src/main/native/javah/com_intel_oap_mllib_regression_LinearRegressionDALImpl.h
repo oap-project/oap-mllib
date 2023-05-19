@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     com_intel_oap_mllib_regression_LinearRegressionDALImpl
  * Method:    cLinearRegressionTrainDAL
- * Signature: (JJDDIII[ILcom/intel/oap/mllib/regression/LiRResult;)J
+ * Signature: (JJZDDIII[ILcom/intel/oap/mllib/regression/LiRResult;)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL
-  (JNIEnv *, jobject, jlong, jlong, jdouble, jdouble, jint, jint, jint, jintArray, jobject);
+  (JNIEnv *, jobject, jlong, jlong, jboolean, jdouble, jdouble, jint, jint, jint, jintArray, jobject);
 
 #ifdef __cplusplus
 }

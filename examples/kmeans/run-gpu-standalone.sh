@@ -17,7 +17,7 @@ TASK_GPU_AMOUNT=1
 
 # Should run in standalone mode
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
-    --num-executors $SPARK_NUM_EXECUTORS \
+    --num-executors 1 \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \
     --driver-memory $SPARK_DRIVER_MEMORY \

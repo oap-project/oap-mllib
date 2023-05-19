@@ -45,6 +45,7 @@ static NumericTablePtr linear_regression_compute(size_t rankId,
                                                  ccl::communicator &comm,
                                                  const NumericTablePtr &pData,
                                                  const NumericTablePtr &pLabel,
+						 bool fitIntercept,
                                                  size_t nBlocks) {
     using daal::byte;
 
@@ -54,6 +55,7 @@ static NumericTablePtr linear_regression_compute(size_t rankId,
     localAlgorithm.input.set(linear_regression_cpu::training::data, pData);
     localAlgorithm.input.set(
         linear_regression_cpu::training::dependentVariables, pLabel);
+    localAlgorithm.parameter.interceptFlag = fitIntercept;
 
     /* Train the multiple linear regression model on local nodes */
     localAlgorithm.compute();
@@ -107,6 +109,7 @@ static NumericTablePtr linear_regression_compute(size_t rankId,
 
         /* Merge and finalizeCompute the multiple linear regression model on the
          * master node */
+	masterAlgorithm.parameter.interceptFlag = fitIntercept;
         masterAlgorithm.compute();
         masterAlgorithm.finalizeCompute();
 
@@ -126,16 +129,19 @@ static NumericTablePtr linear_regression_compute(size_t rankId,
 }
 
 static NumericTablePtr ridge_regression_compute(
-    size_t rankId, ccl::communicator &comm, const NumericTablePtr &pData,
-    const NumericTablePtr &pLabel, double regParam, size_t nBlocks) {
+    size_t rankId, ccl::communicator &comm,
+    const NumericTablePtr &pData,
+    const NumericTablePtr &pLabel, bool fitIntercept, double regParam, size_t nBlocks) {
 
     using daal::byte;
 
+    std::cout << "KP: call ridge_regression: " << regParam << std::endl;
     NumericTablePtr ridgeParams(new HomogenNumericTable<double>(
         1, 1, NumericTable::doAllocate, regParam));
 
     ridge_regression_cpu::training::Distributed<step1Local> localAlgorithm;
     localAlgorithm.parameter.ridgeParameters = ridgeParams;
+    localAlgorithm.parameter.interceptFlag = fitIntercept;
 
     /* Pass a training data set and dependent values to the algorithm */
     localAlgorithm.input.set(ridge_regression_cpu::training::data, pData);
@@ -195,6 +201,7 @@ static NumericTablePtr ridge_regression_compute(
 
         /* Merge and finalizeCompute the multiple ridge regression model on the
          * master node */
+	masterAlgorithm.parameter.interceptFlag = fitIntercept;
         masterAlgorithm.compute();
         masterAlgorithm.finalizeCompute();
 
@@ -215,11 +222,12 @@ static NumericTablePtr ridge_regression_compute(
 #ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
                                ccl::communicator &cclComm, sycl::queue &queue,
-                               jlong pData, jlong pLabel, jint executorNum,
+                               jlong pData, jlong pLabel, jboolean jfitIntercept, jint executorNum,
                                jobject resultObj) {
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
+    bool fitIntercept = bool(jfitIntercept);
 
     int size = cclComm.size();
     ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
@@ -230,7 +238,7 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
-    const auto linear_regression_desc = linear_regression_gpu::descriptor<>(false);
+    const auto linear_regression_desc = linear_regression_gpu::descriptor<>(fitIntercept);
 
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
@@ -248,12 +256,11 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
 /*
  * Class:     com_intel_oap_mllib_regression_LinearRegressionDALImpl
  * Method:    cLinearRegressionTrainDAL
- * Signature:
- * (JJDDIIIILjava/lang/String;Lcom/intel/oap/mllib/regression/LiRResult;)J
+ * Signature: (JJZDDIII[ILcom/intel/oap/mllib/regression/LiRResult;)J
  */
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
-    JNIEnv *env, jobject obj, jlong data, jlong label, jdouble regParam,
+    JNIEnv *env, jobject obj, jlong data, jlong label, jboolean fitIntercept, jdouble regParam,
     jdouble elasticNetParam, jint executorNum, jint executorCores,
     jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
 
@@ -285,7 +292,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         jlong pDatagpu = (jlong)data;
         jlong pLabelgpu = (jlong)label;
         resultptr = doLROneAPICompute(env, rankId, cclComm, queue, pDatagpu,
-                                      pLabelgpu, executorNum, resultObj);
+                                      pLabelgpu, fitIntercept, executorNum, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 #endif
     } else {
@@ -301,10 +308,10 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
              << endl;
         if (regParam == 0) {
             resultTable = linear_regression_compute(rankId, cclComm, pData,
-                                                    pLabel, executorNum);
+                                                    pLabel, fitIntercept, executorNum);
         } else {
             resultTable = ridge_regression_compute(
-                rankId, cclComm, pData, pLabel, regParam, executorNum);
+                rankId, cclComm, pData, pLabel, fitIntercept, regParam, executorNum);
         }
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
