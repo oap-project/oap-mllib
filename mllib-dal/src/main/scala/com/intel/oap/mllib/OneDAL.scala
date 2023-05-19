@@ -678,17 +678,14 @@ object OneDAL {
         partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
       .setName("coalescedRdd").cache()
 
-    val start = System.nanoTime()
     // convert RDD to HomogenTable
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-      val startOther = System.nanoTime()
       val list = it.toList
       val subRowCount: Int = list.size / numberCores
       val futureList: ListBuffer[Future[Array[Double]]] = new ListBuffer[Future[Array[Double]]]()
       val numRows = list.size
       val numCols = list(0).toArray.size
       val targetArray = new Array[Double](numRows * numCols)
-      val startCopy = System.nanoTime()
       for ( i <- 0 until  numberCores) {
         val f = Future {
           val iter = list.iterator
@@ -708,7 +705,6 @@ object OneDAL {
       val result = Future.sequence(futureList)
       Await.result(result, Duration.Inf)
       }
-      val startMake = System.nanoTime()
       val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArray,
         device)
 
