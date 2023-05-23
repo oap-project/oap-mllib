@@ -4,12 +4,12 @@ source ../../conf/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_linear_regression_data.txt) and put in examples/data
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=/home/kunpengj/data/LinearRegression/YearPredictionMSD
+DATA_FILE=/home/kunpengj/data/LinearRegression/yearPredictionMSD/YearPredictionMSDraw
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.LinearRegressionExample
 
-DEVICE=GPU
+DEVICE=CPU
 RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
 WORKER_GPU_AMOUNT=1
 EXECUTOR_GPU_AMOUNT=1
