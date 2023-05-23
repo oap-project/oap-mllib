@@ -659,14 +659,13 @@ object OneDAL {
   def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
     logger.info(s"Processing partitions with $executorNum executors")
-    val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 0)
+    val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
-      val reData = data.repartition(executorNum).setName("Repartitioned for conversion")
-      reData.cache()
-      reData.count()
+      val reData = data.repartition(executorNum).setName("RepartitionedRDD")
+      reData.cache().count()
       reData
     } else {
       data

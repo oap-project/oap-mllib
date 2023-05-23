@@ -51,3 +51,9 @@ void sparceFileReadError() {
     std::cout << "Incorrect format of file" << std::endl;
     exit(fileError);
 }
+
+void deviceError() {
+    std::cout << "Error: no supported device, please select HOST/CPU/GPU"
+              << std::endl;
+    exit(-1);
+}

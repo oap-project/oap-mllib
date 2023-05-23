@@ -57,6 +57,10 @@ JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
         static_cast<HomogenNumericTable<double> *>(
             ((SerializationIfacePtr *)numTableAddr)->get());
     jdouble *values = (jdouble *)env->GetPrimitiveArrayCritical(batch, 0);
+    if (values == NULL) {
+        std::cout << "Error: unable to obtain critical array" << std::endl;
+        exit(-1);
+    }
     std::memcpy((*nt)[curRows], values, numRows * numCols * sizeof(double));
     env->ReleasePrimitiveArrayCritical(batch, values, JNI_ABORT);
 }
