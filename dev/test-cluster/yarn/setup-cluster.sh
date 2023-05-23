@@ -40,6 +40,7 @@ cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ../log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
+cp ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/yarn/spark-*-yarn-shuffle.jar ~/opt/hadoop-$HADOOP_VERSION/share/hadoop/yarn/lib/
 
 echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
 echo $HOST_IP > $SPARK_HOME/conf/slaves
