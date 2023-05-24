@@ -58,6 +58,14 @@ $HADOOP_HOME/bin/hdfs namenode -format
 $HADOOP_HOME/sbin/start-dfs.sh
 $HADOOP_HOME/sbin/start-yarn.sh
 
+jps
+free -g
+df -h
+yarn application -list
+ls -ls $HADOOP_HOME/logs/
+cat $HADOOP_HOME/logs/hadoop-*-resourcemanager-*.log
+cat $HADOOP_HOME/logs/hadoop-*-nodemanager-*.log
+
 hadoop fs -ls /
 yarn node -list
 
