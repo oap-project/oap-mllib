@@ -33,7 +33,7 @@
 
 	<property>
 		<name>yarn.nodemanager.resource.memory-mb</name>
-		<value>7168</value>
+		<value>3072</value>
 	</property>
 	<property>
 		<name>yarn.nodemanager.resource.cpu-vcores</name>
@@ -49,11 +49,11 @@
 	</property>
 	<property>
 		<name>yarn.scheduler.minimum-allocation-mb</name>
-		<value>1024</value>
+		<value>256</value>
 	</property>
 	<property>
 		<name>yarn.scheduler.maximum-allocation-mb</name>
-		<value>7168</value>
+		<value>3072</value>
 	</property>
 	<property>
 		<name>yarn.scheduler.minimum-allocation-vcores</name>
@@ -65,6 +65,6 @@
 	</property>
 	<property>
 		<name>yarn.nodemanager.env-whitelist</name>
-		<value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,HADOOP_YARN_HOME,LD_LIBRARY_PATH</value>
+		<value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,HADOOP_YARN_HOME,LD_LIBRARY_PATH,FI_TCP_IFACE,CMPLR_ROOT,DAALROOT,CCL_ROOT</value>
 	</property>
 </configuration>
