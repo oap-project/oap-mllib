@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     com_intel_oneapi_dal_table_SimpleMetadataImpl
- * Method:    cGetDataType
- * Signature: (JI)I
- */
-JNIEXPORT jint JNICALL Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType
-  (JNIEnv *, jobject, jlong, jint);
-
-/*
- * Class:     com_intel_oneapi_dal_table_SimpleMetadataImpl
  * Method:    cGetFeatureCount
  * Signature: (J)J
  */
@@ -29,6 +21,14 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetF
  * Signature: (JI)I
  */
 JNIEXPORT jint JNICALL Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureType
+  (JNIEnv *, jobject, jlong, jint);
+
+/*
+ * Class:     com_intel_oneapi_dal_table_SimpleMetadataImpl
+ * Method:    cGetDataType
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType
   (JNIEnv *, jobject, jlong, jint);
 
 #ifdef __cplusplus

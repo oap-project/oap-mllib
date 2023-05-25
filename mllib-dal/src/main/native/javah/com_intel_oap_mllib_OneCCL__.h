@@ -49,6 +49,14 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init
 
 /*
  * Class:     com_intel_oap_mllib_OneCCL__
+ * Method:    c_initDpcpp
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_intel_oap_mllib_OneCCL__
  * Method:    c_cleanup
  * Signature: ()V
  */
