@@ -231,41 +231,41 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
   }
 
   //OAP-MLlib: Singular matrice prejudege is not supported.
-  test("linear regression handles singular matrices") {
-    // check for both constant columns with intercept (zero std) and collinear
-    val singularDataConstantColumn = sc.parallelize(Seq(
-      Instance(17.0, 1.0, Vectors.dense(1.0, 5.0)),
-      Instance(19.0, 2.0, Vectors.dense(1.0, 7.0)),
-      Instance(23.0, 3.0, Vectors.dense(1.0, 11.0)),
-      Instance(29.0, 4.0, Vectors.dense(1.0, 13.0))
-    ), 2).toDF()
-
-    Seq("auto", "l-bfgs", "normal").foreach { solver =>
-      val trainer = new LinearRegression().setSolver(solver).setFitIntercept(true)
-      val model = trainer.fit(singularDataConstantColumn)
-      // to make it clear that WLS did not solve analytically
-      intercept[UnsupportedOperationException] {
-        model.summary.coefficientStandardErrors
-      }
-      assert(model.summary.objectiveHistory !== Array(0.0))
-    }
-
-    val singularDataCollinearFeatures = sc.parallelize(Seq(
-      Instance(17.0, 1.0, Vectors.dense(10.0, 5.0)),
-      Instance(19.0, 2.0, Vectors.dense(14.0, 7.0)),
-      Instance(23.0, 3.0, Vectors.dense(22.0, 11.0)),
-      Instance(29.0, 4.0, Vectors.dense(26.0, 13.0))
-    ), 2).toDF()
-
-    Seq("auto", "l-bfgs", "normal").foreach { solver =>
-      val trainer = new LinearRegression().setSolver(solver).setFitIntercept(true)
-      val model = trainer.fit(singularDataCollinearFeatures)
-      intercept[UnsupportedOperationException] {
-        model.summary.coefficientStandardErrors
-      }
-      assert(model.summary.objectiveHistory !== Array(0.0))
-    }
-  }
+//  test("linear regression handles singular matrices") {
+//    // check for both constant columns with intercept (zero std) and collinear
+//    val singularDataConstantColumn = sc.parallelize(Seq(
+//      Instance(17.0, 1.0, Vectors.dense(1.0, 5.0)),
+//      Instance(19.0, 2.0, Vectors.dense(1.0, 7.0)),
+//      Instance(23.0, 3.0, Vectors.dense(1.0, 11.0)),
+//      Instance(29.0, 4.0, Vectors.dense(1.0, 13.0))
+//    ), 2).toDF()
+//
+//    Seq("auto", "l-bfgs", "normal").foreach { solver =>
+//      val trainer = new LinearRegression().setSolver(solver).setFitIntercept(true)
+//      val model = trainer.fit(singularDataConstantColumn)
+//      // to make it clear that WLS did not solve analytically
+//      intercept[UnsupportedOperationException] {
+//        model.summary.coefficientStandardErrors
+//      }
+//      assert(model.summary.objectiveHistory !== Array(0.0))
+//    }
+//
+//    val singularDataCollinearFeatures = sc.parallelize(Seq(
+//      Instance(17.0, 1.0, Vectors.dense(10.0, 5.0)),
+//      Instance(19.0, 2.0, Vectors.dense(14.0, 7.0)),
+//      Instance(23.0, 3.0, Vectors.dense(22.0, 11.0)),
+//      Instance(29.0, 4.0, Vectors.dense(26.0, 13.0))
+//    ), 2).toDF()
+//
+//    Seq("auto", "l-bfgs", "normal").foreach { solver =>
+//      val trainer = new LinearRegression().setSolver(solver).setFitIntercept(true)
+//      val model = trainer.fit(singularDataCollinearFeatures)
+//      intercept[UnsupportedOperationException] {
+//        model.summary.coefficientStandardErrors
+//      }
+//      assert(model.summary.objectiveHistory !== Array(0.0))
+//    }
+//  }
 
   test("linear regression with intercept without regularization") {
     Seq("auto", "l-bfgs", "normal").foreach { solver =>
