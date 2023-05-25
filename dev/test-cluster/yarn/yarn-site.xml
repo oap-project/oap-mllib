@@ -63,5 +63,8 @@
 		<name>yarn.scheduler.maximum-allocation-vcores</name>
 		<value>2</value>
 	</property>
-
+	<property>
+		<name>yarn.nodemanager.env-whitelist</name>
+		<value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,HADOOP_YARN_HOME,LD_LIBRARY_PATH</value>
+	</property>
 </configuration>
