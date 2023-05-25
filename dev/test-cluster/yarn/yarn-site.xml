@@ -44,8 +44,12 @@
 		<value>false</value>
 	</property>
 	<property>
+		<name>yarn.nodemanager.pmem-check-enabled</name>
+		<value>false</value>
+	</property>
+	<property>
 		<name>yarn.nodemanager.vmem-pmem-ratio</name>
-		<value>2</value>
+		<value>1</value>
 	</property>
 	<property>
 		<name>yarn.scheduler.minimum-allocation-mb</name>
