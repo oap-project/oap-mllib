@@ -64,6 +64,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    val testDevice = TestCommon.getComputeDevice.toString
     datasetWithDenseFeature = sc.parallelize(LinearDataGenerator.generateLinearInput(
       intercept = 6.3, weights = Array(4.7, 7.2), xMean = Array(0.9, -1.3),
       xVariance = Array(0.7, 1.2), nPoints = 10000, seed, eps = 0.1), 2).map(_.asML).toDF()
