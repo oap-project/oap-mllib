@@ -24,6 +24,28 @@ import java.net.InetAddress
 
 object Utils {
 
+  Class AlgoTimeStamp {
+    private val _stampName = String()
+    private val _nextIntervalName = String()
+    private val _timeStamp = Int
+  }
+
+  class AlgoTimeMetrics {
+    private var _algoTimeStampList = List[AlgoTimeStamp]()
+    private var _algoName = String()
+
+    def print(): = {
+
+    }
+  }
+
+  class TimeMetricsTable {
+    private var _algoTimeMetricsList = Map[String, AlgoTimeMetrics]()
+    def print(): = {
+
+    }
+  }
+
   val DefaultComputeDevice = "GPU"
   def isOAPEnabled(): Boolean = {
     val sc = SparkSession.active.sparkContext
