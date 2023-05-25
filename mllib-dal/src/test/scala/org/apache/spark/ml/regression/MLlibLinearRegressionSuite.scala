@@ -41,7 +41,6 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
   override def sparkConf: SparkConf = {
     val device = TestCommon.getComputeDevice.toString
     val conf = super.sparkConf
-//    conf.set("spark.oap.mllib.enabled", "false")
     if (device == "GPU") {
       conf.set("spark.oap.mllib.device", Common.ComputeDevice.GPU.toString)
       conf.set("spark.oap.mllib.isTest", "true")
@@ -234,7 +233,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
 //  test("linear regression handles singular matrices") {
 //    // check for both constant columns with intercept (zero std) and collinear
 //    val singularDataConstantColumn = sc.parallelize(Seq(
-//      Instance(17.0, 1.0, Vectors.dense(1.0, 5.0)),
+//      Instance(17.0, 1.0, Vectors.dense(1.0, 5.0).toSparse),
 //      Instance(19.0, 2.0, Vectors.dense(1.0, 7.0)),
 //      Instance(23.0, 3.0, Vectors.dense(1.0, 11.0)),
 //      Instance(29.0, 4.0, Vectors.dense(1.0, 13.0))
@@ -251,7 +250,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
 //    }
 //
 //    val singularDataCollinearFeatures = sc.parallelize(Seq(
-//      Instance(17.0, 1.0, Vectors.dense(10.0, 5.0)),
+//      Instance(17.0, 1.0, Vectors.dense(10.0, 5.0).toSparse),
 //      Instance(19.0, 2.0, Vectors.dense(14.0, 7.0)),
 //      Instance(23.0, 3.0, Vectors.dense(22.0, 11.0)),
 //      Instance(29.0, 4.0, Vectors.dense(26.0, 13.0))
