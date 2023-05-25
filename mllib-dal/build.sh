@@ -26,7 +26,7 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-check_cpu_libs() {
+check_build_deps() {
   # Check lib dependencies for building
   RESOURCE_PATH=src/main/resources/lib
   LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
@@ -39,30 +39,15 @@ check_cpu_libs() {
   done
 }
 
-check_gpu_libs() {
-  # Check lib dependencies for building
-  RESOURCE_PATH=src/main/resources/lib
-  LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
-  for lib in ${LIBS[@]}
-  do
-    if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
-      echo
-      echo \"$RESOURCE_PATH/$lib\" does not exsit, please run \"../dev/prepare-build-deps-gpu.sh\"!
-      echo
-      exit 1
-  fi
-  done
-}
-
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./build.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h]"
+  echo "Usage: ./build.sh [-p <CPU_GPU_PROFILE | CPU_ONLY_PROFILE>] [-q] [-h]"
   echo
   echo "-p  Supported Platform Profiles:"
+    echo "    CPU_GPU_PROFILE (Default)"
     echo "    CPU_ONLY_PROFILE"
-    echo "    CPU_GPU_PROFILE"
   echo
 }
 
@@ -84,9 +69,9 @@ SUITE=$1
 
 print_usage
 
-if [[ -n $PLATFORM_OPT && ! ($PLATFORM_OPT == CPU_ONLY_PROFILE || $PLATFORM_OPT == CPU_GPU_PROFILE) ]]; then
+if [[ -n $PLATFORM_OPT && ! ($PLATFORM_OPT == CPU_GPU_PROFILE || $PLATFORM_OPT == CPU_ONLY_PROFILE) ]]; then
   echo
-  echo Platform Profile should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE, but \"$PLATFORM_OPT\" found!
+  echo Platform Profile should be CPU_GPU_PROFILE or CPU_ONLY_PROFILE, but \"$PLATFORM_OPT\" found!
   echo
   exit 1
 fi
@@ -100,35 +85,28 @@ fi
 SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
-
+# Set default PLATFORM_PROFILE from RELEASE envs
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
-if [[ $PLATFORM_PROFILE == CPU_ONLY_PROFILE ]]
-then
-  check_cpu_libs
-elif [[ $PLATFORM_PROFILE == CPU_GPU_PROFILE ]]
-then
-  check_gpu_libs
-fi
+# Check Build deps
+check_build_deps
 
 echo
 echo === Building Environments ===
+echo Platform Profile: $PLATFORM_PROFILE
+echo Spark Version: $SPARK_VERSION
+echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
+if [[ $PLATFORM_PROFILE == CPU_GPU_PROFILE ]]
+then
+  echo ICPX Version: $(icpx -dumpversion)
+elif [[ $PLATFORM_PROFILE == CPU_ONLY_PROFILE ]]
+then
+  echo GCC Version: $(gcc -dumpversion)
+fi
 echo JAVA_HOME=$JAVA_HOME
 echo DAALROOT=$DAALROOT
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
-echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-
-if [[ $PLATFORM_PROFILE == CPU_ONLY_PROFILE ]]
-then
-  echo GCC Version: $(gcc -dumpversion)
-elif [[ $PLATFORM_PROFILE == CPU_GPU_PROFILE ]]
-then
-  echo DPCPP Version: $(dpcpp -dumpversion)
-fi
-
-echo Spark Version: $SPARK_VERSION
-echo Platform Profile: $PLATFORM_PROFILE
 echo =============================
 echo
 
