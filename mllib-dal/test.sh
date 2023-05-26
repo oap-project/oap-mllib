@@ -52,11 +52,11 @@ MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] [-d] <test suite name>"
+  echo "Usage: ./test.sh [-p <CPU_GPU_PROFILE | CPU_ONLY_PROFILE>] [-q] [-h] [-d] <test suite name>"
   echo
   echo "-p  Supported Platform Profiles:"
-    echo "    CPU_ONLY_PROFILE"
-    echo "    CPU_GPU_PROFILE"
+  echo "    CPU_GPU_PROFILE (Default)"
+  echo "    CPU_ONLY_PROFILE"
   echo
 }
 
@@ -78,11 +78,12 @@ shift "$((OPTIND-1))"
 SUITE=$*
 
 print_usage
-echo $SUITE
+echo Testing suite(s) $SUITE ...
+echo
 
-if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_PROFILE) ]]; then
+if [[ ! ($PLATFORM_PROFILE == CPU_GPU_PROFILE || $PLATFORM_PROFILE == CPU_ONLY_PROFILE) ]]; then
   echo
-  echo Platform Profile should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE, but \"$PLATFORM_PROFILE\" found!
+  echo Platform Profile should be CPU_GPU_PROFILE or CPU_ONLY_PROFILE, but \"$PLATFORM_PROFILE\" found!
   echo
   exit 1
 fi
@@ -122,18 +123,18 @@ fi
 SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
-
+# Set defaults from RELEASE envs
 export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
-echo "computeDevice : $DEVICE_OPT"
+echo "Using Compute Device: $DEVICE_OPT"
 
 echo
 echo === Testing Environments ===
-echo JAVA_HOME=$JAVA_HOME
-echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
+echo Spark Version: $SPARK_VERSION
+echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
+echo JAVA_HOME=$JAVA_HOME
 echo ============================
 echo
 
@@ -166,7 +167,7 @@ else
       echo
       echo Testing $suite ...
       echo
-      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DcomputeDevice=$DEVICE_OPT -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
     elif [[ $suite == *"org.apache.spark.ml"* ]]; then
       echo
       echo Testing $suite ...
@@ -174,9 +175,9 @@ else
       mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DcomputeDevice=$DEVICE_OPT -DfailIfNoTests=false  -DwildcardSuites=$suite test
     else
       echo
-      echo Testing java $suite ...
+      echo Testing Java $suite ...
       echo
-      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=$suite -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none test
     fi
   done
 fi
