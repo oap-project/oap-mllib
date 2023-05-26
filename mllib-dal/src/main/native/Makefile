@@ -83,6 +83,7 @@ endif
 
 CPP_SRCS += \
   ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
+  ./Logger.cpp \
   ./KMeansImpl.cpp \
   ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
