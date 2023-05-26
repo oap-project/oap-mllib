@@ -78,7 +78,7 @@ shift "$((OPTIND-1))"
 SUITE=$*
 
 print_usage
-echo Testing suite(s) $SUITE ...
+echo "Testing suite(s) $SUITE ..."
 echo
 
 if [[ ! ($PLATFORM_PROFILE == CPU_GPU_PROFILE || $PLATFORM_PROFILE == CPU_ONLY_PROFILE) ]]; then
