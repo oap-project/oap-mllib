@@ -82,7 +82,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
           OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         } else {
-          val msg = s"OAPMLlib: Sparse table is not supported for GPU now."
+          val msg = s"OAP MLlib: Sparse table is not supported for GPU now."
           logError(msg)
           throw new SparkException(msg)
         }
@@ -94,9 +94,9 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       }
     }
 
-    //OAP-MLlib: Only normal linear regression is supported for GPU currently
+    // OAP MLlib: Only normal linear regression is supported for GPU currently
     if (useDevice == "GPU" && regParam != 0){
-      val msg = s"OAPMLlib: Only normal linear regression is supported for GPU now."
+      val msg = s"OAP MLlib: Regularization parameter is not supported for GPU now."
       logError(msg)
       throw new SparkException(msg)
     }
@@ -108,6 +108,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
+          // OAP MLlib: This ia a hack for unit test, and will be repaireid in the future.
+          // GPU info can't be detected automatically in UT enviroment.
           if (isTest) {
             Array(0)
           } else {

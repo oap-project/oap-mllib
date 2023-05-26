@@ -133,7 +133,6 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 
     using daal::byte;
 
-    std::cout << "KP: call ridge_regression: " << regParam << std::endl;
     NumericTablePtr ridgeParams(new HomogenNumericTable<double>(
         1, 1, NumericTable::doAllocate, regParam));
 
