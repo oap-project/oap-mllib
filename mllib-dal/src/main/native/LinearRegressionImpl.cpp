@@ -134,8 +134,7 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
     using daal::byte;
 
     NumericTablePtr ridgeParams(new HomogenNumericTable<double>(
-        1, 1, NumericTable::doAllocate, regParam));
-
+        1, 1, NumericTable::doAllocate, regParam)); 
     ridge_regression_cpu::training::Distributed<step1Local> localAlgorithm;
     localAlgorithm.parameter.ridgeParameters = ridgeParams;
     localAlgorithm.parameter.interceptFlag = fitIntercept;
