@@ -495,7 +495,7 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
     } else {
       // For low dimensional data, WeightedLeastSquares is more efficient since the
       // training algorithm only requires one pass through the data. (SPARK-10668)
-      if (!paramSupported && useDevice == "GPU"){
+      if (!paramSupported && useDevice == "GPU") {
         val msg = s"OAP-MLlib: Parameter used is not supported for GPU now."
         logError(msg)
         throw new SparkException(msg)

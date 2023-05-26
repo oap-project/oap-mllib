@@ -496,7 +496,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
       // training algorithm only requires one pass through the data. (SPARK-10668)
       val fallbackmsg = s"KP: OAP-MLlib: FALL BACK"
       logError(fallbackmsg)
-      if (!paramSupported && useDevice == "GPU"){
+      if (!paramSupported && useDevice == "GPU") {
         val msg = s"OAP-MLlib: Parameter used is not supported for GPU now."
         logError(msg)
         throw new SparkException(msg)
