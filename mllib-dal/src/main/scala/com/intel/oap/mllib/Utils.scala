@@ -23,12 +23,40 @@ import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
 import java.net.InetAddress
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import collection.mutable.ListBuffer
+
+object Tabulator {
+  def format(table: Seq[Seq[Any]]) = table match {
+    case Seq() => ""
+    case _ => 
+    val sizes = for (row <- table) yield (for (cell <- row) yield if (cell == null) 0 else cell.toString.length)
+    val colSizes = for (col <- sizes.transpose) yield col.max
+    val rows = for (row <- table) yield formatRow(row, colSizes)
+    formatRows(rowSeparator(colSizes), rows)
+    }
+
+  def formatRows(rowSeparator: String, rows: Seq[String]): String = (
+    rowSeparator :: 
+    rows.head :: 
+    rowSeparator :: 
+    rows.tail.toList ::: 
+    rowSeparator :: 
+    List()).mkString("\n")
+
+  def formatRow(row: Seq[Any], colSizes: Seq[Int]) = {
+    val cells = (for ((item, size) <- row.zip(colSizes)) yield if (size == 0) "" else ("%" + size + "s").format(item))
+      cells.mkString("|", "|", "|")
+    }
+
+  def rowSeparator(colSizes: Seq[Int]) = colSizes map { "-" * _ } mkString("+", "+", "+")
+}
 
 object Utils {
 
+
   class AlgoTimeStamp(var name: String) {
-    val timeStamp = 0
-    val timeStampHuman = "Haven't update"
+    var timeStamp = LocalDateTime.now()
+    var timeStampHuman = "uninitialized time stamp"
     def update(): Unit = {
       timeStamp = LocalDateTime.now()
       timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss").format(timeStamp)
@@ -41,21 +69,26 @@ object Utils {
 
   trait AlgoTimeMetrics {
     val algoName: String
-    var algoTimeStampList: Map[String, AlgoTimeStamp]
+    val algoTimeStampList: Map[String, AlgoTimeStamp]
+    val recorderName: String
 
     def print(): Unit = {
       println("KP: log time metrics")
     }
+    def writeToFile(filename: String): Unit = {
+    }
   }
 
   class TimeMetricsTable {
-    private var _algoTimeMetricsList = collection.mutable.Map[String, ListBuffer[AlgoTimeMetrics]]()
+    private var _algoTimeMetricsList = collection.mutable.Map[String, collection.mutable.ListBuffer[AlgoTimeMetrics]]()
     def print(): Unit = {
       println("KP: log timetable")
     }
-    def add(timeMetrics: AlgoTimeMetrics): ListBuffer[AlgoTimeMetrics] = {
+    def register(timeMetrics: AlgoTimeMetrics): String = {
       val timeClassList = _algoTimeMetricsList.getOrElseUpdate(timeMetrics.algoName, ListBuffer())
       timeClassList += timeMetrics
+      val recorderName = timeMetrics.algoName + timeClassList.size.toString
+      return recorderName
     }
   }
 

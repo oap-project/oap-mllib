@@ -17,7 +17,6 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.Utils.AlgoTimeStamp
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
@@ -28,9 +27,16 @@ import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
 
-class KMeansTimeMetrics(algoName: String) extends Utils.AlgoTimeMetrics{
+
+class KMeansTimerClass() extends Utils.AlgoTimeMetrics{
+  val algoName = "KMeans"
   val KMeansTimeStamps = List("Start", "End")
-  var algoTimeStampList = KMeansTimeStamps.map((x:String) => (x, AlgoTimeStamp(x)))
+  val algoTimeStampList = KMeansTimeStamps.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
+  val recorderName = Utils.GlobalTimeTable.register(this)
+  
+  def record(stampName: String): Unit = {
+    algoTimeStampList(stampName).update()
+  }
 }
 
 class KMeansDALImpl(var nClusters: Int,
@@ -51,6 +57,10 @@ class KMeansDALImpl(var nClusters: Int,
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
+
+    //KP: Timer
+    var KMeansTimer = new KMeansTimerClass()
+    KMeansTimer.record("Start")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -118,6 +128,8 @@ class KMeansDALImpl(var nClusters: Int,
     val parentModel = new MLlibKMeansModel(
       centerVectors.map(OldVectors.fromML(_)),
       distanceMeasure, totalCost, iterationNum)
+    //KP: Timer
+    KMeansTimer.record("End")
 
     parentModel
   }
