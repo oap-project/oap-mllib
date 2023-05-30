@@ -49,6 +49,17 @@ private[mllib] class LinearRegressionDALModel(val coefficients: DenseVector,
 
   }
 
+class LinearRegressionTimerClass() extends Utils.AlgoTimeMetrics{
+  val algoName = "LinearRegression"
+  val timeZoneName = List("Start", "Data conversion", "Training")
+  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
+  val recorderName = Utils.GlobalTimeTable.register(this)
+  
+  def record(stampName: String): Unit = {
+    algoTimeStampList(stampName).update()
+  }
+}
+
 class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                val regParam: Double,
                                val elasticNetParam: Double,
@@ -69,6 +80,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   def train(labeledPoints: Dataset[_],
             labelCol: String,
             featuresCol: String): LinearRegressionDALModel = {
+
+    //KP: Timer
+    var LRTimer = new LinearRegressionTimerClass()
+    LRTimer.record("Start")
 
     val sparkContext = labeledPoints.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -101,6 +116,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       throw new SparkException(msg)
     }
 
+    LRTimer.record("Data conversion")
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
         val (featureTabAddr, lableTabAddr) = tables.next()
@@ -153,6 +169,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
     val coefficientVector = results(0)
 
+    LRTimer.record("Training")
+    LRTimer.print()
     val parentModel = new LinearRegressionDALModel(
       new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
       coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
