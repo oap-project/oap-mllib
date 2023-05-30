@@ -30,8 +30,8 @@ import org.apache.spark.rdd.RDD
 
 class KMeansTimerClass() extends Utils.AlgoTimeMetrics{
   val algoName = "KMeans"
-  val KMeansTimeStamps = List("Start", "End")
-  val algoTimeStampList = KMeansTimeStamps.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
+  val timeZoneName = List("Start", "Data conversion", "Training")
+  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
   val recorderName = Utils.GlobalTimeTable.register(this)
   
   def record(stampName: String): Unit = {
@@ -52,15 +52,16 @@ class KMeansDALImpl(var nClusters: Int,
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    //KP: Timer
+    var KMeansTimer = new KMeansTimerClass()
+    KMeansTimer.record("Start")
+
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum, computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-
-    //KP: Timer
-    var KMeansTimer = new KMeansTimerClass()
-    KMeansTimer.record("Start")
+    KMeansTimer.record("Data conversion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -129,7 +130,8 @@ class KMeansDALImpl(var nClusters: Int,
       centerVectors.map(OldVectors.fromML(_)),
       distanceMeasure, totalCost, iterationNum)
     //KP: Timer
-    KMeansTimer.record("End")
+    KMeansTimer.record("Training")
+    KMeansTimer.print()
 
     parentModel
   }

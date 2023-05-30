@@ -22,6 +22,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
 import java.net.InetAddress
 import java.time.LocalDateTime
+import java.time.Duration
 import java.time.format.DateTimeFormatter
 import collection.mutable.ListBuffer
 
@@ -53,7 +54,6 @@ object Tabulator {
 
 object Utils {
 
-
   class AlgoTimeStamp(var name: String) {
     var timeStamp = LocalDateTime.now()
     var timeStampHuman = "uninitialized time stamp"
@@ -61,19 +61,20 @@ object Utils {
       timeStamp = LocalDateTime.now()
       timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss").format(timeStamp)
     }
-    def print(): Unit = {
-      println(name)
-      println(timeStampHuman)
-    }
   }
 
   trait AlgoTimeMetrics {
     val algoName: String
+    val timeZoneName: List[String]
     val algoTimeStampList: Map[String, AlgoTimeStamp]
     val recorderName: String
 
     def print(): Unit = {
       println("KP: log time metrics")
+      val head = List(recorderName) ++ timeZoneName.tail
+      val (start, startTime) = algoTimeStampList.head
+      val ans = algoTimeStampList.view.map{case(k, v) => Duration.between(v.timeStamp, startTime.timeStamp).toString()}.toList.tail
+      Tabulator.format(List(head ,ans))
     }
     def writeToFile(filename: String): Unit = {
     }
