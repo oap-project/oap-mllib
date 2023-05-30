@@ -21,30 +21,46 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
 import java.net.InetAddress
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 object Utils {
 
-  Class AlgoTimeStamp {
-    private val _stampName = String()
-    private val _nextIntervalName = String()
-    private val _timeStamp = Int
+  class AlgoTimeStamp(var name: String) {
+    val timeStamp = 0
+    val timeStampHuman = "Haven't update"
+    def update(): Unit = {
+      timeStamp = LocalDateTime.now()
+      timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss").format(timeStamp)
+    }
+    def print(): Unit = {
+      println(name)
+      println(timeStampHuman)
+    }
   }
 
-  class AlgoTimeMetrics {
-    private var _algoTimeStampList = List[AlgoTimeStamp]()
-    private var _algoName = String()
+  trait AlgoTimeMetrics {
+    val algoName: String
+    var algoTimeStampList: Map[String, AlgoTimeStamp]
 
-    def print(): = {
-
+    def print(): Unit = {
+      println("KP: log time metrics")
     }
   }
 
   class TimeMetricsTable {
-    private var _algoTimeMetricsList = Map[String, AlgoTimeMetrics]()
-    def print(): = {
-
+    private var _algoTimeMetricsList = collection.mutable.Map[String, ListBuffer[AlgoTimeMetrics]]()
+    def print(): Unit = {
+      println("KP: log timetable")
+    }
+    def add(timeMetrics: AlgoTimeMetrics): ListBuffer[AlgoTimeMetrics] = {
+      val timeClassList = _algoTimeMetricsList.getOrElseUpdate(timeMetrics.algoName, ListBuffer())
+      timeClassList += timeMetrics
     }
   }
+
+
+  val GlobalTimeTable = new TimeMetricsTable()
 
   val DefaultComputeDevice = "GPU"
   def isOAPEnabled(): Boolean = {

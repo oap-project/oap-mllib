@@ -17,6 +17,7 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
+import com.intel.oap.mllib.Utils.AlgoTimeStamp
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
@@ -26,6 +27,11 @@ import org.apache.spark.ml.util._
 import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
+
+class KMeansTimeMetrics(algoName: String) extends Utils.AlgoTimeMetrics{
+  val KMeansTimeStamps = List("Start", "End")
+  var algoTimeStampList = KMeansTimeStamps.map((x:String) => (x, AlgoTimeStamp(x)))
+}
 
 class KMeansDALImpl(var nClusters: Int,
                     var maxIterations: Int,
