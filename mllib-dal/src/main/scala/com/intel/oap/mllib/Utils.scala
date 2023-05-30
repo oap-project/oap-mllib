@@ -73,7 +73,7 @@ object Utils {
       println("KP: log time metrics")
       val head = List(recorderName) ++ timeZoneName.tail
       val (start, startTime) = algoTimeStampList.head
-      val ans = List("") + algoTimeStampList.view.map{case(k, v) => Duration.between(v.timeStamp, startTime.timeStamp).toString()}.toList.tail
+      val ans = List("") ++ algoTimeStampList.view.map{case(k, v) => Duration.between(v.timeStamp, startTime.timeStamp).toString()}.toList.tail
       println(Tabulator.format(List(head ,ans))
     }
     def writeToFile(filename: String): Unit = {
