@@ -146,12 +146,12 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 7+
-* Intel® oneAPI Base Toolkit Components :
+* Intel® oneAPI Base Toolkit Components:
     - DPC++/C++ Compiler (icpx)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
+    - Collective Communications Library (oneCCL)
     - MPI Library (MPI)
-    - Collective Communications Library (oneCCL)]
 
 Generally you only need to install __Intel® oneAPI Base Toolkit for Linux__ with all or selected components mentioned above. Intel® oneAPI Base Toolkit can be downloaded and installed from [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html). Installation process for oneAPI using Package Managers (YUM (DNF), APT, and ZYPPER) is also available. More details about oneAPI can be found [here](https://software.intel.com/content/www/us/en/develop/tools/oneapi.html).
 
