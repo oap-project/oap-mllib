@@ -59,12 +59,10 @@ You can also build the package from source code, please refer to [Building Code]
 * Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [Intel® oneAPI Base Toolkit System Requirements](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
 
 * Please follow [this guide](https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-1/install-using-package-managers.html) to install Intel® oneAPI Runtime Library Packages using package managers.
-The following runtime packages should be installed in __all cluster nodes__:
+The following runtime packages with all their dependencies should be installed in __all cluster nodes__:
   ```
-  intel-oneapi-ccl-<version>
-  intel-oneapi-mpi-<version>
-  intel-oneapi-compiler-dpcpp-cpp-runtime-<version>
-  intel-oneapi-dpcpp-cpp-<version>
+  intel-oneapi-runtime-dal
+  intel-oneapi-runtime-ccl
   ```
 * (Optional) If you plan to use Intel GPU, [install the Intel GPU drivers](https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-1/install-intel-gpu-drivers.html). Otherwise only CPU is supported.
 
