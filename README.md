@@ -8,7 +8,7 @@
 
 [Apache Spark MLlib](https://spark.apache.org/mllib) is a scalable machine learning library based on Spark unified platform. It seamlessly integrates with Spark SQL, Spark Streaming and other machine learning and deep learning frameworks without additional glue code for the entire pipeline.
 
-However, JVM-based MLlib only has limited use of BLAS acceleration and Spark shuffle is also slow for communication during distributed training. It doesn't fully utilize modern CPU and GPU capabilities to achieve best performance.
+However, JVM-based MLlib only has limited use of BLAS acceleration and Spark shuffle is also slow for communication during distributed training. Spark's original design is CPU-centric that can't leverage GPU acceleration. It doesn't fully utilize modern CPU and GPU capabilities to achieve best performance.
 
 ## OAP MLlib Solution
 
@@ -36,15 +36,15 @@ You can find the all the OAP MLlib documents on the [project web page](https://o
 
 # Getting Started
 
-## Java/Scala Users Preferred
-
-Use a pre-built OAP MLlib JAR to get started, you can download OAP MLlib JAR from [Release Page](https://github.com/oap-project/oap-mllib/releases/download/v1.5.0/oap-mllib-1.5.0.jar).
-
-Then you can refer to the following [Running](#running) section to try out.
-
 ## Python/PySpark Users Preferred
 
 Use a pre-built JAR to get started. If you have finished [OAP Installation Guide](./docs/OAP-Installation-Guide.md), you can find compiled OAP MLlib JAR `oap-mllib-x.x.x.jar` in `$HOME/miniconda2/envs/oapenv/oap_jars/`.
+
+Then you can refer to the following [Running](#running) section to try out.
+
+## Java/Scala Users Preferred
+
+Use a pre-built OAP MLlib JAR to get started, you can download OAP MLlib JAR from [Release Page](https://github.com/oap-project/oap-mllib/releases/download/v1.5.0/oap-mllib-1.5.0.jar).
 
 Then you can refer to the following [Running](#running) section to try out.
 
@@ -54,9 +54,21 @@ You can also build the package from source code, please refer to [Building Code]
 
 ## Running
 
-### Supported Spark Versions
+### Prerequisites
 
-OAP MLlib's latest version supports multiple Spark versions as below.
+* Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [Intel® oneAPI Base Toolkit System Requirements](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
+
+* Please follow [this guide](https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-1/install-using-package-managers.html) to install Intel® oneAPI Runtime Library Packages using package managers.
+The following runtime packages should be installed in __all cluster nodes__:
+  ```
+  intel-oneapi-ccl-<version>
+  intel-oneapi-mpi-<version>
+  intel-oneapi-compiler-dpcpp-cpp-runtime-<version>
+  intel-oneapi-dpcpp-cpp-<version>
+  ```
+* (Optional) If you plan to use Intel GPU, [install the Intel GPU drivers](https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2023-1/install-intel-gpu-drivers.html). Otherwise only CPU is supported.
+
+### Supported Spark Versions
 
 * Apache Spark 3.1.1
 * Apache Spark 3.1.2
@@ -64,22 +76,26 @@ OAP MLlib's latest version supports multiple Spark versions as below.
 * Apache Spark 3.2.0
 * Apache Spark 3.2.1
 
-### Prerequisites
+### Supported Intel® oneAPI Toolkits
 
-* CentOS 7.0+, Ubuntu 18.04 LTS+
-* Java JRE 8.0+ Runtime
-* Apache Spark 3.1.1, 3.1.2, 3.1.3, 3.2.0 or 3.2.1
-
-Generally, our common system requirements are the same with Intel® oneAPI Toolkit, please refer to [Intel® oneAPI Base Toolkit System Requirements](https://software.intel.com/content/www/us/en/develop/articles/intel-oneapi-base-toolkit-system-requirements.html) for details.
-
-Intel® oneAPI Toolkits components used by the project are already included into JAR package mentioned above. There are no extra installations for cluster nodes.
+* Intel® oneAPI 2023.1
 
 ### Spark Configuration
 
 #### General Configuration
 
+##### Standalone Cluster Manager
+For using standalone cluster manager, you need to upload the jar to every node or use shared network folder and then specify absolute paths for extraClassPath.
+
+```
+# absolute path of the jar for driver class path
+spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
+# absolute path of the jar for executor class path
+spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
+```
+
 ##### YARN Cluster Manager
-Users usually run Spark application on __YARN__ with __client__ mode. In that case, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running.
+For users running Spark application on __YARN__ with __client__ mode, you only need to add the following configurations in `spark-defaults.conf` or in `spark-submit` command line before running.
 
 ```
 # absolute path of the jar for uploading
@@ -88,16 +104,6 @@ spark.files                       /path/to/oap-mllib-x.x.x.jar
 spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path of the jar for executor class path
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
-```
-
-##### Standalone Cluster Manager
-For standalone cluster manager, you need to upload the jar to every node or use shared network folder and then specify absolute paths for extraClassPath.
-
-```
-# absolute path of the jar for driver class path
-spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
-# absolute path of the jar for executor class path
-spark.executor.extraClassPath     /path/to/oap-mllib-x.x.x.jar
 ```
 
 #### OAP MLlib Specific Configuration
@@ -142,8 +148,8 @@ We use [Apache Maven](https://maven.apache.org/) to manage and build source code
 * JDK 8.0+
 * Apache Maven 3.6.2+
 * GNU GCC 7+
-* Intel® oneAPI Base Toolkit (>=2022.1) Components :
-    - DPC++/C++ Compiler (dpcpp/clang++)
+* Intel® oneAPI Base Toolkit Components :
+    - DPC++/C++ Compiler (icpx)
     - Data Analytics Library (oneDAL)
     - Threading Building Blocks (oneTBB)
     - MPI Library (MPI)
@@ -153,7 +159,7 @@ Generally you only need to install __Intel® oneAPI Base Toolkit for Linux__ wit
 
 Scala and Java dependency descriptions are already included in Maven POM file.
 
-***Note:*** You can refer to [this script](dev/install-build-deps-centos.sh) to install correct dependencies.
+***Note:*** You can refer to [this script](dev/install-build-deps-ubuntu.sh) to install correct dependencies.
 
 ### Build
 
@@ -173,7 +179,6 @@ Environment | Description
 JAVA_HOME   | Path to JDK home directory
 DAALROOT    | Path to oneDAL home directory
 TBB_ROOT    | Path to oneTBB home directory
-I_MPI_ROOT  | Path to Intel MPI home directory
 CCL_ROOT    | Path to oneCCL home directory
 
 We suggest you to source `setvars.sh` script into current shell to setup building environments as following:
@@ -197,6 +202,15 @@ The built JAR package will be placed in `target` directory with the name `oap-ml
 
 ## Examples
 
+### Python Examples
+
+Example                |  Description
+-----------------------|---------------------------
+kmeans-pyspark         |  K-means example for PySpark
+pca-pyspark            |  PCA example for PySpark
+als-pyspark            |  ALS example for PySpark
+random-forest-pyspark  |  Random Forest example for PySpark
+
 ### Scala Examples
 
 Example            |  Description
@@ -209,15 +223,6 @@ linear-regression  |  Linear Regression example for Scala
 correlation        |  Correlation example for Scala
 summarizer         |  Summarizer example for Scala
 
-
-### Python Examples
-
-Example         |  Description
-----------------|---------------------------
-kmeans-pyspark  |  K-means example for PySpark
-pca-pyspark     |  PCA example for PySpark
-als-pyspark     |  ALS example for PySpark
-
 ## List of Accelerated Algorithms
 
 Algorithm         | CPU | GPU |
@@ -226,7 +231,8 @@ K-Means           | X   | X   |
 PCA               | X   | X   |
 ALS               | X   |     |
 Naive Bayes       | X   |     |
-Linear Regression | X   |     |
+Linear Regression | X   | X   |
 Ridge Regression  | X   |     |
+Random Forest     |     | X   |
 Correlation       | X   | X   |
 Summarizer        | X   | X   |
