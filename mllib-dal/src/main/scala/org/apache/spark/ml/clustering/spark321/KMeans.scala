@@ -20,7 +20,7 @@
 package org.apache.spark.ml.clustering.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansShim}
+import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansShim, KMeansTimerClass}
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.clustering.{KMeans => SparkKMeans, _}
@@ -53,7 +53,9 @@ class KMeans @Since("1.5.0") (
   }
 
   @Since("2.0.0")
-  override def fit(dataset: Dataset[_]): KMeansModel = instrumented { instr =>
+  override def fit(
+      dataset: Dataset[_],
+      kmeansTimer: KMeansTimerClass): KMeansModel = instrumented { instr =>
     transformSchema(dataset.schema, logging = true)
 
     instr.logPipelineStage(this)
@@ -78,7 +80,7 @@ class KMeans @Since("1.5.0") (
       $(distanceMeasure) == "euclidean" && !handleWeight
 
     val model = if (useKMeansDAL) {
-      trainWithDAL(instances, handlePersistence)
+      trainWithDAL(instances, handlePersistence, kmeansTimer)
     } else {
       trainWithML(instances, handlePersistence)
     }
@@ -98,7 +100,8 @@ class KMeans @Since("1.5.0") (
   }
 
   private def trainWithDAL(instances: RDD[(Vector, Double)],
-                           handlePersistence: Boolean): KMeansModel = instrumented { instr =>
+                           handlePersistence: Boolean,
+                           kmeansTimer: KMeansTimerClass): KMeansModel = instrumented { instr =>
 
     val sc = instances.sparkContext
 
@@ -129,6 +132,7 @@ class KMeans @Since("1.5.0") (
       case (point: Vector, weight: Double) => new VectorWithNorm(point)
     }
 
+    kmeansTimer.record("Preprocessing")
     // Cache for init
     dataWithNorm.persist(StorageLevel.MEMORY_AND_DISK)
 
@@ -155,10 +159,11 @@ class KMeans @Since("1.5.0") (
       inputData.persist(StorageLevel.MEMORY_AND_DISK)
     }
 
+    kmeansTimer.record("Init random")
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
       DistanceMeasure.EUCLIDEAN, centers, executor_num, executor_cores)
 
-    val parentModel = kmeansDAL.train(inputData)
+    val parentModel = kmeansDAL.train(inputData, kmeansTimer)
 
     val model = copyValues(new KMeansModel(uid, parentModel).setParent(this))
 

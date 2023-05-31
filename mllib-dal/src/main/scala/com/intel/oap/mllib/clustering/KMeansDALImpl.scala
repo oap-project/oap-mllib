@@ -30,7 +30,7 @@ import org.apache.spark.rdd.RDD
 
 class KMeansTimerClass() extends Utils.AlgoTimeMetrics{
   val algoName = "KMeans"
-  val timeZoneName = List("Start", "Prepare", "Data conversion", "Training")
+  val timeZoneName = List("Start", "Preprocessing", "Init random", "Device prepare", "Data conversion", "Training", "Finishing")
   val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
   val recorderName = Utils.GlobalTimeTable.register(this)
 }
@@ -44,20 +44,20 @@ class KMeansDALImpl(var nClusters: Int,
                     val executorCores: Int
                    ) extends Serializable with Logging {
 
-  def train(data: RDD[Vector]): MLlibKMeansModel = {
+  def train(data: RDD[Vector],
+            kmeansTimer: KMeansTimerClass): MLlibKMeansModel = {
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-    //KP: Timer
-    var KMeansTimer = new KMeansTimerClass()
-    KMeansTimer.record("Start")
+
+    kmeansTimer.record("Device prepare")
 
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum, computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-    KMeansTimer.record("Data conversion")
+    kmeansTimer.record("Data conversion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -109,6 +109,7 @@ class KMeansDALImpl(var nClusters: Int,
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
+    kmeansTimer.record("Training")
     val centerVectors = results(0)._1
     val totalCost = results(0)._2
     val iterationNum = results(0)._3
@@ -126,8 +127,6 @@ class KMeansDALImpl(var nClusters: Int,
       centerVectors.map(OldVectors.fromML(_)),
       distanceMeasure, totalCost, iterationNum)
     //KP: Timer
-    KMeansTimer.record("Training")
-    KMeansTimer.print()
 
     parentModel
   }
