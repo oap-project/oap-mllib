@@ -27,7 +27,7 @@ import org.apache.spark.{SPARK_VERSION, SparkException}
 
 trait KMeansShim extends Logging {
   def initShim(params: ParamMap): Unit
-  def fit(dataset: Dataset[_]): KMeansModel
+  def fit(dataset: Dataset[_], kmeansTimer: KMeansTimerClass): KMeansModel
 }
 
 object KMeansShim extends Logging {

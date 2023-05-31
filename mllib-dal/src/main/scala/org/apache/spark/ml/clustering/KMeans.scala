@@ -101,7 +101,7 @@ class KMeans @Since("1.5.0") (
 
     val shim = KMeansShim.create(uid)
     shim.initShim(extractParamMap())
-    val result = shim.fit(dataset)
+    val result = shim.fit(dataset, kmeansTimer)
 
     kmeansTimer.record("Finishing")
     kmeansTimer.print()
