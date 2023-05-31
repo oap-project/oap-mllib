@@ -229,7 +229,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
     }
   }
 
-  //OAP-MLlib: Singular matrice prejudege is not supported.
+  // OAP-MLlib: Singular matrice prejudege is not supported.
 //  test("linear regression handles singular matrices") {
 //    // check for both constant columns with intercept (zero std) and collinear
 //    val singularDataConstantColumn = sc.parallelize(Seq(
@@ -459,7 +459,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
     }
   }
 
-  //OAP-MLlib: Ridge regression will fall back now
+  // OAP-MLlib: Ridge regression will fall back now
   test("linear regression with intercept with L2 regularization") {
     Seq("auto", "l-bfgs", "normal").foreach { solver =>
       val trainer1 = (new LinearRegression).setElasticNetParam(0.0).setRegParam(2.3)
@@ -511,7 +511,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
     }
   }
 
-  //OAP-MLlib: Ridge regression will fall back now
+  // OAP-MLlib: Ridge regression will fall back now
   test("linear regression without intercept with L2 regularization") {
     Seq("auto", "l-bfgs", "normal").foreach { solver =>
       val trainer1 = (new LinearRegression).setElasticNetParam(0.0).setRegParam(2.3)
@@ -728,7 +728,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
     }
   }
 
-  //OAP-MLlib: origin check with constant label is not supported
+  // OAP-MLlib: origin check with constant label is not supported
   //test("regularized linear regression through origin with constant label") {
   //  // The problem is ill-defined if fitIntercept=false, regParam is non-zero.
   //  // An exception is thrown in this case.
@@ -770,7 +770,7 @@ class MLlibLinearRegressionSuite extends MLTest with DefaultReadWriteTest with P
     }
   }
 
-  //OAP-MLlib summary is not fully supported
+    // OAP-MLlib summary is not fully supported
 //  test("linear regression model training summary") {
 //    Seq("auto", "l-bfgs", "normal").foreach { solver =>
 //      val trainer = new LinearRegression().setSolver(solver).setPredictionCol("myPrediction")
