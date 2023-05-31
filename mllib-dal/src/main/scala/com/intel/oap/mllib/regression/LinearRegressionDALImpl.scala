@@ -51,13 +51,9 @@ private[mllib] class LinearRegressionDALModel(val coefficients: DenseVector,
 
 class LinearRegressionTimerClass() extends Utils.AlgoTimeMetrics{
   val algoName = "LinearRegression"
-  val timeZoneName = List("Start", "Data conversion", "Training")
+  val timeZoneName = List("Start", "Preprocessing", "Device prepare", "Data conversion", "Training", "Finishing")
   val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
   val recorderName = Utils.GlobalTimeTable.register(this)
-  
-  def record(stampName: String): Unit = {
-    algoTimeStampList(stampName).update()
-  }
 }
 
 class LinearRegressionDALImpl( val fitIntercept: Boolean,
@@ -79,11 +75,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
   def train(labeledPoints: Dataset[_],
             labelCol: String,
-            featuresCol: String): LinearRegressionDALModel = {
-
-    //KP: Timer
-    var LRTimer = new LinearRegressionTimerClass()
-    LRTimer.record("Start")
+            featuresCol: String,
+            lrTimer: LinearRegressionTimerClass): LinearRegressionDALModel = {
 
     val sparkContext = labeledPoints.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -92,6 +85,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+    lrTimer.record("Device prepare")
 
     val labeledPointsTables = if (useDevice == "GPU") {
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
@@ -116,7 +110,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       throw new SparkException(msg)
     }
 
-    LRTimer.record("Data conversion")
+    lrTimer.record("Data conversion")
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
         val (featureTabAddr, lableTabAddr) = tables.next()
@@ -169,8 +163,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
     val coefficientVector = results(0)
 
-    LRTimer.record("Training")
-    LRTimer.print()
+    lrTimer.record("Training")
     val parentModel = new LinearRegressionDALModel(
       new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
       coefficientVector(0), new DenseVector(Array(0D)), Array(0D))

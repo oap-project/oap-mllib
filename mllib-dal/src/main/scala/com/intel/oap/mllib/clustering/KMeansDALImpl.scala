@@ -30,13 +30,9 @@ import org.apache.spark.rdd.RDD
 
 class KMeansTimerClass() extends Utils.AlgoTimeMetrics{
   val algoName = "KMeans"
-  val timeZoneName = List("Start", "Data conversion", "Training")
+  val timeZoneName = List("Start", "Prepare", "Data conversion", "Training")
   val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
   val recorderName = Utils.GlobalTimeTable.register(this)
-  
-  def record(stampName: String): Unit = {
-    algoTimeStampList(stampName).update()
-  }
 }
 
 class KMeansDALImpl(var nClusters: Int,

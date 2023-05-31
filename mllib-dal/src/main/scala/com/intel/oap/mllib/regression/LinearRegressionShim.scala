@@ -28,7 +28,7 @@ import org.apache.spark.{SPARK_VERSION, SparkException}
 
 trait LinearRegressionShim extends Serializable with Logging {
   def initShim(params: ParamMap): Unit
-  def train(dataset: Dataset[_]): LinearRegressionModel
+  def train(dataset: Dataset[_], lrTimer: LinearRegressionTimerClass): LinearRegressionModel
 }
 
 object LinearRegressionShim extends Logging {

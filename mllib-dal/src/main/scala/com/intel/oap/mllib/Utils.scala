@@ -69,12 +69,21 @@ object Utils {
     val algoTimeStampList: Map[String, AlgoTimeStamp]
     val recorderName: String
 
+    def record(stampName: String): Unit = {
+      algoTimeStampList(stampName).update()
+    }
+
+    def getTableHead(): List[String] = {
+      List(recorderName) ++ timeZoneName.tail
+    }
+    def getTableContent(): List[String] = {
+      val (startTimeStampName, startTime) = algoTimeStampList.head
+      List(startTime.timeStampHuman) ++ algoTimeStampList.view.map{case(k, v) => Duration.between(v.timeStamp, startTime.timeStamp).toString()}.toList.tail
+    }
+
     def print(): Unit = {
       println("KP: log time metrics")
-      val head = List(recorderName) ++ timeZoneName.tail
-      val (start, startTime) = algoTimeStampList.head
-      val ans = List("") ++ algoTimeStampList.view.map{case(k, v) => Duration.between(v.timeStamp, startTime.timeStamp).toString()}.toList.tail
-      println(Tabulator.format(List(head ,ans)))
+      println(Tabulator.format(List(getTableHead ,getTableContent)))
     }
 
     def writeToFile(filename: String): Unit = {

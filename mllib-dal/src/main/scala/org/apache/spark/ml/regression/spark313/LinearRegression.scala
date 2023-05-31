@@ -30,7 +30,7 @@ import breeze.optimize.{
 }
 import breeze.stats.distributions.StudentsT
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim}
+import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim, LinearRegressionTimerClass}
 import org.apache.hadoop.fs.Path
 import scala.collection.mutable
 
@@ -335,7 +335,8 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 //  def setMaxBlockSizeInMB(value: Double): this.type = set(maxBlockSizeInMB, value)
 
   override def train(
-      dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
+      dataset: Dataset[_],
+      lrTimer: LinearRegressionTimerClass): LinearRegressionModel = instrumented { instr =>
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, solver, tol,
@@ -353,7 +354,7 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 
     if ($(loss) == SquaredError && (($(solver) == Auto &&
       numFeatures <= WeightedLeastSquares.MAX_NUM_FEATURES) || $(solver) == Normal)) {
-      return trainWithNormal(dataset, instr)
+      return trainWithNormal(dataset, instr, lrTimer)
     }
 
     val instances = extractInstances(dataset)
@@ -454,7 +455,8 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
 
   private def trainWithNormal(
       dataset: Dataset[_],
-      instr: Instrumentation): LinearRegressionModel = {
+      instr: Instrumentation,
+      lrTimer: LinearRegressionTimerClass): LinearRegressionModel = {
     val paramSupported = ($(regParam) == 0) && (!isDefined(weightCol) || getWeightCol.isEmpty)
     val sparkContext = dataset.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -469,8 +471,9 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
         elasticNetParam = $(elasticNetParam), $(standardization), true,
         executor_num, executor_cores)
 
+      lrTimer.record("Preprocessing")
       // Return same model as WeightedLeastSquaresModel
-      val model = optimizer.train(dataset, $(labelCol), $(featuresCol))
+      val model = optimizer.train(dataset, $(labelCol), $(featuresCol), lrTimer)
 
       val lrModel = copyValues(
         new LinearRegressionModel(uid, model.coefficients, model.intercept))
