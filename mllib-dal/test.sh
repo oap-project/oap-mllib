@@ -52,11 +52,11 @@ MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
   echo
-  echo "Usage: ./test.sh [-p <CPU_ONLY_PROFILE | CPU_GPU_PROFILE>] [-q] [-h] [-d] <test suite name>"
+  echo "Usage: ./test.sh [-p <CPU_GPU_PROFILE | CPU_ONLY_PROFILE>] [-q] [-h] [-d] <test suite name>"
   echo
   echo "-p  Supported Platform Profiles:"
-    echo "    CPU_ONLY_PROFILE"
-    echo "    CPU_GPU_PROFILE"
+  echo "    CPU_GPU_PROFILE (Default)"
+  echo "    CPU_ONLY_PROFILE"
   echo
 }
 
@@ -78,10 +78,12 @@ shift "$((OPTIND-1))"
 SUITE=$*
 
 print_usage
+echo "Testing suite(s) $SUITE ..."
+echo
 
-if [[ ! ($PLATFORM_PROFILE == CPU_ONLY_PROFILE || $PLATFORM_PROFILE == CPU_GPU_PROFILE) ]]; then
+if [[ ! ($PLATFORM_PROFILE == CPU_GPU_PROFILE || $PLATFORM_PROFILE == CPU_ONLY_PROFILE) ]]; then
   echo
-  echo Platform Profile should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE, but \"$PLATFORM_PROFILE\" found!
+  echo Platform Profile should be CPU_GPU_PROFILE or CPU_ONLY_PROFILE, but \"$PLATFORM_PROFILE\" found!
   echo
   exit 1
 fi
@@ -93,7 +95,7 @@ if [ "HOST" = $DEVICE_OPT ]; then
     "RowAccessorTest" \
     "com.intel.oap.mllib.ConvertHomogenTableSuite"
   )
-else
+elif [ "CPU" = $DEVICE_OPT ]; then
   suiteArray=(
     "org.apache.spark.ml.clustering.MLlibKMeansSuite" \
     "org.apache.spark.ml.feature.MLlibPCASuite" \
@@ -103,6 +105,13 @@ else
     "org.apache.spark.ml.stat.MLlibCorrelationSuite" \
     "org.apache.spark.ml.stat.MLlibSummarizerSuite"
   )
+elif [ "GPU" = $DEVICE_OPT ]; then
+  suiteArray=(
+    "org.apache.spark.ml.regression.MLlibLinearRegressionSuite"
+  )
+else
+  echo Error: $DEVICE_OPT is not supported!
+  exit 1
 fi
 
 if [[ ! ${suiteArray[*]} =~ $SUITE ]]; then
@@ -114,18 +123,18 @@ fi
 SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
-
+# Set defaults from RELEASE envs
 export SPARK_VERSION=${SPARK_OPT:-$SPARK_VERSION}
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
-echo "computeDevice : $DEVICE_OPT"
+echo "Using Compute Device: $DEVICE_OPT"
 
 echo
 echo === Testing Environments ===
-echo JAVA_HOME=$JAVA_HOME
-echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
-echo Spark Version: $SPARK_VERSION
 echo Platform Profile: $PLATFORM_PROFILE
+echo Spark Version: $SPARK_VERSION
+echo Maven Version: $(mvn -v | head -n 1 | cut -f3 -d" ")
+echo JAVA_HOME=$JAVA_HOME
 echo ============================
 echo
 
@@ -153,21 +162,22 @@ else
   SUBSUITE=$(echo $SUITE | tr "," "\n")
   for suite in ${SUBSUITE[*]}
   do
-      if [[ $suite == *"com.intel.oap.mllib"* ]]; then
-        echo
-        echo Testing $suite ...
-        echo
-        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
-      elif [[ $suite == *"org.apache.spark.ml"* ]]; then
-         echo
-          echo Testing $suite ...
-          echo
-          mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -Dtest=none -DwildcardSuites=$suite test
-      else
-        echo
-        echo Testing java $suite ...
-        echo
-        mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none -Dtest=$suite test
-      fi
+    echo $suite
+    if [[ $suite == *"com.intel.oap.mllib"* ]]; then
+      echo
+      echo Testing $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DcomputeDevice=$DEVICE_OPT -DforkMode=never -Dmaven.test.failure.ignore=true  -DfailIfNoTests=false -DwildcardSuites=$suite test
+    elif [[ $suite == *"org.apache.spark.ml"* ]]; then
+      echo
+      echo Testing $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=none -DcomputeDevice=$DEVICE_OPT -DfailIfNoTests=false  -DwildcardSuites=$suite test
+    else
+      echo
+      echo Testing Java $suite ...
+      echo
+      mvn $MVN_NO_TRANSFER_PROGRESS -Dspark.version=$SPARK_VERSION -Dtest=$suite -DcomputeDevice=$DEVICE_OPT -DwildcardSuites=none test
+    fi
   done
 fi

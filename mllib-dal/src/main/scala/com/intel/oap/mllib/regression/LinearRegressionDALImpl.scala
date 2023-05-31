@@ -74,15 +74,15 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
+    val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
+
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
 
     val labeledPointsTables = if (useDevice == "GPU") {
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
           OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
         } else {
-          val msg = s"OAPMLlib: Sparse table is not supported for gpu now."
-          //todo sparse table is not supported
-          
+          val msg = s"OAP MLlib: Sparse table is not supported for GPU now."
           logError(msg)
           throw new SparkException(msg)
         }
@@ -94,6 +94,13 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       }
     }
 
+    // OAP MLlib: Only normal linear regression is supported for GPU currently
+    if (useDevice == "GPU" && regParam != 0){
+      val msg = s"OAP MLlib: Regularization parameter is not supported for GPU now."
+      logError(msg)
+      throw new SparkException(msg)
+    }
+
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
         val (featureTabAddr, lableTabAddr) = tables.next()
@@ -101,8 +108,14 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
-          val resources = TaskContext.get().resources()
-          resources("gpu").addresses.map(_.toInt)
+          // OAP MLlib: This ia a hack for unit test, and will be repaireid in the future.
+          // GPU info can't be detected automatically in UT enviroment.
+          if (isTest) {
+            Array(0)
+          } else {
+            val resources = TaskContext.get().resources()
+            resources("gpu").addresses.map(_.toInt)
+          }
         } else {
           null
         }
@@ -110,6 +123,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val cbeta = cLinearRegressionTrainDAL(
           featureTabAddr,
           lableTabAddr,
+          fitIntercept,
           regParam,
           elasticNetParam,
           executorNum,
@@ -149,6 +163,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   // Single entry to call Linear Regression DAL backend with parameters
   @native private def cLinearRegressionTrainDAL(data: Long,
                                   label: Long,
+                                  fitIntercept: Boolean,
                                   regParam: Double,
                                   elasticNetParam: Double,
                                   executorNum: Int,
