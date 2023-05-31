@@ -103,6 +103,7 @@ spark.driver.extraClassPath       /path/to/oap-mllib-x.x.x.jar
 # relative path of the jar for executor class path
 spark.executor.extraClassPath     ./oap-mllib-x.x.x.jar
 ```
+__Note: Intel GPUs are not fully supported in YARN Cluster Manager, please use Standalone mode.__
 
 #### OAP MLlib Specific Configuration
 
