@@ -91,11 +91,11 @@ CPP_SRCS += \
   ./CorrelationImpl.cpp \
   ./SummarizerImpl.cpp \
   ./DecisionForestClassifierImpl.cpp \
+  ./DecisionForestRegressorImpl.cpp \
   ./oneapi/dal/HomogenTableImpl.cpp \
   ./oneapi/dal/SimpleMetadataImpl.cpp \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
   ./oneapi/dal/RowAccessorImpl.cpp
-
 
 OBJS += \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
@@ -107,6 +107,7 @@ OBJS += \
   ./CorrelationImpl.o \
   ./SummarizerImpl.o \
   ./DecisionForestClassifierImpl.o \
+  ./DecisionForestRegressorImpl.o \
   ./oneapi/dal/HomogenTableImpl.o \
   ./oneapi/dal/SimpleMetadataImpl.o \
   ./oneapi/dal/ColumnAccessorImpl.o  \
@@ -121,7 +122,6 @@ endif
 
 # Output Binary
 OUTPUT = ../../../src/main/resources/lib/libMLlibDAL.so
-
 
 all: $(OUTPUT)
 

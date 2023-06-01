@@ -1,4 +1,4 @@
-name: OAP MLlib Checks and Build
+name: Checks and Build
 
 on: [push, pull_request]
 
@@ -46,7 +46,7 @@ jobs:
           ${{github.workspace}}/dev/code-checks/lint-cpp.sh
 
   code-build:
-    name: Code Build
+    name: Build Checks
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3

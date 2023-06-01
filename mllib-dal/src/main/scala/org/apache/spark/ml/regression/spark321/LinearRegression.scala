@@ -454,8 +454,9 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
   private def trainWithNormal(
       dataset: Dataset[_],
       instr: Instrumentation): LinearRegressionModel = {
-    // oneDAL only support simple linear regression and ridge regression
-    val paramSupported = ($(regParam) == 0) || ($(regParam) != 0 && $(elasticNetParam) == 0)
+    val paramSupported = ($(regParam) == 0) && (!isDefined(weightCol) || getWeightCol.isEmpty)
+    val sparkContext = dataset.sparkSession.sparkContext
+    val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     if (paramSupported && Utils.isOAPEnabled && isPlatformSupported) {
@@ -488,6 +489,13 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
     } else {
       // For low dimensional data, WeightedLeastSquares is more efficient since the
       // training algorithm only requires one pass through the data. (SPARK-10668)
+      val fallbackmsg = s"OAP MLlib: Fall back to vanilla Spark MLlib"
+      logError(fallbackmsg)
+      if (!paramSupported && useDevice == "GPU") {
+        val msg = s"OAP MLlib: Parameter used is not supported for GPU now."
+        logError(msg)
+        throw new SparkException(msg)
+      }
 
       val optimizer = new WeightedLeastSquares($(fitIntercept), $(regParam),
         elasticNetParam = $(elasticNetParam), $(standardization), true,
