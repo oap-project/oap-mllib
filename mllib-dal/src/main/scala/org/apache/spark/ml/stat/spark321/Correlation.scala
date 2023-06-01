@@ -20,7 +20,7 @@
 package org.apache.spark.ml.stat.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
+import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim, CorrelationTimerClass}
 import scala.collection.JavaConverters._
 
 import org.apache.spark.annotation.Since
@@ -69,7 +69,7 @@ class Correlation extends CorrelationShim {
    * to avoid recomputing the common lineage.
    */
   @Since("2.2.0")
-  def corr(dataset: Dataset[_], column: String, method: String): DataFrame = {
+  def corr(dataset: Dataset[_], column: String, method: String, corTimer: CorrelationTimerClass): DataFrame = {
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
@@ -84,7 +84,7 @@ class Correlation extends CorrelationShim {
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val matrix = new CorrelationDALImpl(executor_num, executor_cores)
-        .computeCorrelationMatrix(rdd)
+        .computeCorrelationMatrix(rdd, corTimer)
       val name = s"$method($column)"
       val schema = StructType(Array(StructField(name, SQLDataTypes.MatrixType, nullable = false)))
       val dataframe = dataset.sparkSession.createDataFrame(Seq(Row(matrix)).asJava, schema)

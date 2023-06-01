@@ -20,7 +20,7 @@
 package org.apache.spark.ml.stat
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
+import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim, CorrelationTimerClass}
 import scala.collection.JavaConverters._
 
 import org.apache.spark.annotation.{Experimental, Since}
@@ -70,8 +70,13 @@ object Correlation {
    */
   @Since("2.2.0")
   def corr(dataset: Dataset[_], column: String, method: String): DataFrame = {
+    val corTimer = new CorrelationTimerClass()
+    corTimer.record("Start")
     val shim = CorrelationShim.create()
-    shim.corr(dataset, column, method)
+    val result = shim.corr(dataset, column, method)
+    corTimer.record("Finishing")
+    corTimer.print()
+    result
   }
 
   /**

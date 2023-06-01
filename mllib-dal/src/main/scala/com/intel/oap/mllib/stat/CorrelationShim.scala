@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
 import org.apache.spark.ml.stat.spark321.{Correlation => CorrelationSpark321}
 
 trait CorrelationShim extends Serializable with Logging {
-  def corr(dataset: Dataset[_], column: String, method: String): DataFrame
+  def corr(dataset: Dataset[_], column: String, method: String, corTimer: CorrelationTimerClass): DataFrame
 }
 
 object CorrelationShim extends Logging {
