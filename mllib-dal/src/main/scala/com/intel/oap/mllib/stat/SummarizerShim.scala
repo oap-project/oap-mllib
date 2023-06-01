@@ -27,7 +27,7 @@ import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.mllib.stat.spark321.{Statistics => SummarizerSpark321}
 
 trait SummarizerShim extends Serializable with Logging {
-  def colStats(X: RDD[Vector]): MultivariateStatisticalSummary
+  def colStats(X: RDD[Vector], sumTimer: SummarizerTimerClass): MultivariateStatisticalSummary
 
   }
 

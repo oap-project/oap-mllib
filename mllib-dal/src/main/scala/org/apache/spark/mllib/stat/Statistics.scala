@@ -19,7 +19,7 @@
 
 package org.apache.spark.mllib.stat
 
-import com.intel.oap.mllib.stat.{SummarizerShim}
+import com.intel.oap.mllib.stat.{SummarizerShim, SummarizerTimerClass}
 import scala.annotation.varargs
 
 import org.apache.spark.annotation.Since
@@ -51,8 +51,14 @@ object Statistics {
    */
   @Since("1.1.0")
   def colStats(X: RDD[Vector]): MultivariateStatisticalSummary = {
+    val sumTimer = new SummarizerTimerClass()
+    sumTimer.record("Start")
+
     val shim = SummarizerShim.create()
-    shim.colStats(X)
+    val result = shim.colStats(X, sumTimer)
+    sumTimer.record("Finshing")
+    sumTimer.print()
+    result
   }
 
   /*
