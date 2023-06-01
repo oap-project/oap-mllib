@@ -68,9 +68,12 @@ object Utils {
     val timeZoneName: List[String]
     val algoTimeStampList: Map[String, AlgoTimeStamp]
     val recorderName: String
+    val timerEnabled = isTimerEnabled()
 
     def record(stampName: String): Unit = {
-      algoTimeStampList(stampName).update()
+      if (timerEnabled) {
+        algoTimeStampList(stampName).update()
+      }
     }
 
     def getTableHead(): List[String] = {
@@ -83,8 +86,10 @@ object Utils {
     }
 
     def print(): Unit = {
-      println("KP: log time metrics")
-      println(Tabulator.format(List(getTableHead ,getTableContent)))
+      if (timerEnabled) {
+        println("OAP MLlib: time metrics")
+        println(Tabulator.format(List(getTableHead ,getTableContent)))
+      }
     }
 
     def writeToFile(filename: String): Unit = {
@@ -118,6 +123,11 @@ object Utils {
           s"spark.dynamicAllocation.enabled should be set to false")
     }
     isOap
+  }
+
+  def isTimerEnabled(): Boolean = {
+    val sc = SparkSession.active.sparkContext
+    sc.getConf.getBoolean("spark.oap.mllib.timer", true)
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {
