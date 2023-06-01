@@ -39,7 +39,7 @@ class PCADALModel private[mllib] (
 
 class PCATimerClass() extends Utils.AlgoTimeMetrics{
   val algoName = "PCA"
-  val timeZoneName = List("Start", "Preprocessing", "Device prepare", "Data conversion", "Training", "Finishing")
+  val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Finishing")
   val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
   val recorderName = Utils.GlobalTimeTable.register(this)
 }
@@ -49,11 +49,13 @@ class PCADALImpl(val k: Int,
                  val executorCores: Int)
   extends Serializable with Logging {
 
-  def train(data: RDD[Vector]): PCADALModel = {
+  def train(data: RDD[Vector],
+    pcaTimer: PCATimerClass): PCADALModel = {
     val normalizedData = normalizeData(data)
     val sparkContext = normalizedData.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    pcaTimer.record("Preprocessing")
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(normalizedData, executorNum,
         computeDevice)
@@ -61,6 +63,7 @@ class PCADALImpl(val k: Int,
       OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
     }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    pcaTimer.record("Data conversion")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
@@ -109,6 +112,7 @@ class PCADALImpl(val k: Int,
       ret
     }.collect()
 
+    pcaTimer.record("Training")
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
