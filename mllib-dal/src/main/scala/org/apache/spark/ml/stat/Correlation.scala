@@ -73,7 +73,7 @@ object Correlation {
     val corTimer = new CorrelationTimerClass()
     corTimer.record("Start")
     val shim = CorrelationShim.create()
-    val result = shim.corr(dataset, column, method)
+    val result = shim.corr(dataset, column, method, corTimer)
     corTimer.record("Finishing")
     corTimer.print()
     result

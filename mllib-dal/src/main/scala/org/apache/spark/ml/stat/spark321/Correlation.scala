@@ -107,7 +107,7 @@ class Correlation extends CorrelationShim {
    * Compute the Pearson correlation matrix for the input Dataset of Vectors.
    */
   @Since("2.2.0")
-  def corr(dataset: Dataset[_], column: String): DataFrame = {
-    corr(dataset, column, "pearson")
+  def corr(dataset: Dataset[_], column: String, corTimer: CorrelationTimerClass): DataFrame = {
+    corr(dataset, column, "pearson", corTimer)
   }
 }
