@@ -20,7 +20,7 @@
 package org.apache.spark.ml.classification.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
+import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim, RandomForestClassifierTimerClass}
 import java.util.{Map => JavaMap}
 import scala.jdk.CollectionConverters._
 
@@ -146,13 +146,13 @@ class RandomForestClassifier @Since("1.4.0") (
   @Since("3.0.0")
   def setWeightCol(value: String): this.type = set(weightCol, value)
 
-  override def train(dataset: Dataset[_]): RandomForestClassificationModel = instrumented { instr =>
+  override def train(dataset: Dataset[_], rfcTimer: RandomForestClassifierTimerClass): RandomForestClassificationModel = instrumented { instr =>
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     val model = if (Utils.isOAPEnabled() && isPlatformSupported) {
       // Spark ML Random Forest implemented 'entropy' and 'gini', but OneDAL only implemented 'gini' criterion.
       if (getImpurity == "gini") {
-        trainRandomForestClassifierDAL(dataset, instr)
+        trainRandomForestClassifierDAL(dataset, instr, rfcTimer)
       } else {
         trainDiscreteImpl(dataset, instr)
       }
@@ -163,7 +163,8 @@ class RandomForestClassifier @Since("1.4.0") (
   }
 
   private def trainRandomForestClassifierDAL(dataset: Dataset[_],
-                       instr: Instrumentation): RandomForestClassificationModel = {
+                       instr: Instrumentation,
+                       rfcTimer: RandomForestClassifierTimerClass): RandomForestClassificationModel = {
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     val spark = dataset.sparkSession
@@ -212,7 +213,7 @@ class RandomForestClassifier @Since("1.4.0") (
       getMaxBins,
       getBootstrap)
 
-    val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol})
+    val treesMap = rfDAL.train(dataset, ${labelCol}, ${featuresCol}, rfcTimer)
 
 
     val numFeatures = metadata.numFeatures

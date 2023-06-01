@@ -25,7 +25,7 @@ import org.apache.spark.sql.Dataset
 
 trait RandomForestClassifierShim extends Logging {
   def initShim(params: ParamMap): Unit
-  def train(dataset: Dataset[_]): RandomForestClassificationModel
+  def train(dataset: Dataset[_], rfcTimer: RandomForestClassifierTimerClass): RandomForestClassificationModel
 }
 
 object RandomForestClassifierShim extends Logging {
