@@ -94,10 +94,8 @@ class KMeans @Since("1.5.0") (
   @Since("2.0.0")
   override def fit(dataset: Dataset[_]): KMeansModel = {
 
-    //KP: Timer
     val kmeansTimer = new KMeansTimerClass()
     kmeansTimer.record("Start")
-
 
     val shim = KMeansShim.create(uid)
     shim.initShim(extractParamMap())

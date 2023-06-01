@@ -69,7 +69,11 @@ class Correlation extends CorrelationShim {
    * to avoid recomputing the common lineage.
    */
   @Since("2.2.0")
-  def corr(dataset: Dataset[_], column: String, method: String, corTimer: CorrelationTimerClass): DataFrame = {
+  def corr(
+    dataset: Dataset[_],
+    column: String,
+    method: String,
+    corTimer: CorrelationTimerClass): DataFrame = {
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       dataset.sparkSession.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported && method == "pearson") {
