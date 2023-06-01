@@ -37,6 +37,13 @@ class PCADALModel private[mllib] (
   val pc: OldDenseMatrix,
   val explainedVariance: OldDenseVector)
 
+class PCATimerClass() extends Utils.AlgoTimeMetrics{
+  val algoName = "PCA"
+  val timeZoneName = List("Start", "Preprocessing", "Device prepare", "Data conversion", "Training", "Finishing")
+  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
+  val recorderName = Utils.GlobalTimeTable.register(this)
+}
+
 class PCADALImpl(val k: Int,
                  val executorNum: Int,
                  val executorCores: Int)

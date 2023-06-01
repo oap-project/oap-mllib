@@ -74,11 +74,12 @@ object Utils {
     }
 
     def getTableHead(): List[String] = {
-      List(recorderName) ++ timeZoneName.tail
+      List("AlgoName", "Start Time") ++ timeZoneName.tail.map(x => x + "(s)") ++ List("Total time")
     }
     def getTableContent(): List[String] = {
       val (startTimeStampName, startTime) = algoTimeStampList.head
-      List(startTime.timeStampHuman) ++ algoTimeStampList.view.map{case(k, v) => Duration.between(v.timeStamp, startTime.timeStamp).toString()}.toList.tail
+      val (endTimeStampName, endTime) = algoTimeStampList.last
+      List(recorderName) ++ List(startTime.timeStampHuman) ++ algoTimeStampList.view.map{case(k, v) => (Duration.between(v.timeStamp, startTime.timeStamp).toMillis()/1000).toString()}.toList.tail ++ List(Duration.between(endTime.timeStamp, startTime.timeStamp).toString())
     }
 
     def print(): Unit = {
