@@ -19,7 +19,7 @@
 
 package org.apache.spark.ml.classification
 
-import com.intel.oap.mllib.classification.{RandomForestClassifierShim, RandomForestClassifierTimerClass}
+import com.intel.oap.mllib.classification.{RandomForestClassifierShim}
 import org.json4s.{DefaultFormats, JObject}
 import org.json4s.JsonDSL._
 
@@ -140,17 +140,9 @@ class RandomForestClassifier @Since("1.4.0") (
   override protected def train(
                                 dataset: Dataset[_]): RandomForestClassificationModel
   = instrumented { instr =>
-
-    //KP: Timer
-    val rfcTimer = new RandomForestClassifierTimerClass()
-    rfcTimer.record("Start")
-
     val shim = RandomForestClassifierShim.create(uid)
     shim.initShim(extractParamMap())
-    val result = shim.train(dataset, rfcTimer)
-    rfcTimer.record("Finishing")
-    rfcTimer.print()
-    result
+    shim.train(dataset)
   }
 
   @Since("1.4.1")
