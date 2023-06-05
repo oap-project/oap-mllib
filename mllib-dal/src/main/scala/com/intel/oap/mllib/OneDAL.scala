@@ -18,11 +18,10 @@ package com.intel.oap.mllib
 
 import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
-import org.apache.spark.SparkContext
+import org.apache.spark.{Partition, SparkContext, SparkException}
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
-import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, PartitionGroup, RDD}
 import org.apache.spark.storage.StorageLevel
 
 import java.lang
@@ -35,10 +34,18 @@ import com.intel.daal.services.DaalContext
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.mllib.linalg.{DenseMatrix => OldDenseMatrix, Matrix => OldMatrix, Vector => OldVector}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, RDD}
+import org.apache.spark.scheduler.{ExecutorCacheTaskLocation, TaskLocation}
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable
+import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.{Await, Future}
+import scala.sys.exit
+
 
 object OneDAL {
 
@@ -651,15 +658,55 @@ object OneDAL {
 
   def coalesceToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Long] = {
+    logger.info(s"Processing partitions with $executorNum executors")
+    val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (data.getNumPartitions < executorNum) {
+      logger.info(s"Repartition to executorNum if not enough partitions")
+      val reData = data.repartition(executorNum).setName("RepartitionedRDD")
+      reData.cache().count()
+      reData
+    } else {
+      data
+    }
+
     // Coalesce partitions belonging to the same executor
-    val coalescedRdd = data
+    val coalescedRdd = dataForConversion
       .coalesce(executorNum,
         partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-      .setName("coalescedRdd")
+      .setName("coalescedRdd").cache()
 
     // convert RDD to HomogenTable
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
-      val table = makeHomogenTable(it.toArray, device)
+      val list = it.toList
+      val subRowCount: Int = list.size / numberCores
+      val futureList: ListBuffer[Future[Array[Double]]] = new ListBuffer[Future[Array[Double]]]()
+      val numRows = list.size
+      val numCols = list(0).toArray.size
+      val targetArray = new Array[Double](numRows * numCols)
+      for ( i <- 0 until  numberCores) {
+        val f = Future {
+          val iter = list.iterator
+          val slice = if (i == numberCores - 1) {
+            iter.slice(subRowCount * i, numRows * numCols)
+          } else {
+            iter.slice(subRowCount * i, subRowCount * i + subRowCount)
+          }
+          slice.toArray.zipWithIndex.map { case (vector, index) =>
+            val length = vector.toArray.length
+            System.arraycopy(vector.toArray, 0, targetArray, subRowCount * numCols * i + length * index, length)
+          }
+          targetArray
+        }
+        futureList += f
+
+      val result = Future.sequence(futureList)
+      Await.result(result, Duration.Inf)
+      }
+      val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArray,
+        device)
+
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
     coalescedTables.count()
@@ -822,5 +869,4 @@ object OneDAL {
   @native def cNewCSRNumericTableDouble(data: Array[Double],
                                         colIndices: Array[Long], rowOffsets: Array[Long],
                                         nFeatures: Long, nVectors: Long): Long
-
 }

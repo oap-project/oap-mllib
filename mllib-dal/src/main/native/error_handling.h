@@ -29,3 +29,4 @@ void checkPtr(void *ptr);
 void fileOpenError(const char *filename);
 void fileReadError();
 void sparceFileReadError();
+void deviceError();
