@@ -29,6 +29,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_regression_LinearRegressionDALImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -152,7 +153,6 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
     InputDataArchive dataArch;
     localAlgorithm.getPartialResult()->serialize(dataArch);
     size_t perNodeArchLength = dataArch.getSizeOfArchive();
-    // std::cout << "perNodeArchLength: " << perNodeArchLength << std::endl;
 
     serializedData =
         services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
@@ -221,6 +221,7 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
                                jlong pData, jlong pLabel,
                                jboolean jfitIntercept, jint executorNum,
                                jobject resultObj) {
+    print(INFO, "KP:oneDAL (native): GPU compute start , rankid %d\n", rankId);
     std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
               << std::endl;
     const bool isRoot = (rankId == ccl_root);
