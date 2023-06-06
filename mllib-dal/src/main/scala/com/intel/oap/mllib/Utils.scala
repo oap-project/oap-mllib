@@ -89,7 +89,7 @@ object Utils {
       val (endTimeStampName, endTime) = algoTimeStampList.last
       var contentMain = algoTimeStampList.view.map{case(k, v) => (Duration.between(v.timeStamp, startTime.timeStamp).toMillis())}.toList.tail
       val contentSize = contentMain.size
-      for ( i <- 1 to contentSize - 1){
+      for ( i <- contentSize - 1 to 1){
         contentMain.updated(i, contentMain(i) - contentMain(i - 1))
       }
       List(recorderName) ++ List(startTime.timeStampHuman) ++ contentMain.map{x => x.toString()} ++ List((Duration.between(endTime.timeStamp, startTime.timeStamp).toMillis()).toString())
