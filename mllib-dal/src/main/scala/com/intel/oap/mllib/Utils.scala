@@ -57,22 +57,27 @@ object Utils {
   class AlgoTimeStamp(var name: String) {
     var timeStamp = LocalDateTime.now()
     var timeStampHuman = "uninitialized time stamp"
-    def update(): Unit = {
+    def update(timeFileName: String): Unit = {
       timeStamp = LocalDateTime.now()
-      timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss").format(timeStamp)
+      timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss SSS").format(timeStamp)
+      val timeFile = new BufferedWriter(new FileWriter(new File(timeFileName), true))
+      timeFile.write(timeStampHuman)
+      timeFile.close
     }
   }
 
-  trait AlgoTimeMetrics {
-    val algoName: String
+  class AlgoTimeMetrics(val algoName: String) {
     val timeZoneName: List[String]
-    val algoTimeStampList: Map[String, AlgoTimeStamp]
-    val recorderName: String
+    val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Post-processing")
+    val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
+    val recorderName = Utils.GlobalTimeTable.register(this)
+    val timeFileName = recorderName + "time_breakdown"
+
     val timerEnabled = isTimerEnabled()
 
     def record(stampName: String): Unit = {
       if (timerEnabled) {
-        algoTimeStampList(stampName).update()
+        algoTimeStampList(stampName).update(timeFileName)
       }
     }
 

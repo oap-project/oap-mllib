@@ -27,14 +27,6 @@ import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
 
-
-class KMeansTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "KMeans"
-  val timeZoneName = List("Start", "Preprocessing", "Init random", "Device prepare", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
 class KMeansDALImpl(var nClusters: Int,
                     var maxIterations: Int,
                     var tolerance: Double,
@@ -45,7 +37,7 @@ class KMeansDALImpl(var nClusters: Int,
                    ) extends Serializable with Logging {
 
   def train(data: RDD[Vector],
-            kmeansTimer: KMeansTimerClass): MLlibKMeansModel = {
+            kmeansTimer: Utils.AlgoTimeMetrics): MLlibKMeansModel = {
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
