@@ -30,7 +30,7 @@ import breeze.optimize.{
 }
 import breeze.stats.distributions.StudentsT
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim, LinearRegressionTimerClass}
+import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim}
 import org.apache.hadoop.fs.Path
 import scala.collection.mutable
 
@@ -352,7 +352,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
     if ($(loss) == SquaredError && (($(solver) == Auto &&
       numFeatures <= WeightedLeastSquares.MAX_NUM_FEATURES) || $(solver) == Normal)) {
-      return trainWithNormal(dataset, instr, lrTimer)
+      return trainWithNormal(dataset, instr)
     }
 
     val instances = extractInstances(dataset)
@@ -453,8 +453,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
   private def trainWithNormal(
       dataset: Dataset[_],
-      instr: Instrumentation,
-      lrTimer: LinearRegressionTimerClass): LinearRegressionModel = {
+      instr: Instrumentation): LinearRegressionModel = {
     val paramSupported = ($(regParam) == 0) && (!isDefined(weightCol) || getWeightCol.isEmpty)
     val sparkContext = dataset.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -469,9 +468,8 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
         elasticNetParam = $(elasticNetParam), $(standardization), true,
         executor_num, executor_cores)
 
-      lrTimer.record("Preprocessing")
       // Return same model as WeightedLeastSquaresModel
-      val model = optimizer.train(dataset, $(labelCol), $(featuresCol), lrTimer)
+      val model = optimizer.train(dataset, $(labelCol), $(featuresCol))
 
       val lrModel = copyValues(
         new LinearRegressionModel(uid, model.coefficients, model.intercept))

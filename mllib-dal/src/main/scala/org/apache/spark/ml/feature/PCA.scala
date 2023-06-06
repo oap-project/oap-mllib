@@ -19,7 +19,7 @@
 
 package org.apache.spark.ml.feature
 
-import com.intel.oap.mllib.feature.{PCAShim, PCATimerClass}
+import com.intel.oap.mllib.feature.PCAShim
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml._
@@ -57,18 +57,9 @@ class PCA @Since("1.5.0") (
    */
   @Since("2.0.0")
   override def fit(dataset: Dataset[_]): PCAModel = {
-
-    val pcaTimer = new PCATimerClass()
-    pcaTimer.record("Start")
-
     val shim = PCAShim.create(uid)
     shim.initShim(extractParamMap())
-    val result = shim.fit(dataset, pcaTimer)
-
-    pcaTimer.record("Finishing")
-    pcaTimer.print()
-
-    result
+    shim.fit(dataset)
   }
 
   @Since("1.5.0")

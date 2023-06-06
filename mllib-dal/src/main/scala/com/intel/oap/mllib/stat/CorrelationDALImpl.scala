@@ -24,19 +24,13 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrix, Vector}
 import org.apache.spark.rdd.RDD
 
-class CorrelationTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "Correlation"
-  val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
 class CorrelationDALImpl(
                           val executorNum: Int,
                           val executorCores: Int)
   extends Serializable with Logging {
 
-  def computeCorrelationMatrix(data: RDD[Vector], corTimer: CorrelationTimerClass): Matrix = {
+  def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
+    val corTimer = new Utils.AlgoTimeMetrics("Correlation")
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
@@ -101,6 +95,7 @@ class CorrelationDALImpl(
     }.collect()
 
     corTimer.record("Training")
+    corTimer.print()
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 

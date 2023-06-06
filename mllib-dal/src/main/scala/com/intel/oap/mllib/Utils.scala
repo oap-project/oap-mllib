@@ -21,6 +21,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
 import java.net.InetAddress
+import java.io.{File, FileWriter, BufferedWriter}
 import java.time.LocalDateTime
 import java.time.Duration
 import java.time.format.DateTimeFormatter
@@ -67,8 +68,7 @@ object Utils {
   }
 
   class AlgoTimeMetrics(val algoName: String) {
-    val timeZoneName: List[String]
-    val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Post-processing")
+    val timeZoneName = List("Preprocessing", "Data Convertion", "Training")
     val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
     val recorderName = Utils.GlobalTimeTable.register(this)
     val timeFileName = recorderName + "time_breakdown"

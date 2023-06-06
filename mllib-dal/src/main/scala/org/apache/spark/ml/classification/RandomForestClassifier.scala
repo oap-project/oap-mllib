@@ -19,7 +19,7 @@
 
 package org.apache.spark.ml.classification
 
-import com.intel.oap.mllib.classification.{RandomForestClassifierShim}
+import com.intel.oap.mllib.classification.RandomForestClassifierShim
 import org.json4s.{DefaultFormats, JObject}
 import org.json4s.JsonDSL._
 

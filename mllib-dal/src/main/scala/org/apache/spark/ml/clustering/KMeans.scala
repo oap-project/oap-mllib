@@ -20,7 +20,6 @@
 package org.apache.spark.ml.clustering
 
 import com.intel.oap.mllib.clustering.KMeansShim
-import com.intel.oap.mllib.clustering.KMeansTimerClass
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.Estimator
@@ -93,17 +92,9 @@ class KMeans @Since("1.5.0") (
 
   @Since("2.0.0")
   override def fit(dataset: Dataset[_]): KMeansModel = {
-
-    val kmeansTimer = new KMeansTimerClass()
-    kmeansTimer.record("Start")
-
     val shim = KMeansShim.create(uid)
     shim.initShim(extractParamMap())
-    val result = shim.fit(dataset, kmeansTimer)
-
-    kmeansTimer.record("Finishing")
-    kmeansTimer.print()
-    result
+    shim.fit(dataset)
   }
 
   @Since("1.5.0")

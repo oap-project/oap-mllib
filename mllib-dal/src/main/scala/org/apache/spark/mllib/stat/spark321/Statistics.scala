@@ -17,7 +17,7 @@
 package org.apache.spark.mllib.stat.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.stat.{SummarizerDALImpl, SummarizerShim, SummarizerTimerClass}
+import com.intel.oap.mllib.stat.{SummarizerDALImpl, SummarizerShim}
 import scala.annotation.varargs
 
 import org.apache.spark.annotation.Since
@@ -51,7 +51,7 @@ class Statistics extends SummarizerShim {
     *        object containing column-wise summary statistics.
     */
   @Since("1.1.0")
-  def colStats(X: RDD[Vector], sumTimer: SummarizerTimerClass): MultivariateStatisticalSummary = {
+  def colStats(X: RDD[Vector]): MultivariateStatisticalSummary = {
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
       X.sparkContext)
     if (Utils.isOAPEnabled() && isPlatformSupported) {
@@ -66,7 +66,7 @@ class Statistics extends SummarizerShim {
       val executor_num = Utils.sparkExecutorNum(X.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val summary = new SummarizerDALImpl(executor_num, executor_cores)
-        .computeSummarizerMatrix(rdd, sumTimer)
+        .computeSummarizerMatrix(rdd)
       if (handlePersistence) {
         rdd.unpersist()
       }

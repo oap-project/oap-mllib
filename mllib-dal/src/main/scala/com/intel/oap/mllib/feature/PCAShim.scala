@@ -27,7 +27,7 @@ import org.apache.spark.{SPARK_VERSION, SparkException}
 
 trait PCAShim extends Logging {
   def initShim(params: ParamMap): Unit
-  def fit(dataset: Dataset[_], pcaTimer: PCATimerClass): PCAModel
+  def fit(dataset: Dataset[_]): PCAModel
 }
 
 object PCAShim extends Logging {

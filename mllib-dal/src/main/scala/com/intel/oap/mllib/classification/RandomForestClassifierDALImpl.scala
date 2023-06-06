@@ -34,13 +34,6 @@ import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
 
-class RandomForestClassifierTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "RandomForestClassifier"
-  val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
 class RandomForestClassifierDALImpl(val uid: String,
                                     val classCount: Int,
                                     val treeCount: Int,
@@ -60,8 +53,7 @@ class RandomForestClassifierDALImpl(val uid: String,
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
 
-    val rfcTimer = new RandomForestClassifierTimerClass()
-    rfcTimer.record("Start")
+    val rfcTimer = new Utils.AlgoTimeMetrics("Random Forest Classifier")
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -80,7 +72,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       throw new Exception("Random Forset didn't implemente for CPU device, " +
         "Please run on GPU device.")
     }
-    rfcTimer.record("Data conversion")
+    rfcTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
@@ -135,11 +127,9 @@ class RandomForestClassifierDALImpl(val uid: String,
     }.collect()
 
     rfcTimer.record("Training")
+    rfcTimer.print()
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-
-    rfcTimer.record("Finishing")
-    rfcTimer.print()
     results(0)
   }
 

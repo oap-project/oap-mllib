@@ -19,9 +19,7 @@
 
 package org.apache.spark.ml.regression
 
-import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.regression.{LinearRegressionDALImpl, LinearRegressionShim}
-import com.intel.oap.mllib.regression.LinearRegressionTimerClass
+import com.intel.oap.mllib.regression.LinearRegressionShim
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -230,7 +228,6 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 
   override protected def train(
       dataset: Dataset[_]): LinearRegressionModel = {
-
     val shim = LinearRegressionShim.create(uid)
     shim.initShim(extractParamMap())
     shim.train(dataset)

@@ -28,14 +28,6 @@ import org.apache.spark.sql.Dataset
 import java.util
 import scala.collection.JavaConversions._
 
-class RandomForestRegressorTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "RandomForestClassifier"
-  val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
-
 class RandomForestRegressorDALImpl(val uid: String,
                                     val treeCount: Int,
                                     val featurePerNode: Int,
@@ -53,8 +45,7 @@ class RandomForestRegressorDALImpl(val uid: String,
   def train(labeledPoints: Dataset[_],
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
-    val rfrTimer = new RandomForestRegressorTimerClass()
-    rfrTimer.record("Start")
+    val rfrTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier")
     logInfo(s"RandomForestRegressorDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -73,7 +64,7 @@ class RandomForestRegressorDALImpl(val uid: String,
       throw new Exception("Random Forset didn't implemente for CPU device, " +
         "Please run on GPU device.")
     }
-    rfrTimer.record("Data conversion")
+    rfrTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
@@ -135,9 +126,9 @@ class RandomForestRegressorDALImpl(val uid: String,
       ret
     }.collect()
     rfrTimer.record("Training")
+    rfrTimer.print()
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-    rfrTimer.record("Finishing")
 
     results(0)._2
   }

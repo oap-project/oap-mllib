@@ -26,16 +26,8 @@ import org.apache.spark.ml.regression.spark321.{LinearRegression => LinearRegres
 import org.apache.spark.sql.Dataset
 import org.apache.spark.{SPARK_VERSION, SparkException}
 
-class LinearRegressionTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "LinearRegression"
-  val timeZoneName = List("Start", "Preprocessing", "Device prepare", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
 
 trait LinearRegressionShim extends Serializable with Logging {
-  val lrTimer = new LinearRegressionTimerClass()
-  lrTimer.record("Start")
   def initShim(params: ParamMap): Unit
   def train(dataset: Dataset[_]): LinearRegressionModel
 }

@@ -20,7 +20,7 @@
 package org.apache.spark.ml.feature.spark321
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.feature.{PCADALImpl, PCAShim, PCATimerClass}
+import com.intel.oap.mllib.feature.{PCADALImpl, PCAShim}
 
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.feature.{PCA => SparkPCA, _}
@@ -49,8 +49,7 @@ class PCA @Since("1.5.0") (
    * Computes a [[PCAModel]] that contains the principal components of the input vectors.
    */
   @Since("2.0.0")
-  override def fit(dataset: Dataset[_],
-    pcaTimer: PCATimerClass): PCAModel = {
+  override def fit(dataset: Dataset[_]): PCAModel = {
     transformSchema(dataset.schema, logging = true)
     val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
     val input = dataset.select($(inputCol)).rdd
@@ -73,7 +72,7 @@ class PCA @Since("1.5.0") (
       val executor_num = Utils.sparkExecutorNum(dataset.sparkSession.sparkContext)
       val executor_cores = Utils.sparkExecutorCores()
       val pca = new PCADALImpl(k = $(k), executor_num, executor_cores)
-      val pcaDALModel = pca.train(inputVectors, pcaTimer)
+      val pcaDALModel = pca.train(inputVectors)
       if (handlePersistence) {
         inputVectors.unpersist()
       }

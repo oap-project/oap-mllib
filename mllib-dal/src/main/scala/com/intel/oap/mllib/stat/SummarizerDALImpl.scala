@@ -26,19 +26,12 @@ import org.apache.spark.rdd.RDD
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oneapi.dal.table.Common
 
-class SummarizerTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "Summarizer"
-  val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
 class SummarizerDALImpl(val executorNum: Int,
                         val executorCores: Int)
   extends Serializable with Logging {
 
-  def computeSummarizerMatrix(data: RDD[Vector],
-            sumTimer: SummarizerTimerClass): Summary = {
+  def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
+    val sumTimer = new Utils.AlgoTimeMetrics("Summarizer")
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
@@ -126,6 +119,7 @@ class SummarizerDALImpl(val executorNum: Int,
       ret
     }.collect()
     sumTimer.record("Training")
+    sumTimer.print()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

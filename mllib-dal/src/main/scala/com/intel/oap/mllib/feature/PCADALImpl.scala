@@ -37,20 +37,13 @@ class PCADALModel private[mllib] (
   val pc: OldDenseMatrix,
   val explainedVariance: OldDenseVector)
 
-class PCATimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "PCA"
-  val timeZoneName = List("Start", "Preprocessing", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
 class PCADALImpl(val k: Int,
                  val executorNum: Int,
                  val executorCores: Int)
   extends Serializable with Logging {
 
-  def train(data: RDD[Vector],
-    pcaTimer: PCATimerClass): PCADALModel = {
+  def train(data: RDD[Vector]): PCADALModel = {
+    val pcaTimer = new Utils.AlgoTimeMetrics("PCA")
     val normalizedData = normalizeData(data)
     val sparkContext = normalizedData.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -113,6 +106,7 @@ class PCADALImpl(val k: Int,
     }.collect()
 
     pcaTimer.record("Training")
+    pcaTimer.print()
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
