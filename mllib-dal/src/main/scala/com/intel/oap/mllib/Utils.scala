@@ -62,7 +62,7 @@ object Utils {
       timeStamp = LocalDateTime.now()
       timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss SSS").format(timeStamp)
       val timeFile = new BufferedWriter(new FileWriter(new File(timeFileName), true))
-      timeFile.write(timeStampHuman)
+      timeFile.write(name + " " + timeStampHuman)
       timeFile.close
     }
   }

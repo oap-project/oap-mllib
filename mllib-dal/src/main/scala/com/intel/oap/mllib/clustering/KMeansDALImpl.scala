@@ -49,7 +49,7 @@ class KMeansDALImpl(var nClusters: Int,
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-    kmeansTimer.record("Data conversion")
+    kmeansTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
