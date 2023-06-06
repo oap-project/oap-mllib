@@ -53,7 +53,20 @@ object Tabulator {
   def rowSeparator(colSizes: Seq[Int]) = colSizes map { "-" * _ } mkString("+", "+", "+")
 }
 
+
+
 object Utils {
+
+  def calculateSingle(pre: Long, cur: List[Long]): List[String] = {
+    if (cur.tail.isEmpty) {
+      return List((cur.head - pre).toString())
+    }
+    return List((cur.head - pre).toString()) ++ calculateSingle(cur.head, cur.tail)
+  }
+
+  def calculateTimeZone(raw: List[Long]): List[String] = {
+    return List(raw.head.toString()) ++ calculateSingle(raw.head, raw.tail)
+  }
 
   class AlgoTimeStamp(var name: String) {
     var timeStamp = LocalDateTime.now()
@@ -62,7 +75,7 @@ object Utils {
       timeStamp = LocalDateTime.now()
       timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss SSS").format(timeStamp)
       val timeFile = new BufferedWriter(new FileWriter(new File(timeFileName), true))
-      timeFile.write(name + " " + timeStampHuman)
+      timeFile.write(name + " " + timeStampHuman + "\n")
       timeFile.close
     }
   }
@@ -82,17 +95,13 @@ object Utils {
     }
 
     def getTableHead(): List[String] = {
-      List("AlgoName", "Start Time") ++ timeZoneName.tail.map(x => x + "(ms)") ++ List("Total time")
+      List("AlgoName", "Start Time") ++ timeZoneName.tail.map(x => x + "(ms)") ++ List("Total time(ms)")
     }
     def getTableContent(): List[String] = {
       val (startTimeStampName, startTime) = algoTimeStampList.head
       val (endTimeStampName, endTime) = algoTimeStampList.last
-      var contentMain = algoTimeStampList.view.map{case(k, v) => (Duration.between(v.timeStamp, startTime.timeStamp).toMillis())}.toList.tail
-      val contentSize = contentMain.size
-      for ( i <- contentSize - 1 to 1){
-        contentMain.updated(i, contentMain(i) - contentMain(i - 1))
-      }
-      List(recorderName) ++ List(startTime.timeStampHuman) ++ contentMain.map{x => x.toString()} ++ List((Duration.between(endTime.timeStamp, startTime.timeStamp).toMillis()).toString())
+      val contentMain = algoTimeStampList.view.map{case(k, v) => (Duration.between(startTime.timeStamp, v.timeStamp).toMillis())}.toList.tail
+      List(recorderName) ++ List(startTime.timeStampHuman) ++ calculateTimeZone(contentMain) ++ List((Duration.between(startTime.timeStamp, endTime.timeStamp).toMillis()).toString())
     }
 
     def print(): Unit = {

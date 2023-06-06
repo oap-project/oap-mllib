@@ -103,7 +103,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       throw new SparkException(msg)
     }
 
-    lrTimer.record("Data conversion")
+    lrTimer.record("Data Convertion")
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
         val (featureTabAddr, lableTabAddr) = tables.next()

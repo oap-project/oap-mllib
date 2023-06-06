@@ -33,6 +33,7 @@ from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
+    # INIT
     spark = SparkSession\
         .builder\
         .appName("KMeansExample")\
@@ -44,11 +45,16 @@ if __name__ == "__main__":
 
     # $example on$
     # Loads data.
+    # INIT end
+    # Preprocessing start
     dataset = spark.read.format("libsvm").load(sys.argv[1])
 
     # Trains a k-means model.
     kmeans = KMeans().setK(2).setSeed(1)
+
+    # Preprocessing end
     model = kmeans.fit(dataset)
+    # Convertion + training
 
     # Make predictions
     predictions = model.transform(dataset)
@@ -67,4 +73,5 @@ if __name__ == "__main__":
     # $example off$
 
     spark.stop()
+    # Postprocessing
 
