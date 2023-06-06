@@ -231,15 +231,9 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
   override protected def train(
       dataset: Dataset[_]): LinearRegressionModel = {
 
-    val LRTimer = new LinearRegressionTimerClass()
-    LRTimer.record("Start")
-
     val shim = LinearRegressionShim.create(uid)
     shim.initShim(extractParamMap())
-    val result = shim.train(dataset, LRTimer)
-    LRTimer.record("Finishing")
-    LRTimer.print()
-    result
+    shim.train(dataset)
   }
 
   @Since("1.4.0")

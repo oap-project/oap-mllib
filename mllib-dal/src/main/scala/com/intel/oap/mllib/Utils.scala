@@ -82,7 +82,12 @@ object Utils {
     def getTableContent(): List[String] = {
       val (startTimeStampName, startTime) = algoTimeStampList.head
       val (endTimeStampName, endTime) = algoTimeStampList.last
-      List(recorderName) ++ List(startTime.timeStampHuman) ++ algoTimeStampList.view.map{case(k, v) => (Duration.between(v.timeStamp, startTime.timeStamp).toMillis()).toString()}.toList.tail ++ List((Duration.between(endTime.timeStamp, startTime.timeStamp).toMillis()).toString())
+      var contentMain = algoTimeStampList.view.map{case(k, v) => (Duration.between(v.timeStamp, startTime.timeStamp).toMillis())}.toList.tail
+      val contentSize = contentMain.size
+      for ( i <- 1 to contentSize - 1){
+        contentMain.updated(i, contentMain(i) - contentMain(i - 1))
+      }
+      List(recorderName) ++ List(startTime.timeStampHuman) ++ contentMain.map{x => x.toString()} ++ List((Duration.between(endTime.timeStamp, startTime.timeStamp).toMillis()).toString())
     }
 
     def print(): Unit = {

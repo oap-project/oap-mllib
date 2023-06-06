@@ -49,13 +49,6 @@ private[mllib] class LinearRegressionDALModel(val coefficients: DenseVector,
 
   }
 
-class LinearRegressionTimerClass() extends Utils.AlgoTimeMetrics{
-  val algoName = "LinearRegression"
-  val timeZoneName = List("Start", "Preprocessing", "Device prepare", "Data conversion", "Training", "Finishing")
-  val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
-  val recorderName = Utils.GlobalTimeTable.register(this)
-}
-
 class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                val regParam: Double,
                                val elasticNetParam: Double,
@@ -167,6 +160,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     val parentModel = new LinearRegressionDALModel(
       new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),
       coefficientVector(0), new DenseVector(Array(0D)), Array(0D))
+    lrTimer.record("Finishing")
+    lrTimer.print()
 
     parentModel
   }

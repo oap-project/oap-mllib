@@ -334,8 +334,7 @@ class LinearRegression @Since("1.3.0") (@Since("1.3.0") override val uid: String
 //  def setMaxBlockSizeInMB(value: Double): this.type = set(maxBlockSizeInMB, value)
 
   override def train(
-      dataset: Dataset[_],
-      lrTimer: LinearRegressionTimerClass): LinearRegressionModel = instrumented { instr =>
+      dataset: Dataset[_]): LinearRegressionModel = instrumented { instr =>
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
     instr.logParams(this, labelCol, featuresCol, weightCol, predictionCol, solver, tol,
