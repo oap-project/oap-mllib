@@ -24,15 +24,20 @@ This example requires NumPy (http://www.numpy.org/).
 """
 from __future__ import print_function
 import sys
+sys.path.append('..')
+from utils.utils import Timer
 
 # $example on$
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.evaluation import ClusteringEvaluator
 # $example off$
 
+
 from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
+    kmeans_timer = Timer("KMeans")
+    kmeans_timer.record("Start")
     # INIT
     spark = SparkSession\
         .builder\
@@ -46,6 +51,7 @@ if __name__ == "__main__":
     # $example on$
     # Loads data.
     # INIT end
+    kmeans_timer.record("Init")
     # Preprocessing start
     dataset = spark.read.format("libsvm").load(sys.argv[1])
 
@@ -74,4 +80,6 @@ if __name__ == "__main__":
 
     spark.stop()
     # Postprocessing
+    kmeans_timer.record("Postprocessing")
+    kmeans_timer.printTimeTable()
 

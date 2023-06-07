@@ -73,9 +73,9 @@ object Utils {
     var timeStampHuman = "uninitialized time stamp"
     def update(timeFileName: String): Unit = {
       timeStamp = LocalDateTime.now()
-      timeStampHuman = DateTimeFormatter.ofPattern("dd-M-yyyy hh:mm:ss SSS").format(timeStamp)
+      timeStampHuman = DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss.SSS").format(timeStamp)
       val timeFile = new BufferedWriter(new FileWriter(new File(timeFileName), true))
-      timeFile.write(name + " " + timeStampHuman + "\n")
+      timeFile.write(name + "," + timeStampHuman + "\n")
       timeFile.close
     }
   }
@@ -117,9 +117,6 @@ object Utils {
 
   class TimeMetricsTable {
     private var _algoTimeMetricsList = collection.mutable.Map[String, collection.mutable.ListBuffer[AlgoTimeMetrics]]()
-    def print(): Unit = {
-      println("KP: log timetable")
-    }
     def register(timeMetrics: AlgoTimeMetrics): String = {
       val timeClassList = _algoTimeMetricsList.getOrElseUpdate(timeMetrics.algoName, ListBuffer())
       timeClassList += timeMetrics
