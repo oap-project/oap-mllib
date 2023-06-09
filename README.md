@@ -107,6 +107,8 @@ __Note: Intel GPUs are not fully supported in YARN Cluster Manager, please use S
 
 #### OAP MLlib Specific Configuration
 
+`spark.oap.mllib.device` is used to select compute device, you can set it as `CPU` or `GPU`. Default value is `CPU` if it's not specified. Please check [List of Accelerated Algorithms](#list-of-accelerated-algorithms) for supported algorithms of each compute device.
+
 OAP MLlib adopted oneDAL as implementation backend. oneDAL requires enough native memory allocated for each executor. For large dataset, depending on algorithms, you may need to tune `spark.executor.memoryOverhead` to allocate enough native memory. Setting this value to larger than __dataset size / executor number__ is a good starting point.
 
 OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As `spark.shuffle.reduceLocality.enabled` option is `true` by default, when the dataset is not evenly distributed accross executors, this option may result in assigning more than 1 rank to single executor and task failing. The error could be fixed by setting `spark.shuffle.reduceLocality.enabled` to `false`.
