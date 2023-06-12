@@ -36,9 +36,9 @@ from pyspark.ml.evaluation import ClusteringEvaluator
 from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
-    kmeans_timer = Timer("KMeans")
-    kmeans_timer.record("Start")
-    # INIT
+    timer = Timer("KMeans")
+    timer.record("Start")
+
     spark = SparkSession\
         .builder\
         .appName("KMeansExample")\
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # $example on$
     # Loads data.
     # INIT end
-    kmeans_timer.record("Init")
+    timer.record("Init")
     # Preprocessing start
     dataset = spark.read.format("libsvm").load(sys.argv[1])
 
@@ -80,6 +80,6 @@ if __name__ == "__main__":
 
     spark.stop()
     # Postprocessing
-    kmeans_timer.record("Postprocessing")
-    kmeans_timer.printTimeTable()
+    timer.record("Postprocessing")
+    timer.printTimeTable()
 
