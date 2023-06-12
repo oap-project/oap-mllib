@@ -26,7 +26,6 @@ import org.apache.spark.ml.regression.spark321.{LinearRegression => LinearRegres
 import org.apache.spark.sql.Dataset
 import org.apache.spark.{SPARK_VERSION, SparkException}
 
-
 trait LinearRegressionShim extends Serializable with Logging {
   def initShim(params: ParamMap): Unit
   def train(dataset: Dataset[_]): LinearRegressionModel

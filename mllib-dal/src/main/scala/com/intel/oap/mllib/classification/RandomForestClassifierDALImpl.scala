@@ -53,7 +53,7 @@ class RandomForestClassifierDALImpl(val uid: String,
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
 
-    val rfcTimer = new Utils.AlgoTimeMetrics("Random Forest Classifier")
+    val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier")
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -130,6 +130,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     rfcTimer.print()
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
+
     results(0)
   }
 

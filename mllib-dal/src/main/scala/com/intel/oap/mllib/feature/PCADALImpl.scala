@@ -49,6 +49,7 @@ class PCADALImpl(val k: Int,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     pcaTimer.record("Preprocessing")
+
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(normalizedData, executorNum,
         computeDevice)
@@ -56,7 +57,7 @@ class PCADALImpl(val k: Int,
       OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
     }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
-    pcaTimer.record("Data conversion")
+    pcaTimer.record("Data Convertion")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
@@ -104,9 +105,9 @@ class PCADALImpl(val k: Int,
       OneCCL.cleanup()
       ret
     }.collect()
-
     pcaTimer.record("Training")
     pcaTimer.print()
+
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 

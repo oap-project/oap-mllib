@@ -41,7 +41,6 @@ class KMeansDALImpl(var nClusters: Int,
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
-
     kmeansTimer.record("Preprocessing")
 
     val coalescedTables = if (useDevice == "GPU") {
@@ -100,9 +99,9 @@ class KMeansDALImpl(var nClusters: Int,
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
-
     kmeansTimer.record("Training")
     kmeansTimer.print()
+
     val centerVectors = results(0)._1
     val totalCost = results(0)._2
     val iterationNum = results(0)._3
@@ -119,7 +118,6 @@ class KMeansDALImpl(var nClusters: Int,
     val parentModel = new MLlibKMeansModel(
       centerVectors.map(OldVectors.fromML(_)),
       distanceMeasure, totalCost, iterationNum)
-    //KP: Timer
 
     parentModel
   }
