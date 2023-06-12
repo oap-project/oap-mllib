@@ -35,13 +35,15 @@ class CorrelationDALImpl(
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
+
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum,
         computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-    corTimer.record("Data conversion")
+    corTimer.record("Data Convertion")
+
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -93,9 +95,9 @@ class CorrelationDALImpl(
       OneCCL.cleanup()
       ret
     }.collect()
-
     corTimer.record("Training")
     corTimer.print()
+
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 

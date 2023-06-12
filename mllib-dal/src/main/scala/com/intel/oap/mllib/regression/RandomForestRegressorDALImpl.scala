@@ -45,7 +45,7 @@ class RandomForestRegressorDALImpl(val uid: String,
   def train(labeledPoints: Dataset[_],
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
-    val rfrTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier")
+    val rfrTimer = new Utils.AlgoTimeMetrics("RandomForestRegressor")
     logInfo(s"RandomForestRegressorDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -53,6 +53,7 @@ class RandomForestRegressorDALImpl(val uid: String,
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
     rfrTimer.record("Preprocessing")
+
     val labeledPointsTables = if (useDevice == "GPU") {
       if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
         OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
@@ -65,6 +66,7 @@ class RandomForestRegressorDALImpl(val uid: String,
         "Please run on GPU device.")
     }
     rfrTimer.record("Data Convertion")
+
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
@@ -127,6 +129,7 @@ class RandomForestRegressorDALImpl(val uid: String,
     }.collect()
     rfrTimer.record("Training")
     rfrTimer.print()
+
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 

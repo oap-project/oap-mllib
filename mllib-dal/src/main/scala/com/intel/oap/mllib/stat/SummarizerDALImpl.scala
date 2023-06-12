@@ -36,13 +36,15 @@ class SummarizerDALImpl(val executorNum: Int,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     sumTimer.record("Preprocessing")
+
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum,
         computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
-    sumTimer.record("Data conversion")
+    sumTimer.record("Data Convertion")
+
     val kvsIPPort = getOneCCLIPPort(data)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
