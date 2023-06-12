@@ -16,17 +16,12 @@
 #
 
 import sys
-sys.path.append('..')
-from utils.utils import Timer
 
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.feature import PCA
 from pyspark.sql import SparkSession
 
 if __name__ == "__main__":
-    timer = Timer("PCA")
-    timer.record("Start")
-
     spark = SparkSession\
         .builder\
         .appName("PCAExample")\
@@ -35,8 +30,6 @@ if __name__ == "__main__":
     if (len(sys.argv) != 3) :
         print("bin/spark-submit pca-pyspark.py <data_set.csv> <param_K>")
         sys.exit(1)    
-
-    timer.record("Init")
 
     input = spark.read.load(sys.argv[1], format="csv", inferSchema="true", header="false")
     K = int(sys.argv[2])    
@@ -55,5 +48,3 @@ if __name__ == "__main__":
     print("Explained Variance: ", model.explainedVariance, sep='\n')
 
     spark.stop()
-    timer.record("Postprocessing")
-    timer.printTimeTable()
