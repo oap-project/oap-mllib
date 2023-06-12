@@ -110,9 +110,6 @@ object Utils {
         println(Tabulator.format(List(getTableHead ,getTableContent)))
       }
     }
-
-    def writeToFile(filename: String): Unit = {
-    }
   }
 
   class TimeMetricsTable {
@@ -143,7 +140,7 @@ object Utils {
 
   def isTimerEnabled(): Boolean = {
     val sc = SparkSession.active.sparkContext
-    sc.getConf.getBoolean("spark.oap.mllib.timer", true)
+    sc.getConf.getBoolean("spark.oap.mllib.timer", false)
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {
