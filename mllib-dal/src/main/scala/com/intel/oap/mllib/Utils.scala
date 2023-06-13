@@ -107,7 +107,7 @@ object Utils {
     def print(): Unit = {
       if (timerEnabled) {
         println("OAP MLlib: time metrics")
-        println(Tabulator.format(List(getTableHead ,getTableContent)))
+        println(Tabulator.format(List(getTableHead, getTableContent)))
       }
     }
   }
