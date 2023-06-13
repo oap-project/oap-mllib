@@ -140,7 +140,7 @@ object Utils {
 
   def isTimerEnabled(): Boolean = {
     val sc = SparkSession.active.sparkContext
-    sc.getConf.getBoolean("spark.oap.mllib.timer", false)
+    sc.getConf.getBoolean("spark.oap.mllib.performance.recording", false)
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {
