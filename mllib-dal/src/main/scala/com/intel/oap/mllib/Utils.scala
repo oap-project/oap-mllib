@@ -21,8 +21,109 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
 import java.net.InetAddress
+import java.io.{File, FileWriter, BufferedWriter}
+import java.time.LocalDateTime
+import java.time.Duration
+import java.time.format.DateTimeFormatter
+import collection.mutable.ListBuffer
+
+object Tabulator {
+  def format(table: Seq[Seq[Any]]) = table match {
+    case Seq() => ""
+    case _ => 
+    val sizes = for (row <- table) yield (for (cell <- row) yield if (cell == null) 0 else cell.toString.length)
+    val colSizes = for (col <- sizes.transpose) yield col.max
+    val rows = for (row <- table) yield formatRow(row, colSizes)
+    formatRows(rowSeparator(colSizes), rows)
+    }
+
+  def formatRows(rowSeparator: String, rows: Seq[String]): String = (
+    rowSeparator :: 
+    rows.head :: 
+    rowSeparator :: 
+    rows.tail.toList ::: 
+    rowSeparator :: 
+    List()).mkString("\n")
+
+  def formatRow(row: Seq[Any], colSizes: Seq[Int]) = {
+    val cells = (for ((item, size) <- row.zip(colSizes)) yield if (size == 0) "" else ("%" + size + "s").format(item))
+      cells.mkString("|", "|", "|")
+    }
+
+  def rowSeparator(colSizes: Seq[Int]) = colSizes map { "-" * _ } mkString("+", "+", "+")
+}
+
+
 
 object Utils {
+
+  def calculateSingle(pre: Long, cur: List[Long]): List[String] = {
+    if (cur.tail.isEmpty) {
+      return List((cur.head - pre).toString())
+    }
+    return List((cur.head - pre).toString()) ++ calculateSingle(cur.head, cur.tail)
+  }
+
+  def calculateTimeZone(raw: List[Long]): List[String] = {
+    return List(raw.head.toString()) ++ calculateSingle(raw.head, raw.tail)
+  }
+
+  class AlgoTimeStamp(var name: String) {
+    var timeStamp = LocalDateTime.now()
+    var timeStampHuman = "uninitialized time stamp"
+    def update(timeFileName: String): Unit = {
+      timeStamp = LocalDateTime.now()
+      timeStampHuman = DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss.SSS").format(timeStamp)
+      val timeFile = new BufferedWriter(new FileWriter(new File(timeFileName), true))
+      timeFile.write(name + "," + timeStampHuman + "\n")
+      timeFile.close
+    }
+  }
+
+  class AlgoTimeMetrics(val algoName: String) {
+    val timeZoneName = List("Preprocessing", "Data Convertion", "Training")
+    val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
+    val recorderName = Utils.GlobalTimeTable.register(this)
+    val timeFileName = recorderName + "time_breakdown"
+
+    val timerEnabled = isTimerEnabled()
+
+    def record(stampName: String): Unit = {
+      if (timerEnabled) {
+        algoTimeStampList(stampName).update(timeFileName)
+      }
+    }
+
+    def getTableHead(): List[String] = {
+      List("AlgoName", "Start Time") ++ timeZoneName.tail.map(x => x + "(ms)") ++ List("Total time(ms)")
+    }
+    def getTableContent(): List[String] = {
+      val (startTimeStampName, startTime) = algoTimeStampList.head
+      val (endTimeStampName, endTime) = algoTimeStampList.last
+      val contentMain = algoTimeStampList.view.map{case(k, v) => (Duration.between(startTime.timeStamp, v.timeStamp).toMillis())}.toList.tail
+      List(recorderName) ++ List(startTime.timeStampHuman) ++ calculateTimeZone(contentMain) ++ List((Duration.between(startTime.timeStamp, endTime.timeStamp).toMillis()).toString())
+    }
+
+    def print(): Unit = {
+      if (timerEnabled) {
+        println("OAP MLlib: time metrics")
+        println(Tabulator.format(List(getTableHead, getTableContent)))
+      }
+    }
+  }
+
+  class TimeMetricsTable {
+    private var _algoTimeMetricsList = collection.mutable.Map[String, collection.mutable.ListBuffer[AlgoTimeMetrics]]()
+    def register(timeMetrics: AlgoTimeMetrics): String = {
+      val timeClassList = _algoTimeMetricsList.getOrElseUpdate(timeMetrics.algoName, ListBuffer())
+      timeClassList += timeMetrics
+      val recorderName = timeMetrics.algoName + timeClassList.size.toString
+      return recorderName
+    }
+  }
+
+
+  val GlobalTimeTable = new TimeMetricsTable()
 
   val DefaultComputeDevice = "GPU"
   def isOAPEnabled(): Boolean = {
@@ -35,6 +136,11 @@ object Utils {
           s"spark.dynamicAllocation.enabled should be set to false")
     }
     isOap
+  }
+
+  def isTimerEnabled(): Boolean = {
+    val sc = SparkSession.active.sparkContext
+    sc.getConf.getBoolean("spark.oap.mllib.performance.recording", false)
   }
 
   def getOneCCLIPPort(data: RDD[_]): String = {

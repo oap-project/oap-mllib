@@ -31,15 +31,20 @@ class SummarizerDALImpl(val executorNum: Int,
   extends Serializable with Logging {
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
+    val sumTimer = new Utils.AlgoTimeMetrics("Summarizer")
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    sumTimer.record("Preprocessing")
+
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum,
         computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
+    sumTimer.record("Data Convertion")
+
     val kvsIPPort = getOneCCLIPPort(data)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -115,6 +120,8 @@ class SummarizerDALImpl(val executorNum: Int,
       OneCCL.cleanup()
       ret
     }.collect()
+    sumTimer.record("Training")
+    sumTimer.print()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

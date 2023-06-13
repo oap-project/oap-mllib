@@ -70,6 +70,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             labelCol: String,
             featuresCol: String): LinearRegressionDALModel = {
 
+    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression")
     val sparkContext = labeledPoints.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
@@ -77,6 +78,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+    lrTimer.record("Preprocessing")
 
     val labeledPointsTables = if (useDevice == "GPU") {
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
@@ -100,6 +102,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
       logError(msg)
       throw new SparkException(msg)
     }
+    lrTimer.record("Data Convertion")
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
@@ -152,6 +155,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     assert(results.length == 1)
 
     val coefficientVector = results(0)
+    lrTimer.record("Training")
+    lrTimer.print()
 
     val parentModel = new LinearRegressionDALModel(
       new DenseVector(coefficientVector.toArray.slice(1, coefficientVector.size)),

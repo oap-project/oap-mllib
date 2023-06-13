@@ -30,15 +30,20 @@ class CorrelationDALImpl(
   extends Serializable with Logging {
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
+    val corTimer = new Utils.AlgoTimeMetrics("Correlation")
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    corTimer.record("Preprocessing")
+
     val coalescedTables = if (useDevice == "GPU") {
       OneDAL.coalesceToHomogenTables(data, executorNum,
         computeDevice)
     } else {
       OneDAL.rddVectorToMergedTables(data, executorNum)
     }
+    corTimer.record("Data Convertion")
+
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
@@ -90,6 +95,8 @@ class CorrelationDALImpl(
       OneCCL.cleanup()
       ret
     }.collect()
+    corTimer.record("Training")
+    corTimer.print()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

@@ -52,12 +52,15 @@ class RandomForestClassifierDALImpl(val uid: String,
   def train(labeledPoints: Dataset[_],
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
+
+    val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier")
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
+    rfcTimer.record("Preprocessing")
     val labeledPointsTables = if (useDevice == "GPU") {
       if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
         OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints,
@@ -69,6 +72,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       throw new Exception("Random Forset didn't implemente for CPU device, " +
         "Please run on GPU device.")
     }
+    rfcTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
@@ -122,6 +126,8 @@ class RandomForestClassifierDALImpl(val uid: String,
       ret
     }.collect()
 
+    rfcTimer.record("Training")
+    rfcTimer.print()
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
 
