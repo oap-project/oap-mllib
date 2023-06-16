@@ -40,6 +40,7 @@ cp ./yarn-site.xml ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ./hadoop-env.sh ~/opt/hadoop-$HADOOP_VERSION/etc/hadoop/
 cp ../log4j.properties ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
 cp ./spark-defaults.conf ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/conf
+cp ~/opt/spark-$SPARK_VERSION-bin-$SPARK_HADOOP_VERSION/yarn/spark-*-yarn-shuffle.jar ~/opt/hadoop-$HADOOP_VERSION/share/hadoop/yarn/lib/
 
 echo $HOST_IP > $HADOOP_HOME/etc/hadoop/slaves
 echo $HOST_IP > $SPARK_HOME/conf/slaves
@@ -53,9 +54,19 @@ mkdir -p /tmp/run/hdfs/datanode
 # hdfs format
 $HADOOP_HOME/bin/hdfs namenode -format
 
+wget -P $HADOOP_HOME/share/hadoop/yarn/lib/ https://repo1.maven.org/maven2/javax/activation/activation/1.1.1/activation-1.1.1.jar
+
 # start hdfs and yarn
 $HADOOP_HOME/sbin/start-dfs.sh
 $HADOOP_HOME/sbin/start-yarn.sh
+
+jps
+free -g
+df -h
+yarn application -list
+ls -ls $HADOOP_HOME/logs/
+cat $HADOOP_HOME/logs/hadoop-*-resourcemanager-*.log
+cat $HADOOP_HOME/logs/hadoop-*-nodemanager-*.log
 
 hadoop fs -ls /
 yarn node -list

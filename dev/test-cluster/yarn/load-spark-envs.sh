@@ -15,5 +15,6 @@ export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
 export PYSPARK_PYTHON=python3
 
 export PATH=$HADOOP_HOME/bin:$SPARK_HOME/bin:$PATH
+export FI_TCP_IFACE=eth0
 
 set +x
