@@ -12,7 +12,7 @@ do
   echo Running $dir ...
   echo ==========================
   echo
-  ./run.sh
+  ./run-cpu.sh
   cd ..
 done
 
