@@ -10,6 +10,6 @@ do
   echo Building $dir ...
   echo ===================
   echo
-  mv ./run-gpu-standalone.sh ./run-gpu.sh
+  rm ./*.log
   cd ..
 done

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-source ../../conf/env.sh
+CONF_PATH=../../../conf
+source $CONF_PATH/env.sh
 
 DEVICE=CPU
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
