@@ -33,5 +33,5 @@ echo "========================================="
 
 # Build and run all examples
 ./build-all-scala.sh
-./run-all-scala.sh
+./run-all-scala-cpu.sh
 ./run-all-pyspark.sh

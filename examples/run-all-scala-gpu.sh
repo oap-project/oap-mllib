@@ -2,6 +2,8 @@
 
 exampleDirs=(kmeans pca linear-regression correlation summarizer)
 
+cd scala
+
 for dir in ${exampleDirs[*]}
 do
   cd $dir
@@ -13,3 +15,5 @@ do
   ./run-gpu.sh
   cd ..
 done
+
+cd ..
