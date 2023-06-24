@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ../../conf/env.sh
+source ../../../conf/env.sh
 
 # Data file is converted from oneDAL examples ($DAALROOT/examples/daal/data/batch/implicit_als_csr.csv)
 # The data file should be copied to $HDFS_ROOT before running examples

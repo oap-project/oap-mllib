@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-source ../../conf/env.sh
+CONF_PATH=../../../conf
+source $CONF_PATH/env.sh
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
 APP_CLASS=org.apache.spark.examples.ml.PCAExample
 
 DEVICE=GPU
-RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
+RESOURCE_FILE=$CONF_PATH/IntelGpuResourceFile.json
 WORKER_GPU_AMOUNT=4
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1

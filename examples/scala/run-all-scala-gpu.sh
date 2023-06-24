@@ -10,6 +10,6 @@ do
   echo Running $dir ...
   echo ==========================
   echo
-  ./run.sh
+  ./run-gpu.sh
   cd ..
 done

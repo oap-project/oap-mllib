@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ../../conf/env.sh
+source ../../../conf/env.sh
 
 # CSV data is the same as in Spark example "ml/pca_example.py"
 # The data file should be copied to $HDFS_ROOT before running examples
