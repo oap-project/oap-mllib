@@ -2,6 +2,8 @@
 
 exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark)
 
+cd python
+
 for dir in ${exampleDirs[*]}
 do
   cd $dir
@@ -13,3 +15,5 @@ do
   ./run.sh
   cd ..
 done
+
+cd ..
