@@ -22,6 +22,8 @@
 
 #include "ALSShuffle.h"
 
+#include "Logger.h"
+
 using namespace std;
 
 std::vector<Rating> recvData;
@@ -76,7 +78,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
         // perNodeSendLens[i] << endl;
         sendBufSize += perNodeSendLens[i];
     }
-    cout << "sendData size " << sendBufSize << endl;
+    print(INFO, "sendData size %d\n", sendBufSize);
     sendData.resize(sendBufSize);
 
     // Fill in send buffer
@@ -119,8 +121,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
     // std::distance(recvData.begin(), iter);
     newCsrRowNum = distinct_count(recvData);
 
-    cout << "newRatingsNum: " << newRatingsNum
-         << " newCsrRowNum: " << newCsrRowNum << endl;
+    print(INFO, "newRatingsNum: %d, newCsrRowNum: %d\n", newRatingsNum, newCsrRowNum);
 
     return recvData.data();
 }

@@ -82,8 +82,8 @@ else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
 endif
 
 CPP_SRCS += \
-  ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
   ./Logger.cpp \
+  ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
   ./KMeansImpl.cpp \
   ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
@@ -99,6 +99,7 @@ CPP_SRCS += \
   ./oneapi/dal/RowAccessorImpl.cpp
 
 OBJS += \
+  ./Logger.o\
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
   ./KMeansImpl.o \
   ./PCAImpl.o \
