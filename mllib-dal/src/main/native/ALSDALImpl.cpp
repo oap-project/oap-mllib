@@ -24,6 +24,8 @@
 
 #include "ALSShuffle.h"
 
+#include "Logger.h"
+
 using namespace std;
 using namespace daal;
 using namespace daal::algorithms;
@@ -210,7 +212,7 @@ void initializeStep2Local(
 
 void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
                      size_t nBlocks, size_t nUsers, size_t nFactors) {
-    std::cout << "ALS (native): initializeModel " << std::endl;
+    print(INFO, "ALS (native): initializeModel \n");
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -229,8 +231,7 @@ void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cout << "ALS (native): initializeModel took " << duration << " secs"
-              << std::endl;
+    print(INFO, "ALS (native): initializeModel took %d secs\n", duration);
 }
 
 training::DistributedPartialResultStep1Ptr computeStep1Local(
@@ -312,7 +313,7 @@ computeStep4Local(const CSRNumericTablePtr &dataTable,
 
 void trainModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
                 size_t nBlocks, size_t nFactors, size_t maxIterations) {
-    std::cout << "ALS (native): trainModel" << std::endl;
+    print(INFO, "ALS (native): trainModel\n");
 
     auto tStart = std::chrono::high_resolution_clock::now();
 
@@ -421,15 +422,13 @@ void trainModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        std::cout << "ALS (native): iteration " << iteration << " took "
-                  << duration << " secs" << std::endl;
+	print(INFO, "ALS (native): iteration %d took %f secs\n",iteration ,duration);
     }
 
     auto tEnd = std::chrono::high_resolution_clock::now();
     auto durationTotal =
         std::chrono::duration_cast<std::chrono::seconds>(tEnd - tStart).count();
-    std::cout << "ALS (native): trainModel took " << durationTotal << " secs"
-              << std::endl;
+    print(INFO, "ALS (native): trainModel took %d secs\n", durationTotal);
 }
 
 static size_t getOffsetFromOffsetTable(NumericTablePtr offsetTable) {
@@ -447,7 +446,7 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     JNIEnv *env, jobject obj, jobject dataBuffer, jint nTotalKeys, jint nBlocks,
     jobject infoObj) {
     //   cout << "cShuffleData: rank " << rankId << endl;
-    cout << "RATING_SIZE: " << RATING_SIZE << endl;
+    print(INFO, "RATING_SIZE: %d\n", RATING_SIZE);
 
     ccl::communicator &comm = getComm();
 
@@ -491,19 +490,18 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
 
     dataTable = *((CSRNumericTablePtr *)numTableAddr);
 
-    cout << "ALS (native): Input info: " << endl;
-    cout << "- NumberOfRows: " << dataTable->getNumberOfRows() << endl;
-    cout << "- NumberOfColumns: " << dataTable->getNumberOfColumns() << endl;
-    cout << "- NumberOfRatings: " << dataTable->getDataSize() << endl;
-    cout << "- fullNUsers: " << nUsers << endl;
-    cout << "- nFactors: " << nFactors << endl;
+    print(INFO, "ALS (native): Input info: ");
+    print(INFO, "- NumberOfRows: %d\n", dataTable->getNumberOfRows());
+    print(INFO, "- NumberOfColumns: %d\n", dataTable->getNumberOfColumns());
+    print(INFO, "- NumberOfRatings: %d\n", dataTable->getDataSize());
+    print(INFO, "- fullNUsers: %d\n", nUsers);
+    print(INFO, "- nFactors: %d\n", nFactors);
 
     // Set number of threads for oneDAL to use for each rank
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
-    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-         << endl;
+    print(INFO, "oneDAL (native): Number of CPU threads used: %d\n", nThreadsNew);
 
     int nBlocks = executor_num;
     initializeModel(rankId, comm, partitionId, nBlocks, nUsers, nFactors);
@@ -514,16 +512,16 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     auto pItem = itemsPartialResultLocal->get(training::outputOfStep4ForStep1)
                      ->getFactors();
 
-    std::cout << "\n=== Results for Rank " << rankId << "===\n" << std::endl;
+    print(INFO, "\n");
+    print(INFO, "=== Results for Rank %d ===\n", rankId);
+    print(INFO, "\n");
     printNumericTable(pUser, "User Factors (first 10 rows x 20 columns):", 10,
                       20);
     printNumericTable(pItem, "Item Factors (first 10 rows x 20 columns):", 10,
                       20);
-    std::cout << "User Offset: " << getOffsetFromOffsetTable(userOffset)
-              << std::endl;
-    std::cout << "Item Offset: " << getOffsetFromOffsetTable(itemOffset)
-              << std::endl;
-    std::cout << std::endl;
+    print(INFO, "User Offset: %d\n", getOffsetFromOffsetTable(userOffset));
+    print(INFO, "Item Offset: %d\n", getOffsetFromOffsetTable(itemOffset));
+    print(INFO, "\n");
 
     // Get the class of the input object
     jclass clazz = env->GetObjectClass(resultObj);
