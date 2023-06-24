@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-exampleDirs=(kmeans pca linear-regression correlation summarizer)
+exampleDirs=(kmeans-scala pca-scala als-scala naive-bayes-scala \
+       	linear-regression-scala correlation-scala summarizer-scala)
 
 cd scala
 
