@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-source ../../../conf/env.sh
+CONF_PATH=../../../conf
+source $CONF_PATH/env.sh
 
-# Data file is converted from oneDAL examples ($DAALROOT/examples/daal/data/batch/implicit_als_csr.csv)
+# Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=$HDFS_ROOT/data/onedal_als_csr_ratings.txt
+DATA_FILE=$HDFS_ROOT/data/sample_kmeans_data.txt
 
 DEVICE=CPU
-APP_PY=als-pyspark.py
+APP_PY=kmeans-pyspark.py
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
@@ -26,4 +27,4 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
     $APP_PY $DATA_FILE \
-    2>&1 | tee ALS-$(date +%m%d_%H_%M_%S).log
+    2>&1 | tee KMeans-$(date +%m%d_%H_%M_%S).log

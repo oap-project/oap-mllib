@@ -3,18 +3,17 @@
 CONF_PATH=../../../conf
 source $CONF_PATH/env.sh
 
-# Data file is from Spark Examples (data/mllib/sample_linear_regression_data.txt) and put in examples/data
+# Data file is converted from oneDAL examples ($DAALROOT/examples/daal/data/batch/implicit_als_csr.csv)
 # The data file should be copied to $HDFS_ROOT before running examples
-DATA_FILE=$HDFS_ROOT/data/sample_linear_regression_data.txt
-
-APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
-APP_CLASS=org.apache.spark.examples.ml.LinearRegressionExample
+DATA_FILE=$HDFS_ROOT/data/onedal_als_csr_ratings.txt
 
 DEVICE=GPU
 RESOURCE_FILE=$CONF_PATH/IntelGpuResourceFile.json
 WORKER_GPU_AMOUNT=4
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
+APP_PY=als-pyspark.py
+
 
 # Should run in standalone mode
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
@@ -37,6 +36,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
-    --class $APP_CLASS \
-    $APP_JAR $DATA_FILE \
-    2>&1 | tee LinearRegression-$(date +%m%d_%H_%M_%S).log
+    $APP_PY $DATA_FILE \
+    2>&1 | tee ALS-$(date +%m%d_%H_%M_%S).log

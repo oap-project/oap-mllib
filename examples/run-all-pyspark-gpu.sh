@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-exampleDirs=(kmeans-scala pca-scala linear-regression-scala correlation-scala summarizer-scala)
+exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark random-forest-pyspark)
 
-cd scala
+cd python
 
 for dir in ${exampleDirs[*]}
 do
