@@ -55,8 +55,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "Correleation (native): local step took " << duration / 1000
-              << " secs" << std::endl;
+    print(INFO, "Correleation (native): local step took %d secs\n", duration / 1000);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -82,6 +81,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    print(INFO, "Correleation (native): ccl_allgatherv took "
     std::cout << "Correleation (native): ccl_allgatherv took "
               << duration / 1000 << " secs" << std::endl;
     if (isRoot) {
