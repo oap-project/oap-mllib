@@ -72,7 +72,7 @@ jobs:
             ${{ runner.os }}-
       - name: Cluster Test
         run: |
-          ${{github.workspace}}/dev/ci/ci-yarn-test.sh
+          ${{github.workspace}}/dev/ci/ci-yarn-test-cpu.sh
   standalone-test:
     name: Standalone CPU_GPU_PROFILE Test for Examples (CPU)
     runs-on: ubuntu-20.04
@@ -95,4 +95,4 @@ jobs:
             ${{ runner.os }}-
       - name: Cluster Test
         run: |
-          ${{github.workspace}}/dev/ci/ci-standalone-test.sh
+          ${{github.workspace}}/dev/ci/ci-standalone-test-cpu.sh
