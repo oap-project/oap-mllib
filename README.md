@@ -16,7 +16,7 @@ OAP MLlib is a platform optimized package to accelerate machine learning algorit
 
 ## Who will use OAP MLlib
 
-This solution is intended for researchers, data scientists and enterprise users to accelerate their Spark MLlib algorithms with minimum configuration changes. 
+This solution is intended for researchers, data scientists and enterprise users to accelerate their Spark MLlib algorithms with minimum configuration changes.
 
 # Architecture
 
