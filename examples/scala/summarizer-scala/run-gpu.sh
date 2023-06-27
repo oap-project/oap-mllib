@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONF_PATH=../../../conf
+CONF_PATH=$PWD/../../conf
 source $CONF_PATH/env.sh
 
 APP_JAR=target/oap-mllib-examples-$OAP_MLLIB_VERSION.jar
