@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 
-source ../../conf/env.sh
+CONF_PATH=$PWD/../../conf
+source $CONF_PATH/env.sh
 
 # CSV data is the same as in Spark example "ml/pca_example.py"
 # The data file should be copied to $HDFS_ROOT before running examples
 DATA_FILE=$HDFS_ROOT/data/sample_libsvm_data.txt
 
 DEVICE=GPU
-RESOURCE_FILE=$PWD/IntelGpuResourceFile.json
+RESOURCE_FILE=$CONF_PATH/IntelGpuResourceFile.json
 WORKER_GPU_AMOUNT=4
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
 APP_PY=random_forest_regressor_example.py
 
 
+# Should run in standalone mode
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
@@ -34,5 +36,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
-    $APP_PY DATA_FILE \
+    $APP_PY $DATA_FILE \
     2>&1 | tee random_forest_regressor-$(date +%m%d_%H_%M_%S).log
