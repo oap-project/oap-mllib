@@ -9,11 +9,11 @@ for dir in ${exampleDirs[*]}
 do
   cd $dir
   echo
-  echo ===================
-  echo Building $dir ...
-  echo ===================
+  echo ==========================
+  echo Cleaning $dir ...
+  echo ==========================
   echo
-  ./build.sh
+  rm -rf ./target/
   cd ..
 done
 

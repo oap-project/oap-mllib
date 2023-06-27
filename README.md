@@ -131,9 +131,8 @@ Edit related variables in "`Minimun Settings`" of `env.sh`
 #### Run K-means
 
 ```bash
-    $ cd examples/kmeans
-    $ ./build.sh
-    $ ./run.sh
+    $ cd examples/python/kmeans-pyspark
+    $ ./run-cpu.sh
 ```
 
 ### PySpark Support
