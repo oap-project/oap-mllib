@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONF_PATH=$PWD/../../conf
+CONF_PATH=$PWD/../../../conf
 source $CONF_PATH/env.sh
 
 # Data file is converted from oneDAL examples ($DAALROOT/examples/daal/data/batch/implicit_als_csr.csv)

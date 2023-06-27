@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONF_PATH=$PWD/../../conf
+CONF_PATH=$PWD/../../../conf
 source $CONF_PATH/env.sh
 
 # CSV data is the same as in Spark example "ml/pca_example.py"
