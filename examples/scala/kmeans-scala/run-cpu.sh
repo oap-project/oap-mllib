@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONF_PATH=../../../conf
+CONF_PATH=$PWD/../../../conf
 source $CONF_PATH/env.sh
 
 # Data file is from Spark Examples (data/mllib/sample_kmeans_data.txt) and put in examples/data
