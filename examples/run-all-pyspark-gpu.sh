@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark random-forest-pyspark)
+exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark \
+	random-forest-regressor-pyspark random-forest-classifier-pyspark)
 
 cd python
 
