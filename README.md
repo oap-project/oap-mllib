@@ -24,7 +24,7 @@ The following diagram shows the high-level architecture of OAP MLlib.
 
 ![OAP MLlib Architecture](docs/images/arch.png)
 
-OAP MLlib maintains the same API interfaces with Spark MLlib. That means the application built with Spark MLlib can be running directly with minimum configuration.
+OAP MLlib maintains the same API interfaces with Spark MLlib. Both Python and Scala languages are supported. That means the application built with Spark MLlib can be running directly with minimum configuration.
 
 Most of the algorithms can produce the same results that are identical with Spark MLlib. However due to the nature of distributed float point operations, there may be some small deviation from the original result, we will make sure the error is within acceptable range and the accuracy is on par with Spark MLlib.
 
@@ -76,7 +76,7 @@ The following runtime packages with all their dependencies should be installed i
 
 ### Supported Intel® oneAPI Toolkits
 
-* Intel® oneAPI 2023.1
+* Intel® oneAPI Toolkits >= 2023.1
 
 ### Spark Configuration
 
@@ -122,22 +122,12 @@ OAP MLlib expects 1 executor acts as 1 oneCCL rank for compute. As `spark.shuffl
 ```
 Edit related variables in "`Minimun Settings`" of `env.sh`
 
-#### Upload example data files to HDFS
-```bash
-    $ cd examples
-    $ hadoop fs -copyFromLocal data /
-    $ hadoop fs -ls data
-```
 #### Run K-means
 
 ```bash
     $ cd examples/python/kmeans-pyspark
     $ ./run-cpu.sh
 ```
-
-### PySpark Support
-
-As PySpark-based applications call their Scala counterparts, they shall be supported out-of-box. Examples can be found in the [Examples](#examples) section.
 
 ## Building Code
 
@@ -203,35 +193,39 @@ The built JAR package will be placed in `target` directory with the name `oap-ml
 
 ### Python Examples
 
-Example                |  Description
------------------------|---------------------------
-kmeans-pyspark         |  K-means example for PySpark
-pca-pyspark            |  PCA example for PySpark
-als-pyspark            |  ALS example for PySpark
-random-forest-pyspark  |  Random Forest example for PySpark
+Example                           |  Description
+----------------------------------|---------------------------
+kmeans-pyspark                    |  K-means example for PySpark
+pca-pyspark                       |  PCA example for PySpark
+als-pyspark                       |  ALS example for PySpark
+random-forest-classifier-pyspark  |  Random Forest Classifier example for PySpark
+random-forest-regressor-pyspark   |  Random Forest Regressor example for PySpark
 
 ### Scala Examples
 
-Example            |  Description
--------------------|-------------------------------------
-kmeans             |  K-means example for Scala
-pca                |  PCA example for Scala
-als                |  ALS example for Scala
-naive-bayes        |  Naive Bayes example for Scala
-linear-regression  |  Linear Regression example for Scala
-correlation        |  Correlation example for Scala
-summarizer         |  Summarizer example for Scala
+Example                  |  Description
+-------------------------|-------------------------------------
+kmeans-scala             |  K-means example for Scala
+pca-scala                |  PCA example for Scala
+als-scala                |  ALS example for Scala
+naive-bayes              |  Naive Bayes example for Scala
+linear-regression-scala  |  Linear Regression example for Scala
+correlation-scala        |  Correlation example for Scala
+summarizer-scala         |  Summarizer example for Scala
+
+__Note: Not all examples have both CPU or GPU version, please check [List of Accelerated Algorithms](#list-of-accelerated-algorithms) section.__
 
 ## List of Accelerated Algorithms
 
-Algorithm         | CPU | GPU |
-------------------|-----|-----|
-K-Means           | X   | X   |
-PCA               | X   | X   |
-ALS               | X   |     |
-Naive Bayes       | X   |     |
-Linear Regression | X   | X   |
-Ridge Regression  | X   |     |
-Random Forest     |     | X   |
-Correlation       | X   | X   |
-Summarizer        | X   | X   |
+Algorithm                 | CPU | GPU |
+--------------------------|-----|-----|
+K-Means                   | X   | X   |
+PCA                       | X   | X   |
+ALS                       | X   |     |
+Naive Bayes               | X   |     |
+Linear Regression         | X   | X   |
+Ridge Regression          | X   |     |
+Random Forest Classifier  |     | X   |
+Random Forest Regressor   |     | X   |
+Correlation               | X   | X   |
+Summarizer                | X   | X   |
