@@ -153,6 +153,7 @@ class KMeans @Since("1.5.0") (
 
     if (handlePersistence) {
       inputData.persist(StorageLevel.MEMORY_AND_DISK)
+      inputData.count()
     }
 
     val kmeansDAL = new KMeansDALImpl(getK, getMaxIter, getTol,
