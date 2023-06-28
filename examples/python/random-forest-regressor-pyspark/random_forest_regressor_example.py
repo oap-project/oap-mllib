@@ -18,11 +18,16 @@
 """
 Random Forest Regressor Example.
 """
+from __future__ import print_function
+import sys
+
+from pyspark import Row
 from pyspark.ml import Pipeline
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.feature import VectorIndexer
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.sql import SparkSession
+from pyspark.ml.linalg import DenseVector
 
 if __name__ == "__main__":
     spark = SparkSession \
