@@ -671,11 +671,23 @@ object OneDAL {
       data
     }
 
-    // Coalesce partitions belonging to the same executor
-    val coalescedRdd = dataForConversion
-      .coalesce(executorNum,
-        partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
-      .setName("coalescedRdd").cache()
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(dataForConversion)
+
+    // Filter out empty partitions, if there is no such rdd, coalesce will report an error
+    // "No partitions or no locations for partitions found".
+    // TODO: ML-312: Improve ExecutorInProcessCoalescePartitioner
+    val nonEmptyPartitions = dataForConversion.mapPartitionsWithIndex {
+      (index: Int, it: Iterator[Vector]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
+    }.filter {
+      _._1 > 0
+    }.flatMap {
+      entry => entry._3
+    }
+
+    val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      .setName("coalescedRdd")
 
     // convert RDD to HomogenTable
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
