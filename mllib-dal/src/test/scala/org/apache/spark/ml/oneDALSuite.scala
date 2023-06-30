@@ -81,8 +81,8 @@ class oneDALSuite extends FunctionsSuite with Logging {
     }.collect()
     df.show(10, false)
 
-    val mergedata = OneDAL.rddLabeledPointToMergedHomogenTables(df,
-      "label", "features",1 , TestCommon.getComputeDevice)
+    val mergedata = OneDAL.coalesceLabelPointsToHomogenTables(df,
+      "label", "features", 1, TestCommon.getComputeDevice)
     val results = mergedata.collect()
     val featureTable = new HomogenTable(results(0)._1)
     val labelTable = new HomogenTable(results(0)._2)
@@ -108,7 +108,7 @@ class oneDALSuite extends FunctionsSuite with Logging {
     val rddVectors = df.rdd.map {
       case Row(v: Vector) => v
     }.cache()
-    val result = OneDAL.rddVectorToMergedHomogenTables(rddVectors, 1, TestCommon.getComputeDevice)
+    val result = OneDAL.coalesceVectorsToHomogenTables(rddVectors, 1, TestCommon.getComputeDevice)
 
     val tableAddr = result.collect()
     val table = new HomogenTable(tableAddr(0))

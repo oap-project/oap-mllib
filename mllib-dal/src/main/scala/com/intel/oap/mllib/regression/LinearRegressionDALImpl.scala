@@ -82,7 +82,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
     val labeledPointsTables = if (useDevice == "GPU") {
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-          OneDAL.rddLabeledPointToMergedHomogenTables(labeledPoints, labelCol, featuresCol, executorNum, computeDevice)
+          OneDAL.coalesceLabelPointsToHomogenTables(labeledPoints,
+            labelCol, featuresCol, executorNum, computeDevice)
         } else {
           val msg = s"OAP MLlib: Sparse table is not supported for GPU now."
           logError(msg)
@@ -90,9 +91,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         }
     } else {
         if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-        OneDAL.rddLabeledPointToMergedTables(labeledPoints, labelCol, featuresCol, executorNum)
+        OneDAL.coalesceLabelPointsToNumericTables(labeledPoints, labelCol, featuresCol, executorNum)
       } else {
-        OneDAL.rddLabeledPointToSparseTables(labeledPoints, labelCol, featuresCol, executorNum)
+        OneDAL.coalesceSparseLabelPointsToSparseNumericTables(labeledPoints,
+          labelCol, featuresCol, executorNum)
       }
     }
 

@@ -51,10 +51,10 @@ class PCADALImpl(val k: Int,
     pcaTimer.record("Preprocessing")
 
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceToHomogenTables(normalizedData, executorNum,
+      OneDAL.coalesceVectorsToHomogenTables(normalizedData, executorNum,
         computeDevice)
     } else {
-      OneDAL.rddVectorToMergedTables(normalizedData, executorNum)
+      OneDAL.coalesceVectorsToNumericTables(normalizedData, executorNum)
     }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
