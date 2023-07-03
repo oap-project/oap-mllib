@@ -1,9 +1,12 @@
 #pragma once
 
-#include "iostream"
 #include <cstdarg>
 #include <string>
 
+#include "oneapi/dal/table/row_accessor.hpp"
+#include "oneapi/dal/table/common.hpp"
+
+namespace logger{
 // message type for print functions
 enum MessageType {
     NONE = 0,
@@ -16,3 +19,5 @@ enum MessageType {
 
 int print(MessageType message_type, const std::string &msg);
 int print(MessageType message_type, const char *format, ...);
+int print(MessageType message_type, const oneapi::dal::table &table);
+};
