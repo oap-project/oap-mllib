@@ -38,10 +38,10 @@ class SummarizerDALImpl(val executorNum: Int,
     sumTimer.record("Preprocessing")
 
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceToHomogenTables(data, executorNum,
+      OneDAL.coalesceVectorsToHomogenTables(data, executorNum,
         computeDevice)
     } else {
-      OneDAL.rddVectorToMergedTables(data, executorNum)
+      OneDAL.coalesceVectorsToNumericTables(data, executorNum)
     }
     sumTimer.record("Data Convertion")
 
