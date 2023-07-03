@@ -450,6 +450,7 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     jobject infoObj) {
     logger::println(logger::INFO, "RATING_SIZE: %d", RATING_SIZE);
 
+
     ccl::communicator &comm = getComm();
 
     jbyte *ratingsBuf = (jbyte *)env->GetDirectBufferAddress(dataBuffer);
