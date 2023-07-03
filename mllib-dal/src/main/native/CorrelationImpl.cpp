@@ -25,6 +25,8 @@
 #include "com_intel_oap_mllib_stat_CorrelationDALImpl.h"
 #include "service.h"
 
+#include "Logger.h"
+
 using namespace std;
 #ifdef CPU_GPU_PROFILE
 namespace covariance_gpu = oneapi::dal::covariance;
@@ -53,7 +55,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    print(INFO, "Correleation (native): local step took %d secs\n", duration / 1000);
+    logger::print(logger::INFO, "Correleation (native): local step took %d secs\n", duration / 1000);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -79,9 +81,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    print(INFO, "Correleation (native): ccl_allgatherv took "
-    std::cout << "Correleation (native): ccl_allgatherv took "
-              << duration / 1000 << " secs" << std::endl;
+    logger::print(logger::INFO, "Correleation (native): ccl_allgatherv took %d secs\n",
+		    duration / 1000);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -119,8 +120,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "Correlation (native): master step took "
-                  << duration / 1000 << " secs" << std::endl;
+        logger::print(logger::INFO, "Correleation (native): master step took %d secs\n",
+		    duration / 1000);
 
         /* Print the results */
         printNumericTable(result->get(covariance_cpu::correlation),
@@ -147,7 +148,7 @@ static void doCorrelationOneAPICompute(
     JNIEnv *env, jlong pNumTabData,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start" << std::endl;
+    logger::print(logger::INFO, "oneDAL (native): GPU compute start\n");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -159,7 +160,10 @@ static void doCorrelationOneAPICompute(
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
-        std::cout << "Mean:\n" << result_train.get_means() << std::endl;
+        logger::print(logger::INFO, "Mean:\n");
+        logger::print(logger::INFO, result_train.get_means());
+        logger::print(logger::INFO, "Correlation:\n");
+        logger::print(logger::INFO, result_train.get_cor_matrix());
         std::cout << "Correlation:\n"
                   << result_train.get_cor_matrix() << std::endl;
         auto t2 = std::chrono::high_resolution_clock::now();
