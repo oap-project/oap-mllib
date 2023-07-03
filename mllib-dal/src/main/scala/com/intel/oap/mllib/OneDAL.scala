@@ -409,10 +409,10 @@ object OneDAL {
 
     val spark = SparkSession.active
     import spark.implicits._
-    val labeledPointsrdd = labeledPoints.rdd
+    val labeledPointsRDD = labeledPoints.rdd
 
     // Repartition to executorNum if not enough partitions
-    val dataForConversion = if (labeledPointsrdd.getNumPartitions < executorNum) {
+    val dataForConversion = if (labeledPointsRDD.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
       val rePartitions = labeledPoints.repartition(executorNum).cache()
       rePartitions.count()
