@@ -19,14 +19,13 @@
 An example for summarizer.
 """
 from __future__ import print_function
-import sys
+from pyspark import SparkContext
 
-from pyspark.sql import SparkSession
 import numpy as np
 from pyspark.mllib.stat import Statistics
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.appName("SummaryStatisticsExample").getOrCreate()
+    spark = SparkContext(appName="SummaryStatisticsExample")
     data = spark.parallelize([
         np.array([5.308206,9.869278,1.018934,4.292158,6.081011,6.585723,2.411094,4.767308,-3.256320,-6.029562]),
         np.array([7.279464,0.390664,-9.619284,3.435376,-4.769490,-4.873188,-0.118791,-5.117316,-0.418655,-0.475422]),
