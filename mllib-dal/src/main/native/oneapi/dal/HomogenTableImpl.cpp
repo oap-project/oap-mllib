@@ -129,7 +129,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     printf("HomogenTable int init \n");
     jint *fData = static_cast<jint *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
-       std::cout << "Error: unable to obtain critical array" << std::endl;
+       logger::println(logger::ERROR, "Error: unable to obtain critical array");
        exit(-1);
     }
     const std::vector<sycl::event> dependencies = {};
@@ -173,7 +173,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     printf("HomogenTable float init \n");
     jfloat *fData = static_cast<jfloat *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
-       std::cout << "Error: unable to obtain critical array" << std::endl;
+       logger::println(logger::ERROR, "Error: unable to obtain critical array");
        exit(-1);
     }
     const std::vector<sycl::event> dependencies = {};
@@ -216,7 +216,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     printf("HomogenTable double init \n");
     jdouble *fData = static_cast<jdouble *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
-       std::cout << "Error: unable to obtain critical array" << std::endl;
+       logger::println(logger::ERROR, "Error: unable to obtain critical array");
        exit(-1);
     }
     const std::vector<sycl::event> dependencies = {};
@@ -260,7 +260,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     printf("HomogenTable long init \n");
     jlong *fData = static_cast<jlong *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
-       std::cout << "Error: unable to obtain critical array" << std::endl;
+       logger::println(logger::ERROR, "Error: unable to obtain critical array");
        exit(-1);
     }
     const std::vector<sycl::event> dependencies = {};
@@ -501,7 +501,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHom
           const auto targetDataType = targetMetaData.get_data_type(0);
           const auto sourceDataType = sourceMetaData.get_data_type(0);
           if( targetDataType != sourceDataType ) {
-             std::cout << "different data type" << std::endl;
+             logger::println(logger::ERROR, "different data type");
              exit(-1);
           } else {
              switch(targetDataType){
@@ -518,7 +518,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHom
                     return MergeHomogenTable<double>(targetTable, sourceTable, cComputeDevice);
                 }
                 default: {
-                    std::cout << "no base type" << std::endl;
+                    logger::println(logger::ERROR, "no base type");
                     exit(-1);
                 }
              }
