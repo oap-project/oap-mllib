@@ -194,7 +194,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
     logger::print(logger::INFO, "oneDAL (native): use DPC++ kernels; device %s\n",
-		    ComputeDeviceString[computeDeviceOrdinal]);
+		    ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
@@ -218,7 +218,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
 	logger::print(logger::INFO, "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d\n",
-			nGPU, rankID);
+			nGpu, rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 

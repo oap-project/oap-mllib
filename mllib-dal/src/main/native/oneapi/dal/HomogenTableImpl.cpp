@@ -14,7 +14,6 @@
  * limitations under the License.
  *******************************************************************************/
 #include <cstring>
-#include <iostream>
 #include <memory>
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +27,7 @@
 
 #include "com_intel_oneapi_dal_table_HomogenTableImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 using namespace std;
 using namespace oneapi::dal;
