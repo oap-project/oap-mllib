@@ -25,6 +25,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_stat_SummarizerDALImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -229,6 +230,7 @@ static void doSummarizerOneAPICompute(
         logger::println(logger::INFO,
                         "Summarizer (native): computing step took %d secs",
                         duration / 1000);
+
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
