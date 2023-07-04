@@ -32,6 +32,7 @@
     <scala.binary.version>2.12</scala.binary.version>
     <scalatest.version>3.2.9</scalatest.version>
     <spark.version>3.2.2</spark.version>
+    <dal.version>2023.1.0.31217</dal.version>
     <assembly.description>src/assembly/assembly.xml</assembly.description>
   </properties>
 
