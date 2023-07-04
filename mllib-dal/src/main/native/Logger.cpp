@@ -71,37 +71,35 @@ int print(MessageType message_type, const oneapi::dal::table &table) {
     auto [prefix, enable] = get_prefix(message_type);
     if (!enable)
         return 0;
+    FILE *output = stdout;
 
     auto arr = oneapi::dal::row_accessor<const float>(table).pull();
     const auto x = arr.get_data();
     if (table.get_row_count() <= 10) {
         for (std::int64_t i = 0; i < table.get_row_count(); i++) {
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
-                fprintf(stdout, "%s", prefix.c_str());
-                std::cout << std::setw(10) << std::setiosflags(std::ios::fixed)
-                          << std::setprecision(6) << x[i * table.get_column_count() + j];
+                fprintf(output, "%s", prefix.c_str());
+		fprintf(output, "%10f",  x[i * table.get_column_count() + j]);
             }
-            std::cout << std::endl;
+	    fprintf(output, "\n");
         }
     }
     else {
         for (std::int64_t i = 0; i < 5; i++) {
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
                 fprintf(stdout, "%s", prefix.c_str());
-                std::cout << std::setw(10) << std::setiosflags(std::ios::fixed)
-                          << std::setprecision(6) << x[i * table.get_column_count() + j];
+		fprintf(output, "%10f",  x[i * table.get_column_count() + j]);
             }
-            std::cout << std::endl;
+	    fprintf(output, "\n");
         }
-        fprintf(stdout, "%s", prefix.c_str());
-        std::cout << "..." << (table.get_row_count() - 10) << " lines skipped..." << std::endl;
+        fprintf(output, "%s", prefix.c_str());
+	fprintf(output, "...%d lines skipped...\n", (table.get_row_count() - 10));
         for (std::int64_t i = table.get_row_count() - 5; i < table.get_row_count(); i++) {
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
                 fprintf(stdout, "%s", prefix.c_str());
-                std::cout << std::setw(10) << std::setiosflags(std::ios::fixed)
-                          << std::setprecision(6) << x[i * table.get_column_count() + j];
+		fprintf(output, "%10f",  x[i * table.get_column_count() + j]);
             }
-            std::cout << std::endl;
+	    fprintf(output, "\n");
         }
     }
     return 0;
