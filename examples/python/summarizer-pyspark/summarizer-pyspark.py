@@ -20,7 +20,7 @@ An example for summarizer.
 """
 from __future__ import print_function
 
-from pyspark.ml.linalg import Vectors
+from pyspark.mllib.linalg import Vectors
 from pyspark.sql import SparkSession
 from pyspark.mllib.stat import Statistics
 
@@ -57,7 +57,8 @@ if __name__ == "__main__":
     summary = Statistics.colStats(vector_rdd)
     print(summary.mean())  # a dense vector containing the mean value for each column
     print(summary.variance())  # column-wise variance
-    print(summary.numNonzeros())  # number of nonzeros in each column
+    print(summary.max())
+    print(summary.min())
     # $example off$
 
     spark.stop()
