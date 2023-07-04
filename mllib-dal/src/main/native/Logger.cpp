@@ -67,6 +67,21 @@ int print(MessageType message_type, const char *format, ...) {
     return ret;
 }
 
+int println(MessageType message_type, const std::string &msg) {
+    int ret = print2stream(message_type, stdout, msg.c_str());
+    fprintf(stdout, "\n");
+    return ret;
+}
+
+int println(MessageType message_type, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    int ret = print2streamFromArgs(message_type, stdout, format, args);
+    va_end(args);
+    fprintf(stdout, "\n");
+    return ret;
+}
+
 int print(MessageType message_type, const oneapi::dal::table &table) {
     auto [prefix, enable] = get_prefix(message_type);
     if (!enable)
