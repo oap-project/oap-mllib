@@ -249,6 +249,7 @@ static jlong doKMeansOneAPICompute(
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
+
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
