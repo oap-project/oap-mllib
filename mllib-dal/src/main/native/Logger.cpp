@@ -108,7 +108,7 @@ int print(MessageType message_type, const oneapi::dal::table &table) {
 	    fprintf(output, "\n");
         }
         fprintf(output, "%s", prefix.c_str());
-	fprintf(output, "...%d lines skipped...\n", (table.get_row_count() - 10));
+	fprintf(output, "...%ld lines skipped...\n", (table.get_row_count() - 10));
         for (std::int64_t i = table.get_row_count() - 5; i < table.get_row_count(); i++) {
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
                 fprintf(stdout, "%s", prefix.c_str());
