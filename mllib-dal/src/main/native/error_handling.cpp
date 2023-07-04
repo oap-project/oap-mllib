@@ -21,39 +21,39 @@
 !******************************************************************************/
 
 #include "error_handling.h"
+#include "Logger.h"
 #include <iostream>
 
 void checkAllocation(void *ptr) {
     if (!ptr) {
-        std::cout << "Error: Memory allocation failed" << std::endl;
+        logger::println(logger::ERROR, "Error: Memory allocation failed");
         exit(-1);
     }
 }
 
 void checkPtr(void *ptr) {
     if (!ptr) {
-        std::cout << "Error: NULL pointer" << std::endl;
+        logger::println(logger::ERROR, "Error: NULL pointer");
         exit(-2);
     }
 }
 
 void fileOpenError(const char *filename) {
-    std::cout << "Unable to open file '" << filename << "'" << std::endl;
+    logger::println(logger::ERROR, "Unable to open file '%s'", filename);
     exit(fileError);
 }
 
 void fileReadError() {
-    std::cout << "Unable to read next line" << std::endl;
+    logger::println(logger::ERROR, "Unable to read next line");
     exit(fileError);
 }
 
 void sparceFileReadError() {
-    std::cout << "Incorrect format of file" << std::endl;
+    logger::println(logger::ERROR, "Incorrect format of file");
     exit(fileError);
 }
 
 void deviceError() {
-    std::cout << "Error: no supported device, please select HOST/CPU/GPU"
-              << std::endl;
+    logger::println(logger::ERROR, "Error: no supported device, please select HOST/CPU/GPU");
     exit(-1);
 }
