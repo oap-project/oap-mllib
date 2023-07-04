@@ -51,12 +51,14 @@ if __name__ == "__main__":
 
     df = spark.createDataFrame(data,  ["features"])
     df.show()
-
+    # Convert the vector column to an RDD of vectors
+    vector_rdd = df.select("features").rdd.map(lambda row: row[0])
     # Compute column summary statistics.
-    summary = Statistics.colStats(df)
+    summary = Statistics.colStats(vector_rdd)
     print(summary.mean())  # a dense vector containing the mean value for each column
     print(summary.variance())  # column-wise variance
     print(summary.numNonzeros())  # number of nonzeros in each column
     # $example off$
 
     spark.stop()
+    
