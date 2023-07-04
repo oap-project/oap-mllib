@@ -4,6 +4,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_classification_NaiveBayesDALImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 #define PROFILE 1
 
