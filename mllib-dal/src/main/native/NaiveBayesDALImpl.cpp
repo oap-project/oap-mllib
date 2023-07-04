@@ -3,6 +3,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_classification_NaiveBayesDALImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 #define PROFILE 1
 
@@ -135,34 +136,28 @@ Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
 
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
-    cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-         << endl;
-
+    logger::println(logger::INFO, "oneDAL (native): Number of CPU threads used %d",
+			nThreadsNew);
     auto t1 = std::chrono::high_resolution_clock::now();
 
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
-        cout << "oneDAL (native): training model with fastCSR method" << endl;
+        logger::println(logger::INFO, "oneDAL (native): training model with fastCSR method");
         trainingResult = trainModel<training::fastCSR>(comm, featuresTab,
                                                        labelsTab, class_num);
     } else {
-        cout << "oneDAL (native): training model with defaultDense method"
-             << endl;
+        logger::println(logger::INFO, "oneDAL (native): training model with defaultDense method");
         trainingResult = trainModel<training::defaultDense>(
             comm, featuresTab, labelsTab, class_num);
     }
 
-    cout << "oneDAL (native): training model finished" << endl;
+    logger::println(logger::INFO, "oneDAL (native): training model finished");
 
     auto t2 = std::chrono::high_resolution_clock::now();
-
-    std::cout << "training took "
-              << (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                     t2 - t1)
-                         .count() /
-                     1000
-              << " secs" << std::endl;
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    logger::println(logger::INFO, "training took %d secs", duration / 1000);
 
     if (rankId == ccl_root) {
         multinomial_naive_bayes::ModelPtr model =
