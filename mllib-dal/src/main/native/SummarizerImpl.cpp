@@ -24,6 +24,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_stat_SummarizerDALImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -39,7 +40,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
                                     size_t nBlocks, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start" << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -56,8 +57,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "low_order_moments (native): local step took "
-              << duration / 1000 << " secs" << std::endl;
+    logger::println(logger::INFO, "low_order_moments (native): local step took %d secs", duration / 1000);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -83,8 +83,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "low_order_moments (native): ccl_gather took "
-              << duration / 1000 << " secs" << std::endl;
+    logger::println(logger::INFO, "low_order_moments (native): ccl_gather took %d secs", duration / 1000);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -122,8 +121,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "low_order_moments (native): master step took "
-                  << duration / 1000 << " secs" << std::endl;
+        logger::println(logger::INFO, "low_order_moments (native): master step took %d secs", duration / 1000);
 
         /* Print the results */
         printNumericTable(result->get(low_order_moments::mean),
@@ -202,7 +200,7 @@ static void doSummarizerOneAPICompute(
     JNIEnv *env, jlong pNumTabData,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start" << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -210,17 +208,20 @@ static void doSummarizerOneAPICompute(
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {
-        std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
-        std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
-        std::cout << "Mean:\n" << result_train.get_mean() << std::endl;
-        std::cout << "Variance:\n" << result_train.get_variance() << std::endl;
+        logger::println(logger::INFO, "Minimum");
+	logger::print(logger::INFO, result_train.get_min());
+        logger::println(logger::INFO, "Maximum");
+	logger::print(logger::INFO, result_train.get_max());
+        logger::println(logger::INFO, "Mean");
+	logger::print(logger::INFO, result_train.get_mean());
+        logger::println(logger::INFO, "Variation");
+	logger::print(logger::INFO, result_train.get_variance());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
                                                                          t1)
                 .count();
-        std::cout << "Summarizer (native): computing step took "
-                  << duration / 1000 << " secs." << std::endl;
+        logger::println(logger::INFO, "Summarizer (native): computing step took %d secs", duration / 1000);
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -260,9 +261,9 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
-    std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels; device %s",
+		    ComputeDeviceString[computeDeviceOrdinal].c_str());
+
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -275,8 +276,8 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used "
-                  << nThreadsNew << std::endl;
+	logger::println(logger::INFO, "oneDAL (native): Number of CPU threads used %d",
+			nThreadsNew);
         doSummarizerDAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                                 resultObj);
         break;
@@ -284,9 +285,8 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
-        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
-                  << " GPU(s)"
-                  << " rankid " << rankId << std::endl;
+	logger::println(logger::INFO, "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d",
+			nGpu, rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -305,7 +305,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     }
 #endif
     default: {
-        std::cout << "no supported device!" << std::endl;
+        logger::println(logger::ERROR, "no supported device!");
         exit(-1);
     }
     }
