@@ -233,12 +233,38 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
-    const auto linear_regression_desc =
-        linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
 
-    linear_regression_gpu::train_result result_train =
-        preview::train(comm, linear_regression_desc, xtrain, ytrain);
+    const auto &dtype = xtrain.get_metadata().get_data_type(0);
+    linear_regression_gpu::train_result result_train;
+    auto t1 = std::chrono::high_resolution_clock::now();
+    switch (dtype) {
+    case data_type::float32: {
+        const auto linear_regression_desc =
+            linear_regression_gpu::descriptor<float>(fitIntercept);
+        result_train =
+            preview::train(comm, linear_regression_desc, xtrain, ytrain);
+        break;
+    }
+    case data_type::float64: {
+        const auto linear_regression_desc =
+            linear_regression_gpu::descriptor<double>(fitIntercept);
+        result_train =
+            preview::train(comm, linear_regression_desc, xtrain, ytrain);
+        break;
+    }
+    default: {
+        std::cout << "no supported data type :" << &dtype << std::endl;
+        exit(-1);
+    }
+    }
     if (isRoot) {
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
+                                                                         t1)
+                .count();
+        std::cout << "LinerRegression(native): training step took "
+                  << duration / 1000 << " secs." << std::endl;
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model().get_betas());
         saveHomogenTablePtrToVector(result_matrix);

@@ -205,19 +205,44 @@ static void doSummarizerOneAPICompute(
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-    const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
+    const auto &dtype = htable.get_metadata().get_data_type(0);
+    basic_statistics::compute_result result_train;
     auto t1 = std::chrono::high_resolution_clock::now();
-    const auto result_train = preview::compute(comm, bs_desc, htable);
+    switch (dtype) {
+    case data_type::float32: {
+        const auto bs_desc = basic_statistics::descriptor<float>{};
+
+        t1 = std::chrono::high_resolution_clock::now();
+        result_train = preview::compute(comm, bs_desc, htable);
+        break;
+    }
+    case data_type::float64: {
+        const auto bs_desc = basic_statistics::descriptor<double>{};
+
+        t1 = std::chrono::high_resolution_clock::now();
+        result_train = preview::compute(comm, bs_desc, htable);
+        break;
+    }
+    default: {
+        std::cout << "no supported data type :" << &dtype << std::endl;
+        exit(-1);
+    }
+    }
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    std::cout << "Summarizer (native): computing step took " << duration / 1000
+              << " secs." << std::endl;
     if (isRoot) {
         std::cout << "Minimum:\n" << result_train.get_min() << std::endl;
         std::cout << "Maximum:\n" << result_train.get_max() << std::endl;
         std::cout << "Mean:\n" << result_train.get_mean() << std::endl;
         std::cout << "Variance:\n" << result_train.get_variance() << std::endl;
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
         std::cout << "Summarizer (native): computing step took "
                   << duration / 1000 << " secs." << std::endl;
         // Return all covariance & mean

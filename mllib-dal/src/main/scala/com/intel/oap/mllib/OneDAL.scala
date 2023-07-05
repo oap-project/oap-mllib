@@ -444,26 +444,27 @@ object OneDAL {
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Row]) =>
       val list = it.toList
       val subRowCount: Int = list.size / numberCores
-      val labeledPointsList: ListBuffer[Future[(Array[Double], Array[Double])]] =
-        new ListBuffer[Future[(Array[Double], Array[Double])]]()
+      val labeledPointsList: ListBuffer[Future[(Array[Double], Long)]] =
+        new ListBuffer[Future[(Array[Double], Long)]]()
       val numRows = list.size
       val numCols = list(0).getAs[Vector](1).toArray.size
+
       val labelsArray = new Array[Double](numRows)
-      val featuresArray = new Array[Double](numRows * numCols)
+      val featuresAddress= OneDAL.cNewDoubleArray(numRows.toLong * numCols)
       for ( i <- 0 until  numberCores) {
         val f = Future {
           val iter = list.iterator
           val slice = if (i == numberCores - 1) {
-            iter.slice(subRowCount * i, numRows * numCols)
+            iter.slice(subRowCount * i, numRows)
           } else {
             iter.slice(subRowCount * i, subRowCount * i + subRowCount)
           }
           slice.toArray.zipWithIndex.map { case (row, index) =>
             val length = row.getAs[Vector](1).toArray.length
-            System.arraycopy(row.getAs[Vector](1).toArray, 0, featuresArray, subRowCount * numCols * i + length * index, length)
+            OneDAL.cCopyDoubleArrayToNative(featuresAddress, row.getAs[Vector](1).toArray, subRowCount.toLong * numCols * i + length * index)
             labelsArray(subRowCount * i +  index) = row.getAs[Double](0)
           }
-          (labelsArray, featuresArray)
+          (labelsArray, featuresAddress)
         }
         labeledPointsList += f
 
@@ -472,7 +473,7 @@ object OneDAL {
       }
       val labelsTable = new HomogenTable(numRows.toLong, 1, labelsArray,
         device)
-      val featuresTable = new HomogenTable(numRows.toLong, numCols.toLong, featuresArray,
+      val featuresTable = new HomogenTable(numRows.toLong, numCols.toLong, featuresAddress, Common.DataType.FLOAT64,
         device)
 
       Iterator((featuresTable.getcObejct(), labelsTable.getcObejct()))
@@ -618,31 +619,32 @@ object OneDAL {
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
       val list = it.toList
       val subRowCount: Int = list.size / numberCores
-      val futureList: ListBuffer[Future[Array[Double]]] = new ListBuffer[Future[Array[Double]]]()
+      val futureList: ListBuffer[Future[Long]] = new ListBuffer[Future[Long]]()
       val numRows = list.size
       val numCols = list(0).toArray.size
-      val targetArray = new Array[Double](numRows * numCols)
+      val size = numRows.toLong * numCols.toLong
+      val targetArrayAddress = OneDAL.cNewDoubleArray(size)
       for ( i <- 0 until  numberCores) {
         val f = Future {
           val iter = list.iterator
           val slice = if (i == numberCores - 1) {
-            iter.slice(subRowCount * i, numRows * numCols)
+            iter.slice(subRowCount * i, numRows)
           } else {
             iter.slice(subRowCount * i, subRowCount * i + subRowCount)
           }
           slice.toArray.zipWithIndex.map { case (vector, index) =>
             val length = vector.toArray.length
-            System.arraycopy(vector.toArray, 0, targetArray, subRowCount * numCols * i + length * index, length)
+            OneDAL.cCopyDoubleArrayToNative(targetArrayAddress, vector.toArray, subRowCount.toLong * numCols * i + length * index)
           }
-          targetArray
+          targetArrayAddress
         }
         futureList += f
 
       val result = Future.sequence(futureList)
       Await.result(result, Duration.Inf)
       }
-      val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArray,
-        device)
+      val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArrayAddress,
+        Common.DataType.FLOAT64, device)
 
       Iterator(table.getcObejct())
     }.setName("coalescedTables").cache()
@@ -750,4 +752,16 @@ object OneDAL {
   @native def cNewCSRNumericTableDouble(data: Array[Double],
                                         colIndices: Array[Long], rowOffsets: Array[Long],
                                         nFeatures: Long, nVectors: Long): Long
+
+  @native def cNewFloatArray(size: Long): Long
+
+  @native def cNewDoubleArray(size: Long): Long
+
+  @native def cCopyFloatArrayToNative(arrayAddr: Long,
+                                 data: Array[Float],
+                                 index: Long): Unit
+
+  @native def cCopyDoubleArrayToNative(arrayAddr: Long,
+                                 data: Array[Double],
+                                 index: Long): Unit
 }

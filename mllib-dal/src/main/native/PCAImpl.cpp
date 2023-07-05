@@ -185,34 +185,88 @@ static void doPCAOneAPICompute(
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-
-    const auto cov_desc =
-        covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
-            covariance_gpu::result_options::cov_matrix);
-
+    const auto &dtype = htable.get_metadata().get_data_type(0);
+    covariance_gpu::compute_result result;
+    pca_gpu::train_result result_train;
     auto t1 = std::chrono::high_resolution_clock::now();
-    const auto result = preview::compute(comm, cov_desc, htable);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance step took " << duration / 1000
-              << " secs" << std::endl;
-    if (isRoot) {
-        using float_t = GpuAlgorithmFPType;
-        using method_t = pca_gpu::method::precomputed;
-        using task_t = pca_gpu::task::dim_reduction;
-        using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;
-        const auto pca_desc = descriptor_t().set_deterministic(true);
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
 
+    switch (dtype) {
+    case data_type::float32: {
+        const auto cov_desc =
+            covariance_gpu::descriptor<float>{}.set_result_options(
+                covariance_gpu::result_options::cov_matrix);
         t1 = std::chrono::high_resolution_clock::now();
-        const auto result_train =
-            preview::train(comm, pca_desc, result.get_cov_matrix());
+        result = preview::compute(comm, cov_desc, htable);
         t2 = std::chrono::high_resolution_clock::now();
-        duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        std::cout << "PCA (native): Eigen step took " << duration / 1000
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        std::cout << "PCA (native): Covariance step took " << duration / 1000
                   << " secs." << std::endl;
+        if (isRoot) {
+            using float_t = float;
+            using method_t = pca_gpu::method::precomputed;
+            using task_t = pca_gpu::task::dim_reduction;
+            using descriptor_float_t =
+                pca_gpu::descriptor<float_t, method_t, task_t>;
+            const auto pca_desc = descriptor_float_t().set_deterministic(true);
+
+            t1 = std::chrono::high_resolution_clock::now();
+            result_train =
+                preview::train(comm, pca_desc, result.get_cov_matrix());
+            t2 = std::chrono::high_resolution_clock::now();
+            duration =
+                (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                    t2 - t1)
+                    .count();
+            std::cout << "PCA (native): Eigen step took " << duration / 1000
+                      << " secs." << std::endl;
+        }
+        break;
+    }
+    case data_type::float64: {
+        const auto cov_desc =
+            covariance_gpu::descriptor<double>{}.set_result_options(
+                covariance_gpu::result_options::cov_matrix);
+        t1 = std::chrono::high_resolution_clock::now();
+        result = preview::compute(comm, cov_desc, htable);
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        std::cout << "PCA (native): Covariance step took " << duration / 1000
+                  << " secs." << std::endl;
+        if (isRoot) {
+            using double_t = double;
+            using method_t = pca_gpu::method::precomputed;
+            using task_t = pca_gpu::task::dim_reduction;
+            using descriptor_double_t =
+                pca_gpu::descriptor<double_t, method_t, task_t>;
+            const auto pca_desc = descriptor_double_t().set_deterministic(true);
+
+            t1 = std::chrono::high_resolution_clock::now();
+            result_train =
+                preview::train(comm, pca_desc, result.get_cov_matrix());
+            t2 = std::chrono::high_resolution_clock::now();
+            duration =
+                (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                    t2 - t1)
+                    .count();
+            std::cout << "PCA (native): Eigen step took " << duration / 1000
+                      << " secs." << std::endl;
+        }
+        break;
+    }
+    default: {
+        std::cout << "no supported data type :" << &dtype << std::endl;
+        exit(-1);
+    }
+    }
+    if (isRoot) {
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);

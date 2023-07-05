@@ -249,23 +249,54 @@ static jlong doKMeansOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
-    const auto kmeans_desc = kmeans_gpu::descriptor<GpuAlgorithmFPType>()
-                                 .set_cluster_count(clusterNum)
-                                 .set_max_iteration_count(iterationNum)
-                                 .set_accuracy_threshold(tolerance);
-    kmeans_gpu::train_input local_input{htable, centroids};
+    const auto &dtype = htable.get_metadata().get_data_type(0);
+    kmeans_gpu::train_result result_train;
     auto t1 = std::chrono::high_resolution_clock::now();
-    kmeans_gpu::train_result result_train =
-        preview::train(comm, kmeans_desc, local_input);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    kmeans_gpu::train_input local_input{htable, centroids};
+
+    switch (dtype) {
+    case data_type::float32: {
+        const auto kmeans_desc = kmeans_gpu::descriptor<float>()
+                                     .set_cluster_count(clusterNum)
+                                     .set_max_iteration_count(iterationNum)
+                                     .set_accuracy_threshold(tolerance);
+        t1 = std::chrono::high_resolution_clock::now();
+        result_train = preview::train(comm, kmeans_desc, local_input);
+        break;
+    }
+    case data_type::float64: {
+        const auto kmeans_desc = kmeans_gpu::descriptor<double>()
+                                     .set_cluster_count(clusterNum)
+                                     .set_max_iteration_count(iterationNum)
+                                     .set_accuracy_threshold(tolerance);
+        t1 = std::chrono::high_resolution_clock::now();
+        result_train = preview::train(comm, kmeans_desc, local_input);
+        break;
+    }
+    default: {
+        std::cout << "no supported data type :" << &dtype << std::endl;
+        exit(-1);
+    }
+    }
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    t2 = std::chrono::high_resolution_clock::now();
+    std::cout << "KMeans (native): training step took " << duration / 1000
+              << " secs." << std::endl;
     if (isRoot) {
         std::cout << "Iteration count: " << result_train.get_iteration_count()
                   << std::endl;
         std::cout << "Centroids:\n"
                   << result_train.get_model().get_centroids() << std::endl;
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
         std::cout << "KMeans (native): training step took " << duration / 1000
                   << " secs." << std::endl;
         // Get the class of the input object

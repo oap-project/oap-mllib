@@ -295,6 +295,88 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
 
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
+ * Method:    Init
+ * Signature: (JJJIII)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dPtrInit(
+    JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlong dataPtr, jint cLayout, jint computeDeviceOrdinal) {
+    printf("HomogenTable dPtrInit\n");
+    double *fData = reinterpret_cast<double *>(dataPtr);
+    if (fData == NULL) {
+       std::cout << "Error: unable to obtain critical array" << std::endl;
+       exit(-1);
+    }
+    const std::vector<sycl::event> dependencies = {};
+    HomogenTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch(device) {
+       case ComputeDevice::host:{
+           tablePtr = std::make_shared<homogen_table>(fData, cRowCount, cColCount,
+                                                      detail::empty_delete<const double>(),
+                                                      getDataLayout(cLayout));
+           break;
+       }
+       case ComputeDevice::cpu:
+       case ComputeDevice::gpu:{
+           auto queue = getQueue(device);
+           auto data = sycl::malloc_shared<double>(cRowCount * cColCount, queue);
+           queue.memcpy(data, fData, sizeof(double) * cRowCount * cColCount).wait();
+           tablePtr = std::make_shared<homogen_table>(queue, data, cRowCount, cColCount,
+                                                      detail::make_default_delete<const double>(queue),
+                                                      dependencies, getDataLayout(cLayout));
+           break;
+       }
+       default: {
+           deviceError();
+       }
+    }
+    saveHomogenTablePtrToVector(tablePtr);
+    return (jlong)tablePtr.get();
+}
+
+/*
+ * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
+ * Method:    Init
+ * Signature: (JJJIII)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fPtrInit(
+    JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlong dataPtr, jint cLayout, jint computeDeviceOrdinal) {
+    printf("HomogenTable fPtrInit\n");
+    float *fData = reinterpret_cast<float *>(dataPtr);
+    if (fData == NULL) {
+       std::cout << "Error: unable to obtain critical array" << std::endl;
+       exit(-1);
+    }
+    const std::vector<sycl::event> dependencies = {};
+    HomogenTablePtr tablePtr;
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch(device) {
+       case ComputeDevice::host:{
+           tablePtr = std::make_shared<homogen_table>(fData, cRowCount, cColCount,
+                                                      detail::empty_delete<const float>(),
+                                                      getDataLayout(cLayout));
+           break;
+       }
+       case ComputeDevice::cpu:
+       case ComputeDevice::gpu:{
+           auto queue = getQueue(device);
+           auto data = sycl::malloc_shared<float>(cRowCount * cColCount, queue);
+           queue.memcpy(data, fData, sizeof(float) * cRowCount * cColCount).wait();
+           tablePtr = std::make_shared<homogen_table>(queue, data, cRowCount, cColCount,
+                                                      detail::make_default_delete<const float>(queue),
+                                                      dependencies, getDataLayout(cLayout));
+           break;
+       }
+       default: {
+           deviceError();
+       }
+    }
+    saveHomogenTablePtrToVector(tablePtr);
+    return (jlong)tablePtr.get();
+}
+
+/*
+ * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    cGetColumnCount
  * Signature: ()J
  */
