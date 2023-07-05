@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "GPU.h"
+#include "Logger.h"
 
 typedef std::shared_ptr<sycl::queue> queuePtr;
 
@@ -17,7 +18,7 @@ static std::vector<sycl::device> get_gpus() {
             return devices;
         }
     }
-    std::cout << "No GPUs!" << std::endl;
+    logger::println(logger::ERROR, "No GPUs!");
     exit(-1);
 
     return {};
@@ -70,23 +71,19 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        std::cout
-            << "Not implemented for HOST/CPU device, Please run on GPU device."
-            << std::endl;
+        logger::println(logger::ERROR, "Not implemented for HOST/CPU device, Please run on GPU device.");
         exit(-1);
     }
     case ComputeDevice::gpu: {
-        std::cout << "selector GPU" << std::endl;
+        logger::println(logger::INFO, "selector GPU");
         auto local_rank = getLocalRank(comm, size, rankId);
         auto gpus = get_gpus();
 
-        std::cout << "rank: " << rankId << " size: " << size
-                  << " local_rank: " << local_rank << " n_gpu: " << n_gpu
-                  << std::endl;
+        logger::println(logger::INFO, "rank: %d size: %d local_rank: %d n_gpu: %d",
+			rankId, size, local_rank, n_gpu);
 
         auto gpu_selected = gpu_indices[local_rank % n_gpu];
-        std::cout << "GPU selected for current rank: " << gpu_selected
-                  << std::endl;
+        logger::println(logger::INFO, "GPU selected for current rank: %d", gpu_selected);
 
         // In case gpu_selected index is larger than number of GPU SYCL devices
         auto rank_gpu = gpus[gpu_selected % gpus.size()];
@@ -95,7 +92,7 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     }
 
     default: {
-        std::cout << "No Device!" << std::endl;
+        logger::println(logger::ERROR, "No Device!");
         exit(-1);
     }
     }
@@ -107,19 +104,17 @@ sycl::queue getQueue(const ComputeDevice device) {
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        std::cout << "Not implemented for HOST/CPU device, Please run on "
-                     "GPU device."
-                  << std::endl;
+        logger::println(logger::ERROR, "Not implemented for HOST/CPU device, Please run on GPU device.");
         exit(-1);
     }
     case ComputeDevice::gpu: {
-        std::cout << "selector GPU" << std::endl;
+        logger::println(logger::INFO, "selector GPU");
         auto device_gpu = sycl::gpu_selector{}.select_device();
-        std::cout << "selector GPU end" << std::endl;
+        logger::println(logger::INFO, "selector GPU end");
         return getSyclQueue(device_gpu);
     }
     default: {
-        std::cout << "No Device!" << std::endl;
+        logger::println(logger::ERROR, "No Device!");
         exit(-1);
     }
     }
