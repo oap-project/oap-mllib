@@ -99,7 +99,7 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
 }
 
 sycl::queue getQueue(const ComputeDevice device) {
-    std::cout << "Get Queue" << std::endl;
+    logger::println(logger::INFO, "Get Queue");
 
     switch (device) {
     case ComputeDevice::host:

@@ -447,7 +447,7 @@ JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     JNIEnv *env, jobject obj, jobject dataBuffer, jint nTotalKeys, jint nBlocks,
     jobject infoObj) {
-    //   cout << "cShuffleData: rank " << rankId << endl;
+    //logger::println(logger::DEBUG, "cShuffleData: rank %d", rankId);
     logger::print(logger::INFO, "RATING_SIZE: %d\n", RATING_SIZE);
 
     ccl::communicator &comm = getComm();
