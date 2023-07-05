@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include "Logger.h"
 
 class Profiler {
   public:
@@ -10,7 +11,7 @@ class Profiler {
 
     void startProfile(std::string s = "") {
         action = s;
-        std::cout << subject << " (native): start " << action << std::endl;
+	logger::println(logger::INFO, "%s (native): start %s", subject.c_str(), action.c_str());
         startTime = std::chrono::high_resolution_clock::now();
     }
 
@@ -19,12 +20,11 @@ class Profiler {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                             end_time - startTime)
                             .count();
-        std::cout << subject << " (native): " << action << " took " << (float)duration / 1000
-                  << " secs" << std::endl;
+	logger::println(logger::INFO, "%s (native): start %s took %f secs", subject.c_str(), action.c_str(), (float)duration / 1000);
     }
 
     void println(std::string msg) {
-        std::cout << subject << " (native): " << msg << std::endl;
+	logger::println(logger::INFO, "%s (native): %s", subject.c_str(), msg.c_str());
     }
 
   private:
