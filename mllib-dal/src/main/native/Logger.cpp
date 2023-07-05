@@ -155,5 +155,4 @@ int printerrln(MessageType message_type, const char *format, ...) {
     va_end(args);
     return ret;
 }
-
 }; // namespace logger

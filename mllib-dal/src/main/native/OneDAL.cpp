@@ -17,9 +17,9 @@
 #include <cstring>
 #include <iostream>
 
+#include "Logger.h"
 #include "com_intel_oap_mllib_OneDAL__.h"
 #include "service.h"
-#include "Logger.h"
 
 using namespace daal;
 using namespace daal::data_management;

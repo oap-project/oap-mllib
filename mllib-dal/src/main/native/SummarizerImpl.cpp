@@ -25,7 +25,6 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_stat_SummarizerDALImpl.h"
 #include "service.h"
-#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE

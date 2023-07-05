@@ -30,7 +30,6 @@
 #include "com_intel_oap_mllib_classification_RandomForestClassifierDALImpl.h"
 #include "oneapi/dal/algo/decision_forest.hpp"
 #include "service.h"
-#include "Logger.h"
 
 using namespace std;
 using namespace oneapi::dal;
