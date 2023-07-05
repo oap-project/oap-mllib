@@ -26,6 +26,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
 #include "service.h"
+#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -42,7 +43,7 @@ typedef double algorithmFPType; /* Algorithm floating-point type */
 static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              size_t nBlocks, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start" << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -59,8 +60,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << " PCA (native): Covariance local step took " << duration / 1000
-              << " secs" << std::endl;
+    logger::println(logger::INFO, "PCA (native): Covariance local step took %d secs", duration / 1000);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -85,8 +85,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance gather to master took "
-              << duration / 1000 << " secs" << std::endl;
+    logger::println(logger::INFO, "PCA (native): Covariance gather to master took %d secs", duration / 1000);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -125,8 +124,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native): Covariance master step took "
-                  << duration / 1000 << " secs" << std::endl;
+        logger::println(logger::INFO, "PCA (native): Covariance master step took %d secs", duration / 1000);
 
         t1 = std::chrono::high_resolution_clock::now();
 
@@ -146,8 +144,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native): master step took " << duration / 1000
-                  << " secs" << std::endl;
+        logger::println(logger::INFO, "PCA (native): master step took %d secs", duration / 1000);
 
         /* Print the results */
         pca_cpu::ResultPtr result = algorithm.getResult();
@@ -183,7 +180,7 @@ static void doPCAOneAPICompute(
     JNIEnv *env, jlong pNumTabData,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start" << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -196,8 +193,7 @@ static void doPCAOneAPICompute(
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    std::cout << "PCA (native): Covariance step took " << duration / 1000
-              << " secs" << std::endl;
+    logger::println(logger::INFO, "PCA (native): Covariance step took %d secs", duration / 1000);
     if (isRoot) {
         using float_t = double;
         using method_t = pca_gpu::method::precomputed;
@@ -212,8 +208,7 @@ static void doPCAOneAPICompute(
         duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "PCA (native): Eigen step took " << duration / 1000
-                  << " secs." << std::endl;
+        logger::println(logger::INFO, "PCA (native): Eigen step took %d secs", duration / 1000);
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -222,10 +217,10 @@ static void doPCAOneAPICompute(
             env->GetFieldID(clazz, "pcNumericTable", "J");
         jfieldID explainedVarianceNumericTableField =
             env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
-        std::cout << "Eigenvectors:\n"
-                  << result_train.get_eigenvectors() << std::endl;
-        std::cout << "Eigenvalues:\n"
-                  << result_train.get_eigenvalues() << std::endl;
+        logger::println(logger::INFO, "Eigenvectors:");
+	logger::print(logger::INFO, result_train.get_eigenvectors());
+        logger::println(logger::INFO, "Eigenvalues:");
+	logger::print(logger::INFO, result_train.get_eigenvalues());
 
         HomogenTablePtr eigenvectors =
             std::make_shared<homogen_table>(result_train.get_eigenvectors());
@@ -248,9 +243,9 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
-    std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels; device %s",
+		    ComputeDeviceString[computeDeviceOrdinal].c_str());
+
     ccl::communicator &cclComm = getComm();
     size_t rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -263,8 +258,8 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used "
-                  << nThreadsNew << std::endl;
+	logger::println(logger::INFO, "oneDAL (native): Number of CPU threads used %d",
+			nThreadsNew);
         doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                          resultObj);
         break;
@@ -272,9 +267,8 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
-        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
-                  << " GPU(s)"
-                  << " rankid " << rankId << std::endl;
+       	logger::println(logger::INFO, "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d",
+			nGpu, rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -293,7 +287,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     }
 #endif
     default: {
-        std::cout << "no supported device!" << std::endl;
+        logger::println(logger::ERROR, "no supported device!");
         exit(-1);
     }
     }
