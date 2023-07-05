@@ -25,11 +25,11 @@
 #ifdef CPU_GPU_PROFILE
 #include "Common.hpp"
 
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_classification_RandomForestClassifierDALImpl.h"
 #include "oneapi/dal/algo/decision_forest.hpp"
 #include "service.h"
-#include "Logger.h"
 
 using namespace std;
 using namespace oneapi::dal;
@@ -183,7 +183,9 @@ jobject collect_model(JNIEnv *env, const df::model<Task> &m,
 
     logger::println(logger::INFO, "Number of trees: %d", m.get_tree_count());
     for (std::int64_t i = 0, n = m.get_tree_count(); i < n; ++i) {
-        logger::println(logger::INFO, "Iterate over the C++ map and add each entry to the Java map");
+        logger::println(
+            logger::INFO,
+            "Iterate over the C++ map and add each entry to the Java map");
         // Create a new Java ArrayList to hold the LearningNode objects
         jobject jList = env->NewObject(listClass, listConstructor);
         m.traverse_depth_first(i, collect_nodes{env, classCount, jList,
@@ -220,10 +222,11 @@ static jobject doRFClassifierOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabFeature);
     homogen_table hLabeltable =
         *reinterpret_cast<const homogen_table *>(pNumTabLabel);
-    logger::println(logger::INFO, "doRFClassifierOneAPICompute get_column_count = %d",
-		    hFeaturetable.get_column_count());
+    logger::println(logger::INFO,
+                    "doRFClassifierOneAPICompute get_column_count = %d",
+                    hFeaturetable.get_column_count());
     logger::println(logger::INFO, "doRFClassifierOneAPICompute classCount = %d",
-		    classCount);
+                    classCount);
 
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
@@ -253,11 +256,11 @@ static jobject doRFClassifierOneAPICompute(
         logger::println(logger::INFO, "Variable importance results:");
         logger::print(logger::INFO, result_train.get_var_importance());
         logger::println(logger::INFO, "OOB error:");
-	logger::print(logger::INFO, result_train.get_oob_err());
+        logger::print(logger::INFO, result_train.get_oob_err());
         logger::println(logger::INFO, "Prediction results:");
-	logger::print(logger::INFO, result_infer.get_responses());
+        logger::print(logger::INFO, result_infer.get_responses());
         logger::println(logger::INFO, "Probabilities results:\n");
-	logger::print(logger::INFO, result_infer.get_probabilities());
+        logger::print(logger::INFO, result_infer.get_probabilities());
 
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
@@ -312,8 +315,10 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     switch (device) {
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
-	logger::println(logger::INFO, "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d",
-			nGpu, rankId);
+        logger::println(
+            logger::INFO,
+            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
+            rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -336,7 +341,9 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
         return hashmapObj;
     }
     default: {
-        logger::println(logger::ERROR, "RandomForest (native): The compute device is not supported!");
+        logger::println(
+            logger::ERROR,
+            "RandomForest (native): The compute device is not supported!");
         exit(-1);
     }
     }

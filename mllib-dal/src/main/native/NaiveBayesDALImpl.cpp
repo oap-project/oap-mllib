@@ -1,9 +1,9 @@
 #include <unistd.h>
 
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_classification_NaiveBayesDALImpl.h"
 #include "service.h"
-#include "Logger.h"
 
 #define PROFILE 1
 
@@ -136,18 +136,22 @@ Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
 
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
-    logger::println(logger::INFO, "oneDAL (native): Number of CPU threads used %d",
-			nThreadsNew);
+    logger::println(logger::INFO,
+                    "oneDAL (native): Number of CPU threads used %d",
+                    nThreadsNew);
     auto t1 = std::chrono::high_resolution_clock::now();
 
     // Support both dense and csr numeric table
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
-        logger::println(logger::INFO, "oneDAL (native): training model with fastCSR method");
+        logger::println(logger::INFO,
+                        "oneDAL (native): training model with fastCSR method");
         trainingResult = trainModel<training::fastCSR>(comm, featuresTab,
                                                        labelsTab, class_num);
     } else {
-        logger::println(logger::INFO, "oneDAL (native): training model with defaultDense method");
+        logger::println(
+            logger::INFO,
+            "oneDAL (native): training model with defaultDense method");
         trainingResult = trainModel<training::defaultDense>(
             comm, featuresTab, labelsTab, class_num);
     }
