@@ -233,7 +233,8 @@ void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    logger::print(logger::INFO, "ALS (native): initializeModel took %d secs\n", duration);
+    logger::print(logger::INFO, "ALS (native): initializeModel took %d secs\n",
+                  duration);
 }
 
 training::DistributedPartialResultStep1Ptr computeStep1Local(
@@ -424,13 +425,15 @@ void trainModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-	logger::print(logger::INFO, "ALS (native): iteration %d took %f secs\n",iteration ,duration);
+        logger::print(logger::INFO, "ALS (native): iteration %d took %f secs\n",
+                      iteration, duration);
     }
 
     auto tEnd = std::chrono::high_resolution_clock::now();
     auto durationTotal =
         std::chrono::duration_cast<std::chrono::seconds>(tEnd - tStart).count();
-    logger::print(logger::INFO, "ALS (native): trainModel took %d secs\n", durationTotal);
+    logger::print(logger::INFO, "ALS (native): trainModel took %d secs\n",
+                  durationTotal);
 }
 
 static size_t getOffsetFromOffsetTable(NumericTablePtr offsetTable) {
@@ -447,7 +450,7 @@ JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     JNIEnv *env, jobject obj, jobject dataBuffer, jint nTotalKeys, jint nBlocks,
     jobject infoObj) {
-    //logger::println(logger::DEBUG, "cShuffleData: rank %d", rankId);
+    // logger::println(logger::DEBUG, "cShuffleData: rank %d", rankId);
     logger::print(logger::INFO, "RATING_SIZE: %d\n", RATING_SIZE);
 
     ccl::communicator &comm = getComm();
@@ -493,9 +496,12 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     dataTable = *((CSRNumericTablePtr *)numTableAddr);
 
     logger::print(logger::INFO, "ALS (native): Input info: ");
-    logger::print(logger::INFO, "- NumberOfRows: %d\n", dataTable->getNumberOfRows());
-    logger::print(logger::INFO, "- NumberOfColumns: %d\n", dataTable->getNumberOfColumns());
-    logger::print(logger::INFO, "- NumberOfRatings: %d\n", dataTable->getDataSize());
+    logger::print(logger::INFO, "- NumberOfRows: %d\n",
+                  dataTable->getNumberOfRows());
+    logger::print(logger::INFO, "- NumberOfColumns: %d\n",
+                  dataTable->getNumberOfColumns());
+    logger::print(logger::INFO, "- NumberOfRatings: %d\n",
+                  dataTable->getDataSize());
     logger::print(logger::INFO, "- fullNUsers: %d\n", nUsers);
     logger::print(logger::INFO, "- nFactors: %d\n", nFactors);
 
@@ -503,7 +509,9 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
-    logger::print(logger::INFO, "oneDAL (native): Number of CPU threads used: %d\n", nThreadsNew);
+    logger::print(logger::INFO,
+                  "oneDAL (native): Number of CPU threads used: %d\n",
+                  nThreadsNew);
 
     int nBlocks = executor_num;
     initializeModel(rankId, comm, partitionId, nBlocks, nUsers, nFactors);
@@ -521,8 +529,10 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
                       20);
     printNumericTable(pItem, "Item Factors (first 10 rows x 20 columns):", 10,
                       20);
-    logger::print(logger::INFO, "User Offset: %d\n", getOffsetFromOffsetTable(userOffset));
-    logger::print(logger::INFO, "Item Offset: %d\n", getOffsetFromOffsetTable(itemOffset));
+    logger::print(logger::INFO, "User Offset: %d\n",
+                  getOffsetFromOffsetTable(userOffset));
+    logger::print(logger::INFO, "Item Offset: %d\n",
+                  getOffsetFromOffsetTable(itemOffset));
     logger::print(logger::INFO, "\n");
 
     // Get the class of the input object

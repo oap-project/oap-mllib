@@ -26,10 +26,10 @@
 #include "oneapi/dal/algo/linear_regression.hpp"
 #endif
 
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_regression_LinearRegressionDALImpl.h"
 #include "service.h"
-#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -221,7 +221,8 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
                                jlong pData, jlong pLabel,
                                jboolean jfitIntercept, jint executorNum,
                                jobject resultObj) {
-    logger::print(logger::INFO, "oneDAL (native): GPU compute start , rankid %d\n", rankId);
+    logger::print(logger::INFO,
+                  "oneDAL (native): GPU compute start , rankid %d\n", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 
@@ -262,8 +263,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
 
-    logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels; device %s",
-		    ComputeDeviceString[computeDeviceOrdinal].c_str());
+    logger::println(logger::INFO,
+                    "oneDAL (native): use DPC++ kernels; device %s",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     ccl::communicator &cclComm = getComm();
     size_t rankId = cclComm.rank();
@@ -278,8 +280,10 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
         int nGpu = env->GetArrayLength(gpuIdxArray);
-	logger::println(logger::INFO, "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d",
-			nGpu, rankId);
+        logger::println(
+            logger::INFO,
+            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
+            rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
         int size = cclComm.size();
@@ -302,8 +306,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-	logger::println(logger::INFO, "oneDAL (native): Number of CPU threads used %d",
-			nThreadsNew);
+        logger::println(logger::INFO,
+                        "oneDAL (native): Number of CPU threads used %d",
+                        nThreadsNew);
         if (regParam == 0) {
             resultTable = linear_regression_compute(
                 rankId, cclComm, pData, pLabel, fitIntercept, executorNum);

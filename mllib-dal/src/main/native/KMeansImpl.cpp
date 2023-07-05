@@ -23,10 +23,10 @@
 #include "oneapi/dal/algo/kmeans.hpp"
 #endif
 
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_clustering_KMeansDALImpl.h"
 #include "service.h"
-#include "Logger.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
@@ -209,17 +209,20 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        logger::println(logger::INFO, "KMeans (native): iteration %d took %d secs",
-		       it, duration / 1000);
+        logger::println(logger::INFO,
+                        "KMeans (native): iteration %d took %d secs", it,
+                        duration / 1000);
     }
 
     if (rankId == ccl_root) {
         if (it == iteration_num)
-            logger::println(logger::INFO, "KMeans (native): reached %d max iterations.",
-                           iteration_num);
+            logger::println(logger::INFO,
+                            "KMeans (native): reached %d max iterations.",
+                            iteration_num);
         else
-            logger::println(logger::INFO, "KMeans (native): converged in %d iterations.",
-                           iteration_num);
+            logger::println(logger::INFO,
+                            "KMeans (native): converged in %d iterations.",
+                            iteration_num);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -261,15 +264,17 @@ static jlong doKMeansOneAPICompute(
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
-        logger::println(logger::INFO, "Iteration count: %d", result_train.get_iteration_count());
-	logger::println(logger::INFO, "Centroids:");
-	logger::print(logger::INFO, result_train.get_model().get_centroids());
+        logger::println(logger::INFO, "Iteration count: %d",
+                        result_train.get_iteration_count());
+        logger::println(logger::INFO, "Centroids:");
+        logger::print(logger::INFO, result_train.get_model().get_centroids());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        logger::println(logger::INFO, "KMeans (native): training step took %d secs",
-		       duration / 1000);
+        logger::println(logger::INFO,
+                        "KMeans (native): training step took %d secs",
+                        duration / 1000);
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -304,8 +309,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels; device %s",
-		    ComputeDeviceString[computeDeviceOrdinal].c_str());
+    logger::println(logger::INFO,
+                    "oneDAL (native): use DPC++ kernels; device %s",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     jlong ret = 0L;
     ccl::communicator &cclComm = getComm();
@@ -321,8 +327,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-	logger::println(logger::INFO, "oneDAL (native): Number of CPU threads used %d",
-			nThreadsNew);
+        logger::println(logger::INFO,
+                        "oneDAL (native): Number of CPU threads used %d",
+                        nThreadsNew);
         ret = doKMeansDaalCompute(env, obj, rankId, cclComm, pData, centroids,
                                   clusterNum, tolerance, iterationNum,
                                   executorNum, resultObj);
@@ -331,8 +338,10 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
-	logger::println(logger::INFO, "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d",
-			nGpu, rankId);
+        logger::println(
+            logger::INFO,
+            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
+            rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 

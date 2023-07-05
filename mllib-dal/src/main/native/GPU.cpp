@@ -71,7 +71,9 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        logger::println(logger::ERROR, "Not implemented for HOST/CPU device, Please run on GPU device.");
+        logger::println(
+            logger::ERROR,
+            "Not implemented for HOST/CPU device, Please run on GPU device.");
         exit(-1);
     }
     case ComputeDevice::gpu: {
@@ -79,11 +81,13 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
         auto local_rank = getLocalRank(comm, size, rankId);
         auto gpus = get_gpus();
 
-        logger::println(logger::INFO, "rank: %d size: %d local_rank: %d n_gpu: %d",
-			rankId, size, local_rank, n_gpu);
+        logger::println(logger::INFO,
+                        "rank: %d size: %d local_rank: %d n_gpu: %d", rankId,
+                        size, local_rank, n_gpu);
 
         auto gpu_selected = gpu_indices[local_rank % n_gpu];
-        logger::println(logger::INFO, "GPU selected for current rank: %d", gpu_selected);
+        logger::println(logger::INFO, "GPU selected for current rank: %d",
+                        gpu_selected);
 
         // In case gpu_selected index is larger than number of GPU SYCL devices
         auto rank_gpu = gpus[gpu_selected % gpus.size()];
@@ -104,7 +108,9 @@ sycl::queue getQueue(const ComputeDevice device) {
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        logger::println(logger::ERROR, "Not implemented for HOST/CPU device, Please run on GPU device.");
+        logger::println(
+            logger::ERROR,
+            "Not implemented for HOST/CPU device, Please run on GPU device.");
         exit(-1);
     }
     case ComputeDevice::gpu: {
