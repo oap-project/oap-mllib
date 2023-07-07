@@ -30,6 +30,7 @@
 
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
+#include "Logger.h"
 
 extern const size_t ccl_root = 0;
 
@@ -47,7 +48,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
     jobject param) {
 
-    std::cerr << "OneCCL (native): init" << std::endl;
+    logger::printerrln(logger::INFO, "OneCCL (native): init");
+    
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -68,8 +70,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    std::cerr << "OneCCL (native): init took " << duration << " secs"
-              << std::endl;
+    logger::printerrln(logger::INFO, "OneCCL (native): init took %d secs", duration);
 
     rank_id = getComm().rank();
     comm_size = getComm().size();
@@ -92,7 +93,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
  */
 JNIEXPORT jint JNICALL
 Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp(JNIEnv *env, jobject) {
-    std::cerr << "OneCCL (native): init dpcpp" << std::endl;
+    logger::printerrln(logger::INFO, "OneCCL (native): init dpcpp");
     ccl::init();
 
     return 1;
@@ -100,7 +101,7 @@ Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp(JNIEnv *env, jobject) {
 
 JNIEXPORT void JNICALL
 Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
-    std::cerr << "OneCCL (native): cleanup" << std::endl;
+    logger::printerrln(logger::INFO, "OneCCL (native): cleanup");
     g_kvs.pop_back();
     g_comms.pop_back();
 }
@@ -135,7 +136,7 @@ static int fill_local_host_ip() {
     int family = AF_UNSPEC;
     char local_ip[CCL_IP_LEN];
     if (getifaddrs(&ifaddr) < 0) {
-        std::cerr << "OneCCL (native): can not get host IP" << std::endl;
+        logger::printerrln(logger::ERROR, "OneCCL (native): can not get host IP");
         return -1;
     }
 
@@ -157,7 +158,7 @@ static int fill_local_host_ip() {
                 if (res != 0) {
                     std::string s("OneCCL (native): getnameinfo error > ");
                     s.append(gai_strerror(res));
-                    std::cerr << s << std::endl;
+                    logger::printerrln(logger::ERROR, s);
                     return -1;
                 }
                 local_host_ips.push_back(local_ip);
@@ -165,8 +166,7 @@ static int fill_local_host_ip() {
         }
     }
     if (local_host_ips.empty()) {
-        std::cerr << "OneCCL (native): can't find interface to get host IP"
-                  << std::endl;
+        logger::printerrln(logger::ERROR, "OneCCL (native): can't find interface to get host IP");
         return -1;
     }
 
@@ -177,7 +177,7 @@ static int fill_local_host_ip() {
 
 static bool is_valid_ip(char ip[]) {
     if (fill_local_host_ip() == -1) {
-        std::cerr << "OneCCL (native): get local host ip error" << std::endl;
+        logger::printerrln(logger::ERROR, "OneCCL (native): get local host ip error");
         return false;
     };
 

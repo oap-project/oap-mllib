@@ -22,4 +22,9 @@ int print(MessageType message_type, const char *format, ...);
 int print(MessageType message_type, const oneapi::dal::table &table);
 int println(MessageType message_type, const char *format, ...);
 int println(MessageType message_type, const std::string &msg);
+
+int printerr(MessageType message_type, const std::string &msg);
+int printerr(MessageType message_type, const char *format, ...);
+int printerrln(MessageType message_type, const char *format, ...);
+int printerrln(MessageType message_type, const std::string &msg);
 }; // namespace logger
