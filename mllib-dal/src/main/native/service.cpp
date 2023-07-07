@@ -1,5 +1,6 @@
 #include "service.h"
 #include "error_handling.h"
+#include "Logger.h"
 
 using namespace daal;
 using namespace daal::data_management;
@@ -36,18 +37,15 @@ template <typename T>
 void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
                 const size_t nCols, const std::string &message,
                 size_t interval = 10) {
-    std::cout << std::setiosflags(std::ios::left);
-    std::cout << message << std::endl;
+    logger::println(logger::INFO, message);
     for (size_t i = 0; i < nPrintedRows; i++) {
+        logger::print(logger::INFO, "");
         for (size_t j = 0; j < nPrintedCols; j++) {
-            std::cout << std::setw(interval)
-                      << std::setiosflags(std::ios::fixed)
-                      << std::setprecision(3);
-            std::cout << array[i * nCols + j];
+            logger::print(logger::NONE, "%*.3f", interval, array[i * nCols + j]);
         }
-        std::cout << std::endl;
+        logger::println(logger::NONE, "");
     }
-    std::cout << std::endl;
+    logger::println(logger::INFO, "");
 }
 
 template <typename T>
@@ -59,44 +57,38 @@ void printArray(T *array, const size_t nCols, const size_t nRows,
 template <typename T>
 void printLowerArray(T *array, const size_t nPrintedRows,
                      const std::string &message, size_t interval = 10) {
-    std::cout << std::setiosflags(std::ios::left);
-    std::cout << message << std::endl;
+    logger::println(logger::INFO, message);
     int ind = 0;
     for (size_t i = 0; i < nPrintedRows; i++) {
+        logger::print(logger::INFO, "");
         for (size_t j = 0; j <= i; j++) {
-            std::cout << std::setw(interval)
-                      << std::setiosflags(std::ios::fixed)
-                      << std::setprecision(3);
-            std::cout << array[ind++];
+            logger::print(logger::NONE, "%*.3f", interval, array[ind++]);
         }
-        std::cout << std::endl;
+        logger::println(logger::NONE, "");
     }
-    std::cout << std::endl;
+    logger::println(logger::INFO, "");
 }
 
 template <typename T>
 void printUpperArray(T *array, const size_t nPrintedCols,
                      const size_t nPrintedRows, const size_t nCols,
                      const std::string &message, size_t interval = 10) {
-    std::cout << std::setiosflags(std::ios::left);
-    std::cout << message << std::endl;
+    logger::println(logger::INFO, message);
     int ind = 0;
     for (size_t i = 0; i < nPrintedRows; i++) {
+        logger::print(logger::INFO, "");
         for (size_t j = 0; j < i; j++) {
-            std::cout << "          ";
+            logger::print(logger::NONE, "          ");
         }
         for (size_t j = i; j < nPrintedCols; j++) {
-            std::cout << std::setw(interval)
-                      << std::setiosflags(std::ios::fixed)
-                      << std::setprecision(3);
-            std::cout << array[ind++];
+            logger::print(logger::NONE, "%*.3f", interval, array[ind++]);
         }
         for (size_t j = nPrintedCols; j < nCols; j++) {
             ind++;
         }
-        std::cout << std::endl;
+        logger::println(logger::NONE, "");
     }
-    std::cout << std::endl;
+    logger::println(logger::INFO, "");
 }
 
 void printNumericTable(NumericTable *dataTable, const char *message = "",
