@@ -1,6 +1,7 @@
 #include "service.h"
 #include "Logger.h"
 #include "error_handling.h"
+#include "Logger.h"
 
 using namespace daal;
 using namespace daal::data_management;
