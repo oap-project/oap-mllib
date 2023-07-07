@@ -14,7 +14,6 @@ EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
 APP_PY=pca-pyspark.py
 
-
 # Should run in standalone mode
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \

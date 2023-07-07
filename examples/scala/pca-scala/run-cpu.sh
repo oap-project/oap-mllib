@@ -26,5 +26,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
     --class $APP_CLASS \
-    $APP_JAR $DATA_FILE $K \
+    $APP_JAR \
     2>&1 | tee PCA-$(date +%m%d_%H_%M_%S).log
