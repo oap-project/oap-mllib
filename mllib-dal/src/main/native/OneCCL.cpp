@@ -32,7 +32,6 @@
 #include "CCLInitSingleton.hpp"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
-#include "Logger.h"
 
 extern const size_t ccl_root = 0;
 
@@ -135,12 +134,8 @@ static int fill_local_host_ip() {
     int family = AF_UNSPEC;
     char local_ip[CCL_IP_LEN];
     if (getifaddrs(&ifaddr) < 0) {
-<<<<<<< HEAD
         logger::printerrln(logger::ERROR,
                            "OneCCL (native): can not get host IP");
-=======
-        logger::printerrln(logger::ERROR, "OneCCL (native): can not get host IP");
->>>>>>> All done
         return -1;
     }
 
@@ -170,13 +165,9 @@ static int fill_local_host_ip() {
         }
     }
     if (local_host_ips.empty()) {
-<<<<<<< HEAD
         logger::printerrln(
             logger::ERROR,
             "OneCCL (native): can't find interface to get host IP");
-=======
-        logger::printerrln(logger::ERROR, "OneCCL (native): can't find interface to get host IP");
->>>>>>> All done
         return -1;
     }
 
@@ -187,12 +178,8 @@ static int fill_local_host_ip() {
 
 static bool is_valid_ip(char ip[]) {
     if (fill_local_host_ip() == -1) {
-<<<<<<< HEAD
         logger::printerrln(logger::ERROR,
                            "OneCCL (native): get local host ip error");
-=======
-        logger::printerrln(logger::ERROR, "OneCCL (native): get local host ip error");
->>>>>>> All done
         return false;
     };
 
