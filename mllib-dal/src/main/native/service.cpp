@@ -1,6 +1,6 @@
 #include "service.h"
-#include "error_handling.h"
 #include "Logger.h"
+#include "error_handling.h"
 
 using namespace daal;
 using namespace daal::data_management;
@@ -41,7 +41,8 @@ void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
     for (size_t i = 0; i < nPrintedRows; i++) {
         logger::print(logger::INFO, "");
         for (size_t j = 0; j < nPrintedCols; j++) {
-            logger::print(logger::NONE, "%*.3f", interval, array[i * nCols + j]);
+            logger::print(logger::NONE, "%*.3f", interval,
+                          array[i * nCols + j]);
         }
         logger::println(logger::NONE, "");
     }
