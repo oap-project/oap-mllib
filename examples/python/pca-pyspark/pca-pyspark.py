@@ -27,13 +27,12 @@ if __name__ == "__main__":
         .appName("PCAExample")\
         .getOrCreate()
 
-    if (len(sys.argv) != 3) :
-        print("bin/spark-submit pca-pyspark.py <data_set.csv> <param_K>")
+    if (len(sys.argv) != 2) :
+        print("bin/spark-submit pca-pyspark.py <data_set.csv>")
         sys.exit(1)    
 
     input = spark.read.load(sys.argv[1], format="csv", inferSchema="true", header="false")
-    K = int(sys.argv[2])    
-        
+
     assembler = VectorAssembler(
         inputCols=input.columns,
         outputCol="features")
@@ -41,7 +40,7 @@ if __name__ == "__main__":
     dataset = assembler.transform(input)   
     dataset.show() 
 
-    pca = PCA(k=K, inputCol="features", outputCol="pcaFeatures")
+    pca = PCA(k=3, inputCol="features", outputCol="pcaFeatures")
     model = pca.fit(dataset)
 
     print("Principal Components: ", model.pc, sep='\n')
