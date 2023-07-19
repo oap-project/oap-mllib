@@ -85,12 +85,13 @@ object Utils {
     val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
     val recorderName = Utils.GlobalTimeTable.register(this)
     val timeFileName = recorderName + "time_breakdown"
-
+    val redirect_path = sys.env.getOrElse("SPARKJOB_CONFIG_DIR", "")
+    val current_directory = redirect_path + "/" + timeFileName
     val timerEnabled = isTimerEnabled()
 
     def record(stampName: String): Unit = {
       if (timerEnabled) {
-        algoTimeStampList(stampName).update(timeFileName)
+        algoTimeStampList(stampName).update(current_directory)
       }
     }
 
