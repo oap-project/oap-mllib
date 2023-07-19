@@ -20,8 +20,10 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
+
 import java.net.InetAddress
-import java.io.{File, FileWriter, BufferedWriter}
+import java.io.{BufferedWriter, File, FileWriter}
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.Duration
 import java.time.format.DateTimeFormatter
@@ -85,7 +87,7 @@ object Utils {
     val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
     val recorderName = Utils.GlobalTimeTable.register(this)
     val timeFileName = recorderName + "time_breakdown"
-    val redirect_path = sys.env.getOrElse("SPARKJOB_CONFIG_DIR", "")
+    val redirect_path = sys.env.getOrElse("SPARKJOB_CONFIG_DIR", Paths.get("").toAbsolutePath)
     val current_directory = redirect_path + "/" + timeFileName
     val timerEnabled = isTimerEnabled()
 
