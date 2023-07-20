@@ -212,7 +212,7 @@ void initializeStep2Local(
 
 void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
                      size_t nBlocks, size_t nUsers, size_t nFactors) {
-    logger::print(logger::INFO, "ALS (native): initializeModel \n");
+    logger::println(logger::INFO, "ALS (native): initializeModel ");
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -231,7 +231,7 @@ void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    logger::print(logger::INFO, "ALS (native): initializeModel took %d secs\n",
+    logger::println(logger::INFO, "ALS (native): initializeModel took %d secs",
                   duration);
 }
 
@@ -314,7 +314,7 @@ computeStep4Local(const CSRNumericTablePtr &dataTable,
 
 void trainModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
                 size_t nBlocks, size_t nFactors, size_t maxIterations) {
-    logger::print(logger::INFO, "ALS (native): trainModel\n");
+    logger::println(logger::INFO, "ALS (native): trainModel");
 
     auto tStart = std::chrono::high_resolution_clock::now();
 
@@ -423,14 +423,14 @@ void trainModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-        logger::print(logger::INFO, "ALS (native): iteration %d took %f secs\n",
+        logger::println(logger::INFO, "ALS (native): iteration %d took %f secs",
                       iteration, duration);
     }
 
     auto tEnd = std::chrono::high_resolution_clock::now();
     auto durationTotal =
         std::chrono::duration_cast<std::chrono::seconds>(tEnd - tStart).count();
-    logger::print(logger::INFO, "ALS (native): trainModel took %d secs\n",
+    logger::println(logger::INFO, "ALS (native): trainModel took %d secs",
                   durationTotal);
 }
 
@@ -449,7 +449,7 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     JNIEnv *env, jobject obj, jobject dataBuffer, jint nTotalKeys, jint nBlocks,
     jobject infoObj) {
     // logger::println(logger::DEBUG, "cShuffleData: rank %d", rankId);
-    logger::print(logger::INFO, "RATING_SIZE: %d\n", RATING_SIZE);
+    logger::println(logger::INFO, "RATING_SIZE: %d", RATING_SIZE);
 
     ccl::communicator &comm = getComm();
 
@@ -493,22 +493,22 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
 
     dataTable = *((CSRNumericTablePtr *)numTableAddr);
 
-    logger::print(logger::INFO, "ALS (native): Input info: ");
-    logger::print(logger::INFO, "- NumberOfRows: %d\n",
+    logger::println(logger::INFO, "ALS (native): Input info:");
+    logger::println(logger::INFO, "- NumberOfRows: %d",
                   dataTable->getNumberOfRows());
-    logger::print(logger::INFO, "- NumberOfColumns: %d\n",
+    logger::println(logger::INFO, "- NumberOfColumns: %d",
                   dataTable->getNumberOfColumns());
-    logger::print(logger::INFO, "- NumberOfRatings: %d\n",
+    logger::println(logger::INFO, "- NumberOfRatings: %d",
                   dataTable->getDataSize());
-    logger::print(logger::INFO, "- fullNUsers: %d\n", nUsers);
-    logger::print(logger::INFO, "- nFactors: %d\n", nFactors);
+    logger::println(logger::INFO, "- fullNUsers: %d", nUsers);
+    logger::println(logger::INFO, "- nFactors: %d", nFactors);
 
     // Set number of threads for oneDAL to use for each rank
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
-    logger::print(logger::INFO,
-                  "oneDAL (native): Number of CPU threads used: %d\n",
+    logger::println(logger::INFO,
+                  "oneDAL (native): Number of CPU threads used: %d",
                   nThreadsNew);
 
     int nBlocks = executor_num;
@@ -520,18 +520,18 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     auto pItem = itemsPartialResultLocal->get(training::outputOfStep4ForStep1)
                      ->getFactors();
 
-    logger::print(logger::INFO, "\n");
-    logger::print(logger::INFO, "=== Results for Rank %d ===\n", rankId);
-    logger::print(logger::INFO, "\n");
+    logger::println(logger::INFO, "");
+    logger::println(logger::INFO, "=== Results for Rank %d ===", rankId);
+    logger::println(logger::INFO, "");
     printNumericTable(pUser, "User Factors (first 10 rows x 20 columns):", 10,
                       20);
     printNumericTable(pItem, "Item Factors (first 10 rows x 20 columns):", 10,
                       20);
-    logger::print(logger::INFO, "User Offset: %d\n",
+    logger::println(logger::INFO, "User Offset: %d",
                   getOffsetFromOffsetTable(userOffset));
-    logger::print(logger::INFO, "Item Offset: %d\n",
+    logger::println(logger::INFO, "Item Offset: %d",
                   getOffsetFromOffsetTable(itemOffset));
-    logger::print(logger::INFO, "\n");
+    logger::println(logger::INFO, "");
 
     // Get the class of the input object
     jclass clazz = env->GetObjectClass(resultObj);

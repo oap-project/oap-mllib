@@ -78,7 +78,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
         // rankId, i, perNodeSendLens[i]);
         sendBufSize += perNodeSendLens[i];
     }
-    logger::print(logger::INFO, "sendData size %d\n", sendBufSize);
+    logger::println(logger::INFO, "sendData size %d", sendBufSize);
     sendData.resize(sendBufSize);
 
     // Fill in send buffer
@@ -117,7 +117,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
     // std::distance(recvData.begin(), iter);
     newCsrRowNum = distinct_count(recvData);
 
-    logger::print(logger::INFO, "newRatingsNum: %d, newCsrRowNum: %d\n",
+    logger::println(logger::INFO, "newRatingsNum: %d, newCsrRowNum: %d",
                   newRatingsNum, newCsrRowNum);
 
     return recvData.data();
