@@ -221,8 +221,8 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
                                jlong pData, jlong pLabel,
                                jboolean jfitIntercept, jint executorNum,
                                jobject resultObj) {
-    logger::print(logger::INFO,
-                  "oneDAL (native): GPU compute start , rankid %d\n", rankId);
+    logger::println(logger::INFO,
+                  "oneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 

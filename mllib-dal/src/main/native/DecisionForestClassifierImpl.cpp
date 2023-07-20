@@ -253,13 +253,13 @@ static jobject doRFClassifierOneAPICompute(
     jobject trees = nullptr;
     if (isRoot) {
         logger::println(logger::INFO, "Variable importance results:");
-        logger::print(logger::INFO, result_train.get_var_importance());
+        printHomegenTable(result_train.get_var_importance());
         logger::println(logger::INFO, "OOB error:");
-        logger::print(logger::INFO, result_train.get_oob_err());
+        printHomegenTable(result_train.get_oob_err());
         logger::println(logger::INFO, "Prediction results:");
-        logger::print(logger::INFO, result_infer.get_responses());
+        printHomegenTable(result_infer.get_responses());
         logger::println(logger::INFO, "Probabilities results:\n");
-        logger::print(logger::INFO, result_infer.get_probabilities());
+        printHomegenTable(result_infer.get_probabilities());
 
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);

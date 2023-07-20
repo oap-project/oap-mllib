@@ -99,7 +99,7 @@ CPP_SRCS += \
   ./oneapi/dal/RowAccessorImpl.cpp
 
 OBJS += \
-  ./Logger.o\
+  ./Logger.o \
   ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
   ./KMeansImpl.o \
   ./PCAImpl.o \

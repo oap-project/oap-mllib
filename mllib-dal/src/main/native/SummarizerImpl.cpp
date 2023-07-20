@@ -215,13 +215,13 @@ static void doSummarizerOneAPICompute(
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {
         logger::println(logger::INFO, "Minimum");
-        logger::print(logger::INFO, result_train.get_min());
+        printHomegenTable(result_train.get_min());
         logger::println(logger::INFO, "Maximum");
-        logger::print(logger::INFO, result_train.get_max());
+        printHomegenTable(result_train.get_max());
         logger::println(logger::INFO, "Mean");
-        logger::print(logger::INFO, result_train.get_mean());
+        printHomegenTable(result_train.get_mean());
         logger::println(logger::INFO, "Variation");
-        logger::print(logger::INFO, result_train.get_variance());
+        printHomegenTable(result_train.get_variance());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -

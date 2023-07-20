@@ -267,7 +267,7 @@ static jlong doKMeansOneAPICompute(
         logger::println(logger::INFO, "Iteration count: %d",
                         result_train.get_iteration_count());
         logger::println(logger::INFO, "Centroids:");
-        logger::print(logger::INFO, result_train.get_model().get_centroids());
+        printHomegenTable(result_train.get_model().get_centroids());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)

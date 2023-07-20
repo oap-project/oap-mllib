@@ -227,9 +227,9 @@ static void doPCAOneAPICompute(
         jfieldID explainedVarianceNumericTableField =
             env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
         logger::println(logger::INFO, "Eigenvectors:");
-        logger::print(logger::INFO, result_train.get_eigenvectors());
+        printHomegenTable(result_train.get_eigenvectors());
         logger::println(logger::INFO, "Eigenvalues:");
-        logger::print(logger::INFO, result_train.get_eigenvalues());
+        printHomegenTable(result_train.get_eigenvalues());
 
         HomogenTablePtr eigenvectors =
             std::make_shared<homogen_table>(result_train.get_eigenvectors());

@@ -3,9 +3,6 @@
 #include <cstdarg>
 #include <string>
 
-#include "oneapi/dal/table/common.hpp"
-#include "oneapi/dal/table/row_accessor.hpp"
-
 namespace logger {
 // message type for print functions
 enum MessageType {
@@ -19,7 +16,6 @@ enum MessageType {
 
 int print(MessageType message_type, const std::string &msg);
 int print(MessageType message_type, const char *format, ...);
-int print(MessageType message_type, const oneapi::dal::table &table);
 int println(MessageType message_type, const char *format, ...);
 int println(MessageType message_type, const std::string &msg);
 
