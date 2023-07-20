@@ -237,4 +237,33 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
 
     return ntSycl;
 }
+
+void printHomegenTable(const oneapi::dal::table &table) {
+    auto arr = oneapi::dal::row_accessor<const float>(table).pull();
+    const auto x = arr.get_data();
+    if (table.get_row_count() <= 10) {
+        for (std::int64_t i = 0; i < table.get_row_count(); i++) {
+            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
+                logger::print(logger::INFO, "%10f", x[i * table.get_column_count() + j]);
+            }
+	    logger::println("");
+        }
+    } else {
+        for (std::int64_t i = 0; i < 5; i++) {
+            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
+                logger::print(logger::INFO, "%10f", x[i * table.get_column_count() + j]);
+            }
+	    logger::println("");
+        }
+        logger::println(logger::INFO, "...%ld lines skipped...", (table.get_row_count() - 10));
+        for (std::int64_t i = table.get_row_count() - 5;
+             i < table.get_row_count(); i++) {
+            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
+                logger::print(logger::INFO, "%10f", x[i * table.get_column_count() + j]);
+            }
+	    logger::println("");
+        }
+    }
+    return 0;
+}
 #endif
