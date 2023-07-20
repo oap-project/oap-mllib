@@ -113,5 +113,6 @@ Rating *shuffle_all2all(ccl::communicator &comm,
     logger::println(logger::INFO, "newRatingsNum: %d, newCsrRowNum: %d",
                     newRatingsNum, newCsrRowNum);
 
+
     return recvData.data();
 }
