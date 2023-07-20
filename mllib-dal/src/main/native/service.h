@@ -69,4 +69,5 @@ void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
 
 #ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
+void printHomegenTable(const oneapi::dal::table &table);
 #endif

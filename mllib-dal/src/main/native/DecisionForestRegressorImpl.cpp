@@ -242,11 +242,11 @@ static jobject doRFRegressorOneAPICompute(
     jobject trees = nullptr;
     if (isRoot) {
         logger::println(logger::INFO, "Variable importance results:");
-        logger::print(logger::INFO, result_train.get_var_importance());
+        printHomegenTable(result_train.get_var_importance());
         logger::println(logger::INFO, "OOB error:");
-        logger::print(logger::INFO, result_train.get_oob_err());
+        printHomegenTable(result_train.get_oob_err());
         logger::println(logger::INFO, "Prediction results:");
-        logger::print(logger::INFO, result_infer.get_responses());
+        printHomegenTable(result_infer.get_responses());
 
         // convert c++ map to java hashmap
         jint statsSize = 3; // spark create VarianceCalculator needs array of

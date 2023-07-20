@@ -165,9 +165,9 @@ static void doCorrelationOneAPICompute(
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
         logger::println(logger::INFO, "Mean:");
-        logger::print(logger::INFO, result_train.get_means());
+        printHomegenTable(result_train.get_means());
         logger::println(logger::INFO, "Correlation:");
-        logger::print(logger::INFO, result_train.get_cor_matrix());
+        printHomegenTable(result_train.get_cor_matrix());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
@@ -214,8 +214,8 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        logger::print(logger::INFO,
-                      "oneDAL (native): Number of CPU threads used %d\n",
+        logger::println(logger::INFO,
+                      "oneDAL (native): Number of CPU threads used %d",
                       nThreadsNew);
         doCorrelationDaalCompute(env, obj, rankId, cclComm, pData, executorNum,
                                  resultObj);
