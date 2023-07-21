@@ -234,7 +234,7 @@ void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
     auto duration =
         std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     logger::println(logger::INFO, "ALS (native): initializeModel took %d secs",
-                  duration);
+                    duration);
 }
 
 training::DistributedPartialResultStep1Ptr computeStep1Local(
@@ -426,14 +426,14 @@ void trainModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
         logger::println(logger::INFO, "ALS (native): iteration %d took %f secs",
-                      iteration, duration);
+                        iteration, duration);
     }
 
     auto tEnd = std::chrono::high_resolution_clock::now();
     auto durationTotal =
         std::chrono::duration_cast<std::chrono::seconds>(tEnd - tStart).count();
     logger::println(logger::INFO, "ALS (native): trainModel took %d secs",
-                  durationTotal);
+                    durationTotal);
 }
 
 static size_t getOffsetFromOffsetTable(NumericTablePtr offsetTable) {
@@ -497,11 +497,11 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
 
     logger::println(logger::INFO, "ALS (native): Input info:");
     logger::println(logger::INFO, "- NumberOfRows: %d",
-                  dataTable->getNumberOfRows());
+                    dataTable->getNumberOfRows());
     logger::println(logger::INFO, "- NumberOfColumns: %d",
-                  dataTable->getNumberOfColumns());
+                    dataTable->getNumberOfColumns());
     logger::println(logger::INFO, "- NumberOfRatings: %d",
-                  dataTable->getDataSize());
+                    dataTable->getDataSize());
     logger::println(logger::INFO, "- fullNUsers: %d", nUsers);
     logger::println(logger::INFO, "- nFactors: %d", nFactors);
 
@@ -510,8 +510,8 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
     logger::println(logger::INFO,
-                  "oneDAL (native): Number of CPU threads used: %d",
-                  nThreadsNew);
+                    "oneDAL (native): Number of CPU threads used: %d",
+                    nThreadsNew);
 
     int nBlocks = executor_num;
     initializeModel(rankId, comm, partitionId, nBlocks, nUsers, nFactors);
@@ -530,9 +530,9 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     printNumericTable(pItem, "Item Factors (first 10 rows x 20 columns):", 10,
                       20);
     logger::println(logger::INFO, "User Offset: %d",
-                  getOffsetFromOffsetTable(userOffset));
+                    getOffsetFromOffsetTable(userOffset));
     logger::println(logger::INFO, "Item Offset: %d",
-                  getOffsetFromOffsetTable(itemOffset));
+                    getOffsetFromOffsetTable(itemOffset));
     logger::println(logger::INFO, "");
 
     // Get the class of the input object

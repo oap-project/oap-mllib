@@ -58,8 +58,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     logger::println(logger::INFO,
-                  "Correleation (native): local step took %d secs",
-                  duration / 1000);
+                    "Correleation (native): local step took %d secs",
+                    duration / 1000);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -86,8 +86,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
     logger::println(logger::INFO,
-                  "Correleation (native): ccl_allgatherv took %d secs",
-                  duration / 1000);
+                    "Correleation (native): ccl_allgatherv took %d secs",
+                    duration / 1000);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -126,8 +126,8 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         logger::println(logger::INFO,
-                      "Correleation (native): master step took %d secs",
-                      duration / 1000);
+                        "Correleation (native): master step took %d secs",
+                        duration / 1000);
 
         /* Print the results */
         printNumericTable(result->get(covariance_cpu::correlation),
@@ -200,8 +200,8 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
     logger::println(logger::INFO,
-                  "oneDAL (native): use DPC++ kernels; device %s",
-                  ComputeDeviceString[computeDeviceOrdinal].c_str());
+                    "oneDAL (native): use DPC++ kernels; device %s",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
@@ -216,8 +216,8 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
         logger::println(logger::INFO,
-                      "oneDAL (native): Number of CPU threads used %d",
-                      nThreadsNew);
+                        "oneDAL (native): Number of CPU threads used %d",
+                        nThreadsNew);
         doCorrelationDaalCompute(env, obj, rankId, cclComm, pData, executorNum,
                                  resultObj);
         break;
