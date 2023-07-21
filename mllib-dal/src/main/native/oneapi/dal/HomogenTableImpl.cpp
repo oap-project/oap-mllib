@@ -71,7 +71,7 @@ static data_layout getDataLayout(jint cLayout) {
 template <typename T>
  inline jlong MergeHomogenTable(homogen_table &targetTable, homogen_table &sourceTable, const jint computeDeviceOrdinal)
  {
-       printf("oneDal merge HomogenTable \n");
+       logger::println(logger::INFO, "oneDal merge HomogenTable");
        const T *targetData = targetTable.get_data<T>();
        const int targetDatasize = targetTable.get_column_count() * targetTable.get_row_count();
 
@@ -126,7 +126,7 @@ template <typename T>
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jintArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
-    printf("HomogenTable int init \n");
+    logger::println(logger::INFO, "HomogenTable int init");
     jint *fData = static_cast<jint *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
        logger::println(logger::ERROR, "Error: unable to obtain critical array");
@@ -170,7 +170,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jfloatArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
-    printf("HomogenTable float init \n");
+    logger::println(logger::INFO, "HomogenTable float init");
     jfloat *fData = static_cast<jfloat *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
        logger::println(logger::ERROR, "Error: unable to obtain critical array");
@@ -213,7 +213,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jdoubleArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
-    printf("HomogenTable double init \n");
+    logger::println(logger::INFO, "HomogenTable double init");
     jdouble *fData = static_cast<jdouble *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
        logger::println(logger::ERROR, "Error: unable to obtain critical array");
@@ -257,7 +257,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlongArray cData,
     jint cLayout, jint computeDeviceOrdinal) {
-    printf("HomogenTable long init \n");
+    logger::println(logger::INFO, "HomogenTable long init");
     jlong *fData = static_cast<jlong *>(env->GetPrimitiveArrayCritical(cData, NULL));
     if (fData == NULL) {
        logger::println(logger::ERROR, "Error: unable to obtain critical array");
@@ -301,7 +301,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetColumnCount(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getcolumncount %ld \n", cTableAddr);
+    logger::println(logger::INFO, "HomogenTable getcolumncount %ld", cTableAddr);
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     return htable.get_column_count();
 }
@@ -314,7 +314,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetColumnCount(
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetRowCount(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getrowcount \n");
+    logger::println(logger::INFO, "HomogenTable getrowcount");
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     return htable.get_row_count();
 }
@@ -327,7 +327,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetRowCount(
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetKind(JNIEnv *env, jobject,
                                                           jlong cTableAddr) {
-    printf("HomogenTable getkind \n");
+    logger::println(logger::INFO, "HomogenTable getkind");
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     return htable.get_kind();
 }
@@ -340,7 +340,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetKind(JNIEnv *env, jobject,
 JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDataLayout(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getDataLayout \n");
+    logger::println(logger::INFO, "HomogenTable getDataLayout");
     homogen_table  htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     return (jint)htable.get_data_layout();
 }
@@ -353,7 +353,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDataLayout(
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetMetaData(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getMetaData \n");
+    logger::println(logger::INFO, "HomogenTable getMetaData");
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const table_metadata *mdata = reinterpret_cast<const table_metadata *>(&htable.get_metadata());
     TableMetadataPtr metaPtr = std::make_shared<table_metadata>(*mdata);
@@ -370,7 +370,7 @@ JNIEXPORT jintArray JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetIntData(JNIEnv *env,
                                                              jobject,
                                                              jlong cTableAddr) {
-    printf("HomogenTable getIntData \n");
+    logger::println(logger::INFO, "HomogenTable getIntData");
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     const int *data = htable.get_data<int>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
@@ -387,7 +387,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetIntData(JNIEnv *env,
 JNIEXPORT jfloatArray JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetFloatData(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getFloatData \n");
+    logger::println(logger::INFO, "HomogenTable getFloatData");
     homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
     const float *data = htable.get_data<float>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
@@ -405,7 +405,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetFloatData(
 JNIEXPORT jlongArray JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetLongData(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getLongData \n");
+    logger::println(logger::INFO, "HomogenTable getLongData");
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const long *data = htable.get_data<long>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
@@ -423,7 +423,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetLongData(
 JNIEXPORT jdoubleArray JNICALL
 Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("HomogenTable getDoubleData \n");
+    logger::println(logger::INFO, "HomogenTable getDoubleData");
     homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
     const double *data = htable.get_data<double>();
     const int datasize = htable.get_column_count() * htable.get_row_count();
@@ -439,7 +439,7 @@ Java_com_intel_oneapi_dal_table_HomogenTableImpl_cGetDoubleData(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyTableInit
   (JNIEnv *env, jobject) {
-      printf(" init empty HomogenTable \n");
+      logger::println(logger::INFO, " init empty HomogenTable");
       HomogenTablePtr tablePtr = std::make_shared<homogen_table>();
       saveHomogenTablePtrToVector(tablePtr);
       return (jlong)tablePtr.get();
@@ -451,7 +451,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cEmptyT
 */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_cAddHomogenTable
  (JNIEnv *env, jobject, jlong targetTablePtr, jlong sourceTablePtr, jint cComputeDevice){
-       printf("oneDal addHomogenTable \n");
+       logger::println(logger::INFO, "oneDal addHomogenTable");
        homogen_table targetTable = *reinterpret_cast<homogen_table *>(targetTablePtr);
        homogen_table sourceTable = *reinterpret_cast<homogen_table *>(sourceTablePtr);
        const auto targetMetaData = targetTable.get_metadata();
