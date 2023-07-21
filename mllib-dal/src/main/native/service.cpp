@@ -159,7 +159,6 @@ void printNumericTable(const NumericTablePtr &dataTable, const char *message,
                       interval);
 }
 
-
 size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer) {
     /* Create a data archive to serialize the numeric table */
     InputDataArchive dataArch;
