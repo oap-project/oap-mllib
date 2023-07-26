@@ -32,7 +32,6 @@
     <scala.binary.version>2.12</scala.binary.version>
     <scalatest.version>3.2.9</scalatest.version>
     <spark.version>3.3.3</spark.version>
-    <dal.version>2023.1.0.31217</dal.version>
     <assembly.description>src/assembly/assembly.xml</assembly.description>
   </properties>
 
@@ -107,11 +106,6 @@
       <artifactId>spark-mllib_${scala.binary.version}</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.intel.dal</groupId>
-      <artifactId>dal</artifactId>
-      <version>${dal.version}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
