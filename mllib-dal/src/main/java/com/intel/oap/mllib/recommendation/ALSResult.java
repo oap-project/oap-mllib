@@ -22,4 +22,44 @@ public class ALSResult {
   public long cItemsFactorsNumTab;
   public long cUserOffset;
   public long cItemOffset;
+
+  public long getRankId() {
+    return rankId;
+  }
+
+  public void setRankId(long rankId) {
+    this.rankId = rankId;
+  }
+
+  public long getcUsersFactorsNumTab() {
+    return cUsersFactorsNumTab;
+  }
+
+  public void setcUsersFactorsNumTab(long cUsersFactorsNumTab) {
+    this.cUsersFactorsNumTab = cUsersFactorsNumTab;
+  }
+
+  public long getcItemsFactorsNumTab() {
+    return cItemsFactorsNumTab;
+  }
+
+  public void setcItemsFactorsNumTab(long cItemsFactorsNumTab) {
+    this.cItemsFactorsNumTab = cItemsFactorsNumTab;
+  }
+
+  public long getcUserOffset() {
+    return cUserOffset;
+  }
+
+  public void setcUserOffset(long cUserOffset) {
+    this.cUserOffset = cUserOffset;
+  }
+
+  public long getcItemOffset() {
+    return cItemOffset;
+  }
+
+  public void setcItemOffset(long cItemOffset) {
+    this.cItemOffset = cItemOffset;
+  }
 }

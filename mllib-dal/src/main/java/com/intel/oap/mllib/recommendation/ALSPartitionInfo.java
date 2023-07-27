@@ -19,4 +19,20 @@ package com.intel.oap.mllib.recommendation;
 public class ALSPartitionInfo {
   public int ratingsNum;
   public int csrRowNum;
+
+  public int getRatingsNum() {
+    return ratingsNum;
+  }
+
+  public void setRatingsNum(int ratingsNum) {
+    this.ratingsNum = ratingsNum;
+  }
+
+  public int getCsrRowNum() {
+    return csrRowNum;
+  }
+
+  public void setCsrRowNum(int csrRowNum) {
+    this.csrRowNum = csrRowNum;
+  }
 }
