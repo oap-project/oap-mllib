@@ -49,7 +49,7 @@ bool compareRatingUserEquality(Rating &r1, Rating &r2) {
 int distinct_count(std::vector<Rating> &data) {
     long curUser = -1;
     long count = 0;
-    for (auto i : data) {
+    for (auto &i : data) {
         if (i.user > curUser) {
             curUser = i.user;
             count += 1;

@@ -296,6 +296,10 @@ template <typename T>
 void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
                 const size_t nCols, const std::string &message,
                 size_t interval = 10) {
+    // Save the original format state of std::cout
+    std::streamsize originalPrecision = std::cout.precision();
+    std::ios_base::fmtflags originalFlags = std::cout.flags();
+
     std::cout << std::setiosflags(std::ios::left);
     std::cout << message << std::endl;
     for (size_t i = 0; i < nPrintedRows; i++) {
@@ -308,6 +312,10 @@ void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
         std::cout << std::endl;
     }
     std::cout << std::endl;
+
+    // Restore the original format state of std::cout
+    std::cout.precision(originalPrecision);
+    std::cout.flags(originalFlags);
 }
 
 template <typename T>
@@ -319,6 +327,10 @@ void printArray(T *array, const size_t nCols, const size_t nRows,
 template <typename T>
 void printLowerArray(T *array, const size_t nPrintedRows,
                      const std::string &message, size_t interval = 10) {
+    // Save the original format state of std::cout
+    std::streamsize originalPrecision = std::cout.precision();
+    std::ios_base::fmtflags originalFlags = std::cout.flags();
+
     std::cout << std::setiosflags(std::ios::left);
     std::cout << message << std::endl;
     int ind = 0;
@@ -332,12 +344,21 @@ void printLowerArray(T *array, const size_t nPrintedRows,
         std::cout << std::endl;
     }
     std::cout << std::endl;
+
+    // Restore the original format state of std::cout
+    std::cout.precision(originalPrecision);
+    std::cout.flags(originalFlags);
 }
 
 template <typename T>
 void printUpperArray(T *array, const size_t nPrintedCols,
                      const size_t nPrintedRows, const size_t nCols,
                      const std::string &message, size_t interval = 10) {
+
+    // Save the original format state of std::cout
+    std::streamsize originalPrecision = std::cout.precision();
+    std::ios_base::fmtflags originalFlags = std::cout.flags();
+
     std::cout << std::setiosflags(std::ios::left);
     std::cout << message << std::endl;
     int ind = 0;
@@ -357,6 +378,10 @@ void printUpperArray(T *array, const size_t nPrintedCols,
         std::cout << std::endl;
     }
     std::cout << std::endl;
+
+    // Restore the original format state of std::cout
+    std::cout.precision(originalPrecision);
+    std::cout.flags(originalFlags);
 }
 
 void printNumericTable(NumericTable *dataTable, const char *message = "",
@@ -385,18 +410,24 @@ void printNumericTable(NumericTable *dataTable, const char *message = "",
                                    nPrintedRows, nCols, message, interval);
         dataTable->releaseBlockOfRows(block);
     } else {
-        PackedArrayNumericTableIface *packedTable =
-            dynamic_cast<PackedArrayNumericTableIface *>(dataTable);
-        packedTable->getPackedArray(readOnly, block);
-        if (isLower(layout)) {
-            printLowerArray<DAAL_DATA_TYPE>(block.getBlockPtr(), nPrintedRows,
-                                            message, interval);
-        } else if (isUpper(layout)) {
-            printUpperArray<DAAL_DATA_TYPE>(block.getBlockPtr(), nPrintedCols,
-                                            nPrintedRows, nCols, message,
-                                            interval);
+        try {
+            PackedArrayNumericTableIface *packedTable =
+                dynamic_cast<PackedArrayNumericTableIface *>(dataTable);
+            packedTable->getPackedArray(readOnly, block);
+            if (isLower(layout)) {
+                printLowerArray<DAAL_DATA_TYPE>(
+                    block.getBlockPtr(), nPrintedRows, message, interval);
+            } else if (isUpper(layout)) {
+                printUpperArray<DAAL_DATA_TYPE>(block.getBlockPtr(),
+                                                nPrintedCols, nPrintedRows,
+                                                nCols, message, interval);
+            }
+            packedTable->releasePackedArray(block);
+        } catch (const std::bad_cast &e) {
+            std::cout
+                << "Dynamic cast to PackedArrayNumericTableIface* failed: "
+                << e.what() << std::endl;
         }
-        packedTable->releasePackedArray(block);
     }
 }
 
@@ -416,6 +447,10 @@ void printNumericTable(const NumericTablePtr &dataTable, const char *message,
 
 void printPackedNumericTable(NumericTable *dataTable, size_t nFeatures,
                              const char *message = "", size_t interval = 10) {
+    // Save the original format state of std::cout
+    std::streamsize originalPrecision = std::cout.precision();
+    std::ios_base::fmtflags originalFlags = std::cout.flags();
+
     BlockDescriptor<DAAL_DATA_TYPE> block;
 
     dataTable->getBlockOfRows(0, 1, readOnly, block);
@@ -435,6 +470,10 @@ void printPackedNumericTable(NumericTable *dataTable, size_t nFeatures,
         std::cout << std::endl;
     }
     std::cout << std::endl;
+
+    // Restore the original format state of std::cout
+    std::cout.precision(originalPrecision);
+    std::cout.flags(originalFlags);
 
     dataTable->releaseBlockOfRows(block);
 }
@@ -504,6 +543,10 @@ void printNumericTables(NumericTable *dataTable1, NumericTable *dataTable2,
                         const char *title1 = "", const char *title2 = "",
                         const char *message = "", size_t nPrintedRows = 0,
                         size_t interval = 10) {
+    // Save the original format state of std::cout
+    std::streamsize originalPrecision = std::cout.precision();
+    std::ios_base::fmtflags originalFlags = std::cout.flags();
+
     size_t nRows1 = dataTable1->getNumberOfRows();
     size_t nRows2 = dataTable2->getNumberOfRows();
     size_t nCols1 = dataTable1->getNumberOfColumns();
@@ -541,6 +584,10 @@ void printNumericTables(NumericTable *dataTable1, NumericTable *dataTable2,
         std::cout << std::endl;
     }
     std::cout << std::endl;
+
+    // Restore the original format state of std::cout
+    std::cout.precision(originalPrecision);
+    std::cout.flags(originalFlags);
 
     dataTable1->releaseBlockOfRows(block1);
     dataTable2->releaseBlockOfRows(block2);
@@ -763,7 +810,7 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
 }
 
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
-    ComputeDevice device;
+    ComputeDevice device = ComputeDevice::uninitialized;
     switch (computeDeviceOrdinal) {
     case 0:
         device = ComputeDevice::host;
@@ -773,6 +820,8 @@ ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
         break;
     case 2:
         device = ComputeDevice::gpu;
+        break;
+    default:
         break;
     }
     return device;
