@@ -17,7 +17,7 @@
  */
 // scalastyle:on
 
-package org.apache.spark.ml.classification.spark321
+package org.apache.spark.ml.classification.spark322
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}

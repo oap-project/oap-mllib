@@ -73,6 +73,7 @@ The following runtime packages with all their dependencies should be installed i
 * Apache Spark 3.1.3
 * Apache Spark 3.2.0
 * Apache Spark 3.2.1
+* Apache Spark 3.2.2
 
 ### Supported Intel® oneAPI Toolkits
 

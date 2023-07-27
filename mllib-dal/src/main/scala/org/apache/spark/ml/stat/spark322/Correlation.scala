@@ -17,7 +17,7 @@
  */
 // scalastyle:on
 
-package org.apache.spark.ml.stat.spark321
+package org.apache.spark.ml.stat.spark322
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.stat.{CorrelationDALImpl, CorrelationShim}
