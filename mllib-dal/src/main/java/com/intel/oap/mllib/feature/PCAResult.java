@@ -19,4 +19,12 @@ package com.intel.oap.mllib.feature;
 public class PCAResult {
   public long pcNumericTable;
   public long explainedVarianceNumericTable;
+
+  public long getPcNumericTable() {
+    return pcNumericTable;
+  }
+
+  public void setPcNumericTable(long pcNumericTable) {
+    this.pcNumericTable = pcNumericTable;
+  }
 }

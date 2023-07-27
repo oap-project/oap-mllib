@@ -18,4 +18,36 @@ public class SummarizerResult {
   public long varianceNumericTable;
   public long minimumNumericTable;
   public long maximumNumericTable;
+
+  public long getMeanNumericTable() {
+    return meanNumericTable;
+  }
+
+  public void setMeanNumericTable(long meanNumericTable) {
+    this.meanNumericTable = meanNumericTable;
+  }
+
+  public long getVarianceNumericTable() {
+    return varianceNumericTable;
+  }
+
+  public void setVarianceNumericTable(long varianceNumericTable) {
+    this.varianceNumericTable = varianceNumericTable;
+  }
+
+  public long getMinimumNumericTable() {
+    return minimumNumericTable;
+  }
+
+  public void setMinimumNumericTable(long minimumNumericTable) {
+    this.minimumNumericTable = minimumNumericTable;
+  }
+
+  public long getMaximumNumericTable() {
+    return maximumNumericTable;
+  }
+
+  public void setMaximumNumericTable(long maximumNumericTable) {
+    this.maximumNumericTable = maximumNumericTable;
+  }
 }
