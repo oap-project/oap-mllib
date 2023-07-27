@@ -27,7 +27,9 @@ package com.intel.daal.data_management.data;
 
 import com.intel.daal.services.DaalContext;
 import com.intel.daal.utils.LibUtils;
+import com.intel.oap.mllib.LibLoader;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
@@ -44,7 +46,11 @@ abstract public class NumericTable extends SerializableBase implements NumericTa
 
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected NumericTable(DaalContext context) {

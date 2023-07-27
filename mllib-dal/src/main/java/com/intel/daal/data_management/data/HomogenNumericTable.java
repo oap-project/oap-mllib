@@ -23,11 +23,13 @@ package com.intel.daal.data_management.data;
 
 import com.intel.daal.utils.LibUtils;
 
+import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import com.intel.daal.services.DaalContext;
+import com.intel.oap.mllib.LibLoader;
 
 /**
  * <a name="DAAL-CLASS-DATA_MANAGEMENT__DATA__HOMOGENNUMERICTABLE"></a>
@@ -40,7 +42,11 @@ public class HomogenNumericTable extends NumericTable {
 
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

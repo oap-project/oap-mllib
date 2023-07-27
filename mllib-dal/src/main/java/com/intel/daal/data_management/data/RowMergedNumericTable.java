@@ -24,6 +24,9 @@ package com.intel.daal.data_management.data;
 import com.intel.daal.utils.LibUtils;
 
 import com.intel.daal.services.DaalContext;
+import com.intel.oap.mllib.LibLoader;
+
+import java.io.IOException;
 
 /**
  *  <a name="DAAL-CLASS-DATA_MANAGEMENT__DATA__ROWMERGEDNUMERICTABLE"></a>
@@ -32,7 +35,11 @@ import com.intel.daal.services.DaalContext;
 public class RowMergedNumericTable extends NumericTable {
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public RowMergedNumericTable(DaalContext context, RowMergedNumericTableImpl impl) {

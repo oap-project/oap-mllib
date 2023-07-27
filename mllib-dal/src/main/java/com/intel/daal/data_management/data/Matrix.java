@@ -24,6 +24,9 @@ package com.intel.daal.data_management.data;
 import com.intel.daal.utils.*;
 
 import com.intel.daal.services.DaalContext;
+import com.intel.oap.mllib.LibLoader;
+
+import java.io.IOException;
 
 /**
  * <a name="DAAL-CLASS-DATA_MANAGEMENT__DATA__MATRIX"></a>
@@ -36,7 +39,11 @@ public class Matrix extends HomogenNumericTable {
 
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
