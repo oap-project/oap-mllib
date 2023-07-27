@@ -119,4 +119,3 @@ jobs:
       - name: Cluster Test
         run: |
           ${{github.workspace}}/dev/ci/ci-standalone-python-test-cpu.sh
-          
