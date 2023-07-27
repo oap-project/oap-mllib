@@ -410,21 +410,23 @@ void printNumericTable(NumericTable *dataTable, const char *message = "",
                                    nPrintedRows, nCols, message, interval);
         dataTable->releaseBlockOfRows(block);
     } else {
-       try {
+        try {
             PackedArrayNumericTableIface *packedTable =
                 dynamic_cast<PackedArrayNumericTableIface *>(dataTable);
             packedTable->getPackedArray(readOnly, block);
             if (isLower(layout)) {
-                printLowerArray<DAAL_DATA_TYPE>(block.getBlockPtr(), nPrintedRows,
-                                                message, interval);
+                printLowerArray<DAAL_DATA_TYPE>(
+                    block.getBlockPtr(), nPrintedRows, message, interval);
             } else if (isUpper(layout)) {
-                printUpperArray<DAAL_DATA_TYPE>(block.getBlockPtr(), nPrintedCols,
-                                                nPrintedRows, nCols, message,
-                                                interval);
+                printUpperArray<DAAL_DATA_TYPE>(block.getBlockPtr(),
+                                                nPrintedCols, nPrintedRows,
+                                                nCols, message, interval);
             }
             packedTable->releasePackedArray(block);
-        } catch (const std::bad_cast& e) {
-            std::cout << "Dynamic cast to PackedArrayNumericTableIface* failed: " << e.what() << std::endl;
+        } catch (const std::bad_cast &e) {
+            std::cout
+                << "Dynamic cast to PackedArrayNumericTableIface* failed: "
+                << e.what() << std::endl;
         }
     }
 }
