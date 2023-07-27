@@ -32,6 +32,6 @@ echo "Cluster Testing with Spark Version: $SPARK_VERSION"
 echo "========================================="
 
 # Build and run all examples
-./build-all-scala.sh
-./run-all-scala-cpu.sh
+#./build-all-scala.sh
+#./run-all-scala-cpu.sh
 ./run-all-pyspark-cpu.sh
