@@ -48,4 +48,7 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     com.intel.daal.data_management.data.HomogenNumericTableByteBufferImpl \
     com.intel.daal.data_management.data.MergedNumericTableImpl \
     com.intel.daal.data_management.data.NumericTableImpl \
-    com.intel.daal.data_management.data.RowMergedNumericTableImpl
+    com.intel.daal.data_management.data.RowMergedNumericTableImpl \
+    com.intel.daal.data_management.data.DataDictionary \
+    com.intel.daal.data_management.data.DataFeature \
+    com.intel.daal.data_management.data.DataFeatureUtils
