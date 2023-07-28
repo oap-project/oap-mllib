@@ -147,7 +147,7 @@ static int fill_local_host_ip() {
             continue;
         if (strstr(ifa->ifa_name, iface_name) == NULL) {
             family = ifa->ifa_addr->sa_family;
-            if (family == AF_INET) {
+            if (family == AF_INET || family == AF_INET6) {
                 memset(local_ip, 0, CCL_IP_LEN);
                 int res = getnameinfo(
                     ifa->ifa_addr,
@@ -161,6 +161,11 @@ static int fill_local_host_ip() {
                     return -1;
                 }
                 local_host_ips.push_back(local_ip);
+            } else {
+                std::cerr
+                    << "OneCCL (native): can't find interface to get host IP"
+                    << std::endl;
+                return -1;
             }
         }
     }
