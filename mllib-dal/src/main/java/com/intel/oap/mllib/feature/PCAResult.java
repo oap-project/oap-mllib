@@ -20,6 +20,14 @@ public class PCAResult {
   public long pcNumericTable;
   public long explainedVarianceNumericTable;
 
+  public long getExplainedVarianceNumericTable() {
+    return explainedVarianceNumericTable;
+  }
+
+  public void setExplainedVarianceNumericTable(long explainedVarianceNumericTable) {
+    this.explainedVarianceNumericTable = explainedVarianceNumericTable;
+  }
+
   public long getPcNumericTable() {
     return pcNumericTable;
   }
@@ -27,4 +35,6 @@ public class PCAResult {
   public void setPcNumericTable(long pcNumericTable) {
     this.pcNumericTable = pcNumericTable;
   }
+
+
 }
