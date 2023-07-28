@@ -21,8 +21,6 @@
  */
 package com.intel.daal.data_management.data;
 
-import com.intel.daal.utils.LibUtils;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

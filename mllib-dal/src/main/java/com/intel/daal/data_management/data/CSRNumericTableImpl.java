@@ -22,7 +22,6 @@
 package com.intel.daal.data_management.data;
 
 import com.intel.daal.services.DaalContext;
-import com.intel.daal.utils.LibUtils;
 import com.intel.oap.mllib.LibLoader;
 
 import java.io.IOException;

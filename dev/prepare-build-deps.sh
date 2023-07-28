@@ -33,7 +33,6 @@ TARGET_DIR=./src/main/resources/lib
 rm -f $TARGET_DIR/*.so*
 
 # Copy oneDAL JavaAPI libs
-cp $DAALROOT/lib/intel64/libJavaAPI.so $TARGET_DIR/libJavaAPI.so
 cp $TBBROOT/lib/intel64/gcc4.8/libtbb.so.12 $TARGET_DIR/libtbb.so.12
 cp $TBBROOT/lib/intel64/gcc4.8/libtbbmalloc.so.2 $TARGET_DIR/libtbbmalloc.so.2
 
