@@ -21,8 +21,10 @@
  */
 package com.intel.daal.data_management.data;
 
-import com.intel.daal.utils.LibUtils;
 import com.intel.daal.services.DaalContext;
+import com.intel.oap.mllib.LibLoader;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -33,7 +35,11 @@ import java.nio.ByteBuffer;
 public class DataFeature extends SerializableBase {
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
