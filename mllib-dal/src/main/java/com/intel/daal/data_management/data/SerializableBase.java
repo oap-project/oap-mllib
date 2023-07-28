@@ -23,8 +23,6 @@
  */
 package com.intel.daal.data_management.data;
 
-import com.intel.daal.utils.LibUtils;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -33,6 +31,7 @@ import java.nio.ByteBuffer;
 
 import com.intel.daal.services.ContextClient;
 import com.intel.daal.services.DaalContext;
+import com.intel.oap.mllib.LibLoader;
 
 /**
  *  <a name="DAAL-CLASS-DATA_MANAGEMENT__DATA__SERIALIZABLEBASE"></a>
@@ -43,7 +42,11 @@ public class SerializableBase extends ContextClient
 
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

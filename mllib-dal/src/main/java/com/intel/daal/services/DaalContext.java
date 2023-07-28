@@ -21,8 +21,9 @@
  */
 package com.intel.daal.services;
 
-import com.intel.daal.utils.LibUtils;
+import com.intel.oap.mllib.LibLoader;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -35,7 +36,11 @@ public class DaalContext {
 
     /** @private */
     static {
-        LibUtils.loadLibrary();
+        try {
+            LibLoader.loadLibraries();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
