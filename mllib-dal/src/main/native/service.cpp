@@ -424,8 +424,8 @@ void printNumericTable(NumericTable *dataTable, const char *message = "",
             }
             packedTable->releasePackedArray(block);
         } else {
-            std::cout
-                << "Dynamic cast to PackedArrayNumericTableIface* failed."<< std::endl;
+            std::cout << "Dynamic cast to PackedArrayNumericTableIface* failed."
+                      << std::endl;
         }
     }
 }
