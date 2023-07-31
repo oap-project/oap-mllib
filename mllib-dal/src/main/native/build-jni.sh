@@ -44,11 +44,11 @@ javah -d $WORK_DIR/javah -classpath "$WORK_DIR/../../../target/classes:$DAAL_JAR
     com.intel.oneapi.dal.table.SimpleMetadataImpl \
     com.intel.oneapi.dal.table.ColumnAccessor \
     com.intel.oneapi.dal.table.RowAccessor \
-    com.intel.daal.data_management.data.CSRNumericTableImpl \
-    com.intel.daal.data_management.data.HomogenNumericTableByteBufferImpl \
-    com.intel.daal.data_management.data.MergedNumericTableImpl \
-    com.intel.daal.data_management.data.NumericTableImpl \
-    com.intel.daal.data_management.data.RowMergedNumericTableImpl \
-    com.intel.daal.data_management.data.DataDictionary \
-    com.intel.daal.data_management.data.DataFeature \
-    com.intel.daal.data_management.data.DataFeatureUtils
+    com.intel.daal.datamanagement.data.CSRNumericTableImpl \
+    com.intel.daal.datamanagement.data.HomogenNumericTableByteBufferImpl \
+    com.intel.daal.datamanagement.data.MergedNumericTableImpl \
+    com.intel.daal.datamanagement.data.NumericTableImpl \
+    com.intel.daal.datamanagement.data.RowMergedNumericTableImpl \
+    com.intel.daal.datamanagement.data.DataDictionary \
+    com.intel.daal.datamanagement.data.DataFeature \
+    com.intel.daal.datamanagement.data.DataFeatureUtils

@@ -18,8 +18,8 @@
 #include <jni.h>
 #include <string>
 
-#include "com_intel_daal_data_management_data_DataFeature.h"
-#include "com_intel_daal_data_management_data_DataFeatureUtils.h"
+#include "com_intel_daal_datamanagement_data_DataFeature.h"
+#include "com_intel_daal_datamanagement_data_DataFeatureUtils.h"
 #include "data_management/data/data_dictionary.h"
 
 using namespace daal::data_management;
@@ -30,7 +30,7 @@ inline static jlong getDataFeatureObject(JNIEnv * env, jobject thisObj)
     using namespace daal;
 
     // Get a class reference for Java NumericTableFeature
-    jclass cls          = env->FindClass("com/intel/daal/data_management/data/DataFeature");
+    jclass cls          = env->FindClass("com/intel/daal/datamanagement/data/DataFeature");
     jfieldID objFieldID = env->GetFieldID(cls, "cObject", "J");
     return env->GetLongField(thisObj, objFieldID);
 }
@@ -150,7 +150,7 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 /*
  * Class:     com_intel_daal_data_1management_data_DataFeature
  * Method:    getPMMLNumType
- * Signature:()Lcom/intel/daal/data_management/data/DataFeatureUtils/PMMLNumType;
+ * Signature:()Lcom/intel/daal/datamanagement/data/DataFeatureUtils/PMMLNumType;
  */
 JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_getPMMLNumType(JNIEnv * env, jobject thisObj)
 {
@@ -160,7 +160,7 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
     NumericTableFeature * df = ((NumericTableFeaturePtr *)getDataFeatureObject(env, thisObj))->get();
 
     // Wrap resulting C++ table with Java object
-    jclass resultClass = env->FindClass("com/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType");
+    jclass resultClass = env->FindClass("com/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType");
     if (resultClass == 0)
     {
         /* printf("Couldn't find class DataFeatureUtils$InternalNumType\n"); fflush(0); */
@@ -169,46 +169,46 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
 
     switch ((long long)(df->pmmlType))
     {
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalGenFloat:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalGenFloat:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_FLOAT", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_FLOAT", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalGenDouble:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalGenDouble:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_DOUBLE", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_DOUBLE", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalGenInteger:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalGenInteger:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_INTEGER", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_INTEGER", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalGenBoolean:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalGenBoolean:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_BOOLEAN", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_BOOLEAN", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalGenString:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalGenString:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_STRING", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_STRING", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalGenUnknown:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalGenUnknown:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_UNKNOWN", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_UNKNOWN", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
     default: /* DAAL_GEN_UNKNOWN */
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_GEN_UNKNOWN", "Lcom/intel/daal/data_management/data/DataFeatureUtils$PMMLNumType;");
+            env->GetStaticFieldID(resultClass, "DAAL_GEN_UNKNOWN", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$PMMLNumType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
     }
@@ -219,7 +219,7 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
 /*
  * Class:     com_intel_daal_data_1management_data_DataFeature
  * Method:    getFeatureType
- * Signature:()Lcom/intel/daal/data_management/data/DataFeatureUtils/FeatureType;
+ * Signature:()Lcom/intel/daal/datamanagement/data/DataFeatureUtils/FeatureType;
  */
 JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_getFeatureType(JNIEnv * env, jobject thisObj)
 {
@@ -229,7 +229,7 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
     NumericTableFeature * df = ((NumericTableFeaturePtr *)getDataFeatureObject(env, thisObj))->get();
 
     // Wrap resulting C++ table with Java object
-    jclass resultClass = env->FindClass("com/intel/daal/data_management/data/DataFeatureUtils$FeatureType");
+    jclass resultClass = env->FindClass("com/intel/daal/datamanagement/data/DataFeatureUtils$FeatureType");
     if (resultClass == 0)
     {
         /* printf("Couldn't find class DataFeatureUtils$InternalNumType\n"); fflush(0); */
@@ -237,28 +237,28 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
     }
     switch ((long long)(df->featureType))
     {
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalCategorical:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalCategorical:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_CATEGORICAL", "Lcom/intel/daal/data_management/data/DataFeatureUtils$FeatureType;");
+            env->GetStaticFieldID(resultClass, "DAAL_CATEGORICAL", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$FeatureType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalOrdinal:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalOrdinal:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_ORDINAL", "Lcom/intel/daal/data_management/data/DataFeatureUtils$FeatureType;");
+            env->GetStaticFieldID(resultClass, "DAAL_ORDINAL", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$FeatureType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
-    case com_intel_daal_data_management_data_DataFeatureUtils_cDaalContinuous:
+    case com_intel_daal_datamanagement_data_DataFeatureUtils_cDaalContinuous:
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_CONTINUOUS", "Lcom/intel/daal/data_management/data/DataFeatureUtils$FeatureType;");
+            env->GetStaticFieldID(resultClass, "DAAL_CONTINUOUS", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$FeatureType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
     default: /* DAAL_CONTINUOUS */
     {
         jfieldID staticFieldID =
-            env->GetStaticFieldID(resultClass, "DAAL_CONTINUOUS", "Lcom/intel/daal/data_management/data/DataFeatureUtils$FeatureType;");
+            env->GetStaticFieldID(resultClass, "DAAL_CONTINUOUS", "Lcom/intel/daal/datamanagement/data/DataFeatureUtils$FeatureType;");
         return env->GetStaticObjectField(resultClass, staticFieldID);
     }
     }

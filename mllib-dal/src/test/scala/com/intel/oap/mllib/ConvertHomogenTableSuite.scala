@@ -18,7 +18,7 @@ package com.intel.oap.mllib
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 
-import com.intel.daal.data_management.data.{NumericTable, Matrix => DALMatrix}
+import com.intel.daal.datamanagement.data.{NumericTable, Matrix => DALMatrix}
 import com.intel.daal.services.DaalContext
 import com.intel.oneapi.dal.table.{Common, HomogenTable}
 import com.intel.oneapi.dal.table.Common.DataLayout.ROW_MAJOR

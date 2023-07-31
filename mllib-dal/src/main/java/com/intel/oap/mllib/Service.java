@@ -18,9 +18,9 @@
 
 package com.intel.oap.mllib;
 
-import com.intel.daal.data_management.data.CSRNumericTable;
-import com.intel.daal.data_management.data.HomogenNumericTable;
-import com.intel.daal.data_management.data.NumericTable;
+import com.intel.daal.datamanagement.data.CSRNumericTable;
+import com.intel.daal.datamanagement.data.HomogenNumericTable;
+import com.intel.daal.datamanagement.data.NumericTable;
 import com.intel.daal.services.ErrorHandling;
 
 import java.nio.FloatBuffer;
