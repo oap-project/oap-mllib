@@ -36,11 +36,11 @@ inline static jlong getDataFeatureObject(JNIEnv * env, jobject thisObj)
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    init
  * Signature:()J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_data_1management_data_DataFeature_init(JNIEnv * env, jobject thisObj)
+JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_init(JNIEnv * env, jobject thisObj)
 {
     using namespace daal;
 
@@ -50,11 +50,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_data_1management_data_DataFeature_in
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cDispose
  * Signature:(J)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cDispose(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cDispose(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
 {
     using namespace daal;
 
@@ -63,11 +63,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cDi
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSerializeCObject
  * Signature:(J)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSerializeCObject(JNIEnv * env, jobject thisObj,
+JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSerializeCObject(JNIEnv * env, jobject thisObj,
                                                                                                   jlong dataFeatureAddr)
 {
     using namespace daal;
@@ -87,11 +87,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cDeserializeCObject
  * Signature:(Ljava/nio/ByteBuffer;J)J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cDeserializeCObject(JNIEnv * env, jobject thisObj, jobject byteBuffer,
+JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cDeserializeCObject(JNIEnv * env, jobject thisObj, jobject byteBuffer,
                                                                                                   jlong size)
 {
     using namespace daal;
@@ -103,11 +103,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cD
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetPMMLNumType
  * Signature:(JI)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetPMMLNumType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr,
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetPMMLNumType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr,
                                                                                              jint newPMMLType)
 {
     using namespace daal;
@@ -118,11 +118,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetFeatureType
  * Signature:(JI)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetFeatureType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr,
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetFeatureType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr,
                                                                                              jint newFeatureType)
 {
     using namespace daal;
@@ -133,11 +133,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetCategoryNumber
  * Signature:(JI)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetCategoryNumber(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr,
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetCategoryNumber(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr,
                                                                                                 jint categoryNumber)
 {
     using namespace daal;
@@ -148,11 +148,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    getPMMLNumType
  * Signature:()Lcom/intel/daal/datamanagement/data/DataFeatureUtils/PMMLNumType;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_getPMMLNumType(JNIEnv * env, jobject thisObj)
+JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_getPMMLNumType(JNIEnv * env, jobject thisObj)
 {
     using namespace daal;
 
@@ -217,11 +217,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    getFeatureType
  * Signature:()Lcom/intel/daal/datamanagement/data/DataFeatureUtils/FeatureType;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_getFeatureType(JNIEnv * env, jobject thisObj)
+JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_getFeatureType(JNIEnv * env, jobject thisObj)
 {
     using namespace daal;
 
@@ -267,11 +267,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    getCategoryNumber
  * Signature:()I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_data_1management_data_DataFeature_getCategoryNumber(JNIEnv * env, jobject thisObj)
+JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_getCategoryNumber(JNIEnv * env, jobject thisObj)
 {
     using namespace daal;
 
@@ -281,12 +281,12 @@ JNIEXPORT jint JNICALL Java_com_intel_daal_data_1management_data_DataFeature_get
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    getName
  * Signature:()Ljava/lang/String;
  */
 /*
-JNIEXPORT jstring JNICALL Java_com_intel_daal_data_1management_data_DataFeature_getName
+JNIEXPORT jstring JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_getName
  (JNIEnv *env, jobject thisObj)
 {
     using namespace daal;
@@ -298,11 +298,11 @@ JNIEXPORT jstring JNICALL Java_com_intel_daal_data_1management_data_DataFeature_
 */
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetDoubleType
  * Signature:(J)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetDoubleType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetDoubleType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
 {
     using namespace daal;
 
@@ -312,11 +312,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetFloatType
  * Signature:()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetFloatType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetFloatType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
 {
     using namespace daal;
 
@@ -326,11 +326,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetLongType
  * Signature:()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetLongType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetLongType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
 {
     using namespace daal;
 
@@ -340,11 +340,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSe
 }
 
 /*
- * Class:     com_intel_daal_data_1management_data_DataFeature
+ * Class:     com_intel_daal_datamanagement_data_DataFeature
  * Method:    cSetIntType
  * Signature:()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataFeature_cSetIntType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
+JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_DataFeature_cSetIntType(JNIEnv * env, jobject thisObj, jlong dataFeatureAddr)
 {
     using namespace daal;
 
