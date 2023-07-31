@@ -16,8 +16,7 @@
  *******************************************************************************/
 
 /**
- * @ingroup memory
- * @{
+ * @ingroup memory @{
  */
 package com.intel.daal.services;
 
@@ -27,52 +26,52 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- *  <a name="DAAL-CLASS-SERVICES__DAALCONTEXT"></a>
+ * <a name="DAAL-CLASS-SERVICES__DAALCONTEXT"></a>
  * @brief Provides the context for managment of memory in the native C++ object
  */
 public class DaalContext {
 
-    private ConcurrentLinkedQueue<Disposable> queue;
+  private ConcurrentLinkedQueue<Disposable> queue;
 
-    /** @private */
-    static {
-        try {
-            LibLoader.loadLibraries();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  /** @private */
+  static {
+    try {
+      LibLoader.loadLibraries();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    /**
-     *Default constructor
-     */
-    public DaalContext() {
-        queue = new ConcurrentLinkedQueue<Disposable>();
-    }
+  /**
+   * Default constructor
+   */
+  public DaalContext() {
+    queue = new ConcurrentLinkedQueue<Disposable>();
+  }
 
-    /**
-     * Adds Disposable object to the Context
-     */
-    public void add(Disposable obj) {
-        queue.add(obj);
-    }
+  /**
+   * Adds Disposable object to the Context
+   */
+  public void add(Disposable obj) {
+    queue.add(obj);
+  }
 
-    /**
-     * Removes Disposable object from the Context
-     */
-    public void remove(Disposable obj) {
-        queue.remove(obj);
-    }
+  /**
+   * Removes Disposable object from the Context
+   */
+  public void remove(Disposable obj) {
+    queue.remove(obj);
+  }
 
-    /**
-     * Frees memory from native C++ object registered in the Context
-     */
-    public void dispose() {
-        Disposable obj = null;
-        while ((obj = queue.poll()) != null) {
-            obj.dispose();
-        }
+  /**
+   * Frees memory from native C++ object registered in the Context
+   */
+  public void dispose() {
+    Disposable obj = null;
+    while ((obj = queue.poll()) != null) {
+      obj.dispose();
     }
+  }
 
 }
 /** @} */
