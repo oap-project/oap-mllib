@@ -6,10 +6,10 @@
 
 class Profiler {
   public:
-    Profiler(std::string s) : subject(s) {}
+    Profiler(std::string s) : subject(std::move(s)) {}
 
     void startProfile(std::string s = "") {
-        action = s;
+        action = std::move(s);
         std::cout << subject << " (native): start " << action << std::endl;
         startTime = std::chrono::high_resolution_clock::now();
     }
