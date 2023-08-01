@@ -43,8 +43,8 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
   printf("RowAccessor PullDouble \n");
   homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const double> acc {htable};
-  jdoubleArray newDoubleArray;
-  oneapi::dal::array<double> row_values = nullptr;
+  jdoubleArray newDoubleArray = nullptr;
+  oneapi::dal::array<double> row_values;
   ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
          case ComputeDevice::host:{
@@ -77,8 +77,8 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
   printf("RowAccessor PullFloat \n");
   homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const float> acc { htable };
-  jfloatArray newFloatArray;
-  oneapi::dal::array<float> row_values = nullptr;
+  jfloatArray newFloatArray = nullptr;
+  oneapi::dal::array<float> row_values;
   ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
          case ComputeDevice::host:{
@@ -111,8 +111,8 @@ JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   printf("RowAccessor PullInt \n");
   homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
   row_accessor<const int> acc { htable };
-  jintArray newIntArray;
-  oneapi::dal::array<int> row_values = nullptr;
+  jintArray newIntArray = nullptr;
+  oneapi::dal::array<int> row_values;
   ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
   switch(device) {
          case ComputeDevice::host:{
