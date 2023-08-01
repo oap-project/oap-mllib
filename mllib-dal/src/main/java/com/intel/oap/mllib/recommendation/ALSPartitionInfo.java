@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.recommendation;
 
 public class ALSPartitionInfo {
-  public int ratingsNum;
-  public int csrRowNum;
+  private int ratingsNum;
+  private int csrRowNum;
 
   public int getRatingsNum() {
     return ratingsNum;

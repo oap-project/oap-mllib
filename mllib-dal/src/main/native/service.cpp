@@ -296,10 +296,6 @@ template <typename T>
 void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
                 const size_t nCols, const std::string &message,
                 size_t interval = 10) {
-    // Save the original format state of std::cout
-    std::streamsize originalPrecision = std::cout.precision();
-    std::ios_base::fmtflags originalFlags = std::cout.flags();
-
     std::cout << std::setiosflags(std::ios::left);
     std::cout << message << std::endl;
     for (size_t i = 0; i < nPrintedRows; i++) {
@@ -312,10 +308,6 @@ void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
         std::cout << std::endl;
     }
     std::cout << std::endl;
-
-    // Restore the original format state of std::cout
-    std::cout.precision(originalPrecision);
-    std::cout.flags(originalFlags);
 }
 
 template <typename T>
@@ -327,10 +319,6 @@ void printArray(T *array, const size_t nCols, const size_t nRows,
 template <typename T>
 void printLowerArray(T *array, const size_t nPrintedRows,
                      const std::string &message, size_t interval = 10) {
-    // Save the original format state of std::cout
-    std::streamsize originalPrecision = std::cout.precision();
-    std::ios_base::fmtflags originalFlags = std::cout.flags();
-
     std::cout << std::setiosflags(std::ios::left);
     std::cout << message << std::endl;
     int ind = 0;
@@ -344,21 +332,12 @@ void printLowerArray(T *array, const size_t nPrintedRows,
         std::cout << std::endl;
     }
     std::cout << std::endl;
-
-    // Restore the original format state of std::cout
-    std::cout.precision(originalPrecision);
-    std::cout.flags(originalFlags);
 }
 
 template <typename T>
 void printUpperArray(T *array, const size_t nPrintedCols,
                      const size_t nPrintedRows, const size_t nCols,
                      const std::string &message, size_t interval = 10) {
-
-    // Save the original format state of std::cout
-    std::streamsize originalPrecision = std::cout.precision();
-    std::ios_base::fmtflags originalFlags = std::cout.flags();
-
     std::cout << std::setiosflags(std::ios::left);
     std::cout << message << std::endl;
     int ind = 0;
@@ -378,10 +357,6 @@ void printUpperArray(T *array, const size_t nPrintedCols,
         std::cout << std::endl;
     }
     std::cout << std::endl;
-
-    // Restore the original format state of std::cout
-    std::cout.precision(originalPrecision);
-    std::cout.flags(originalFlags);
 }
 
 void printNumericTable(NumericTable *dataTable, const char *message = "",

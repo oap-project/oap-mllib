@@ -174,8 +174,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
     // Use little endian
     buffer.order(ByteOrder.LITTLE_ENDIAN)
 
-    val ratingsNum = info.ratingsNum
-    val csrRowNum = info.csrRowNum
+    val ratingsNum = info.getRatingsNum
+    val csrRowNum = info.getCsrRowNum
     val values = Array.fill(ratingsNum) {
       0.0f
     }
