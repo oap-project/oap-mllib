@@ -1,9 +1,9 @@
 package com.intel.oap.mllib.classification;
 
 public class RandomForestResult {
-    public long predictionNumericTable;
-    public long probabilitiesNumericTable;
-    public long importancesNumericTable;
+    private long predictionNumericTable;
+    private long probabilitiesNumericTable;
+    private long importancesNumericTable;
 
     public long getProbabilitiesNumericTable() {
         return probabilitiesNumericTable;

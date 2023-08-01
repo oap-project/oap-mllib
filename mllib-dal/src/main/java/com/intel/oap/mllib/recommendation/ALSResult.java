@@ -17,11 +17,11 @@
 package com.intel.oap.mllib.recommendation;
 
 public class ALSResult {
-  public long rankId = -1;
-  public long cUsersFactorsNumTab;
-  public long cItemsFactorsNumTab;
-  public long cUserOffset;
-  public long cItemOffset;
+  private long rankId = -1;
+  private long cUsersFactorsNumTab;
+  private long cItemsFactorsNumTab;
+  private long cUserOffset;
+  private long cItemOffset;
 
   public long getRankId() {
     return rankId;

@@ -14,10 +14,10 @@
 package com.intel.oap.mllib.stat;
 
 public class SummarizerResult {
-  public long meanNumericTable;
-  public long varianceNumericTable;
-  public long minimumNumericTable;
-  public long maximumNumericTable;
+  private long meanNumericTable;
+  private long varianceNumericTable;
+  private long minimumNumericTable;
+  private long maximumNumericTable;
 
   public long getMeanNumericTable() {
     return meanNumericTable;

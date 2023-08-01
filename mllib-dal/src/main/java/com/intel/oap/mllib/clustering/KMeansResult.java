@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.clustering;
 
 public class KMeansResult {
-  public int iterationNum;
-  public double totalCost;
+  private int iterationNum;
+  private double totalCost;
 
   public int getIterationNum() {
     return iterationNum;

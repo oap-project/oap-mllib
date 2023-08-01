@@ -17,8 +17,8 @@
 package com.intel.oap.mllib;
 
 class CCLParam {
-  long commSize;
-  long rankId;
+  private long commSize;
+  private long rankId;
 
   public long getCommSize() {
     return commSize;

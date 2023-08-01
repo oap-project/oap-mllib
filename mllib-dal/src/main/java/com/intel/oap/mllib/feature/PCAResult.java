@@ -17,8 +17,8 @@
 package com.intel.oap.mllib.feature;
 
 public class PCAResult {
-  public long pcNumericTable;
-  public long explainedVarianceNumericTable;
+  private long pcNumericTable;
+  private long explainedVarianceNumericTable;
 
   public long getExplainedVarianceNumericTable() {
     return explainedVarianceNumericTable;

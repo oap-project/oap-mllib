@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.regression;
 
 public class LiRResult {
-    public long coeffNumericTable;    // first element of coeff is actually intercept
+    private long coeffNumericTable;    // first element of coeff is actually intercept
 
     public long getCoeffNumericTable() {
         return coeffNumericTable;

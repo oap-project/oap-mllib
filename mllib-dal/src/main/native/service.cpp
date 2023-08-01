@@ -446,10 +446,6 @@ void printNumericTable(const NumericTablePtr &dataTable, const char *message,
 
 void printPackedNumericTable(NumericTable *dataTable, size_t nFeatures,
                              const char *message = "", size_t interval = 10) {
-    // Save the original format state of std::cout
-    std::streamsize originalPrecision = std::cout.precision();
-    std::ios_base::fmtflags originalFlags = std::cout.flags();
-
     BlockDescriptor<DAAL_DATA_TYPE> block;
 
     dataTable->getBlockOfRows(0, 1, readOnly, block);
@@ -469,10 +465,6 @@ void printPackedNumericTable(NumericTable *dataTable, size_t nFeatures,
         std::cout << std::endl;
     }
     std::cout << std::endl;
-
-    // Restore the original format state of std::cout
-    std::cout.precision(originalPrecision);
-    std::cout.flags(originalFlags);
 
     dataTable->releaseBlockOfRows(block);
 }
@@ -542,10 +534,6 @@ void printNumericTables(NumericTable *dataTable1, NumericTable *dataTable2,
                         const char *title1 = "", const char *title2 = "",
                         const char *message = "", size_t nPrintedRows = 0,
                         size_t interval = 10) {
-    // Save the original format state of std::cout
-    std::streamsize originalPrecision = std::cout.precision();
-    std::ios_base::fmtflags originalFlags = std::cout.flags();
-
     size_t nRows1 = dataTable1->getNumberOfRows();
     size_t nRows2 = dataTable2->getNumberOfRows();
     size_t nCols1 = dataTable1->getNumberOfColumns();
@@ -583,10 +571,6 @@ void printNumericTables(NumericTable *dataTable1, NumericTable *dataTable2,
         std::cout << std::endl;
     }
     std::cout << std::endl;
-
-    // Restore the original format state of std::cout
-    std::cout.precision(originalPrecision);
-    std::cout.flags(originalFlags);
 
     dataTable1->releaseBlockOfRows(block1);
     dataTable2->releaseBlockOfRows(block2);
