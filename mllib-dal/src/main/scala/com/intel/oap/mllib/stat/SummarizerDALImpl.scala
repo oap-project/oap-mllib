@@ -80,31 +80,31 @@ class SummarizerDALImpl(val executorNum: Int,
         val convResultStartTime = System.nanoTime()
         val meanVector = if (useDevice == "GPU") {
           OneDAL.homogenTable1xNToVector(
-            OneDAL.makeHomogenTable(result.meanNumericTable), computeDevice)
+            OneDAL.makeHomogenTable(result.getMeanNumericTable), computeDevice)
         } else {
           OneDAL.numericTable1xNToVector(
-            OneDAL.makeNumericTable(result.meanNumericTable))
+            OneDAL.makeNumericTable(result.getMeanNumericTable))
         }
         val varianceVector = if (useDevice == "GPU") {
           OneDAL.homogenTable1xNToVector(
-            OneDAL.makeHomogenTable(result.varianceNumericTable), computeDevice)
+            OneDAL.makeHomogenTable(result.getVarianceNumericTable), computeDevice)
         } else {
           OneDAL.numericTable1xNToVector(
-            OneDAL.makeNumericTable(result.varianceNumericTable))
+            OneDAL.makeNumericTable(result.getVarianceNumericTable))
         }
         val maxVector = if (useDevice == "GPU") {
           OneDAL.homogenTable1xNToVector(
-            OneDAL.makeHomogenTable(result.maximumNumericTable), computeDevice)
+            OneDAL.makeHomogenTable(result.getMaximumNumericTable), computeDevice)
         } else {
           OneDAL.numericTable1xNToVector(
-            OneDAL.makeNumericTable(result.maximumNumericTable))
+            OneDAL.makeNumericTable(result.getMaximumNumericTable))
         }
         val minVector = if (useDevice == "GPU") {
           OneDAL.homogenTable1xNToVector(
-            OneDAL.makeHomogenTable(result.minimumNumericTable), computeDevice)
+            OneDAL.makeHomogenTable(result.getMinimumNumericTable), computeDevice)
         } else {
           OneDAL.numericTable1xNToVector(
-            OneDAL.makeNumericTable(result.minimumNumericTable))
+            OneDAL.makeNumericTable(result.getMinimumNumericTable))
         }
 
         val convResultEndTime = System.nanoTime()

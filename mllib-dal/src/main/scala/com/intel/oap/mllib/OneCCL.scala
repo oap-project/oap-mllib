@@ -34,10 +34,11 @@ object OneCCL extends Logging {
     c_init(executor_num, rank, ip_port, cclParam)
 
     // executor number should equal to oneCCL world size
-    assert(executor_num == cclParam.commSize, "executor number should equal to oneCCL world size")
+    assert(executor_num == cclParam.getCommSize,
+      "executor number should equal to oneCCL world size")
 
     logInfo(s"Initialized with executorNum: $executor_num, " +
-      s"commSize, ${cclParam.commSize}, rankId: ${cclParam.rankId}")
+      s"commSize, ${cclParam.getCommSize}, rankId: ${cclParam.getRankId}")
   }
 
   // Run on Executor

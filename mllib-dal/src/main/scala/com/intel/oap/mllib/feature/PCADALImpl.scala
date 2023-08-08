@@ -80,21 +80,21 @@ class PCADALImpl(val k: Int,
 
       val ret = if (rank == 0) {
         val principleComponents = if (useDevice == "GPU") {
-          val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
+          val pcNumericTable = OneDAL.makeHomogenTable(result.getPcNumericTable)
           getPrincipleComponentsFromOneAPI(pcNumericTable, k, computeDevice)
         } else {
-          val pcNumericTable = OneDAL.makeNumericTable(result.pcNumericTable)
+          val pcNumericTable = OneDAL.makeNumericTable(result.getPcNumericTable)
           getPrincipleComponentsFromDAL(pcNumericTable, k)
         }
 
         val explainedVariance = if (useDevice == "GPU") {
           val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
-            result.explainedVarianceNumericTable)
+            result.getExplainedVarianceNumericTable)
           getExplainedVarianceFromOneAPI(
             explainedVarianceNumericTable, k, computeDevice)
         } else {
           val explainedVarianceNumericTable = OneDAL.makeNumericTable(
-            result.explainedVarianceNumericTable)
+            result.getExplainedVarianceNumericTable)
           getExplainedVarianceFromDAL(explainedVarianceNumericTable, k)
         }
 

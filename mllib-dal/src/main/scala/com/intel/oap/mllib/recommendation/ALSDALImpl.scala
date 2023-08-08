@@ -111,8 +111,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
     val usersFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
         val ret = partiton.flatMap { p =>
-          val userOffset = p.cUserOffset.toInt
-          val usersFactorsNumTab = OneDAL.makeNumericTable(p.cUsersFactorsNumTab)
+          val userOffset = p.getcUserOffset().toInt
+          val usersFactorsNumTab = OneDAL.makeNumericTable(p.getcUsersFactorsNumTab())
           val nRows = usersFactorsNumTab.getNumberOfRows.toInt
           val nCols = usersFactorsNumTab.getNumberOfColumns.toInt
           var buffer = FloatBuffer.allocate(nCols * nRows)
@@ -132,8 +132,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
     val itemsFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
         val ret = partiton.flatMap { p =>
-          val itemOffset = p.cItemOffset.toInt
-          val itemsFactorsNumTab = OneDAL.makeNumericTable(p.cItemsFactorsNumTab)
+          val itemOffset = p.getcItemOffset().toInt
+          val itemsFactorsNumTab = OneDAL.makeNumericTable(p.getcItemsFactorsNumTab())
           val nRows = itemsFactorsNumTab.getNumberOfRows.toInt
           val nCols = itemsFactorsNumTab.getNumberOfColumns.toInt
           var buffer = FloatBuffer.allocate(nCols * nRows)
@@ -174,8 +174,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
     // Use little endian
     buffer.order(ByteOrder.LITTLE_ENDIAN)
 
-    val ratingsNum = info.ratingsNum
-    val csrRowNum = info.csrRowNum
+    val ratingsNum = info.getRatingsNum
+    val csrRowNum = info.getCsrRowNum
     val values = Array.fill(ratingsNum) {
       0.0f
     }

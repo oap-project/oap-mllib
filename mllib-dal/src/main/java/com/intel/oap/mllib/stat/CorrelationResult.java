@@ -17,5 +17,13 @@
 package com.intel.oap.mllib.stat;
 
 public class CorrelationResult {
-    public long correlationNumericTable;
+    private long correlationNumericTable;
+
+    public long getCorrelationNumericTable() {
+        return correlationNumericTable;
+    }
+
+    public void setCorrelationNumericTable(long correlationNumericTable) {
+        this.correlationNumericTable = correlationNumericTable;
+    }
 }

@@ -14,8 +14,40 @@
 package com.intel.oap.mllib.stat;
 
 public class SummarizerResult {
-  public long meanNumericTable;
-  public long varianceNumericTable;
-  public long minimumNumericTable;
-  public long maximumNumericTable;
+  private long meanNumericTable;
+  private long varianceNumericTable;
+  private long minimumNumericTable;
+  private long maximumNumericTable;
+
+  public long getMeanNumericTable() {
+    return meanNumericTable;
+  }
+
+  public void setMeanNumericTable(long meanNumericTable) {
+    this.meanNumericTable = meanNumericTable;
+  }
+
+  public long getVarianceNumericTable() {
+    return varianceNumericTable;
+  }
+
+  public void setVarianceNumericTable(long varianceNumericTable) {
+    this.varianceNumericTable = varianceNumericTable;
+  }
+
+  public long getMinimumNumericTable() {
+    return minimumNumericTable;
+  }
+
+  public void setMinimumNumericTable(long minimumNumericTable) {
+    this.minimumNumericTable = minimumNumericTable;
+  }
+
+  public long getMaximumNumericTable() {
+    return maximumNumericTable;
+  }
+
+  public void setMaximumNumericTable(long maximumNumericTable) {
+    this.maximumNumericTable = maximumNumericTable;
+  }
 }

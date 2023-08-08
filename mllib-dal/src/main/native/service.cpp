@@ -387,16 +387,21 @@ void printNumericTable(NumericTable *dataTable, const char *message = "",
     } else {
         PackedArrayNumericTableIface *packedTable =
             dynamic_cast<PackedArrayNumericTableIface *>(dataTable);
-        packedTable->getPackedArray(readOnly, block);
-        if (isLower(layout)) {
-            printLowerArray<DAAL_DATA_TYPE>(block.getBlockPtr(), nPrintedRows,
-                                            message, interval);
-        } else if (isUpper(layout)) {
-            printUpperArray<DAAL_DATA_TYPE>(block.getBlockPtr(), nPrintedCols,
-                                            nPrintedRows, nCols, message,
-                                            interval);
+        if (packedTable) {
+            packedTable->getPackedArray(readOnly, block);
+            if (isLower(layout)) {
+                printLowerArray<DAAL_DATA_TYPE>(
+                    block.getBlockPtr(), nPrintedRows, message, interval);
+            } else if (isUpper(layout)) {
+                printUpperArray<DAAL_DATA_TYPE>(block.getBlockPtr(),
+                                                nPrintedCols, nPrintedRows,
+                                                nCols, message, interval);
+            }
+            packedTable->releasePackedArray(block);
+        } else {
+            std::cout << "Dynamic cast to PackedArrayNumericTableIface* failed."
+                      << std::endl;
         }
-        packedTable->releasePackedArray(block);
     }
 }
 
@@ -763,7 +768,7 @@ SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length) {
 }
 
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
-    ComputeDevice device;
+    ComputeDevice device = ComputeDevice::uninitialized;
     switch (computeDeviceOrdinal) {
     case 0:
         device = ComputeDevice::host;
@@ -773,6 +778,8 @@ ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
         break;
     case 2:
         device = ComputeDevice::gpu;
+        break;
+    default:
         break;
     }
     return device;

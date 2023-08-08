@@ -99,7 +99,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
 
     // OAP MLlib: Only normal linear regression is supported for GPU currently
-    if (useDevice == "GPU" && regParam != 0){
+    if (useDevice == "GPU" && regParam != 0) {
       val msg = s"OAP MLlib: Regularization parameter is not supported for GPU now."
       logError(msg)
       throw new SparkException(msg)

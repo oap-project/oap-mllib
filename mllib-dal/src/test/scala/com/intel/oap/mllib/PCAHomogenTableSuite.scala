@@ -48,9 +48,9 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val gpuIndices = Array(0)
         val result = new PCAResult()
         pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1,  1, TestCommon.getComputeDevice.ordinal(), gpuIndices, result);
-        val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
+        val pcNumericTable = OneDAL.makeHomogenTable(result.getPcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
-            result.explainedVarianceNumericTable)
+            result.getExplainedVarianceNumericTable)
         val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, TestCommon.getComputeDevice)
         val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, TestCommon.getComputeDevice)
 
@@ -80,9 +80,9 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val gpuIndices = Array(0)
         val result = new PCAResult()
         pcaDAL.cPCATrainDAL(dataTable.getcObejct(), 1, 1, TestCommon.getComputeDevice.ordinal(), gpuIndices, result);
-        val pcNumericTable = OneDAL.makeHomogenTable(result.pcNumericTable)
+        val pcNumericTable = OneDAL.makeHomogenTable(result.getPcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
-            result.explainedVarianceNumericTable)
+            result.getExplainedVarianceNumericTable)
         val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, TestCommon.getComputeDevice)
         val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, TestCommon.getComputeDevice)
 

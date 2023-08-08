@@ -89,7 +89,7 @@ class KMeansDALImpl(var nClusters: Int,
           } else {
             OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
           }
-          Iterator((centerVectors, result.totalCost, result.iterationNum))
+          Iterator((centerVectors, result.getTotalCost, result.getIterationNum))
         } else {
           Iterator.empty
         }
