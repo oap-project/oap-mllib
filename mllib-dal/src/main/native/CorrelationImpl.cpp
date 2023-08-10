@@ -246,7 +246,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     }
 #endif
     default: {
-        deviceError(); 
+        deviceError();
     }
     }
     return 0;
