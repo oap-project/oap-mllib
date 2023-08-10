@@ -79,6 +79,12 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray
 JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToNative
   (JNIEnv *, jobject, jlong, jdoubleArray, jlong);
 
+ * Method:    cSetCppLoggerConf
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetCppLoggerConf
+  (JNIEnv *, jobject, jboolean);
+
 #ifdef __cplusplus
 }
 #endif

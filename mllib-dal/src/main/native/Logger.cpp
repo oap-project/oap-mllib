@@ -4,9 +4,11 @@
 #include "Logger.h"
 
 namespace logger {
+
+bool isLoggerEnabled = true;
+
 std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     std::string prefix;
-    bool enable{true};
     switch (message_type) {
     case NONE:
         break;
@@ -28,7 +30,7 @@ std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     default:
         break;
     }
-    return {prefix + " ", enable};
+    return {prefix + " ", isLoggerEnabled};
 }
 
 int print2streamFromArgs(MessageType message_type, FILE *stream,
