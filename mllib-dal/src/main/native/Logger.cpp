@@ -57,11 +57,36 @@ int print2streamFromArgs(MessageType message_type, FILE *stream,
     return ret;
 }
 
+int print2streamFromArgsln(MessageType message_type, FILE *stream,
+                         const char *format, va_list args) {
+    // print prefix
+    auto [prefix, enable] = get_prefix(message_type);
+    if (!enable)
+        return 0;
+    fprintf(stream, "%s", prefix.c_str());
+
+    // print message
+    int ret = vfprintf(stream, format, args);
+    fprintf(stream, "\n");
+
+    return ret;
+}
+
 int print2stream(MessageType message_type, FILE *stream, const char *format,
                  ...) {
     va_list args;
     va_start(args, format);
     int ret = print2streamFromArgs(message_type, stream, format, args);
+    va_end(args);
+
+    return ret;
+}
+
+int print2streamln(MessageType message_type, FILE *stream, const char *format,
+                 ...) {
+    va_list args;
+    va_start(args, format);
+    int ret = print2streamFromArgsln(message_type, stream, format, args);
     va_end(args);
 
     return ret;
@@ -81,17 +106,15 @@ int print(MessageType message_type, const char *format, ...) {
 }
 
 int println(MessageType message_type, const std::string &msg) {
-    int ret = print2stream(message_type, stdout, msg.c_str());
-    fprintf(stdout, "\n");
+    int ret = print2streamln(message_type, stdout, msg.c_str());
     return ret;
 }
 
 int println(MessageType message_type, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    int ret = print2streamFromArgs(message_type, stdout, format, args);
+    int ret = print2streamFromArgsln(message_type, stdout, format, args);
     va_end(args);
-    fprintf(stdout, "\n");
     return ret;
 }
 
@@ -109,17 +132,15 @@ int printerr(MessageType message_type, const char *format, ...) {
 }
 
 int printerrln(MessageType message_type, const std::string &msg) {
-    int ret = print2stream(message_type, stderr, msg.c_str());
-    fprintf(stderr, "\n");
+    int ret = print2streamln(message_type, stderr, msg.c_str());
     return ret;
 }
 
 int printerrln(MessageType message_type, const char *format, ...) {
     va_list args;
     va_start(args, format);
-    int ret = print2streamFromArgs(message_type, stderr, format, args);
+    int ret = print2streamFromArgsln(message_type, stderr, format, args);
     va_end(args);
-    fprintf(stderr, "\n");
     return ret;
 }
 
