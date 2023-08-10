@@ -17,7 +17,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "Logger.h"
 #include "com_intel_oap_mllib_OneDAL__.h"
 #include "service.h"
 
@@ -59,8 +58,7 @@ JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
             ((SerializationIfacePtr *)numTableAddr)->get());
     jdouble *values = (jdouble *)env->GetPrimitiveArrayCritical(batch, 0);
     if (values == NULL) {
-        logger::printerrln(logger::ERROR,
-                           "Error: unable to obtain critical array");
+        std::cout << "Error: unable to obtain critical array" << std::endl;
         exit(-1);
     }
     std::memcpy((*nt)[curRows], values, numRows * numCols * sizeof(double));
@@ -156,9 +154,4 @@ Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble(
     CSRNumericTablePtr *ret = new CSRNumericTablePtr(numericTable);
 
     return (jlong)ret;
-}
-
-JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetCppLoggerConf(
-    JNIEnv *env, jobject, jboolean isEnabled) {
-    logger::isLoggerEnabled = isEnabled;
 }
