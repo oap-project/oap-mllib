@@ -49,7 +49,6 @@ import scala.concurrent.{Await, Future}
 object OneDAL {
 
   LibLoader.loadLibraries()
-  cSetCppLoggerConf(Utils.isCPPLoggerEnabled())
 
   private val logger = Logger.getLogger("util.OneDAL")
   private val logLevel = Level.INFO
@@ -753,6 +752,4 @@ object OneDAL {
   @native def cNewCSRNumericTableDouble(data: Array[Double],
                                         colIndices: Array[Long], rowOffsets: Array[Long],
                                         nFeatures: Long, nVectors: Long): Long
-
-  @native def cSetCppLoggerConf(enable: Boolean)
 }

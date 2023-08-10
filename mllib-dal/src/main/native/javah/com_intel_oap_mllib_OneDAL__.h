@@ -63,14 +63,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTabl
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble
   (JNIEnv *, jobject, jdoubleArray, jlongArray, jlongArray, jlong, jlong);
 
-/*
- * Class:     com_intel_oap_mllib_OneDAL__
- * Method:    cSetCppLoggerConf
- * Signature: (Z)V
- */
-JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetCppLoggerConf
-  (JNIEnv *, jobject, jboolean);
-
 #ifdef __cplusplus
 }
 #endif
