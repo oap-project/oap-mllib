@@ -16,8 +16,9 @@ WORKER_GPU_AMOUNT=4
 EXECUTOR_GPU_AMOUNT=1
 TASK_GPU_AMOUNT=1
 
+export OAP_MLLIB_LOGGER_CPP_ENABLED=1
 # Should run in standalone mode
-time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
+ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
     --executor-cores $SPARK_EXECUTOR_CORES \
     --total-executor-cores $SPARK_TOTAL_CORES \
