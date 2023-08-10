@@ -47,7 +47,6 @@ import scala.concurrent.{Await, Future}
 object OneDAL {
 
   LibLoader.loadLibraries()
-  cSetCppLoggerConf(Utils.isCPPLoggerEnabled())
 
   private val logger = Logger.getLogger("util.OneDAL")
   private val logLevel = Level.INFO
