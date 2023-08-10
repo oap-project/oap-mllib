@@ -11,19 +11,19 @@ std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     case NONE:
         break;
     case INFO:
-        prefix = "[INFO   ]";
+        prefix = "[INFO]";
         break;
     case WARN:
         prefix = "[WARNING]";
         break;
     case ERROR:
-        prefix = "[ERROR  ]";
+        prefix = "[ERROR]";
         break;
     case DEBUG:
-        prefix = "[DEBUG  ]";
+        prefix = "[DEBUG]";
         break;
     case ASSERT:
-        prefix = "[ASSERT ]";
+        prefix = "[ASSERT]";
         break;
     default:
         break;
