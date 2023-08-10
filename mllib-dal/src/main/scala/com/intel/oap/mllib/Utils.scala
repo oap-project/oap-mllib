@@ -147,11 +147,6 @@ object Utils {
     sc.getConf.getBoolean("spark.oap.mllib.performance.recording", false)
   }
 
-  def isCPPLoggerEnabled(): Boolean = {
-    val sc = SparkSession.active.sparkContext
-    sc.getConf.getBoolean("spark.oap.mllib.logger.cpp.enabled", false)
-  }
-
   def getOneCCLIPPort(data: RDD[_]): String = {
     val executorIPAddress = Utils.sparkFirstExecutorIP(data.sparkContext)
     val kvsIP = data.sparkContext.getConf.get("spark.oap.mllib.oneccl.kvs.ip",
