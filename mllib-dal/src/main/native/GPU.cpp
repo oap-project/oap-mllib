@@ -18,7 +18,7 @@ static std::vector<sycl::device> get_gpus() {
             return devices;
         }
     }
-    logger::println(logger::ERROR, "No GPUs!");
+    logger::printerrln(logger::ERROR, "No GPUs!");
     exit(-1);
 
     return {};
@@ -71,7 +71,7 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        logger::println(
+        logger::printerrln(
             logger::ERROR,
             "Not implemented for HOST/CPU device, Please run on GPU device.");
         exit(-1);
@@ -96,7 +96,7 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     }
 
     default: {
-        logger::println(logger::ERROR, "No Device!");
+        logger::printerrln(logger::ERROR, "No Device!");
         exit(-1);
     }
     }
@@ -108,7 +108,7 @@ sycl::queue getQueue(const ComputeDevice device) {
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
-        logger::println(
+        logger::printerrln(
             logger::ERROR,
             "Not implemented for HOST/CPU device, Please run on GPU device.");
         exit(-1);
@@ -120,7 +120,7 @@ sycl::queue getQueue(const ComputeDevice device) {
         return getSyclQueue(device_gpu);
     }
     default: {
-        logger::println(logger::ERROR, "No Device!");
+        logger::printerrln(logger::ERROR, "No Device!");
         exit(-1);
     }
     }

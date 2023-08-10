@@ -299,8 +299,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     }
 #endif
     default: {
-        logger::println(logger::ERROR, "no supported device!");
-        exit(-1);
+        deviceError();
     }
     }
     return 0;

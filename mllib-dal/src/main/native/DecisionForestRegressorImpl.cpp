@@ -329,10 +329,7 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
         return hashmapObj;
     }
     default: {
-        logger::println(
-            logger::ERROR,
-            "RandomForest (native): The compute device is not supported!");
-        exit(-1);
+        deviceError();
     }
     }
     return nullptr;

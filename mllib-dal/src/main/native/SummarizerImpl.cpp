@@ -316,8 +316,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     }
 #endif
     default: {
-        logger::println(logger::ERROR, "no supported device!");
-        exit(-1);
+        deviceError();
     }
     }
     return 0;
