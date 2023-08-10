@@ -54,7 +54,8 @@ void sparceFileReadError() {
 }
 
 void deviceError() {
-    logger::printerrln(logger::ERROR,
-                    "Error: no supported device, please select HOST/CPU/GPU");
+    logger::printerrln(
+        logger::ERROR,
+        "Error: no supported device, please select HOST/CPU/GPU");
     exit(-1);
 }
