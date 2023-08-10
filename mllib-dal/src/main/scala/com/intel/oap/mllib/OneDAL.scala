@@ -47,6 +47,7 @@ import scala.concurrent.{Await, Future}
 object OneDAL {
 
   LibLoader.loadLibraries()
+  cSetCppLoggerConf(Utils.isCPPLoggerEnabled())
 
   private val logger = Logger.getLogger("util.OneDAL")
   private val logLevel = Level.INFO
@@ -758,4 +759,5 @@ object OneDAL {
   @native def cCopyDoubleArrayToNative(arrayAddr: Long,
                                  data: Array[Double],
                                  index: Long): Unit
+  @native def cSetCppLoggerConf(enable: Boolean)
 }

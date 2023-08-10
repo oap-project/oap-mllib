@@ -27,6 +27,10 @@ std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     if (message_type >= logger_level.get_level()) {
         isLoggerEnabled = true;
     }
+bool isLoggerEnabled = true;
+
+std::tuple<std::string, bool> get_prefix(MessageType message_type) {
+    std::string prefix;
     switch (message_type) {
     case NONE:
         break;
@@ -48,7 +52,6 @@ std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     default:
         break;
     }
-
     return {prefix + " ", isLoggerEnabled};
 }
 

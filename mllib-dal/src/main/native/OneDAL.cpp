@@ -201,3 +201,8 @@ Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToNative(
     std::copy(source, source + sourceLength, nativeArray + index);
     env->ReleasePrimitiveArrayCritical(sourceArray, source, 0);
 }
+
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetCppLoggerConf
+  (JNIEnv *env, jobject, jboolean isEnabled) {
+    logger::isLoggerEnabled = isEnabled;
+}
