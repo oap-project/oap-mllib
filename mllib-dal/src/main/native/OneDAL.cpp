@@ -59,7 +59,7 @@ JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
             ((SerializationIfacePtr *)numTableAddr)->get());
     jdouble *values = (jdouble *)env->GetPrimitiveArrayCritical(batch, 0);
     if (values == NULL) {
-        logger::println(logger::ERROR,
+        logger::printerrln(logger::ERROR,
                         "Error: unable to obtain critical array");
         exit(-1);
     }

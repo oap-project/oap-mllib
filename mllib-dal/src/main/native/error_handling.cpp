@@ -26,35 +26,35 @@
 
 void checkAllocation(void *ptr) {
     if (!ptr) {
-        logger::println(logger::ERROR, "Error: Memory allocation failed");
+        logger::printerrln(logger::ERROR, "Error: Memory allocation failed");
         exit(-1);
     }
 }
 
 void checkPtr(void *ptr) {
     if (!ptr) {
-        logger::println(logger::ERROR, "Error: NULL pointer");
+        logger::printerrln(logger::ERROR, "Error: NULL pointer");
         exit(-2);
     }
 }
 
 void fileOpenError(const char *filename) {
-    logger::println(logger::ERROR, "Unable to open file '%s'", filename);
+    logger::printerrln(logger::ERROR, "Unable to open file '%s'", filename);
     exit(fileError);
 }
 
 void fileReadError() {
-    logger::println(logger::ERROR, "Unable to read next line");
+    logger::printerrln(logger::ERROR, "Unable to read next line");
     exit(fileError);
 }
 
 void sparceFileReadError() {
-    logger::println(logger::ERROR, "Incorrect format of file");
+    logger::printerrln(logger::ERROR, "Incorrect format of file");
     exit(fileError);
 }
 
 void deviceError() {
-    logger::println(logger::ERROR,
+    logger::printerrln(logger::ERROR,
                     "Error: no supported device, please select HOST/CPU/GPU");
     exit(-1);
 }
