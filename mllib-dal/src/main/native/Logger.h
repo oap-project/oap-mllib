@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdarg>
+#include <cstring>
 #include <string>
 
 namespace logger {
@@ -13,8 +14,6 @@ enum MessageType {
     DEBUG = 4,
     ASSERT = 5
 };
-
-extern bool isLoggerEnabled;
 
 int print(MessageType message_type, const std::string &msg);
 int print(MessageType message_type, const char *format, ...);
