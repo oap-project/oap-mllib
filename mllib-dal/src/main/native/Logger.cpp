@@ -58,7 +58,7 @@ int print2streamFromArgs(MessageType message_type, FILE *stream,
 }
 
 int print2streamFromArgsln(MessageType message_type, FILE *stream,
-                         const char *format, va_list args) {
+                           const char *format, va_list args) {
     // print prefix
     auto [prefix, enable] = get_prefix(message_type);
     if (!enable)
@@ -83,7 +83,7 @@ int print2stream(MessageType message_type, FILE *stream, const char *format,
 }
 
 int print2streamln(MessageType message_type, FILE *stream, const char *format,
-                 ...) {
+                   ...) {
     va_list args;
     va_start(args, format);
     int ret = print2streamFromArgsln(message_type, stream, format, args);
