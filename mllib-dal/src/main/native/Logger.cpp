@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iomanip>
+#include <cstdlib>
 #include <tuple>
 
 #include "Logger.h"
@@ -31,6 +32,16 @@ bool isLoggerEnabled = true;
 
 std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     std::string prefix;
+    bool isLoggerEnabled = false;
+    if(const char* env_p = std::getenv("OAP_MLLIB_LOGGER_CPP_ENABLED")) {
+        if(std::strncmp(env_p, "0", 1) == 0) {
+            isLoggerEnabled = false;
+        } else if(std::strncmp(env_p, "1", 1) == 0) {
+            isLoggerEnabled = true;
+        } else {
+            isLoggerEnabled = false;
+	}
+    }
     switch (message_type) {
     case NONE:
         break;
@@ -52,6 +63,7 @@ std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     default:
         break;
     }
+
     return {prefix + " ", isLoggerEnabled};
 }
 

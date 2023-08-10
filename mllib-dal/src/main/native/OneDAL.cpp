@@ -17,7 +17,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "Logger.h"
 #include "com_intel_oap_mllib_OneDAL__.h"
 #include "service.h"
 

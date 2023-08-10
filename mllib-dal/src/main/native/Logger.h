@@ -15,8 +15,6 @@ enum MessageType {
     ERROR = 5
 };
 
-extern bool isLoggerEnabled;
-
 int print(MessageType message_type, const std::string &msg);
 int print(MessageType message_type, const char *format, ...);
 int println(MessageType message_type, const char *format, ...);
