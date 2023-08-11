@@ -7,12 +7,12 @@
 namespace logger {
 // message type for print functions
 enum MessageType {
-    NONE = 0,
-    INFO = 1,
-    WARN = 2,
-    ERROR = 3,
-    DEBUG = 4,
-    ASSERT = 5
+    DEBUG = 0,
+    ASSERT = 1,
+    INFO = 2,
+    NONE = 3,
+    WARN = 4,
+    ERROR = 5
 };
 
 int print(MessageType message_type, const std::string &msg);

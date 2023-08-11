@@ -6,17 +6,27 @@
 
 namespace logger {
 
+class LoggerLevel {
+public:
+    int level;
+    LoggerLevel(){
+        level = 2;
+        if (const char *env_p = std::getenv("OAP_MLLIB_LOGGER_CPP_LEVEL")) {
+            level = atoi(env_p);
+        }
+        if (level > 5 || level < 0 || level == 3) {
+            level = 2;
+        }
+    }
+    int get_level(){return level;}
+} logger_level;
+
+
 std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     std::string prefix;
     bool isLoggerEnabled = false;
-    if (const char *env_p = std::getenv("OAP_MLLIB_LOGGER_CPP_ENABLED")) {
-        if (std::strncmp(env_p, "0", 1) == 0) {
-            isLoggerEnabled = false;
-        } else if (std::strncmp(env_p, "1", 1) == 0) {
-            isLoggerEnabled = true;
-        } else {
-            isLoggerEnabled = false;
-        }
+    if (message_type >= logger_level.get_level()) {
+        isLoggerEnabled = true;
     }
     switch (message_type) {
     case NONE:
