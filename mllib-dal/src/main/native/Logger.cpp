@@ -7,9 +7,9 @@
 namespace logger {
 
 class LoggerLevel {
-public:
+  public:
     int level;
-    LoggerLevel(){
+    LoggerLevel() {
         level = 2;
         if (const char *env_p = std::getenv("OAP_MLLIB_LOGGER_CPP_LEVEL")) {
             level = atoi(env_p);
@@ -18,9 +18,8 @@ public:
             level = 2;
         }
     }
-    int get_level(){return level;}
+    int get_level() { return level; }
 } logger_level;
-
 
 std::tuple<std::string, bool> get_prefix(MessageType message_type) {
     std::string prefix;
