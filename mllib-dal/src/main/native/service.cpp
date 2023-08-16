@@ -1,6 +1,7 @@
 #include "service.h"
 #include "Logger.h"
 #include "error_handling.h"
+#include "oneapi/dal/table/row_accessor.hpp"
 
 using namespace daal;
 using namespace daal::data_management;
@@ -268,6 +269,6 @@ void printHomegenTable(const oneapi::dal::table &table) {
             logger::println(logger::NONE, "");
         }
     }
-    return 0;
+    return;
 }
 #endif
