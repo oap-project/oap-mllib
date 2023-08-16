@@ -23,10 +23,10 @@
 #include "oneapi/dal/algo/pca.hpp"
 #endif
 
+#include "service.h"
 #include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_feature_PCADALImpl.h"
-#include "service.h"
 
 using namespace std;
 #ifdef CPU_GPU_PROFILE
