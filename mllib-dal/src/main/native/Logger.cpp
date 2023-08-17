@@ -62,6 +62,7 @@ int print2streamFromArgs(MessageType message_type, FILE *stream,
 
     // print message
     int ret = vfprintf(stream, format, args);
+    fflush(stream);
 
     return ret;
 }
@@ -76,7 +77,9 @@ int print2streamFromArgsln(MessageType message_type, FILE *stream,
 
     // print message
     int ret = vfprintf(stream, format, args);
+    fflush(stream);
     fprintf(stream, "\n");
+    fflush(stream);
 
     return ret;
 }
