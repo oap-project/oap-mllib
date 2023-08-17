@@ -1,7 +1,11 @@
 #include "service.h"
 #include "Logger.h"
 #include "error_handling.h"
+
+#ifdef CPU_GPU_PROFILE
+#include "oneapi/dal/table/common.hpp"
 #include "oneapi/dal/table/row_accessor.hpp"
+#endif
 
 using namespace daal;
 using namespace daal::data_management;
@@ -240,6 +244,7 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
 }
 
 void printHomegenTable(const oneapi::dal::table &table) {
+    logger::println(logger::INFO, "printerr");
     auto arr = oneapi::dal::row_accessor<const float>(table).pull();
     const auto x = arr.get_data();
     if (table.get_row_count() <= 10) {
