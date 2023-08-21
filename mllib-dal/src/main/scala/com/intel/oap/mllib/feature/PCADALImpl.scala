@@ -20,7 +20,7 @@ import java.nio.DoubleBuffer
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Service, Utils}
-import org.apache.spark.TaskContext
+import org.apache.spark.{BarrierTaskContext, TaskContext}
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg._
@@ -59,9 +59,10 @@ class PCADALImpl(val k: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables.barrier().mapPartitionsWithIndex { (rank, table) =>
+      val context = BarrierTaskContext.get()
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
       val result = new PCAResult()
       val gpuIndices = if (useDevice == "GPU") {
         val resources = TaskContext.get().resources()
@@ -78,7 +79,7 @@ class PCADALImpl(val k: Int,
         result
       )
 
-      val ret = if (rank == 0) {
+      val ret = if (context.partitionId() == 0) {
         val principleComponents = if (useDevice == "GPU") {
           val pcNumericTable = OneDAL.makeHomogenTable(result.getPcNumericTable)
           getPrincipleComponentsFromOneAPI(pcNumericTable, k, computeDevice)
@@ -102,6 +103,7 @@ class PCADALImpl(val k: Int,
       } else {
         Iterator.empty
       }
+      context.barrier()
       OneCCL.cleanup()
       ret
     }.collect()

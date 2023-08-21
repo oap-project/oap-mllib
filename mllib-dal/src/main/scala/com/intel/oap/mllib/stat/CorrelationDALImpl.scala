@@ -19,7 +19,7 @@ package com.intel.oap.mllib.stat
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.TaskContext
+import org.apache.spark.{BarrierTaskContext, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrix, Vector}
 import org.apache.spark.rdd.RDD
@@ -46,9 +46,10 @@ class CorrelationDALImpl(
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables.barrier().mapPartitionsWithIndex { (rank, table) =>
+      val context = BarrierTaskContext.get()
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
 
       val computeStartTime = System.nanoTime()
 
@@ -74,7 +75,7 @@ class CorrelationDALImpl(
 
       logInfo(s"CorrelationDAL compute took ${durationCompute} secs")
 
-      val ret = if (rank == 0) {
+      val ret = if (context.partitionId() == 0) {
         val convResultStartTime = System.nanoTime()
         val correlationNumericTable = if (useDevice == "GPU") {
           OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.getCorrelationNumericTable),
@@ -92,6 +93,7 @@ class CorrelationDALImpl(
       } else {
         Iterator.empty
       }
+      context.barrier()
       OneCCL.cleanup()
       ret
     }.collect()

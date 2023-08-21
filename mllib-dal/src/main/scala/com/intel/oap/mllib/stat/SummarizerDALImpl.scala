@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
-import org.apache.spark.TaskContext
+import org.apache.spark.{BarrierTaskContext, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
@@ -47,9 +47,10 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val kvsIPPort = getOneCCLIPPort(data)
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables.barrier().mapPartitionsWithIndex { (rank, table) =>
+      val context = BarrierTaskContext.get()
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
 
       val computeStartTime = System.nanoTime()
 
@@ -75,7 +76,7 @@ class SummarizerDALImpl(val executorNum: Int,
 
       logInfo(s"SummarizerDAL compute took ${durationCompute} secs")
 
-      val ret = if (rank == 0) {
+      val ret = if (context.partitionId() == 0) {
 
         val convResultStartTime = System.nanoTime()
         val meanVector = if (useDevice == "GPU") {
@@ -117,6 +118,7 @@ class SummarizerDALImpl(val executorNum: Int,
       } else {
         Iterator.empty
       }
+      context.barrier()
       OneCCL.cleanup()
       ret
     }.collect()

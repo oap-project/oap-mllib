@@ -18,6 +18,7 @@ package com.intel.oap.mllib.classification
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL}
+import org.apache.spark.BarrierTaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.NaiveBayesModel
@@ -50,11 +51,12 @@ class NaiveBayesDALImpl(val uid: String,
         labelCol, featuresCol, executorNum)
     }
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
+    val results = labeledPointsTables.barrier().mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
+        val context = BarrierTaskContext.get()
         val (featureTabAddr, lableTabAddr) = tables.next()
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
+        OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
 
         val computeStartTime = System.nanoTime()
 
@@ -68,7 +70,7 @@ class NaiveBayesDALImpl(val uid: String,
 
         println(s"NaiveBayesDAL compute took ${durationCompute} secs")
 
-        val ret = if (OneCCL.isRoot()) {
+        val ret = if (context.partitionId() == 0) {
           val convResultStartTime = System.nanoTime()
 
           val pi = OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.getPiNumericTable))
@@ -86,7 +88,7 @@ class NaiveBayesDALImpl(val uid: String,
         } else {
           Iterator.empty
         }
-
+        context.barrier()
         OneCCL.cleanup()
         ret
     }.collect()

@@ -19,8 +19,7 @@ package com.intel.oap.mllib.regression
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.SparkException
-import org.apache.spark.TaskContext
+import org.apache.spark.{BarrierTaskContext, SparkException, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
 import org.apache.spark.ml.util._
@@ -106,10 +105,11 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
     lrTimer.record("Data Convertion")
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
+    val results = labeledPointsTables.barrier().mapPartitionsWithIndex {
       case (rank: Int, tables: Iterator[(Long, Long)]) =>
+        val context = BarrierTaskContext.get()
         val (featureTabAddr, lableTabAddr) = tables.next()
-        OneCCL.init(executorNum, rank, kvsIPPort)
+        OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
@@ -138,7 +138,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           result
         )
 
-        val ret = if (rank == 0) {
+        val ret = if (context.partitionId() == 0) {
           val coefficientArray = if (useDevice == "GPU") {
               OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cbeta),
                 computeDevice)
@@ -149,6 +149,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         } else {
           Iterator.empty
         }
+        context.barrier()
         OneCCL.cleanup()
         ret
     }.collect()

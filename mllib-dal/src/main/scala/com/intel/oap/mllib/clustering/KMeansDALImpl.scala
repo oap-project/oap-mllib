@@ -19,7 +19,7 @@ package com.intel.oap.mllib.clustering
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.TaskContext
+import org.apache.spark.{BarrierTaskContext, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util._
@@ -51,7 +51,8 @@ class KMeansDALImpl(var nClusters: Int,
     kmeansTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables.barrier().mapPartitionsWithIndex { (rank, table) =>
+      val context = BarrierTaskContext.get()
       var cCentroids = 0L
       val result = new KMeansResult()
       val gpuIndices = if (useDevice == "GPU") {
@@ -62,7 +63,7 @@ class KMeansDALImpl(var nClusters: Int,
       }
 
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
       val initCentroids = if (useDevice == "GPU") {
         OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
       } else {
@@ -81,7 +82,7 @@ class KMeansDALImpl(var nClusters: Int,
         result
       )
 
-      val ret = if (rank == 0) {
+      val ret = if (context.partitionId() == 0) {
           assert(cCentroids != 0)
           val centerVectors = if (useDevice == "GPU") {
             OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
@@ -93,10 +94,10 @@ class KMeansDALImpl(var nClusters: Int,
         } else {
           Iterator.empty
         }
+      context.barrier()
       OneCCL.cleanup()
       ret
     }.collect()
-
     // Make sure there is only one result from rank 0
     assert(results.length == 1)
     kmeansTimer.record("Training")
