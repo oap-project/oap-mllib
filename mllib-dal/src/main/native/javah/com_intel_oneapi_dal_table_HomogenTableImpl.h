@@ -49,14 +49,6 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dPtrIni
 
 /*
  * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
- * Method:    fPtrInit
- * Signature: (JJJII)J
- */
-JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fPtrInit
-  (JNIEnv *, jobject, jlong, jlong, jlong, jint, jint);
-
-/*
- * Class:     com_intel_oneapi_dal_table_HomogenTableImpl
  * Method:    cGetColumnCount
  * Signature: (J)J
  */

@@ -753,13 +753,7 @@ object OneDAL {
                                         colIndices: Array[Long], rowOffsets: Array[Long],
                                         nFeatures: Long, nVectors: Long): Long
 
-  @native def cNewFloatArray(size: Long): Long
-
   @native def cNewDoubleArray(size: Long): Long
-
-  @native def cCopyFloatArrayToNative(arrayAddr: Long,
-                                 data: Array[Float],
-                                 index: Long): Unit
 
   @native def cCopyDoubleArrayToNative(arrayAddr: Long,
                                  data: Array[Double],

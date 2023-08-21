@@ -225,84 +225,39 @@ static jobject doRFClassifierOneAPICompute(
               << hFeaturetable.get_column_count() << std::endl;
     std::cout << "doRFClassifierOneAPICompute classCount = " << classCount
               << std::endl;
-    const auto &dtype = hFeaturetable.get_metadata().get_data_type(0);
-    df::train_result result_train;
-    df::infer_result result_infer;
+    const auto df_desc =
+        df::descriptor<algorithmFPType, df::method::hist,
+                       df::task::classification>{}
+            .set_class_count(classCount)
+            .set_tree_count(treeCount)
+            .set_features_per_node(numFeaturesPerNode)
+            .set_min_observations_in_leaf_node(minObservationsLeafNode)
+            .set_min_observations_in_split_node(minObservationsSplitNode)
+            .set_min_weight_fraction_in_leaf_node(minWeightFractionLeafNode)
+            .set_min_impurity_decrease_in_split_node(
+                minImpurityDecreaseSplitNode)
+            .set_error_metric_mode(df::error_metric_mode::out_of_bag_error)
+            .set_variable_importance_mode(df::variable_importance_mode::mdi)
+            .set_infer_mode(df::infer_mode::class_responses |
+                            df::infer_mode::class_probabilities)
+            .set_voting_mode(df::voting_mode::weighted)
+            .set_max_tree_depth(maxTreeDepth)
+            .set_max_bins(maxBins);
+
     auto t1 = std::chrono::high_resolution_clock::now();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-            .count();
-    switch (dtype) {
-    case data_type::float32: {
-        const auto df_desc =
-            df::descriptor<float, df::method::hist, df::task::classification>{}
-                .set_class_count(classCount)
-                .set_tree_count(treeCount)
-                .set_features_per_node(numFeaturesPerNode)
-                .set_min_observations_in_leaf_node(minObservationsLeafNode)
-                .set_min_observations_in_split_node(minObservationsSplitNode)
-                .set_min_weight_fraction_in_leaf_node(minWeightFractionLeafNode)
-                .set_min_impurity_decrease_in_split_node(
-                    minImpurityDecreaseSplitNode)
-                .set_error_metric_mode(df::error_metric_mode::out_of_bag_error)
-                .set_variable_importance_mode(df::variable_importance_mode::mdi)
-                .set_infer_mode(df::infer_mode::class_responses |
-                                df::infer_mode::class_probabilities)
-                .set_voting_mode(df::voting_mode::weighted)
-                .set_max_tree_depth(maxTreeDepth)
-                .set_max_bins(maxBins);
-        t1 = std::chrono::high_resolution_clock::now();
-        result_train =
-            preview::train(comm, df_desc, hFeaturetable, hLabeltable);
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                       t2 - t1)
-                       .count();
-        std::cout << "DF Classifier (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
-        result_infer = preview::infer(comm, df_desc, result_train.get_model(),
-                                      hFeaturetable);
-        break;
-    }
-    case data_type::float64: {
-        const auto df_desc =
-            df::descriptor<double, df::method::hist, df::task::classification>{}
-                .set_class_count(classCount)
-                .set_tree_count(treeCount)
-                .set_features_per_node(numFeaturesPerNode)
-                .set_min_observations_in_leaf_node(minObservationsLeafNode)
-                .set_min_observations_in_split_node(minObservationsSplitNode)
-                .set_min_weight_fraction_in_leaf_node(minWeightFractionLeafNode)
-                .set_min_impurity_decrease_in_split_node(
-                    minImpurityDecreaseSplitNode)
-                .set_error_metric_mode(df::error_metric_mode::out_of_bag_error)
-                .set_variable_importance_mode(df::variable_importance_mode::mdi)
-                .set_infer_mode(df::infer_mode::class_responses |
-                                df::infer_mode::class_probabilities)
-                .set_voting_mode(df::voting_mode::weighted)
-                .set_max_tree_depth(maxTreeDepth)
-                .set_max_bins(maxBins);
-        t1 = std::chrono::high_resolution_clock::now();
-        result_train =
-            preview::train(comm, df_desc, hFeaturetable, hLabeltable);
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                       t2 - t1)
-                       .count();
-        std::cout << "DF Classifier (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
-        result_infer = preview::infer(comm, df_desc, result_train.get_model(),
-                                      hFeaturetable);
-        break;
-    }
-    default: {
-        std::cout << "no supported data type :" << &dtype << std::endl;
-        exit(-1);
-    }
-    }
+    const auto result_train =
+        preview::train(comm, df_desc, hFeaturetable, hLabeltable);
+    const auto result_infer =
+        preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
     if (isRoot) {
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
+                                                                         t1)
+                .count();
+        std::cout << "DF Classifier (native): training step took "
+                  << duration / 1000 << " secs." << std::endl;
         std::cout << "Variable importance results:\n"
                   << result_train.get_var_importance() << std::endl;
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;
@@ -310,12 +265,7 @@ static jobject doRFClassifierOneAPICompute(
                   << result_infer.get_responses() << std::endl;
         std::cout << "Probabilities results:\n"
                   << result_infer.get_probabilities() << std::endl;
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                       t2 - t1)
-                       .count();
-        std::cout << "DF Classifier (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
+
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
 

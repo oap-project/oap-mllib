@@ -233,30 +233,12 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
     homogen_table ytrain = *reinterpret_cast<const homogen_table *>(pLabel);
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
+    const auto linear_regression_desc =
+        linear_regression_gpu::descriptor<algorithmFPType>(fitIntercept);
 
-    const auto &dtype = xtrain.get_metadata().get_data_type(0);
-    linear_regression_gpu::train_result result_train;
     auto t1 = std::chrono::high_resolution_clock::now();
-    switch (dtype) {
-    case data_type::float32: {
-        const auto linear_regression_desc =
-            linear_regression_gpu::descriptor<float>(fitIntercept);
-        result_train =
-            preview::train(comm, linear_regression_desc, xtrain, ytrain);
-        break;
-    }
-    case data_type::float64: {
-        const auto linear_regression_desc =
-            linear_regression_gpu::descriptor<double>(fitIntercept);
-        result_train =
-            preview::train(comm, linear_regression_desc, xtrain, ytrain);
-        break;
-    }
-    default: {
-        std::cout << "no supported data type :" << &dtype << std::endl;
-        exit(-1);
-    }
-    }
+    linear_regression_gpu::train_result result_train =
+        preview::train(comm, linear_regression_desc, xtrain, ytrain);
     if (isRoot) {
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =

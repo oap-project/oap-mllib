@@ -220,72 +220,24 @@ static jobject doRFRegressorOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabLabel);
     std::cout << "doRFRegressorOneAPICompute get_column_count = "
               << hFeaturetable.get_column_count() << std::endl;
-    const auto &dtype = hFeaturetable.get_metadata().get_data_type(0);
-    df::train_result<df::task::regression> result_train;
-    df::infer_result<df::task::regression> result_infer;
+    const auto df_desc =
+        df::descriptor<algorithmFPType, df::method::hist,
+                       df::task::regression>{}
+            .set_tree_count(treeCount)
+            .set_features_per_node(numFeaturesPerNode)
+            .set_min_observations_in_leaf_node(minObservationsLeafNode)
+            .set_max_tree_depth(maxTreeDepth)
+            .set_max_bins(maxbins)
+            .set_error_metric_mode(
+                df::error_metric_mode::out_of_bag_error |
+                df::error_metric_mode::out_of_bag_error_per_observation)
+            .set_variable_importance_mode(df::variable_importance_mode::mdi);
+
     auto t1 = std::chrono::high_resolution_clock::now();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-            .count();
-    switch (dtype) {
-    case data_type::float32: {
-        const auto df_desc =
-            df::descriptor<float, df::method::hist, df::task::regression>{}
-                .set_tree_count(treeCount)
-                .set_features_per_node(numFeaturesPerNode)
-                .set_min_observations_in_leaf_node(minObservationsLeafNode)
-                .set_max_tree_depth(maxTreeDepth)
-                .set_max_bins(maxbins)
-                .set_error_metric_mode(
-                    df::error_metric_mode::out_of_bag_error |
-                    df::error_metric_mode::out_of_bag_error_per_observation)
-                .set_variable_importance_mode(
-                    df::variable_importance_mode::mdi);
-        t1 = std::chrono::high_resolution_clock::now();
-        result_train =
-            preview::train(comm, df_desc, hFeaturetable, hLabeltable);
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                       t2 - t1)
-                       .count();
-        std::cout << "DF Classifier (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
-        result_infer = preview::infer(comm, df_desc, result_train.get_model(),
-                                      hFeaturetable);
-        break;
-    }
-    case data_type::float64: {
-        const auto df_desc =
-            df::descriptor<double, df::method::hist, df::task::regression>{}
-                .set_tree_count(treeCount)
-                .set_features_per_node(numFeaturesPerNode)
-                .set_min_observations_in_leaf_node(minObservationsLeafNode)
-                .set_max_tree_depth(maxTreeDepth)
-                .set_max_bins(maxbins)
-                .set_error_metric_mode(
-                    df::error_metric_mode::out_of_bag_error |
-                    df::error_metric_mode::out_of_bag_error_per_observation)
-                .set_variable_importance_mode(
-                    df::variable_importance_mode::mdi);
-        t1 = std::chrono::high_resolution_clock::now();
-        result_train =
-            preview::train(comm, df_desc, hFeaturetable, hLabeltable);
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                       t2 - t1)
-                       .count();
-        std::cout << "DF Regression (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
-        result_infer = preview::infer(comm, df_desc, result_train.get_model(),
-                                      hFeaturetable);
-        break;
-    }
-    default: {
-        std::cout << "no supported data type :" << &dtype << std::endl;
-        exit(-1);
-    }
-    }
+    const auto result_train =
+        preview::train(comm, df_desc, hFeaturetable, hLabeltable);
+    const auto result_infer =
+        preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
     if (isRoot) {
         std::cout << "Variable importance results:\n"
@@ -293,10 +245,11 @@ static jobject doRFRegressorOneAPICompute(
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;
         std::cout << "Prediction results:\n"
                   << result_infer.get_responses() << std::endl;
-        t2 = std::chrono::high_resolution_clock::now();
-        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
-                       t2 - t1)
-                       .count();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
+                                                                         t1)
+                .count();
         std::cout << "DF Regression (native): training step took "
                   << duration / 1000 << " secs." << std::endl;
         // convert c++ map to java hashmap

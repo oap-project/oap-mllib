@@ -73,16 +73,12 @@ public class HomogenTableImpl implements HomogenTableIface {
                             Common.ComputeDevice computeDevice) {
         this.device = computeDevice;
         switch (dataType) {
-            case FLOAT32:
-                this.cObject = fPtrInit(rowCount, colCount, dataPtr, dataLayout.ordinal(),
-                        this.device.ordinal());
-                break;
             case FLOAT64:
                 this.cObject = dPtrInit(rowCount, colCount, dataPtr, dataLayout.ordinal(),
                         this.device.ordinal());
                 break;
             default:
-                System.err.println("oneapi algorithm only support float/double");
+                System.err.println("spark algorithm only support double");
                 System.exit(-1);
         }
     }
@@ -194,11 +190,6 @@ public class HomogenTableImpl implements HomogenTableIface {
                                  int dataLayoutIndex,
                                  int computeDeviceIndex);
 
-    private native long fPtrInit(long rowCount,
-                                 long colCount,
-                                 long dataPtr,
-                                 int dataLayoutIndex,
-                                 int computeDeviceIndex);
     private native long cGetColumnCount(long cObject);
     private native long cGetRowCount(long cObject);
     private native long cGetKind(long cObject);
