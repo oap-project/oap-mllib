@@ -19,7 +19,7 @@ import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.annotation.Since
-import org.apache.spark.{BarrierTaskContext, TaskContext}
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.{Matrix, Vector}
@@ -75,9 +75,8 @@ class RandomForestClassifierDALImpl(val uid: String,
     rfcTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
-    val results = labeledPointsTables.barrier().mapPartitionsWithIndex {
+    val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
-      val context = BarrierTaskContext.get()
       val (featureTabAddr, lableTabAddr) = tables.next()
 
       val gpuIndices = if (useDevice == "GPU") {
@@ -90,7 +89,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       } else {
         null
       }
-      OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort)
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
@@ -118,12 +117,11 @@ class RandomForestClassifierDALImpl(val uid: String,
 
       logInfo(s"RandomForestClassifierDAL compute took ${durationCompute} secs")
 
-      val ret = if (context.partitionId() == 0) {
+      val ret = if (rank == 0) {
         Iterator(hashmap)
       } else {
         Iterator.empty
       }
-      context.barrier()
       OneCCL.cleanup()
       ret
     }.collect()

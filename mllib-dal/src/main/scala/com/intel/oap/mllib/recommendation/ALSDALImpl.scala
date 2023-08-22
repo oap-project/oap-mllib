@@ -20,7 +20,7 @@ import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
-import org.apache.spark.{BarrierTaskContext, Partitioner}
+import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.rdd.RDD
@@ -83,9 +83,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
       .map { p =>
         Rating(p.item, p.user, p.rating)
       }
-      .barrier().mapPartitionsWithIndex { (rank, iter) =>
-        val context = BarrierTaskContext.get()
-        OneCCL.init(executorNum, context.partitionId(), kvsIPPort)
+      .mapPartitionsWithIndex { (rank, iter) =>
+        OneCCL.init(executorNum, rank, kvsIPPort)
         val rankId = OneCCL.rankID()
 
         println("rankId", rankId, "nUsers", nVectors, "nItems", nFeatures)
@@ -106,7 +105,6 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
           rankId,
           result
         )
-        context.barrier()
         Iterator(result)
       }.cache()
 
