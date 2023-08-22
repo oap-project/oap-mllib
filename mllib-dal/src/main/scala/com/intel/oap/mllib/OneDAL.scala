@@ -589,16 +589,14 @@ object OneDAL {
     logger.info(s"Processing partitions with $executorNum executors")
     val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
 
-    val barrierRDD = data.barrier().mapPartitions(iter => iter)
-
     // Repartition to executorNum if not enough partitions
-    val dataForConversion = if (barrierRDD.getNumPartitions < executorNum) {
+    val dataForConversion = if (data.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
-      val reData = barrierRDD.repartition(executorNum).setName("RepartitionedRDD")
+      val reData = data.repartition(executorNum).setName("RepartitionedRDD")
       reData.cache().count()
       reData
     } else {
-      barrierRDD
+      data
     }
 
     // Get dimensions for each partition
