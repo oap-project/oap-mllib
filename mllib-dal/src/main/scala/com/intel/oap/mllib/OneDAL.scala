@@ -430,7 +430,8 @@ object OneDAL {
     // Filter out empty partitions, if there is no such rdd, coalesce will report an error
     // "No partitions or no locations for partitions found".
     // TODO: ML-312: Improve ExecutorInProcessCoalescePartitioner
-    val nonEmptyPartitions = dataForConversion.select(labelCol, featuresCol).toDF().rdd.mapPartitionsWithIndex {
+    val nonEmptyPartitions = dataForConversion.select(labelCol, featuresCol).toDF().rdd.
+      barrier().mapPartitionsWithIndex {
       (index: Int, it: Iterator[Row]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
     }.filter {
       _._1 > 0
@@ -680,12 +681,14 @@ object OneDAL {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
+    val barrierRDD = vectors.barrier()mapPartitions(iter => iter)
+
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (vectors.getNumPartitions < executorNum) {
-      vectors.repartition(executorNum).setName("Repartitioned for conversion").cache()
+      barrierRDD.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
-      vectors
+      barrierRDD
     }
 
     // Get dimensions for each partition
