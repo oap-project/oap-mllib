@@ -27,6 +27,8 @@ import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
 
+import java.nio.file.Paths
+
 class KMeansDALImpl(var nClusters: Int,
                     var maxIterations: Int,
                     var tolerance: Double,
@@ -37,9 +39,10 @@ class KMeansDALImpl(var nClusters: Int,
                    ) extends Serializable with Logging {
 
   def train(data: RDD[Vector]): MLlibKMeansModel = {
-    val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans")
     val sparkContext = data.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans", sparkContext)
+
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     kmeansTimer.record("Preprocessing")
 

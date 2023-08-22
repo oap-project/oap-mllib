@@ -31,8 +31,9 @@ class SummarizerDALImpl(val executorNum: Int,
   extends Serializable with Logging {
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
-    val sumTimer = new Utils.AlgoTimeMetrics("Summarizer")
     val sparkContext = data.sparkContext
+    val sumTimer = new Utils.AlgoTimeMetrics("Summarizer", sparkContext)
+
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     sumTimer.record("Preprocessing")

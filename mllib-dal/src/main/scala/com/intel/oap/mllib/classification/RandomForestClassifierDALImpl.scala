@@ -53,10 +53,11 @@ class RandomForestClassifierDALImpl(val uid: String,
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
 
-    val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier")
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier", sparkContext)
+
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)

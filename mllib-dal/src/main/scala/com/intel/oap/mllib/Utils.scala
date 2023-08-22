@@ -82,18 +82,19 @@ object Utils {
     }
   }
 
-  class AlgoTimeMetrics(val algoName: String) {
+  class AlgoTimeMetrics(val algoName: String, val sparkContext: SparkContext) {
     val timeZoneName = List("Preprocessing", "Data Convertion", "Training")
     val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
     val recorderName = Utils.GlobalTimeTable.register(this)
     val timeFileName = recorderName + "time_breakdown"
-    val redirect_path = sys.env.getOrElse("SPARKJOB_CONFIG_DIR", Paths.get("").toAbsolutePath)
-    val current_directory = redirect_path + "/" + timeFileName
+    val redirectPath = sparkContext.getConf.get("spark.oap.mllib.record.output.path",
+      Paths.get("").toAbsolutePath.toString)
+    val currentDirectory = redirectPath + "/" + timeFileName
     val timerEnabled = isTimerEnabled()
 
     def record(stampName: String): Unit = {
       if (timerEnabled) {
-        algoTimeStampList(stampName).update(current_directory)
+        algoTimeStampList(stampName).update(currentDirectory)
       }
     }
 
