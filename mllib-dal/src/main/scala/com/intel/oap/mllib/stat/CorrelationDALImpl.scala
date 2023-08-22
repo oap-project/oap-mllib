@@ -32,7 +32,6 @@ class CorrelationDALImpl(
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
     val sparkContext = data.sparkContext
     val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
-
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
