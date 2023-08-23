@@ -45,7 +45,6 @@ using namespace daal::data_management;
 #include "error_handling.h"
 #include "oneapi/dal/table/detail/csr.hpp"
 #include "oneapi/dal/table/homogen.hpp"
-#include "Logger.h"
 
 using namespace oneapi::dal;
 using namespace oneapi::dal::detail;
