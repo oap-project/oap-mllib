@@ -37,8 +37,8 @@ class KMeansDALImpl(var nClusters: Int,
                    ) extends Serializable with Logging {
 
   def train(data: RDD[Vector]): MLlibKMeansModel = {
-    val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans")
     val sparkContext = data.sparkContext
+    val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     kmeansTimer.record("Preprocessing")

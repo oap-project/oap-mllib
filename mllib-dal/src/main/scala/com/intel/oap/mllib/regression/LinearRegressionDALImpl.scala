@@ -70,8 +70,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             labelCol: String,
             featuresCol: String): LinearRegressionDALModel = {
 
-    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression")
     val sparkContext = labeledPoints.sparkSession.sparkContext
+    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 

@@ -30,8 +30,8 @@ class CorrelationDALImpl(
   extends Serializable with Logging {
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
-    val corTimer = new Utils.AlgoTimeMetrics("Correlation")
     val sparkContext = data.sparkContext
+    val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
