@@ -41,10 +41,10 @@ using namespace daal::data_management;
 #include <string>
 #include <vector>
 
+#include "Logger.h"
 #include "error_handling.h"
 #include "oneapi/dal/table/detail/csr.hpp"
 #include "oneapi/dal/table/homogen.hpp"
-#include "Logger.h"
 
 using namespace oneapi::dal;
 using namespace oneapi::dal::detail;
@@ -68,8 +68,8 @@ void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
 
 #ifdef CPU_GPU_PROFILE
-#include "oneapi/dal/table/row_accessor.hpp"
 #include "oneapi/dal/table/common.hpp"
+#include "oneapi/dal/table/row_accessor.hpp"
 
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
 inline void printHomegenTable(const oneapi::dal::table &table) {
