@@ -71,8 +71,9 @@ class NaiveBayesDALImpl(val uid: String,
         val ret = if (OneCCL.isRoot()) {
           val convResultStartTime = System.nanoTime()
 
-          val pi = OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.piNumericTable))
-          val theta = OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.thetaNumericTable))
+          val pi = OneDAL.numericTableNx1ToVector(OneDAL.makeNumericTable(result.getPiNumericTable))
+          val theta = OneDAL.numericTableToMatrix(
+            OneDAL.makeNumericTable(result.getThetaNumericTable))
 
           val convResultEndTime = System.nanoTime()
 

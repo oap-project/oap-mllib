@@ -6,7 +6,7 @@
 
 class Profiler {
   public:
-    Profiler(std::string s) : subject(s) {}
+    Profiler(const std::string &s) : subject(s) {}
 
     void startProfile(std::string s = "") {
         action = s;

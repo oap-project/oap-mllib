@@ -118,5 +118,10 @@
       <artifactId>commons-net</artifactId>
       <version>3.9.0</version>
     </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>4.1.94.Final</version>
+    </dependency>
   </dependencies>
 </project>

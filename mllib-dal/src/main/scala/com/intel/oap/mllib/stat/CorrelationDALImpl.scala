@@ -30,8 +30,8 @@ class CorrelationDALImpl(
   extends Serializable with Logging {
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
-    val corTimer = new Utils.AlgoTimeMetrics("Correlation")
     val sparkContext = data.sparkContext
+    val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
@@ -77,10 +77,10 @@ class CorrelationDALImpl(
       val ret = if (rank == 0) {
         val convResultStartTime = System.nanoTime()
         val correlationNumericTable = if (useDevice == "GPU") {
-          OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.correlationNumericTable),
+          OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.getCorrelationNumericTable),
             computeDevice)
         } else {
-          OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.correlationNumericTable))
+          OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.getCorrelationNumericTable))
         }
         val convResultEndTime = System.nanoTime()
 

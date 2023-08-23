@@ -20,8 +20,10 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SPARK_VERSION, SparkConf, SparkContext}
+
 import java.net.InetAddress
-import java.io.{File, FileWriter, BufferedWriter}
+import java.io.{BufferedWriter, File, FileWriter}
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.Duration
 import java.time.format.DateTimeFormatter
@@ -80,17 +82,19 @@ object Utils {
     }
   }
 
-  class AlgoTimeMetrics(val algoName: String) {
+  class AlgoTimeMetrics(val algoName: String, val sparkContext: SparkContext) {
     val timeZoneName = List("Preprocessing", "Data Convertion", "Training")
     val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
     val recorderName = Utils.GlobalTimeTable.register(this)
     val timeFileName = recorderName + "time_breakdown"
-
+    val redirectPath = sparkContext.getConf.get("spark.oap.mllib.record.output.path",
+      Paths.get("").toAbsolutePath.toString)
+    val currentDirectory = redirectPath + "/" + timeFileName
     val timerEnabled = isTimerEnabled()
 
     def record(stampName: String): Unit = {
       if (timerEnabled) {
-        algoTimeStampList(stampName).update(timeFileName)
+        algoTimeStampList(stampName).update(currentDirectory)
       }
     }
 

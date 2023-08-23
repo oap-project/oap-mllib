@@ -9,7 +9,6 @@ DATA_FILE=$HDFS_ROOT/data/pca_data.csv
 
 DEVICE=CPU
 APP_PY=pca-pyspark.py
-K=3
 
 time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --num-executors $SPARK_NUM_EXECUTORS \
@@ -27,5 +26,5 @@ time $SPARK_HOME/bin/spark-submit --master $SPARK_MASTER \
     --conf "spark.network.timeout=1200s" \
     --conf "spark.task.maxFailures=1" \
     --jars $OAP_MLLIB_JAR \
-    $APP_PY $DATA_FILE $K \
+    $APP_PY $DATA_FILE \
     2>&1 | tee PCA-$(date +%m%d_%H_%M_%S).log

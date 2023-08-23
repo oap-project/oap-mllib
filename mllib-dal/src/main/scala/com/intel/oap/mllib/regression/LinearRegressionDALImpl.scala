@@ -70,8 +70,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             labelCol: String,
             featuresCol: String): LinearRegressionDALModel = {
 
-    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression")
     val sparkContext = labeledPoints.sparkSession.sparkContext
+    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
@@ -99,7 +99,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
 
     // OAP MLlib: Only normal linear regression is supported for GPU currently
-    if (useDevice == "GPU" && regParam != 0){
+    if (useDevice == "GPU" && regParam != 0) {
       val msg = s"OAP MLlib: Regularization parameter is not supported for GPU now."
       logError(msg)
       throw new SparkException(msg)
