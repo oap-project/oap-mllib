@@ -3,7 +3,6 @@
 CONF_PATH=$PWD/../../../conf
 source $CONF_PATH/env.sh
 
-
 DEVICE=CPU
 APP_PY=correlation-pyspark.py
 
