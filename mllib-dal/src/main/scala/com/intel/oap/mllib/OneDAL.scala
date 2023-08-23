@@ -409,29 +409,28 @@ object OneDAL {
 
     val spark = SparkSession.active
     import spark.implicits._
-    val labeledPointsRDD = labeledPoints.select(labelCol, featuresCol).toDF().rdd
-      .barrier().mapPartitions(iter => iter)
+    val labeledPointsRDD = labeledPoints.rdd
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (labeledPointsRDD.getNumPartitions < executorNum) {
       logger.info(s"Repartition to executorNum if not enough partitions")
-      val rePartitions = labeledPointsRDD.repartition(executorNum).cache()
+      val rePartitions = labeledPoints.repartition(executorNum).cache()
       rePartitions.count()
       rePartitions
     } else {
-      labeledPointsRDD
+      labeledPoints
     }
 
     // Get dimensions for each partition
-    val partitionDims = Utils.getPartitionDims(dataForConversion.map{ row =>
-      val vector = row.getAs[Vector](1)
+    val partitionDims = Utils.getPartitionDims(dataForConversion.select(featuresCol).rdd.map{ row =>
+      val vector = row.getAs[Vector](0)
       vector
     })
 
     // Filter out empty partitions, if there is no such rdd, coalesce will report an error
     // "No partitions or no locations for partitions found".
     // TODO: ML-312: Improve ExecutorInProcessCoalescePartitioner
-    val nonEmptyPartitions = dataForConversion.mapPartitionsWithIndex {
+    val nonEmptyPartitions = dataForConversion.select(labelCol, featuresCol).toDF().rdd.mapPartitionsWithIndex {
       (index: Int, it: Iterator[Row]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
     }.filter {
       _._1 > 0
@@ -679,14 +678,12 @@ object OneDAL {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
-    val barrierRDD = vectors.barrier()mapPartitions(iter => iter)
-
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (vectors.getNumPartitions < executorNum) {
-      barrierRDD.repartition(executorNum).setName("Repartitioned for conversion").cache()
+      vectors.repartition(executorNum).setName("Repartitioned for conversion").cache()
     } else {
-      barrierRDD
+      vectors
     }
 
     // Get dimensions for each partition

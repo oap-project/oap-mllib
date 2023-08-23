@@ -42,11 +42,11 @@ class KMeansDALImpl(var nClusters: Int,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     kmeansTimer.record("Preprocessing")
-
+    val barrierRDD = data.barrier().mapPartitions(iter => iter)
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceVectorsToHomogenTables(data, executorNum, computeDevice)
+      OneDAL.coalesceVectorsToHomogenTables(barrierRDD, executorNum, computeDevice)
     } else {
-      OneDAL.coalesceVectorsToNumericTables(data, executorNum)
+      OneDAL.coalesceVectorsToNumericTables(barrierRDD, executorNum)
     }
     kmeansTimer.record("Data Convertion")
 
@@ -95,7 +95,7 @@ class KMeansDALImpl(var nClusters: Int,
         }
       OneCCL.cleanup()
       ret
-    }.barrier().mapPartitions(iter => iter).collect()
+    }.collect()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

@@ -32,6 +32,8 @@ class MLlibPCASuite extends MLTest with DefaultReadWriteTest {
   override def sparkConf: SparkConf = {
     val conf = super.sparkConf
     conf.set("spark.oap.mllib.device", TestCommon.getComputeDevice.toString)
+    conf.set("spark.driver.bindAddress", "10.239.34.1");
+
   }
 
   test("params") {
