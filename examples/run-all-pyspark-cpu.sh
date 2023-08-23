@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark)
+exampleDirs=(kmeans-pyspark pca-pyspark als-pyspark \
+     correlation-pyspark summarizer-pyspark)
 
 cd python
 

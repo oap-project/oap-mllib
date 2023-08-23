@@ -201,6 +201,8 @@ pca-pyspark                       |  PCA example for PySpark
 als-pyspark                       |  ALS example for PySpark
 random-forest-classifier-pyspark  |  Random Forest Classifier example for PySpark
 random-forest-regressor-pyspark   |  Random Forest Regressor example for PySpark
+correlation-pyspark               |  Correlation example for PySpark
+summarizer-pyspark                |  Summarizer example for PySpark
 
 ### Scala Examples
 
