@@ -95,16 +95,18 @@ class KMeansDALImpl(var nClusters: Int,
         }
       OneCCL.cleanup()
       ret
-    }.barrier().mapPartitions(iter => iter).collect()
+    }
+    results.count()
+    val barrierRDD = results.barrier().mapPartitions(iter => iter).collect()
 
     // Make sure there is only one result from rank 0
-    assert(results.length == 1)
+    assert(barrierRDD.length == 1)
     kmeansTimer.record("Training")
     kmeansTimer.print()
 
-    val centerVectors = results(0)._1
-    val totalCost = results(0)._2
-    val iterationNum = results(0)._3
+    val centerVectors = barrierRDD(0)._1
+    val totalCost = barrierRDD(0)._2
+    val iterationNum = barrierRDD(0)._3
 
     if (iterationNum == maxIterations) {
       logInfo(s"KMeans reached the max number of iterations: $maxIterations.")
