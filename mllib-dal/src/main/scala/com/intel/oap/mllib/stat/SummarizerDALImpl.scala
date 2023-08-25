@@ -36,13 +36,12 @@ class SummarizerDALImpl(val executorNum: Int,
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     sumTimer.record("Preprocessing")
-    val barrierRDD = data.barrier().mapPartitions(iter => iter)
 
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceVectorsToHomogenTables(barrierRDD, executorNum,
+      OneDAL.coalesceVectorsToHomogenTables(data, executorNum,
         computeDevice)
     } else {
-      OneDAL.coalesceVectorsToNumericTables(barrierRDD, executorNum)
+      OneDAL.coalesceVectorsToNumericTables(data, executorNum)
     }
     sumTimer.record("Data Convertion")
 
@@ -120,7 +119,7 @@ class SummarizerDALImpl(val executorNum: Int,
       }
       OneCCL.cleanup()
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
     sumTimer.record("Training")
     sumTimer.print()
 

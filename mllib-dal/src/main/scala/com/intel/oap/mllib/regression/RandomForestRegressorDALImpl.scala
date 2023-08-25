@@ -126,7 +126,7 @@ class RandomForestRegressorDALImpl(val uid: String,
       }
 
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
     rfrTimer.record("Training")
     rfrTimer.print()
 

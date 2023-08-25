@@ -151,7 +151,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         }
         OneCCL.cleanup()
         ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
 
     // Make sure there is only one result from rank 0
     assert(results.length == 1)

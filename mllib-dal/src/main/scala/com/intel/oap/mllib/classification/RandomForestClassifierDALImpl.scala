@@ -124,7 +124,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       }
       OneCCL.cleanup()
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
 
     rfcTimer.record("Training")
     rfcTimer.print()

@@ -72,9 +72,8 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
 
     logInfo(s"ALSDAL fit using $executorNum Executors " +
       s"for $nVectors vectors and $nFeatures features")
-    val barrierRDD = data.barrier().mapPartitions(iter => iter)
 
-    val numericTables = barrierRDD.repartition(executorNum)
+    val numericTables = data.repartition(executorNum)
       .setName("Repartitioned for conversion").cache()
 
     val kvsIPPort = getOneCCLIPPort(numericTables)
@@ -107,7 +106,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
           result
         )
         Iterator(result)
-      }.cache()
+      }.cache().barrier().mapPartitions(iter => iter)
 
     val usersFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
@@ -128,7 +127,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
           }.toIterator
         }
         ret
-      }.setName("userFactors").cache()
+      }.setName("userFactors").cache().barrier().mapPartitions(iter => iter)
 
     val itemsFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>

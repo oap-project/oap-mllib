@@ -45,7 +45,6 @@ class PCADALImpl(val k: Int,
   def train(data: RDD[Vector]): PCADALModel = {
     val pcaTimer = new Utils.AlgoTimeMetrics("PCA")
     val normalizedData = normalizeData(data)
-    val barrierRDD = normalizedData.barrier().mapPartitions(iter => iter)
 
     val sparkContext = normalizedData.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -53,10 +52,10 @@ class PCADALImpl(val k: Int,
     pcaTimer.record("Preprocessing")
 
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceVectorsToHomogenTables(barrierRDD, executorNum,
+      OneDAL.coalesceVectorsToHomogenTables(normalizedData, executorNum,
         computeDevice)
     } else {
-      OneDAL.coalesceVectorsToNumericTables(barrierRDD, executorNum)
+      OneDAL.coalesceVectorsToNumericTables(normalizedData, executorNum)
     }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
@@ -106,7 +105,7 @@ class PCADALImpl(val k: Int,
       }
       OneCCL.cleanup()
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
     pcaTimer.record("Training")
     pcaTimer.print()
 
