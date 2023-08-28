@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import importlib.util
 import glob
 import os
@@ -16,11 +15,9 @@ OAP_HOME = os.path.abspath("../")
 
 # Provide guidance about how to use setup.py
 incorrect_invocation_message = """
-If you are installing oap_mllib from spark source, you must first build Spark and
+If you are installing oap_mllib from source, you must first build oap_mllib and
 run sdist.
-    To build Spark with maven you can run:
-      ./build/mvn -DskipTests clean package
-    Building the source dist is done in the Python directory:
+    After Building source code:
       cd python
       python setup.py sdist
       pip install dist/*.tar.gz"""
