@@ -59,9 +59,14 @@ class PCADALImpl(val k: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
 
+    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+      OneCCL.init(executorNum, rank, kvsIPPort)
+      Iterator.empty
+    }.count()
+    pcaTimer.record("OneCCL Init")
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
       val result = new PCAResult()
       val gpuIndices = if (useDevice == "GPU") {
         val resources = TaskContext.get().resources()

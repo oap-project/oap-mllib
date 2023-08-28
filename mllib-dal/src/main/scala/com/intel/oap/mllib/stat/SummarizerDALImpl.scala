@@ -47,9 +47,14 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val kvsIPPort = getOneCCLIPPort(data)
 
+    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+      OneCCL.init(executorNum, rank, kvsIPPort)
+      Iterator.empty
+    }.count()
+    sumTimer.record("OneCCL Init")
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val computeStartTime = System.nanoTime()
 

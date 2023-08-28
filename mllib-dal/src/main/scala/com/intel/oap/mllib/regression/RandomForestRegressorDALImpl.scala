@@ -69,6 +69,12 @@ class RandomForestRegressorDALImpl(val uid: String,
 
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
+    labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
+      OneCCL.init(executorNum, rank, kvsIPPort)
+      Iterator.empty
+    }.count()
+    rfrTimer.record("OneCCL Init")
+
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(Long, Long)]) =>
       val (featureTabAddr, lableTabAddr) = tables.next()
@@ -83,8 +89,6 @@ class RandomForestRegressorDALImpl(val uid: String,
       } else {
         null
       }
-
-      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult

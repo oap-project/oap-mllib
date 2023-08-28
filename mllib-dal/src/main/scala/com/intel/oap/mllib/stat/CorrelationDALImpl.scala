@@ -46,9 +46,14 @@ class CorrelationDALImpl(
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
+    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+      OneCCL.init(executorNum, rank, kvsIPPort)
+      Iterator.empty
+    }.count()
+    corTimer.record("OneCCL Init")
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       val tableArr = table.next()
-      OneCCL.init(executorNum, rank, kvsIPPort)
 
       val computeStartTime = System.nanoTime()
 
