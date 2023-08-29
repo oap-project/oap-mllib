@@ -50,10 +50,12 @@ try:
             'oap_mllib.examples'],
         install_requires=[],
         package_dir={
+            'oap_mllib': 'oap_mllib',
             'oap_mllib.jars': 'deps/jars',
             'oap_mllib.examples': 'deps/examples'
         },
         package_data={
+            'oap_mllib': ['*'],
             'oap_mllib.jars': ['*.jar'],
             'oap_mllib.examples': ['*'],
         },
