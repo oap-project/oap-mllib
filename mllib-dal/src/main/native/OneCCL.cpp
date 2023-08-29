@@ -31,6 +31,7 @@
 #include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
+#include "CCLInitSingleton.hpp"
 
 extern const size_t ccl_root = 0;
 
@@ -50,18 +51,10 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 
     logger::printerrln(logger::INFO, "OneCCL (native): init");
 
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    ccl::init();
-
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
 
-    auto kvs_attr = ccl::create_kvs_attr();
-    kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
-
-    ccl::shared_ptr_class<ccl::kvs> kvs;
-    kvs = ccl::create_main_kvs(kvs_attr);
+    auto kvs = cclInitSingleton::get(size, rank, ccl_ip_port);
 
     g_kvs.push_back(kvs);
     g_comms.push_back(ccl::create_communicator(size, rank, kvs));
