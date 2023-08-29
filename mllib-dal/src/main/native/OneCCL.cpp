@@ -29,9 +29,9 @@
 #include <oneapi/ccl.hpp>
 
 #include "Logger.h"
+#include "CCLInitSingleton.hpp"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
-#include "CCLInitSingleton.hpp"
 
 extern const size_t ccl_root = 0;
 
@@ -54,10 +54,11 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
 
-    auto& singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
+    auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
 
     g_kvs.push_back(singletonCCLInit.kvs);
-    g_comms.push_back(ccl::create_communicator(size, rank, singletonCCLInit.kvs));
+    g_comms.push_back(
+        ccl::create_communicator(size, rank, singletonCCLInit.kvs));
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
