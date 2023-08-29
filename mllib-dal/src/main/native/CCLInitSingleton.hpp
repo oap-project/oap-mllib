@@ -18,7 +18,7 @@
 
 class cclInitSingleton {
 public:
-    static ccl::shared_ptr_class<ccl::kvs>& get(int size, int rank, string ccl_ip_port) {
+    static ccl::shared_ptr_class<ccl::kvs>& get(int size, int rank, ccl::string ccl_ip_port) {
         static std::once_flag flag;
         std::call_once(flag, [size, rank, ccl_ip_port] {
             get_instance(size, rank, ccl_ip_port);
@@ -27,7 +27,7 @@ public:
     }
 
 private:
-    static ccl::shared_ptr_class<ccl::kvs>& get_instance(int size, int rank, string ccl_ip_port) {
+    static ccl::shared_ptr_class<ccl::kvs>& get_instance(int size, int rank, ccl::string ccl_ip_port) {
         std::cerr << "OneCCL singleton init" << std::endl;
 
         auto t1 = std::chrono::high_resolution_clock::now();
