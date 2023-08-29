@@ -54,10 +54,10 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
 
-    auto kvs = cclInitSingleton::get(size, rank, ccl_ip_port);
+    auto& singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
 
-    g_kvs.push_back(kvs);
-    g_comms.push_back(ccl::create_communicator(size, rank, kvs));
+    g_kvs.push_back(singletonCCLInit.kvs);
+    g_comms.push_back(ccl::create_communicator(size, rank, singletonCCLInit.kvs));
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =

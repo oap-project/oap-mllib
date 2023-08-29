@@ -15,19 +15,27 @@
 *******************************************************************************/
 
 #pragma once
+#include <iostream>
+#include <mutex>
 
-class cclInitSingleton {
+class CCLInitSingleton {
 public:
-    static ccl::shared_ptr_class<ccl::kvs>& get(int size, int rank, ccl::string ccl_ip_port) {
+    ccl::shared_ptr_class<ccl::kvs> kvs;
+
+    static CCLInitSingleton& get(int size, int rank, ccl::string ccl_ip_port) {
         static std::once_flag flag;
+        static CCLInitSingleton instance;
         std::call_once(flag, [size, rank, ccl_ip_port] {
-            get_instance(size, rank, ccl_ip_port);
+            instance = CCLInitSingleton(size, rank, ccl_ip_port);
         });
-        return get_instance(size, rank, ccl_ip_port);
+        return instance;
     }
 
 private:
-    static ccl::shared_ptr_class<ccl::kvs>& get_instance(int size, int rank, ccl::string ccl_ip_port) {
+    CCLInitSingleton() {
+    }
+
+    CCLInitSingleton(int size, int rank, ccl::string ccl_ip_port) {
         std::cerr << "OneCCL singleton init" << std::endl;
 
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -37,14 +45,12 @@ private:
         auto kvs_attr = ccl::create_kvs_attr();
         kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
 
-        ccl::shared_ptr_class<ccl::kvs> kvs;
         kvs = ccl::create_main_kvs(kvs_attr);
 
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-        std::cerr << "OneCCL singleton init took " << duration << " secs"
+        std::cerr << "OneCCL singleton init took " << duration / 1000 << " secs"
                   << std::endl;
-        return kvs;
     }
 };
