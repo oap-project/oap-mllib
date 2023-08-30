@@ -503,12 +503,12 @@ Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cDALImplictALS(
     logger::println(logger::INFO, "- fullNUsers: %d", nUsers);
     logger::println(logger::INFO, "- nFactors: %d", nFactors);
 
-    // Set number of threads for oneDAL to use for each rank
+    // Set number of threads for OneDAL to use for each rank
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
     logger::println(logger::INFO,
-                    "oneDAL (native): Number of CPU threads used: %d",
+                    "OneDAL (native): Number of CPU threads used: %d",
                     nThreadsNew);
 
     int nBlocks = executor_num;

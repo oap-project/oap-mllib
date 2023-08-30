@@ -131,13 +131,13 @@ Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     NumericTablePtr featuresTab = *((NumericTablePtr *)pFeaturesTab);
     NumericTablePtr labelsTab = *((NumericTablePtr *)pLabelsTab);
 
-    // Set number of threads for oneDAL to use for each rank
+    // Set number of threads for OneDAL to use for each rank
     services::Environment::getInstance()->setNumberOfThreads(executor_cores);
 
     int nThreadsNew =
         services::Environment::getInstance()->getNumberOfThreads();
     logger::println(logger::INFO,
-                    "oneDAL (native): Number of CPU threads used %d",
+                    "OneDAL (native): Number of CPU threads used %d",
                     nThreadsNew);
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -145,18 +145,18 @@ Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     training::ResultPtr trainingResult;
     if (featuresTab->getDataLayout() == NumericTable::StorageLayout::csrArray) {
         logger::println(logger::INFO,
-                        "oneDAL (native): training model with fastCSR method");
+                        "OneDAL (native): training model with fastCSR method");
         trainingResult = trainModel<training::fastCSR>(comm, featuresTab,
                                                        labelsTab, class_num);
     } else {
         logger::println(
             logger::INFO,
-            "oneDAL (native): training model with defaultDense method");
+            "OneDAL (native): training model with defaultDense method");
         trainingResult = trainModel<training::defaultDense>(
             comm, featuresTab, labelsTab, class_num);
     }
 
-    logger::println(logger::INFO, "oneDAL (native): training model finished");
+    logger::println(logger::INFO, "OneDAL (native): training model finished");
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
