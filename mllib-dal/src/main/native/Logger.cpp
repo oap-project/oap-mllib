@@ -131,7 +131,7 @@ int println(MessageType message_type, const char *format, ...) {
 }
 
 int printerr(MessageType message_type, const std::string &msg) {
-    int ret = print2stream(message_type, stdout, msg.c_str());
+    int ret = print2stream(message_type, stderr, msg.c_str());
     return ret;
 }
 
