@@ -89,7 +89,7 @@ inline void printHomegenTable(const oneapi::dal::table &table) {
         for (std::int64_t i = 0; i < 5; i++) {
             logger::print(logger::INFO, "");
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
-                logger::print(logger::INFO, "%10f",
+                logger::print(logger::NONE, "%10f",
                               x[i * table.get_column_count() + j]);
             }
             logger::println(logger::NONE, "");
