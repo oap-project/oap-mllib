@@ -83,7 +83,7 @@ object Utils {
   }
 
   class AlgoTimeMetrics(val algoName: String, val sparkContext: SparkContext) {
-    val timeZoneName = List("Preprocessing", "Data Convertion", "Training")
+    val timeZoneName = List("Preprocessing", "Data Convertion", "OneCCL Init", "Training")
     val algoTimeStampList = timeZoneName.map((x: String) => (x, new Utils.AlgoTimeStamp(x))).toMap
     val recorderName = Utils.GlobalTimeTable.register(this)
     val timeFileName = recorderName + "time_breakdown"
