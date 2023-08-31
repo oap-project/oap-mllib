@@ -18,6 +18,8 @@
 #include <iostream>
 #include <mutex>
 
+#include "Logger.h"
+
 class CCLInitSingleton {
 public:
     ccl::shared_ptr_class<ccl::kvs> kvs;
