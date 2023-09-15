@@ -33,8 +33,6 @@ using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
@@ -206,7 +204,7 @@ static void doSummarizerOneAPICompute(
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-    const auto bs_desc = basic_statistics::descriptor{};
+    const auto bs_desc = basic_statistics::descriptor<algorithmFPType>{};
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {

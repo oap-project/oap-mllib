@@ -39,8 +39,6 @@ using namespace daal::services;
 namespace linear_regression_cpu = daal::algorithms::linear_regression;
 namespace ridge_regression_cpu = daal::algorithms::ridge_regression;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static NumericTablePtr linear_regression_compute(
     size_t rankId, ccl::communicator &comm, const NumericTablePtr &pData,
     const NumericTablePtr &pLabel, bool fitIntercept, size_t nBlocks) {

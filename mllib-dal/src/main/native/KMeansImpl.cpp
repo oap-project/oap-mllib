@@ -35,8 +35,6 @@ using namespace daal;
 using namespace daal::services;
 namespace kmeans_cpu = daal::algorithms::kmeans;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
                                       const NumericTablePtr &pData,
                                       const NumericTablePtr &initialCentroids,
@@ -251,7 +249,7 @@ static jlong doKMeansOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
-    const auto kmeans_desc = kmeans_gpu::descriptor<>()
+    const auto kmeans_desc = kmeans_gpu::descriptor<algorithmFPType>()
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);

@@ -215,16 +215,16 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
 
     // printNumericTable(ntHomogen, "ntHomogen:", 10, 10);
 
-    NumericTablePtr ntSycl = SyclHomogenNumericTable<algorithmFpType>::create(
+    NumericTablePtr ntSycl = SyclHomogenNumericTable<algorithmFPType>::create(
         nColumns, nRows, NumericTable::doAllocate);
 
     // printNumericTable(ntSycl, "ntSycl:", 10, 10);
 
-    BlockDescriptor<algorithmFpType> sourceRows;
+    BlockDescriptor<algorithmFPType> sourceRows;
     ntHomogen->getBlockOfRows(0, ntHomogen->getNumberOfRows(), readOnly,
                               sourceRows);
 
-    BlockDescriptor<algorithmFpType> targetRows;
+    BlockDescriptor<algorithmFPType> targetRows;
     ntSycl->getBlockOfRows(0, ntSycl->getNumberOfRows(), writeOnly, targetRows);
 
     // bracets for calling destructor of hostPtr to release lock

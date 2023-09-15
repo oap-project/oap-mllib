@@ -37,8 +37,6 @@ using namespace daal::services;
 namespace pca_cpu = daal::algorithms::pca;
 namespace covariance_cpu = daal::algorithms::covariance;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              size_t nBlocks, jobject resultObj) {
@@ -188,8 +186,9 @@ static void doPCAOneAPICompute(
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto cov_desc = covariance_gpu::descriptor{}.set_result_options(
-        covariance_gpu::result_options::cov_matrix);
+    const auto cov_desc =
+        covariance_gpu::descriptor<algorithmFPType>{}.set_result_options(
+            covariance_gpu::result_options::cov_matrix);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
@@ -199,7 +198,7 @@ static void doPCAOneAPICompute(
     std::cout << "PCA (native): Covariance step took " << duration / 1000
               << " secs" << std::endl;
     if (isRoot) {
-        using float_t = double;
+        using float_t = algorithmFPType;
         using method_t = pca_gpu::method::precomputed;
         using task_t = pca_gpu::task::dim_reduction;
         using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;

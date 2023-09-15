@@ -16,8 +16,6 @@ using namespace daal::algorithms;
 using namespace daal::data_management;
 using namespace daal::algorithms::multinomial_naive_bayes;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 template <training::Method method>
 static training::ResultPtr
 trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,

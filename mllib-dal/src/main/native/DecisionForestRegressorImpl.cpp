@@ -221,7 +221,8 @@ static jobject doRFRegressorOneAPICompute(
     std::cout << "doRFRegressorOneAPICompute get_column_count = "
               << hFeaturetable.get_column_count() << std::endl;
     const auto df_desc =
-        df::descriptor<float, df::method::hist, df::task::regression>{}
+        df::descriptor<algorithmFPType, df::method::hist,
+                       df::task::regression>{}
             .set_tree_count(treeCount)
             .set_features_per_node(numFeaturesPerNode)
             .set_min_observations_in_leaf_node(minObservationsLeafNode)

@@ -29,8 +29,6 @@ using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::algorithms::implicit_als;
 
-typedef float algorithmFPType; /* Algorithm floating-point type */
-
 NumericTablePtr userOffset;
 NumericTablePtr itemOffset;
 

@@ -33,8 +33,6 @@ using namespace daal;
 using namespace daal::services;
 namespace covariance_cpu = daal::algorithms::covariance;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
                                      ccl::communicator &comm,
                                      const NumericTablePtr &pData,
@@ -154,9 +152,10 @@ static void doCorrelationOneAPICompute(
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto cor_desc = covariance_gpu::descriptor{}.set_result_options(
-        covariance_gpu::result_options::cor_matrix |
-        covariance_gpu::result_options::means);
+    const auto cor_desc =
+        covariance_gpu::descriptor<algorithmFPType>{}.set_result_options(
+            covariance_gpu::result_options::cor_matrix |
+            covariance_gpu::result_options::means);
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
