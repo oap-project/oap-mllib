@@ -17,7 +17,7 @@
  */
 // scalastyle:on
 
-package org.apache.spark.ml.clustering.spark322
+package org.apache.spark.ml.clustering.spark333
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.clustering.{KMeansDALImpl, KMeansShim}

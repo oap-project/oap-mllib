@@ -21,7 +21,7 @@ import com.intel.oap.mllib.Utils
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.recommendation.ALS.Rating
 import org.apache.spark.ml.recommendation.spark313.{ALS => ALSSpark313}
-import org.apache.spark.ml.recommendation.spark322.{ALS => ALSSpark322}
+import org.apache.spark.ml.recommendation.spark333.{ALS => ALSSpark333}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SPARK_VERSION, SparkException}
@@ -50,7 +50,7 @@ object ALSShim extends Logging {
     logInfo(s"Loading ALS for Spark $SPARK_VERSION")
     val als = Utils.getSparkVersion() match {
       case "3.1.1" | "3.1.2" | "3.1.3" => new ALSSpark313()
-      case "3.2.0" | "3.2.1" | "3.2.2" => new ALSSpark322()
+      case "3.2.0" | "3.2.1" | "3.2.2" | "3.3.3" => new ALSSpark333()
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     als

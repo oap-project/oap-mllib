@@ -17,7 +17,7 @@
  */
 // scalastyle:on
 
-package org.apache.spark.ml.regression.spark322
+package org.apache.spark.ml.regression.spark333
 
 import com.intel.oap.mllib.Utils
 import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL}

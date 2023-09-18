@@ -20,7 +20,7 @@ import com.intel.oap.mllib.Utils
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.feature.PCAModel
-import org.apache.spark.ml.feature.spark322.{PCA => PCASpark322}
+import org.apache.spark.ml.feature.spark333.{PCA => PCASpark333}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.sql.Dataset
 import org.apache.spark.{SPARK_VERSION, SparkException}
@@ -34,7 +34,8 @@ object PCAShim extends Logging {
   def create(uid: String): PCAShim = {
     logInfo(s"Loading PCA for Spark $SPARK_VERSION")
     val pca = Utils.getSparkVersion() match {
-      case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" | "3.2.1" | "3.2.2" => new PCASpark322(uid)
+      case "3.1.1" | "3.1.2" | "3.1.3" | "3.2.0" | "3.2.1" | "3.2.2" | "3.3.3" =>
+        new PCASpark333(uid)
       case _ => throw new SparkException(s"Unsupported Spark version $SPARK_VERSION")
     }
     pca
