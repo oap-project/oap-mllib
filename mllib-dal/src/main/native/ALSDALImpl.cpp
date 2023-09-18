@@ -153,7 +153,7 @@ KeyValueDataCollectionPtr initializeStep1Local(size_t rankId,
 
     /* Create an algorithm object to initialize the implicit ALS model with the
      * default method */
-    training::init::Distributed<step1Local, algorithmFPType,
+    training::init::Distributed<step1Local, cpu_algorithmFPType,
                                 training::init::fastCSR>
         initAlgorithm;
     initAlgorithm.parameter.fullNUsers = nUsers;
@@ -189,7 +189,7 @@ void initializeStep2Local(
     const KeyValueDataCollectionPtr &initStep2LocalInput) {
     /* Create an algorithm object to perform the second step of the implicit ALS
      * initialization algorithm */
-    training::init::Distributed<step2Local, algorithmFPType,
+    training::init::Distributed<step2Local, cpu_algorithmFPType,
                                 training::init::fastCSR>
         initAlgorithm;
 

@@ -234,7 +234,7 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
-        linear_regression_gpu::descriptor<>(fitIntercept);
+        linear_regression_gpu::descriptor<gpu_algorithmFPType>(fitIntercept);
 
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
