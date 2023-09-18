@@ -20,7 +20,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
           restore-keys: |
             ${{ runner.os }}-
       - name: Local Test
@@ -43,7 +43,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
           restore-keys: |
             ${{ runner.os }}-
       - name: Local Test
@@ -67,7 +67,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
           restore-keys: |
             ${{ runner.os }}-
       - name: Cluster Test
@@ -90,7 +90,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
           restore-keys: |
             ${{ runner.os }}-
       - name: Cluster Test
@@ -113,7 +113,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.2.0_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
           restore-keys: |
             ${{ runner.os }}-
       - name: Cluster Test
