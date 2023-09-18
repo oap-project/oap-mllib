@@ -17,7 +17,7 @@
  */
 // scalastyle:on
 
-package org.apache.spark.ml.regression.spark322
+package org.apache.spark.ml.regression.spark333
 
 import breeze.linalg.{DenseVector => BDV}
 import breeze.optimize.{
