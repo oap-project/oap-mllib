@@ -43,7 +43,8 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     const bool isRoot = (rankId == ccl_root);
 
-    low_order_moments::Distributed<step1Local, cpu_algorithmFPType> localAlgorithm;
+    low_order_moments::Distributed<step1Local, cpu_algorithmFPType>
+        localAlgorithm;
 
     /* Set the input data set to the algorithm */
     localAlgorithm.input.set(low_order_moments::data, pData);

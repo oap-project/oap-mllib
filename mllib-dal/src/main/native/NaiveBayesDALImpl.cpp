@@ -29,8 +29,8 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
 
     /* Create an algorithm object to train the Naive Bayes model based on the
      * local-node data */
-    training::Distributed<step1Local, cpu_algorithmFPType, method> localAlgorithm(
-        nClasses);
+    training::Distributed<step1Local, cpu_algorithmFPType, method>
+        localAlgorithm(nClasses);
 
     /* Pass a training data set and dependent values to the algorithm */
     localAlgorithm.input.set(classifier::training::data, featuresTab);

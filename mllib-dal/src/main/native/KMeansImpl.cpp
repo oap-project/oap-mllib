@@ -105,8 +105,8 @@ static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
 
     if (isRoot) {
         /* Create an algorithm to compute k-means on the master node */
-        kmeans_cpu::Distributed<step2Master, cpu_algorithmFPType> masterAlgorithm(
-            nClusters);
+        kmeans_cpu::Distributed<step2Master, cpu_algorithmFPType>
+            masterAlgorithm(nClusters);
 
         for (size_t i = 0; i < nBlocks; i++) {
             /* Deserialize partial results from step 1 */
