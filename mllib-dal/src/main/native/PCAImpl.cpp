@@ -37,8 +37,6 @@ using namespace daal::services;
 namespace pca_cpu = daal::algorithms::pca;
 namespace covariance_cpu = daal::algorithms::covariance;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              size_t nBlocks, jobject resultObj) {
@@ -48,7 +46,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     const bool isRoot = (rankId == ccl_root);
 
-    covariance_cpu::Distributed<step1Local, algorithmFPType> localAlgorithm;
+    covariance_cpu::Distributed<step1Local, CpuAlgorithmFPType> localAlgorithm;
 
     /* Set the input data set to the algorithm */
     localAlgorithm.input.set(covariance_cpu::data, pData);
@@ -90,7 +88,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
-        covariance_cpu::Distributed<step2Master, algorithmFPType>
+        covariance_cpu::Distributed<step2Master, CpuAlgorithmFPType>
             masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
@@ -132,7 +130,7 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
         /* Create an algorithm for principal component analysis using the
          * correlation method*/
-        pca_cpu::Batch<algorithmFPType> algorithm;
+        pca_cpu::Batch<CpuAlgorithmFPType> algorithm;
 
         /* Set the algorithm input data*/
         algorithm.input.set(pca_cpu::correlation,
@@ -188,8 +186,9 @@ static void doPCAOneAPICompute(
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
-    const auto cov_desc = covariance_gpu::descriptor{}.set_result_options(
-        covariance_gpu::result_options::cov_matrix);
+    const auto cov_desc =
+        covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
+            covariance_gpu::result_options::cov_matrix);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
@@ -199,7 +198,7 @@ static void doPCAOneAPICompute(
     std::cout << "PCA (native): Covariance step took " << duration / 1000
               << " secs" << std::endl;
     if (isRoot) {
-        using float_t = double;
+        using float_t = GpuAlgorithmFPType;
         using method_t = pca_gpu::method::precomputed;
         using task_t = pca_gpu::task::dim_reduction;
         using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;

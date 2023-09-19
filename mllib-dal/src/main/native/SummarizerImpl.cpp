@@ -33,8 +33,6 @@ using namespace daal;
 using namespace daal::algorithms;
 using namespace daal::services;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
@@ -45,7 +43,8 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     const bool isRoot = (rankId == ccl_root);
 
-    low_order_moments::Distributed<step1Local, algorithmFPType> localAlgorithm;
+    low_order_moments::Distributed<step1Local, CpuAlgorithmFPType>
+        localAlgorithm;
 
     /* Set the input data set to the algorithm */
     localAlgorithm.input.set(low_order_moments::data, pData);
@@ -88,7 +87,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
-        low_order_moments::Distributed<step2Master, algorithmFPType>
+        low_order_moments::Distributed<step2Master, CpuAlgorithmFPType>
             masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
@@ -206,7 +205,7 @@ static void doSummarizerOneAPICompute(
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-    const auto bs_desc = basic_statistics::descriptor{};
+    const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {
