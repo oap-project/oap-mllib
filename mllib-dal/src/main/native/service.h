@@ -48,7 +48,8 @@ using namespace daal::data_management;
 using namespace oneapi::dal;
 using namespace oneapi::dal::detail;
 
-typedef double algorithmFpType;
+typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
+typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
 typedef std::vector<daal::byte> ByteBuffer;
 typedef std::shared_ptr<homogen_table> HomogenTablePtr;
 typedef std::shared_ptr<csr_table> CSRTablePtr;

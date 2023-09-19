@@ -39,8 +39,6 @@ using namespace daal::services;
 namespace linear_regression_cpu = daal::algorithms::linear_regression;
 namespace ridge_regression_cpu = daal::algorithms::ridge_regression;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 static NumericTablePtr linear_regression_compute(
     size_t rankId, ccl::communicator &comm, const NumericTablePtr &pData,
     const NumericTablePtr &pLabel, bool fitIntercept, size_t nBlocks) {
@@ -236,7 +234,7 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
-        linear_regression_gpu::descriptor<>(fitIntercept);
+        linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
 
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);

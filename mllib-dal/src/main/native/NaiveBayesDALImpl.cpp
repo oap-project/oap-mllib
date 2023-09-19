@@ -16,8 +16,6 @@ using namespace daal::algorithms;
 using namespace daal::data_management;
 using namespace daal::algorithms::multinomial_naive_bayes;
 
-typedef double algorithmFPType; /* Algorithm floating-point type */
-
 template <training::Method method>
 static training::ResultPtr
 trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
@@ -31,8 +29,8 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
 
     /* Create an algorithm object to train the Naive Bayes model based on the
      * local-node data */
-    training::Distributed<step1Local, algorithmFPType, method> localAlgorithm(
-        nClasses);
+    training::Distributed<step1Local, CpuAlgorithmFPType, method>
+        localAlgorithm(nClasses);
 
     /* Pass a training data set and dependent values to the algorithm */
     localAlgorithm.input.set(classifier::training::data, featuresTab);
@@ -83,7 +81,7 @@ trainModel(const ccl::communicator &comm, const NumericTablePtr &featuresTab,
     if (rankId == ccl_root) {
         /* Create an algorithm object to build the final Naive Bayes model on
          * the master node */
-        training::Distributed<step2Master, algorithmFPType, method>
+        training::Distributed<step2Master, CpuAlgorithmFPType, method>
             masterAlgorithm(nClasses);
 
         for (size_t i = 0; i < nBlocks; i++) {
