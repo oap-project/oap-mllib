@@ -39,7 +39,7 @@ static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
                                       const NumericTablePtr &pData,
                                       const NumericTablePtr &initialCentroids,
                                       size_t nClusters, size_t nBlocks,
-                                      cpu_algorithmFPType &ret_cost) {
+                                      CpuAlgorithmFPType &ret_cost) {
     const bool isRoot = (rankId == ccl_root);
     size_t CentroidsArchLength = 0;
     InputDataArchive inputArch;
@@ -66,12 +66,12 @@ static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
     OutputDataArchive outArch(nodeCentroids.size() ? &nodeCentroids[0] : NULL,
                               CentroidsArchLength);
 
-    NumericTablePtr centroids(new HomogenNumericTable<cpu_algorithmFPType>());
+    NumericTablePtr centroids(new HomogenNumericTable<CpuAlgorithmFPType>());
 
     centroids->deserialize(outArch);
 
     /* Create an algorithm to compute k-means on local nodes */
-    kmeans_cpu::Distributed<step1Local, cpu_algorithmFPType> localAlgorithm(
+    kmeans_cpu::Distributed<step1Local, CpuAlgorithmFPType> localAlgorithm(
         nClusters);
 
     /* Set the input data set to the algorithm */
@@ -105,7 +105,7 @@ static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
 
     if (isRoot) {
         /* Create an algorithm to compute k-means on the master node */
-        kmeans_cpu::Distributed<step2Master, cpu_algorithmFPType>
+        kmeans_cpu::Distributed<step2Master, CpuAlgorithmFPType>
             masterAlgorithm(nClusters);
 
         for (size_t i = 0; i < nBlocks; i++) {
@@ -129,7 +129,7 @@ static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
 
         ret_cost = masterAlgorithm.getResult()
                        ->get(kmeans_cpu::objectiveFunction)
-                       ->getValue<cpu_algorithmFPType>(0, 0);
+                       ->getValue<CpuAlgorithmFPType>(0, 0);
 
         /* Retrieve the algorithm results */
         return masterAlgorithm.getResult()->get(kmeans_cpu::centroids);
@@ -137,11 +137,11 @@ static NumericTablePtr kmeans_compute(size_t rankId, ccl::communicator &comm,
     return NumericTablePtr();
 }
 
-static bool isCenterConverged(const cpu_algorithmFPType *oldCenter,
-                              const cpu_algorithmFPType *newCenter, size_t dim,
+static bool isCenterConverged(const CpuAlgorithmFPType *oldCenter,
+                              const CpuAlgorithmFPType *newCenter, size_t dim,
                               double tolerance) {
 
-    cpu_algorithmFPType sums = 0.0;
+    CpuAlgorithmFPType sums = 0.0;
 
     for (size_t i = 0; i < dim; i++)
         sums += (newCenter[i] - oldCenter[i]) * (newCenter[i] - oldCenter[i]);
@@ -155,13 +155,13 @@ static bool areAllCentersConverged(const NumericTablePtr &oldCenters,
     size_t rows = oldCenters->getNumberOfRows();
     size_t cols = oldCenters->getNumberOfColumns();
 
-    BlockDescriptor<cpu_algorithmFPType> blockOldCenters;
+    BlockDescriptor<CpuAlgorithmFPType> blockOldCenters;
     oldCenters->getBlockOfRows(0, rows, readOnly, blockOldCenters);
-    cpu_algorithmFPType *arrayOldCenters = blockOldCenters.getBlockPtr();
+    CpuAlgorithmFPType *arrayOldCenters = blockOldCenters.getBlockPtr();
 
-    BlockDescriptor<cpu_algorithmFPType> blockNewCenters;
+    BlockDescriptor<CpuAlgorithmFPType> blockNewCenters;
     newCenters->getBlockOfRows(0, rows, readOnly, blockNewCenters);
-    cpu_algorithmFPType *arrayNewCenters = blockNewCenters.getBlockPtr();
+    CpuAlgorithmFPType *arrayNewCenters = blockNewCenters.getBlockPtr();
 
     for (size_t i = 0; i < rows; i++) {
         if (!isCenterConverged(&arrayOldCenters[i * cols],
@@ -179,7 +179,7 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
                                  jdouble tolerance, jint iteration_num,
                                  jint executor_num, jobject resultObj) {
     std::cout << "oneDAL (native): CPU compute start" << std::endl;
-    cpu_algorithmFPType totalCost;
+    CpuAlgorithmFPType totalCost;
 
     NumericTablePtr newCentroids;
     bool converged = false;
@@ -249,7 +249,7 @@ static jlong doKMeansOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
-    const auto kmeans_desc = kmeans_gpu::descriptor<gpu_algorithmFPType>()
+    const auto kmeans_desc = kmeans_gpu::descriptor<GpuAlgorithmFPType>()
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);

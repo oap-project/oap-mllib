@@ -226,7 +226,7 @@ static jobject doRFClassifierOneAPICompute(
     std::cout << "doRFClassifierOneAPICompute classCount = " << classCount
               << std::endl;
     const auto df_desc =
-        df::descriptor<gpu_algorithmFPType, df::method::hist,
+        df::descriptor<GpuAlgorithmFPType, df::method::hist,
                        df::task::classification>{}
             .set_class_count(classCount)
             .set_tree_count(treeCount)

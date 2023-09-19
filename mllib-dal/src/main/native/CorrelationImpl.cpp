@@ -42,7 +42,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
 
     const bool isRoot = (rankId == ccl_root);
 
-    covariance_cpu::Distributed<step1Local, cpu_algorithmFPType> localAlgorithm;
+    covariance_cpu::Distributed<step1Local, CpuAlgorithmFPType> localAlgorithm;
 
     /* Set the input data set to the algorithm */
     localAlgorithm.input.set(covariance_cpu::data, pData);
@@ -85,7 +85,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
-        covariance_cpu::Distributed<step2Master, cpu_algorithmFPType>
+        covariance_cpu::Distributed<step2Master, CpuAlgorithmFPType>
             masterAlgorithm;
 
         for (size_t i = 0; i < nBlocks; i++) {
@@ -153,7 +153,7 @@ static void doCorrelationOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cor_desc =
-        covariance_gpu::descriptor<gpu_algorithmFPType>{}.set_result_options(
+        covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cor_matrix |
             covariance_gpu::result_options::means);
     auto t1 = std::chrono::high_resolution_clock::now();
