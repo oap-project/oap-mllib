@@ -22,11 +22,11 @@ using namespace daal::data_management;
 using namespace daal::services;
 
 /*
- * Class:     com_intel_daal_data_management_data_SerializableBase
+ * Class:     com_intel_daal_data_1management_data_SerializableBase
  * Method:    cSerializeCObject
  * Signature: (J)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobjectArray JNICALL Java_com_intel_daal_data_management_data_SerializableBase_cSerializeCObject(JNIEnv * env, jobject thisObj, jlong ptr)
+JNIEXPORT jobjectArray JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_cSerializeCObject(JNIEnv * env, jobject thisObj, jlong ptr)
 {
     SerializationIface * nt = (*(SerializationIfacePtr *)ptr).get();
     InputDataArchive dataArch;
@@ -82,11 +82,11 @@ JNIEXPORT jobjectArray JNICALL Java_com_intel_daal_data_management_data_Serializ
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_SerializableBase
+ * Class:     com_intel_daal_data_1management_data_SerializableBase
  * Method:    cDeserializeCObject
  * Signature: (Ljava/nio/ByteBuffer;J)J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_SerializableBase_cDeserializeCObject(JNIEnv * env, jobject thisObj,
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_cDeserializeCObject(JNIEnv * env, jobject thisObj,
                                                                                                        jobjectArray byte2dArray)
 {
     jsize length2D = env->GetArrayLength(byte2dArray);
@@ -139,26 +139,26 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_SerializableBas
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_SerializableBase
+ * Class:     com_intel_daal_data_1management_data_SerializableBase
  * Method:    cDispose
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_SerializableBase_cDispose(JNIEnv * env, jobject thisObj, jlong ptr)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_cDispose(JNIEnv * env, jobject thisObj, jlong ptr)
 {
     delete (SerializationIfacePtr *)ptr;
 }
 
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_SerializableBase_throwUnpacked(JNIEnv * env, jobject thisObj)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_throwUnpacked(JNIEnv * env, jobject thisObj)
 {
     env->ThrowNew(env->FindClass("java/lang/Exception"), "Object should be unpacked before further usage");
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_SerializableBase
+ * Class:     com_intel_daal_data_1management_data_SerializableBase
  * Method:    cSetJavaVM
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_SerializableBase_cSetJavaVM(JNIEnv * env, jobject thisObj)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_cSetJavaVM(JNIEnv * env, jobject thisObj)
 {
     JavaVM * jvm;
     jint status = env->GetJavaVM(&jvm);
@@ -170,21 +170,21 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_SerializableBase
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_SerializableBase
+ * Class:     com_intel_daal_data_1management_data_SerializableBase
  * Method:    cSetDaalContext
  * Signature: (Ljava/com/intel/daal/services/DaalContext)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_SerializableBase_cSetDaalContext(JNIEnv * env, jobject thisObj, jobject context)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_cSetDaalContext(JNIEnv * env, jobject thisObj, jobject context)
 {
     daal::JavaNumericTableBase::setDaalContext(env->NewGlobalRef(context));
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_SerializableBase
+ * Class:     com_intel_daal_data_1management_data_SerializableBase
  * Method:    cClearDaalContext
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_SerializableBase_cClearDaalContext(JNIEnv * env, jobject thisObj)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_SerializableBase_cClearDaalContext(JNIEnv * env, jobject thisObj)
 {
     env->DeleteGlobalRef(daal::JavaNumericTableBase::getDaalContext());
     daal::JavaNumericTableBase::setDaalContext(NULL);

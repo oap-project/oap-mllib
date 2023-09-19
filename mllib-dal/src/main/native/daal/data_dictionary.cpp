@@ -26,11 +26,11 @@
 using namespace daal::data_management;
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    init
  * Signature:(I)V
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_DataDictionary_init(JNIEnv * env, jobject thisObj, jint nFeatures,
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_init(JNIEnv * env, jobject thisObj, jint nFeatures,
                                                                                       jint featuresEqual)
 {
     using namespace daal;
@@ -41,11 +41,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_DataDictionary_
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cResetDictionary
  * Signature:()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cResetDictionary(JNIEnv * env, jobject thisObj, jlong cObject)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cResetDictionary(JNIEnv * env, jobject thisObj, jlong cObject)
 {
     using namespace daal;
 
@@ -55,11 +55,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_c
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cSetFeature
  * Signature:(JI)I
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cSetFeature(JNIEnv * env, jobject thisObj, jlong cObject,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cSetFeature(JNIEnv * env, jobject thisObj, jlong cObject,
                                                                                             jlong dfAddr, jint idx)
 {
     using namespace daal;
@@ -70,11 +70,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_c
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cSetAllFeatures
  * Signature:(J)I
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cSetAllFeatures(JNIEnv * env, jobject thisObj, jlong cObject,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cSetAllFeatures(JNIEnv * env, jobject thisObj, jlong cObject,
                                                                                                 jlong dfAddr)
 {
     using namespace daal;
@@ -86,11 +86,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_c
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cSetNumberOfFeatures
  * Signature:(J)I
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cSetNumberOfFeatures(JNIEnv * env, jobject thisObj, jlong cObject,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cSetNumberOfFeatures(JNIEnv * env, jobject thisObj, jlong cObject,
                                                                                                      jlong nFeatures)
 {
     using namespace daal;
@@ -102,11 +102,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_DataDictionary_c
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cGetCDataDictionaryFeaturesEqual
  * Signature:(J)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cGetCDataDictionaryFeaturesEqual(JNIEnv * env, jobject thisObj,
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cGetCDataDictionaryFeaturesEqual(JNIEnv * env, jobject thisObj,
                                                                                                                  jlong cObject)
 {
     using namespace daal;
@@ -115,11 +115,11 @@ JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_DataDictionary_c
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cGetIndexType
  * Signature:(JI)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cGetIndexType(JNIEnv * env, jobject thisObj, jlong cObject, jint idx)
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cGetIndexType(JNIEnv * env, jobject thisObj, jlong cObject, jint idx)
 {
     using namespace daal;
     NumericTableDictionary * dict = ((NumericTableDictionaryPtr *)cObject)->get();
@@ -127,11 +127,11 @@ JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_DataDictionary_c
 }
 
 /*
- * Class:     com_intel_daal_data_management_data_DataDictionary
+ * Class:     com_intel_daal_data_1management_data_DataDictionary
  * Method:    cGetNumberOfFeatures
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_DataDictionary_cGetNumberOfFeatures(JNIEnv * env, jobject thosObj, jlong cObject)
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_1management_data_DataDictionary_cGetNumberOfFeatures(JNIEnv * env, jobject thosObj, jlong cObject)
 {
     using namespace daal;
 
