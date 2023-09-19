@@ -16,7 +16,7 @@
 *******************************************************************************/
 
 #include "common_helpers_functions.h"
-#include "com_intel_daal_datamanagement_data_HomogenNumericTableByteBufferImpl.h"
+#include "com_intel_daal_data_management_data_HomogenNumericTableByteBufferImpl.h"
 #include "data_management/data/numeric_table.h"
 #include "data_management/data/homogen_numeric_table.h"
 

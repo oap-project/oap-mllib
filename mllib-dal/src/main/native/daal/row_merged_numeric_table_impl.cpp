@@ -17,7 +17,7 @@
 
 #include "common_helpers_functions.h"
 
-#include "com_intel_daal_datamanagement_data_RowMergedNumericTableImpl.h"
+#include "com_intel_daal_data_management_data_RowMergedNumericTableImpl.h"
 #include "data_management/data/numeric_table.h"
 #include "data_management/data/row_merged_numeric_table.h"
 

@@ -15,7 +15,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "com_intel_daal_datamanagement_data_SerializableBase.h"
+#include "com_intel_daal_data_management_data_SerializableBase.h"
 #include "daal.h"
 
 using namespace daal::data_management;

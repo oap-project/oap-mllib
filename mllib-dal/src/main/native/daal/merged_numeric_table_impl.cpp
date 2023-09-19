@@ -16,7 +16,7 @@
 *******************************************************************************/
 
 #include "common_helpers_functions.h"
-#include "com_intel_daal_datamanagement_data_MergedNumericTableImpl.h"
+#include "com_intel_daal_data_management_data_MergedNumericTableImpl.h"
 #include "data_management/data/numeric_table.h"
 #include "data_management/data/merged_numeric_table.h"
 

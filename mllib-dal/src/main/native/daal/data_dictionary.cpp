@@ -19,7 +19,7 @@
 #include <string>
 
 #include "common_helpers_functions.h"
-#include "com_intel_daal_datamanagement_data_DataDictionary.h"
+#include "com_intel_daal_data_management_data_DataDictionary.h"
 #include "data_management/data/data_dictionary.h"
 #include "data_management/data/numeric_table.h"
 

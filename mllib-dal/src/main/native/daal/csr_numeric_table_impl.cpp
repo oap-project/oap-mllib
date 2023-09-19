@@ -22,7 +22,7 @@
 */
 
 #include "common_helpers_functions.h"
-#include "com_intel_daal_datamanagement_data_CSRNumericTableImpl.h"
+#include "com_intel_daal_data_management_data_CSRNumericTableImpl.h"
 
 using namespace daal;
 using namespace daal::data_management;
