@@ -19,7 +19,6 @@
  *        with the data dictionary
  * @ingroup data_management @{
  */
-@SuppressWarnings("checkstyle:PackageName")
 package com.intel.daal.data_management.data;
 
 import java.io.IOException;
