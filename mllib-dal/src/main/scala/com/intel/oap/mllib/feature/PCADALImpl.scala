@@ -16,8 +16,8 @@
 
 package com.intel.oap.mllib.feature
 
-import com.intel.daal.datamanagement.data.{HomogenNumericTable, NumericTable}
 import java.nio.DoubleBuffer
+import com.intel.daal.datamanagement.data.NumericTable
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Service, Utils}
 import org.apache.spark.TaskContext
