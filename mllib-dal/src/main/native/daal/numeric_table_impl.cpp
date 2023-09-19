@@ -29,7 +29,7 @@ using namespace daal::data_management;
 inline static NumericTablePtr * getNIONumericTableObject(JNIEnv * env, jobject thisObj)
 {
     // Get a class reference for Java NumericTableFeature
-    jclass cls          = env->FindClass("com/intel/daal/datamanagement/data/NumericTable");
+    jclass cls          = env->FindClass("com/intel/daal/data_management/data/NumericTable");
     jfieldID objFieldID = env->GetFieldID(cls, "cObject", "J");
     return (NumericTablePtr *)(env->GetLongField(thisObj, objFieldID));
 }
@@ -39,10 +39,10 @@ inline static NumericTablePtr * getNIONumericTableObject(JNIEnv * env, jobject t
  * Method:    allocateDataMemory
  * Signature:()J
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cAllocateDataMemory(JNIEnv * env, jobject thisObj)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cAllocateDataMemory(JNIEnv * env, jobject thisObj)
 {
     // Get a class reference for Java NumericTable
-    jclass cls = env->FindClass("com/intel/daal/datamanagement/data/NumericTable");
+    jclass cls = env->FindClass("com/intel/daal/data_management/data/NumericTable");
 
     jfieldID objFieldID = env->GetFieldID(cls, "cObject", "J");
     jlong cObj          = env->GetLongField(thisObj, objFieldID);
@@ -57,10 +57,10 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_
  * Method:    freeDataMemory
  * Signature:()V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cFreeDataMemory(JNIEnv * env, jobject thisObj)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cFreeDataMemory(JNIEnv * env, jobject thisObj)
 {
     // Get a class reference for Java NumericTable
-    jclass cls = env->FindClass("com/intel/daal/datamanagement/data/NumericTable");
+    jclass cls = env->FindClass("com/intel/daal/data_management/data/NumericTable");
 
     jfieldID objFieldID = env->GetFieldID(cls, "cObject", "J");
     jlong cObj          = env->GetLongField(thisObj, objFieldID);
@@ -75,10 +75,10 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_
  * Method:    getNumberOfColumns
  * Signature:()J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetNumberOfColumns(JNIEnv * env, jobject thisObj)
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetNumberOfColumns(JNIEnv * env, jobject thisObj)
 {
     // Get a class reference for Java NumericTable
-    jclass cls = env->FindClass("com/intel/daal/datamanagement/data/NumericTable");
+    jclass cls = env->FindClass("com/intel/daal/data_management/data/NumericTable");
 
     jfieldID objFieldID = env->GetFieldID(cls, "cObject", "J");
     jlong cObj          = env->GetLongField(thisObj, objFieldID);
@@ -95,10 +95,10 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl
  * Method:    getNumberOfRows
  * Signature:()J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetNumberOfRows(JNIEnv * env, jobject thisObj)
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetNumberOfRows(JNIEnv * env, jobject thisObj)
 {
     // Get a class reference for Java NumericTable
-    jclass cls = env->FindClass("com/intel/daal/datamanagement/data/NumericTable");
+    jclass cls = env->FindClass("com/intel/daal/data_management/data/NumericTable");
 
     jfieldID objFieldID = env->GetFieldID(cls, "cObject", "J");
     jlong cObj          = env->GetLongField(thisObj, objFieldID);
@@ -110,33 +110,33 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    setNumberOfRows
  * Signature:(J)I
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cSetNumberOfRows(JNIEnv * env, jobject thisObj, jlong nRow)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cSetNumberOfRows(JNIEnv * env, jobject thisObj, jlong nRow)
 {
     NumericTable * table = getNIONumericTableObject(env, thisObj)->get();
     DAAL_CHECK_THROW(table->resize((size_t)nRow));
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    setNumberOfColumns
  * Signature:(J)I
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cSetNumberOfColumns(JNIEnv * env, jobject thisObj, jlong nCol)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cSetNumberOfColumns(JNIEnv * env, jobject thisObj, jlong nCol)
 {
     NumericTable * table = getNIONumericTableObject(env, thisObj)->get();
     DAAL_CHECK_THROW(table->getDictionary()->setNumberOfFeatures((size_t)nCol));
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    isNormalized
  * Signature:(I)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cIsNormalized(JNIEnv * env, jobject thisObj, jint flag)
+JNIEXPORT jboolean JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cIsNormalized(JNIEnv * env, jobject thisObj, jint flag)
 {
     NumericTable * table = getNIONumericTableObject(env, thisObj)->get();
     jboolean checkResult = (jboolean)table->isNormalized((NumericTableIface::NormalizationType)flag);
@@ -144,11 +144,11 @@ JNIEXPORT jboolean JNICALL Java_com_intel_daal_datamanagement_data_NumericTableI
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    setNormalizationFlag
  * Signature:(I)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cSetNormalizationFlag(JNIEnv * env, jobject thisObj, jint flag)
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cSetNormalizationFlag(JNIEnv * env, jobject thisObj, jint flag)
 {
     NumericTable * table = getNIONumericTableObject(env, thisObj)->get();
     jint oldFlag         = (jint)table->setNormalizationFlag((NumericTableIface::NormalizationType)flag);
@@ -156,33 +156,33 @@ JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    getDataLayout
  * Signature:(J)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetDataLayout(JNIEnv * env, jobject thisObj, jlong cObject)
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetDataLayout(JNIEnv * env, jobject thisObj, jlong cObject)
 {
     NumericTable * table = ((NumericTablePtr *)cObject)->get();
     return table->getDataLayout();
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    getDataMemoryStatus
  * Signature:(J)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetDataMemoryStatus(JNIEnv * env, jobject thisObj, jlong cObject)
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetDataMemoryStatus(JNIEnv * env, jobject thisObj, jlong cObject)
 {
     NumericTable * table = ((NumericTablePtr *)cObject)->get();
     return table->getDataMemoryStatus();
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    cGetNumberOfCategories
  * Signature:(JI)J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetNumberOfCategories(JNIEnv * env, jobject thisObj,
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetNumberOfCategories(JNIEnv * env, jobject thisObj,
                                                                                                           jlong cObject, jint idx)
 {
     NumericTable * table = ((NumericTablePtr *)cObject)->get();
@@ -194,7 +194,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl
  * Method:    cGetIntValue
  * Signature: (JJJ)I
  */
-JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetIntValue(JNIEnv * env, jobject thisObj, jlong cObject,
+JNIEXPORT jint JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetIntValue(JNIEnv * env, jobject thisObj, jlong cObject,
                                                                                                jlong column, jlong row)
 {
     NumericTable * table = ((NumericTablePtr *)cObject)->get();
@@ -206,7 +206,7 @@ JNIEXPORT jint JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_
  * Method:    cGetFloatValue
  * Signature: (JJJ)F
  */
-JNIEXPORT jfloat JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetFloatValue(JNIEnv * env, jobject thisObj, jlong cObject,
+JNIEXPORT jfloat JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetFloatValue(JNIEnv * env, jobject thisObj, jlong cObject,
                                                                                                    jlong column, jlong row)
 {
     NumericTable * table = ((NumericTablePtr *)cObject)->get();
@@ -218,7 +218,7 @@ JNIEXPORT jfloat JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImp
  * Method:    cGetDoubleValue
  * Signature: (JJJ)D
  */
-JNIEXPORT jdouble JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetDoubleValue(JNIEnv * env, jobject thisObj, jlong cObject,
+JNIEXPORT jdouble JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetDoubleValue(JNIEnv * env, jobject thisObj, jlong cObject,
                                                                                                      jlong column, jlong row)
 {
     NumericTable * table = ((NumericTablePtr *)cObject)->get();
@@ -227,22 +227,22 @@ JNIEXPORT jdouble JNICALL Java_com_intel_daal_datamanagement_data_NumericTableIm
 
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    cFreeByteBuffer
  * Signature: (Ljava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cFreeByteBuffer(JNIEnv * env, jobject thisObj, jobject byteBuffer)
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cFreeByteBuffer(JNIEnv * env, jobject thisObj, jobject byteBuffer)
 {
     daal::byte * buffer = (daal::byte *)(env->GetDirectBufferAddress(byteBuffer));
     daal_free(buffer);
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    cGetCDataDictionary
  * Signature:(J)J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cGetCDataDictionary(JNIEnv * env, jobject thisObj, jlong cTable)
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cGetCDataDictionary(JNIEnv * env, jobject thisObj, jlong cTable)
 {
     using namespace daal;
     NumericTablePtr * nt             = (NumericTablePtr *)cTable;
@@ -251,11 +251,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_NumericTableImpl
+ * Class:     com_intel_daal_data_management_data_NumericTableImpl
  * Method:    cSetCDataDictionary
  * Signature:(JJ)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_NumericTableImpl_cSetCDataDictionary(JNIEnv * env, jobject thisObj, jlong cTable,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_NumericTableImpl_cSetCDataDictionary(JNIEnv * env, jobject thisObj, jlong cTable,
                                                                                                       jlong cDictionary)
 {
     using namespace daal;

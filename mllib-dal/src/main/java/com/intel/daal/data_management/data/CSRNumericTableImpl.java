@@ -16,7 +16,9 @@
 /**
  * @ingroup numeric_tables @{
  */
+//checkstyle.off:PackageName
 package com.intel.daal.data_management.data;
+//checkstyle.on:PackageName
 
 import com.intel.daal.services.DaalContext;
 import com.intel.oap.mllib.LibLoader;

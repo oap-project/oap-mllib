@@ -24,11 +24,11 @@ using namespace daal;
 using namespace daal::data_management;
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    cNewMergedNumericTable
  * Signature:()J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_cNewMergedNumericTable(JNIEnv * env, jobject thisObj)
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_cNewMergedNumericTable(JNIEnv * env, jobject thisObj)
 {
     // Create C++ object of the class NumericTable
     NumericTablePtr * tbl = new NumericTablePtr(new MergedNumericTable());
@@ -42,11 +42,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTab
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    cAddDataCollection
  * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_cAddNumericTable(JNIEnv * env, jobject thisObj,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_cAddNumericTable(JNIEnv * env, jobject thisObj,
                                                                                                          jlong mergedNumericTableAddr,
                                                                                                          jlong numericTableAddr)
 {
@@ -56,11 +56,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTabl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    cGetNumberOfColumns
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_cGetNumberOfColumns(JNIEnv * env, jobject thisObj,
+JNIEXPORT jlong JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_cGetNumberOfColumns(JNIEnv * env, jobject thisObj,
                                                                                                              jlong mergedNumericTableAddr)
 {
     data_management::MergedNumericTablePtr pMergedNumericTable = (*(data_management::MergedNumericTablePtr *)mergedNumericTableAddr);
@@ -68,11 +68,11 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTab
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    releaseFloatBlockBuffer
  * Signature:(JJJLjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_releaseFloatBlockBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_releaseFloatBlockBuffer(JNIEnv * env, jobject thisObj,
                                                                                                                 jlong numTableAddr, jlong vectorIndex,
                                                                                                                 jlong vectorNum, jobject byteBuffer)
 {
@@ -95,11 +95,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTabl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    releaseDoubleBlockBuffer
  * Signature:(JJJLjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_releaseDoubleBlockBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_releaseDoubleBlockBuffer(JNIEnv * env, jobject thisObj,
                                                                                                                  jlong numTableAddr,
                                                                                                                  jlong vectorIndex, jlong vectorNum,
                                                                                                                  jobject byteBuffer)
@@ -124,11 +124,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTabl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    releaseIntBlockBuffer
  * Signature:(JJJLjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_releaseIntBlockBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_releaseIntBlockBuffer(JNIEnv * env, jobject thisObj,
                                                                                                               jlong numTableAddr, jlong vectorIndex,
                                                                                                               jlong vectorNum, jobject byteBuffer)
 {
@@ -151,11 +151,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTabl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    getDoubleBlockBuffer
  * Signature:(JJJLjava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_getDoubleBlockBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT jobject JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_getDoubleBlockBuffer(JNIEnv * env, jobject thisObj,
                                                                                                                 jlong numTableAddr, jlong vectorIndex,
                                                                                                                 jlong vectorNum, jobject byteBuffer)
 {
@@ -180,11 +180,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericT
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    getFloatBlockBuffer
  * Signature:(JJJLjava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_getFloatBlockBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT jobject JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_getFloatBlockBuffer(JNIEnv * env, jobject thisObj,
                                                                                                                jlong numTableAddr, jlong vectorIndex,
                                                                                                                jlong vectorNum, jobject byteBuffer)
 {
@@ -209,11 +209,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericT
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    getIntBlockBuffer
  * Signature:(JJJLjava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_getIntBlockBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT jobject JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_getIntBlockBuffer(JNIEnv * env, jobject thisObj,
                                                                                                              jlong numTableAddr, jlong vectorIndex,
                                                                                                              jlong vectorNum, jobject byteBuffer)
 {
@@ -239,11 +239,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericT
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    getDoubleColumnBuffer
  * Signature:(JJJJLjava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_getDoubleColumnBuffer(
+JNIEXPORT jobject JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_getDoubleColumnBuffer(
     JNIEnv * env, jobject thisObj, jlong numTableAddr, jlong featureIndex, jlong vectorIndex, jlong vectorNum, jobject byteBuffer)
 {
     using namespace daal;
@@ -266,11 +266,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericT
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    getFloatColumnBuffer
  * Signature:(JJJJLjava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_getFloatColumnBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT jobject JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_getFloatColumnBuffer(JNIEnv * env, jobject thisObj,
                                                                                                                 jlong numTableAddr,
                                                                                                                 jlong featureIndex, jlong vectorIndex,
                                                                                                                 jlong vectorNum, jobject byteBuffer)
@@ -295,11 +295,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericT
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    getIntColumnBuffer
  * Signature:(JJJJLjava/nio/ByteBuffer;)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_getIntColumnBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT jobject JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_getIntColumnBuffer(JNIEnv * env, jobject thisObj,
                                                                                                               jlong numTableAddr, jlong featureIndex,
                                                                                                               jlong vectorIndex, jlong vectorNum,
                                                                                                               jobject byteBuffer)
@@ -324,11 +324,11 @@ JNIEXPORT jobject JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericT
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    releaseFloatColumnBuffer
  * Signature:(JJJJLjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_releaseFloatColumnBuffer(
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_releaseFloatColumnBuffer(
     JNIEnv * env, jobject thisObj, jlong numTableAddr, jlong featureIndex, jlong vectorIndex, jlong vectorNum, jobject byteBuffer)
 {
     using namespace daal;
@@ -350,11 +350,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTabl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    releaseDoubleColumnBuffer
  * Signature:(JJJJLjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_releaseDoubleColumnBuffer(
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_releaseDoubleColumnBuffer(
     JNIEnv * env, jobject thisObj, jlong numTableAddr, jlong featureIndex, jlong vectorIndex, jlong vectorNum, jobject byteBuffer)
 {
     using namespace daal;
@@ -376,11 +376,11 @@ JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTabl
 }
 
 /*
- * Class:     com_intel_daal_datamanagement_data_MergedNumericTableImpl
+ * Class:     com_intel_daal_data_management_data_MergedNumericTableImpl
  * Method:    releaseIntColumnBuffer
  * Signature:(JJJJLjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_com_intel_daal_datamanagement_data_MergedNumericTableImpl_releaseIntColumnBuffer(JNIEnv * env, jobject thisObj,
+JNIEXPORT void JNICALL Java_com_intel_daal_data_management_data_MergedNumericTableImpl_releaseIntColumnBuffer(JNIEnv * env, jobject thisObj,
                                                                                                                jlong numTableAddr, jlong featureIndex,
                                                                                                                jlong vectorIndex, jlong vectorNum,
                                                                                                                jobject byteBuffer)
