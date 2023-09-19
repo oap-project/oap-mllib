@@ -75,8 +75,6 @@ source $OAP_MLLIB_ROOT/RELEASE
 # Set default PLATFORM_PROFILE from RELEASE envs
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
-## Check Build deps
-#check_build_deps
 
 echo
 echo === Building Environments ===

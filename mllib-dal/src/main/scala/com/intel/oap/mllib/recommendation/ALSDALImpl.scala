@@ -16,7 +16,7 @@
 
 package com.intel.oap.mllib.recommendation
 
-import com.intel.daal.datamanagement.data.CSRNumericTable
+import com.intel.daal.data_management.data.CSRNumericTable
 import com.intel.daal.services.DaalContext
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
