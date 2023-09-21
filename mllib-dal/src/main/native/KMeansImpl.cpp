@@ -249,7 +249,7 @@ static jlong doKMeansOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
-    const auto kmeans_desc = kmeans_gpu::descriptor<algorithmFPType>()
+    const auto kmeans_desc = kmeans_gpu::descriptor<GpuAlgorithmFPType>()
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);
@@ -258,18 +258,16 @@ static jlong doKMeansOneAPICompute(
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
-        std::cout << "KMeans (native): training step took " << duration / 1000
-                  << " secs." << std::endl;
         std::cout << "Iteration count: " << result_train.get_iteration_count()
                   << std::endl;
         std::cout << "Centroids:\n"
                   << result_train.get_model().get_centroids() << std::endl;
-
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "KMeans (native): training step took " << duration / 1000
+                  << " secs." << std::endl;
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references

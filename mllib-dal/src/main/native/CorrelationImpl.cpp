@@ -153,7 +153,7 @@ static void doCorrelationOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cor_desc =
-        covariance_gpu::descriptor<algorithmFPType>{}.set_result_options(
+        covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cor_matrix |
             covariance_gpu::result_options::means);
     auto t1 = std::chrono::high_resolution_clock::now();

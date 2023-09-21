@@ -187,7 +187,7 @@ static void doPCAOneAPICompute(
         *reinterpret_cast<const homogen_table *>(pNumTabData);
 
     const auto cov_desc =
-        covariance_gpu::descriptor<algorithmFPType>{}.set_result_options(
+        covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cov_matrix);
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -198,7 +198,7 @@ static void doPCAOneAPICompute(
     std::cout << "PCA (native): Covariance step took " << duration / 1000
               << " secs" << std::endl;
     if (isRoot) {
-        using float_t = algorithmFPType;
+        using float_t = GpuAlgorithmFPType;
         using method_t = pca_gpu::method::precomputed;
         using task_t = pca_gpu::task::dim_reduction;
         using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;

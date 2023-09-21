@@ -205,7 +205,7 @@ static void doSummarizerOneAPICompute(
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
-    const auto bs_desc = basic_statistics::descriptor<algorithmFPType>{};
+    const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {

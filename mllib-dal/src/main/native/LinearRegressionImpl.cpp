@@ -234,7 +234,7 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
-        linear_regression_gpu::descriptor<algorithmFPType>(fitIntercept);
+        linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     linear_regression_gpu::train_result result_train =
