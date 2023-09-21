@@ -82,7 +82,19 @@ else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
 endif
 
 CPP_SRCS += \
-  ./OneCCL.cpp ./OneDAL.cpp ./service.cpp ./error_handling.cpp \
+  ./service.cpp ./error_handling.cpp \
+  ./daal/csr_numeric_table_impl.cpp \
+  ./daal/homogen_numeric_table_byte_buffer_impl.cpp \
+  ./daal/merged_numeric_table_impl.cpp \
+  ./daal/numeric_table_impl.cpp \
+  ./daal/row_merged_numeric_table_impl.cpp \
+  ./daal/data_dictionary.cpp \
+  ./daal/data_feature.cpp \
+  ./oneapi/dal/HomogenTableImpl.cpp \
+  ./oneapi/dal/SimpleMetadataImpl.cpp \
+  ./oneapi/dal/ColumnAccessorImpl.cpp \
+  ./oneapi/dal/RowAccessorImpl.cpp \
+  ./OneCCL.cpp ./OneDAL.cpp \
   ./KMeansImpl.cpp \
   ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
@@ -91,14 +103,24 @@ CPP_SRCS += \
   ./CorrelationImpl.cpp \
   ./SummarizerImpl.cpp \
   ./DecisionForestClassifierImpl.cpp \
-  ./DecisionForestRegressorImpl.cpp \
-  ./oneapi/dal/HomogenTableImpl.cpp \
-  ./oneapi/dal/SimpleMetadataImpl.cpp \
-  ./oneapi/dal/ColumnAccessorImpl.cpp \
-  ./oneapi/dal/RowAccessorImpl.cpp
+  ./DecisionForestRegressorImpl.cpp
+
+
 
 OBJS += \
-  ./OneCCL.o ./OneDAL.o ./service.o ./error_handling.o \
+  ./service.o ./error_handling.o \
+  ./daal/csr_numeric_table_impl.o \
+  ./daal/homogen_numeric_table_byte_buffer_impl.o \
+  ./daal/merged_numeric_table_impl.o \
+  ./daal/numeric_table_impl.o \
+  ./daal/row_merged_numeric_table_impl.o \
+  ./daal/data_dictionary.o \
+  ./daal/data_feature.o \
+  ./oneapi/dal/HomogenTableImpl.o \
+  ./oneapi/dal/SimpleMetadataImpl.o \
+  ./oneapi/dal/ColumnAccessorImpl.o \
+  ./oneapi/dal/RowAccessorImpl.o \
+  ./OneCCL.o ./OneDAL.o \
   ./KMeansImpl.o \
   ./PCAImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \
@@ -107,11 +129,7 @@ OBJS += \
   ./CorrelationImpl.o \
   ./SummarizerImpl.o \
   ./DecisionForestClassifierImpl.o \
-  ./DecisionForestRegressorImpl.o \
-  ./oneapi/dal/HomogenTableImpl.o \
-  ./oneapi/dal/SimpleMetadataImpl.o \
-  ./oneapi/dal/ColumnAccessorImpl.o  \
-  ./oneapi/dal/RowAccessorImpl.o
+  ./DecisionForestRegressorImpl.o
 
 DEFINES=-D$(PLATFORM_PROFILE)
 

@@ -16,8 +16,6 @@
 
 package com.intel.oap.mllib
 
-import com.intel.daal.data_management.data.{CSRNumericTable, HomogenNumericTable, NumericTable, RowMergedNumericTable, Matrix => DALMatrix}
-import com.intel.daal.services.DaalContext
 import org.apache.spark.{Partition, SparkContext, SparkException}
 import org.apache.spark.ml.linalg.{DenseMatrix, DenseVector, Matrix, SparseVector, Vector, Vectors}
 import org.apache.spark.rdd.{ExecutorInProcessCoalescePartitioner, PartitionGroup, RDD}

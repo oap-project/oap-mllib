@@ -16,7 +16,6 @@ source /opt/intel/oneapi/setvars.sh --ccl-configuration=cpu
 
 # Prepare lib resources
 cd $GITHUB_WORKSPACE/mllib-dal
-../dev/prepare-build-deps.sh
 ./build.sh -p CPU_ONLY_PROFILE -q
 
 ./test.sh -p CPU_ONLY_PROFILE -q -d CPU

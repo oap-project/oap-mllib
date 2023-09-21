@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     com_intel_oap_mllib_regression_RandomForestRegressorDALImpl
  * Method:    cRFRegressorTrainDAL
- * Signature: (JJIIIIIZLjava/lang/String;Lcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
+ * Signature: (JJIIIIIIJIZ[ILcom/intel/oap/mllib/classification/RandomForestResult;)Ljava/util/HashMap;
  */
 JNIEXPORT jobject JNICALL Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL
   (JNIEnv *, jobject, jlong, jlong, jint, jint, jint, jint, jint, jint, jlong, jint, jboolean, jintArray, jobject);

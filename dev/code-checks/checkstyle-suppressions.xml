@@ -28,5 +28,6 @@
 -->
 
 <suppressions>
-
+  <suppress checks="PackageName"
+            files="src/main/java/com/intel/daal/data_management/data/*"/>
 </suppressions>
