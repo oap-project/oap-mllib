@@ -244,20 +244,12 @@ static jobject doRFClassifierOneAPICompute(
             .set_max_tree_depth(maxTreeDepth)
             .set_max_bins(maxBins);
 
-    auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
     if (isRoot) {
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
-        std::cout << "DF Classifier (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
         std::cout << "Variable importance results:\n"
                   << result_train.get_var_importance() << std::endl;
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;

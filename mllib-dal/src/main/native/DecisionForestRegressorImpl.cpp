@@ -233,7 +233,6 @@ static jobject doRFRegressorOneAPICompute(
                 df::error_metric_mode::out_of_bag_error_per_observation)
             .set_variable_importance_mode(df::variable_importance_mode::mdi);
 
-    auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -245,13 +244,7 @@ static jobject doRFRegressorOneAPICompute(
         std::cout << "OOB error: " << result_train.get_oob_err() << std::endl;
         std::cout << "Prediction results:\n"
                   << result_infer.get_responses() << std::endl;
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
-        std::cout << "DF Regression (native): training step took "
-                  << duration / 1000 << " secs." << std::endl;
+
         // convert c++ map to java hashmap
         jint statsSize = 3; // spark create VarianceCalculator needs array of
                             // sufficient statistics
