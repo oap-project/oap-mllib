@@ -26,19 +26,6 @@ if [[ -z $CCL_ROOT ]]; then
  exit 1
 fi
 
-check_build_deps() {
-  # Check lib dependencies for building
-  RESOURCE_PATH=src/main/resources/lib
-  LIBS=(libJavaAPI.so libtbbmalloc.so.2 libtbb.so.12)
-  for lib in ${LIBS[@]}
-  do
-    if [[ ! -f ./$RESOURCE_PATH/$lib ]]; then
-      echo \"$RESOURCE_PATH/$lib\" does not exsit, please run \"../dev/prepare-build-deps.sh\"!
-      exit 1
-  fi
-  done
-}
-
 MVN_NO_TRANSFER_PROGRESS=
 
 print_usage() {
@@ -88,8 +75,6 @@ source $OAP_MLLIB_ROOT/RELEASE
 # Set default PLATFORM_PROFILE from RELEASE envs
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
 
-# Check Build deps
-check_build_deps
 
 echo
 echo === Building Environments ===
