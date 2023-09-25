@@ -79,7 +79,7 @@ public class HomogenTableImpl implements HomogenTableIface {
                 break;
             default:
                 System.err.println("OAP MLlib currently only support input data of " +
-                        "float/double type!");
+                        "double type!");
                 System.exit(-1);
         }
     }
