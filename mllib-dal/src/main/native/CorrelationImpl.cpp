@@ -159,17 +159,15 @@ static void doCorrelationOneAPICompute(
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
-        std::cout << "Correlation batch(native): computing step took "
-                  << duration / 1000 << " secs." << std::endl;
         std::cout << "Mean:\n" << result_train.get_means() << std::endl;
         std::cout << "Correlation:\n"
                   << result_train.get_cor_matrix() << std::endl;
-
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        std::cout << "Correlation batch(native): computing step took "
+                  << duration / 1000 << " secs." << std::endl;
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 

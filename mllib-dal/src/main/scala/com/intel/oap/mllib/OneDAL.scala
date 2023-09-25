@@ -451,7 +451,7 @@ object OneDAL {
 
       val labelsArray = new Array[Double](numRows)
       val featuresAddress= OneDAL.cNewDoubleArray(numRows.toLong * numCols)
-      for ( i <- 0 until  numberCores) {
+      for ( i <- 0 until numberCores) {
         val f = Future {
           val iter = list.iterator
           val slice = if (i == numberCores - 1) {
