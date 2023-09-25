@@ -90,6 +90,18 @@ public class HomogenTable extends Table {
 
     public HomogenTable(long rowCount,
                         long colCount,
+                        long dataAddress,
+                        Common.DataType dataType,
+                        Common.ComputeDevice device){
+        super();
+        // default
+        Common.DataLayout dataLayout = Common.DataLayout.ROW_MAJOR;
+        impl = new HomogenTableImpl(rowCount, colCount, dataAddress, dataType,
+                dataLayout, device);
+    }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
                         double[] data,
                         Common.DataLayout dataLayout,
                         Common.ComputeDevice device){
@@ -97,6 +109,18 @@ public class HomogenTable extends Table {
         impl = new HomogenTableImpl(rowCount, colCount, data,
                 dataLayout, device);
     }
+
+    public HomogenTable(long rowCount,
+                        long colCount,
+                        long dataAddress,
+                        Common.DataType dataType,
+                        Common.DataLayout dataLayout,
+                        Common.ComputeDevice device){
+        super();
+        impl = new HomogenTableImpl(rowCount, colCount, dataAddress, dataType,
+                dataLayout, device);
+    }
+
     @Override
     public Long getColumnCount() {
         return impl.getColumnCount();
