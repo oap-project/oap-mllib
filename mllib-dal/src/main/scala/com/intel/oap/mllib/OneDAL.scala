@@ -624,7 +624,7 @@ object OneDAL {
       val numCols = list(0).toArray.size
       val size = numRows.toLong * numCols.toLong
       val targetArrayAddress = OneDAL.cNewDoubleArray(size)
-      for ( i <- 0 until  numberCores) {
+      for ( i <- 0 until numberCores) {
         val f = Future {
           val iter = list.iterator
           val slice = if (i == numberCores - 1) {
