@@ -63,6 +63,22 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTabl
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble
   (JNIEnv *, jobject, jdoubleArray, jlongArray, jlongArray, jlong, jlong);
 
+/*
+ * Class:     com_intel_oap_mllib_OneDAL__
+ * Method:    cNewDoubleArray
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     com_intel_oap_mllib_OneDAL__
+ * Method:    cCopyDoubleArrayToNative
+ * Signature: (J[DJ)V
+ */
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToNative
+  (JNIEnv *, jobject, jlong, jdoubleArray, jlong);
+
 #ifdef __cplusplus
 }
 #endif

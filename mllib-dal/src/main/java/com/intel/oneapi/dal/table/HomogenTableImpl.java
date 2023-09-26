@@ -65,6 +65,25 @@ public class HomogenTableImpl implements HomogenTableIface {
 
     }
 
+    public HomogenTableImpl(long rowCount,
+                            long colCount,
+                            long dataPtr,
+                            Common.DataType dataType,
+                            Common.DataLayout dataLayout,
+                            Common.ComputeDevice computeDevice) {
+        this.device = computeDevice;
+        switch (dataType) {
+            case FLOAT64:
+                this.cObject = dPtrInit(rowCount, colCount, dataPtr, dataLayout.ordinal(),
+                        this.device.ordinal());
+                break;
+            default:
+                System.err.println("OAP MLlib currently only support input data of " +
+                        "double type!");
+                System.exit(-1);
+        }
+    }
+
     @Override
     public long getColumnCount() {
         return cGetColumnCount(this.cObject);
@@ -165,6 +184,13 @@ public class HomogenTableImpl implements HomogenTableIface {
                               long[] data,
                               int dataLayoutIndex,
                               int computeDeviceIndex);
+
+    private native long dPtrInit(long rowCount,
+                                 long colCount,
+                                 long dataPtr,
+                                 int dataLayoutIndex,
+                                 int computeDeviceIndex);
+
     private native long cGetColumnCount(long cObject);
     private native long cGetRowCount(long cObject);
     private native long cGetKind(long cObject);
