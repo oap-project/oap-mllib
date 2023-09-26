@@ -758,7 +758,4 @@ object OneDAL {
   @native def cCopyDoubleArrayToNative(arrayAddr: Long,
                                  data: Array[Double],
                                  index: Long): Unit
-
-  @native def cSetCppLoggerConf(enable: Boolean)
-
 }
