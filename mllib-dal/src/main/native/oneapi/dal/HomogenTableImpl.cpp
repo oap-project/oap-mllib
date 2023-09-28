@@ -300,7 +300,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dPtrInit(
     JNIEnv *env, jobject, jlong cRowCount, jlong cColCount, jlong dataPtr, jint cLayout, jint computeDeviceOrdinal) {
-    printf("HomogenTable dPtrInit\n");
+    logger::println(logger::INFO, "HomogenTable dPtrInit.");
     double *fData = reinterpret_cast<double *>(dataPtr);
     if (fData == NULL) {
        std::cout << "Error: unable to obtain critical array" << std::endl;
