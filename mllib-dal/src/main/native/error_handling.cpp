@@ -53,9 +53,9 @@ void sparceFileReadError() {
     exit(fileError);
 }
 
-void deviceError(const char *algo_name, const char *description) {
+void deviceError(const std::string &msg, const char *description) {
     logger::printerrln(logger::ERROR,
                        "Error: %s (native): is not supported device : %s",
-                       algo_name, description);
+                       msg, description);
     exit(-1);
 }

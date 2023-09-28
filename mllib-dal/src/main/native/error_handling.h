@@ -29,4 +29,4 @@ void checkPtr(void *ptr);
 void fileOpenError(const char *filename);
 void fileReadError();
 void sparceFileReadError();
-void deviceError(const char *algo_name, const char *description);
+void deviceError(const std::string &msg, const char *description);
