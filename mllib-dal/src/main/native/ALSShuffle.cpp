@@ -73,7 +73,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
 
     // Calculate send buffer size
     for (size_t i = 0; i < nBlocks; i++) {
-        perNodeSendLens[i] = partitions[i].size() * RATING_SIZE;        
+        perNodeSendLens[i] = partitions[i].size() * RATING_SIZE;
         sendBufSize += perNodeSendLens[i];
     }
     logger::println(logger::INFO, "sendData size %d", sendBufSize);
@@ -93,7 +93,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
         .wait();
 
     // Calculate recv buffer size
-    for (size_t i = 0; i < nBlocks; i++) {        
+    for (size_t i = 0; i < nBlocks; i++) {
         recvBufSize += perNodeRecvLens[i];
     }
 
@@ -107,7 +107,7 @@ Rating *shuffle_all2all(ccl::communicator &comm,
 
     sort(recvData.begin(), recvData.end(), compareRatingByUser);
 
-    newRatingsNum = recvData.size();    
+    newRatingsNum = recvData.size();
     newCsrRowNum = distinct_count(recvData);
 
     logger::println(logger::INFO, "newRatingsNum: %d, newCsrRowNum: %d",

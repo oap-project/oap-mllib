@@ -447,7 +447,7 @@ static size_t getOffsetFromOffsetTable(NumericTablePtr offsetTable) {
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_recommendation_ALSDALImpl_cShuffleData(
     JNIEnv *env, jobject obj, jobject dataBuffer, jint nTotalKeys, jint nBlocks,
-    jobject infoObj) {    
+    jobject infoObj) {
     logger::println(logger::INFO, "RATING_SIZE: %d", RATING_SIZE);
 
     ccl::communicator &comm = getComm();
