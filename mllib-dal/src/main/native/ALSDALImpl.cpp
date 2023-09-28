@@ -212,7 +212,7 @@ void initializeStep2Local(
 
 void initializeModel(size_t rankId, ccl::communicator &comm, size_t partitionId,
                      size_t nBlocks, size_t nUsers, size_t nFactors) {
-    logger::println(logger::INFO, "ALS (native): initializeModel ");
+    logger::println(logger::INFO, "ALS (native): initializeModel");
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
