@@ -202,7 +202,7 @@ static void doPCAOneAPICompute(
     logger::println(logger::INFO, "PCA (native): Covariance step took %d secs",
                     duration / 1000);
     if (isRoot) {
-        using float_t = GpuAlgorithmFPType;:queue
+        using float_t = GpuAlgorithmFPType;
         using method_t = pca_gpu::method::precomputed;
         using task_t = pca_gpu::task::dim_reduction;
         using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;
@@ -299,7 +299,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     }
 #endif
     default: {
-        deviceError();
+        deviceError("PCA", ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return 0;

@@ -361,7 +361,8 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     }
 #endif
     default: {
-        deviceError();
+        deviceError("KMeans",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return ret;

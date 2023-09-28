@@ -329,7 +329,8 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
         return hashmapObj;
     }
     default: {
-        deviceError();
+        deviceError("RFRegressor",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return nullptr;

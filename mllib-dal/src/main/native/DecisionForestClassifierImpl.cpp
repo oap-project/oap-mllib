@@ -341,7 +341,8 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
         return hashmapObj;
     }
     default: {
-        deviceError();
+        deviceError("RFClassifier",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return nullptr;

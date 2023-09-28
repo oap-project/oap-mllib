@@ -111,7 +111,7 @@ template <typename T>
             break;
         }
         default: {
-            deviceError();
+            deviceError("HomogenTable", ComputeDeviceString[computeDeviceOrdinal].c_str());
         }
    }
   saveHomogenTablePtrToVector(resultTablePtr);
@@ -154,7 +154,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_iInit(
        }
        default: {
              env->ReleasePrimitiveArrayCritical(cData, fData, 0);
-             deviceError();
+             deviceError("HomogenTable", ComputeDeviceString[computeDeviceOrdinal].c_str());
        }
     }
     saveHomogenTablePtrToVector(tablePtr);
@@ -198,7 +198,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_fInit(
          }
          default: {
              env->ReleasePrimitiveArrayCritical(cData, fData, 0);
-             deviceError();
+             deviceError("HomogenTable", ComputeDeviceString[computeDeviceOrdinal].c_str());
          }
     }
     saveHomogenTablePtrToVector(tablePtr);
@@ -241,7 +241,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dInit(
          }
          default: {
              env->ReleasePrimitiveArrayCritical(cData, fData, 0);
-             deviceError();
+             deviceError("HomogenTable", ComputeDeviceString[computeDeviceOrdinal].c_str());
          }
     }
      saveHomogenTablePtrToVector(tablePtr);
@@ -285,7 +285,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_lInit(
          }
          default: {
              env->ReleasePrimitiveArrayCritical(cData, fData, 0);
-             deviceError();
+             deviceError("HomogenTable", ComputeDeviceString[computeDeviceOrdinal].c_str());
          }
     }
      saveHomogenTablePtrToVector(tablePtr);
@@ -327,7 +327,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oneapi_dal_table_HomogenTableImpl_dPtrIni
            break;
        }
        default: {
-           deviceError();
+          deviceError("HomogenTable", ComputeDeviceString[computeDeviceOrdinal].c_str());
        }
     }
     saveHomogenTablePtrToVector(tablePtr);
