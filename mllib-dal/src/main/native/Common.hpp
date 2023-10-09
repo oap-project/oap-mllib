@@ -22,5 +22,4 @@
 
 #include "GPU.h"
 #include "Communicator.hpp"
-#include "OutputHelpers.hpp"
 #include "oneapi/dal/table/homogen.hpp"

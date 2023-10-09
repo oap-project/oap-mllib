@@ -95,6 +95,7 @@ CPP_SRCS += \
   ./oneapi/dal/ColumnAccessorImpl.cpp \
   ./oneapi/dal/RowAccessorImpl.cpp \
   ./OneCCL.cpp ./OneDAL.cpp \
+  ./Logger.cpp \
   ./KMeansImpl.cpp \
   ./PCAImpl.cpp \
   ./ALSDALImpl.cpp ./ALSShuffle.cpp \
@@ -121,6 +122,7 @@ OBJS += \
   ./oneapi/dal/ColumnAccessorImpl.o \
   ./oneapi/dal/RowAccessorImpl.o \
   ./OneCCL.o ./OneDAL.o \
+  ./Logger.o\
   ./KMeansImpl.o \
   ./PCAImpl.o \
   ./ALSDALImpl.o ./ALSShuffle.o \

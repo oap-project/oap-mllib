@@ -22,6 +22,8 @@
 
 #include "ALSShuffle.h"
 
+#include "Logger.h"
+
 using namespace std;
 
 std::vector<Rating> recvData;
@@ -72,11 +74,9 @@ Rating *shuffle_all2all(ccl::communicator &comm,
     // Calculate send buffer size
     for (size_t i = 0; i < nBlocks; i++) {
         perNodeSendLens[i] = partitions[i].size() * RATING_SIZE;
-        // cout << "rank " << rankId << " Send partition " << i << " size " <<
-        // perNodeSendLens[i] << endl;
         sendBufSize += perNodeSendLens[i];
     }
-    cout << "sendData size " << sendBufSize << endl;
+    logger::println(logger::INFO, "sendData size %d", sendBufSize);
     sendData.resize(sendBufSize);
 
     // Fill in send buffer
@@ -94,8 +94,6 @@ Rating *shuffle_all2all(ccl::communicator &comm,
 
     // Calculate recv buffer size
     for (size_t i = 0; i < nBlocks; i++) {
-        // cout << "rank " << rankId << " Recv partition " << i << " size " <<
-        // perNodeRecvLens[i] << endl;
         recvBufSize += perNodeRecvLens[i];
     }
 
@@ -109,18 +107,11 @@ Rating *shuffle_all2all(ccl::communicator &comm,
 
     sort(recvData.begin(), recvData.end(), compareRatingByUser);
 
-    // for (auto r : recvData) {
-    //   cout << r.user << " " << r.item << " " << r.rating << endl;
-    // }
-
     newRatingsNum = recvData.size();
-    // RatingPartition::iterator iter = std::unique(recvData.begin(),
-    // recvData.end(), compareRatingUserEquality); newCsrRowNum =
-    // std::distance(recvData.begin(), iter);
     newCsrRowNum = distinct_count(recvData);
 
-    cout << "newRatingsNum: " << newRatingsNum
-         << " newCsrRowNum: " << newCsrRowNum << endl;
+    logger::println(logger::INFO, "newRatingsNum: %d, newCsrRowNum: %d",
+                    newRatingsNum, newCsrRowNum);
 
     return recvData.data();
 }

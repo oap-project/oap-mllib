@@ -22,7 +22,7 @@
 #include <typeinfo>
 
 #ifdef CPU_GPU_PROFILE
-
+#include "Logger.h"
 #include "com_intel_oneapi_dal_table_SimpleMetadataImpl.h"
 #include "oneapi/dal/table/homogen.hpp"
 
@@ -37,7 +37,7 @@ using namespace oneapi::dal;
 JNIEXPORT jlong JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureCount(
     JNIEnv *env, jobject, jlong cTableAddr) {
-    printf("SimpleMetadata getfeaturecount \n");
+    logger::println(logger::INFO, "SimpleMetadata getfeaturecount");
     table_metadata mdata = *reinterpret_cast<table_metadata *>(cTableAddr);
     return (jlong)mdata.get_feature_count();
 
@@ -51,7 +51,7 @@ Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureCount(
 JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureType(
     JNIEnv *env, jobject, jlong cTableAddr, jint cindex) {
-    printf("SimpleMetadata getfeaturetype \n");
+    logger::println(logger::INFO, "SimpleMetadata getfeaturetype");
     table_metadata mdata = *reinterpret_cast<table_metadata *>(cTableAddr);
     return (jint)mdata.get_feature_type(cindex);
 }
@@ -64,7 +64,7 @@ Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetFeatureType(
 JNIEXPORT jint JNICALL
 Java_com_intel_oneapi_dal_table_SimpleMetadataImpl_cGetDataType(
     JNIEnv *env, jobject, jlong cTableAddr, jint cindex) {
-    printf("SimpleMetadata getdatatype \n");
+    logger::println(logger::INFO, "SimpleMetadata getdatatype");
     table_metadata mdata = *reinterpret_cast<table_metadata *>(cTableAddr);
     return (jint)mdata.get_data_type(cindex);
 

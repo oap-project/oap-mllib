@@ -23,6 +23,7 @@
 #include <vector>
 
 #ifdef CPU_GPU_PROFILE
+#include "Logger.h"
 #include "Common.hpp"
 
 #include "com_intel_oneapi_dal_table_RowAccessor.h"
@@ -40,7 +41,7 @@ using namespace oneapi::dal;
 JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullDouble
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
    jint computeDeviceOrdinal){
-  printf("RowAccessor PullDouble \n");
+  logger::println(logger::INFO, "RowAccessor PullDouble");
   homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const double> acc {htable};
   jdoubleArray newDoubleArray = nullptr;
@@ -74,7 +75,7 @@ JNIEXPORT jdoubleArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPull
 JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullFloat
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
    jint computeDeviceOrdinal){
-  printf("RowAccessor PullFloat \n");
+  logger::println(logger::INFO, "RowAccessor PullFloat");
   homogen_table htable = *reinterpret_cast<const homogen_table *>(cTableAddr);
   row_accessor<const float> acc { htable };
   jfloatArray newFloatArray = nullptr;
@@ -108,7 +109,7 @@ JNIEXPORT jfloatArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullF
 JNIEXPORT jintArray JNICALL Java_com_intel_oneapi_dal_table_RowAccessor_cPullInt
   (JNIEnv *env, jobject, jlong cTableAddr, jlong cRowStartIndex, jlong cRowEndIndex,
    jint computeDeviceOrdinal){
-  printf("RowAccessor PullInt \n");
+  logger::println(logger::INFO, "RowAccessor PullInt");
   homogen_table htable = *reinterpret_cast<homogen_table *>(cTableAddr);
   row_accessor<const int> acc { htable };
   jintArray newIntArray = nullptr;

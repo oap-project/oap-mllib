@@ -1,4 +1,5 @@
 #include "service.h"
+#include "Logger.h"
 #include "error_handling.h"
 
 using namespace daal;
@@ -36,18 +37,16 @@ template <typename T>
 void printArray(T *array, const size_t nPrintedCols, const size_t nPrintedRows,
                 const size_t nCols, const std::string &message,
                 size_t interval = 10) {
-    std::cout << std::setiosflags(std::ios::left);
-    std::cout << message << std::endl;
+    logger::println(logger::INFO, message);
     for (size_t i = 0; i < nPrintedRows; i++) {
+        logger::print(logger::INFO, "");
         for (size_t j = 0; j < nPrintedCols; j++) {
-            std::cout << std::setw(interval)
-                      << std::setiosflags(std::ios::fixed)
-                      << std::setprecision(3);
-            std::cout << array[i * nCols + j];
+            logger::print(logger::NONE, "%*.3f", interval,
+                          array[i * nCols + j]);
         }
-        std::cout << std::endl;
+        logger::println(logger::NONE, "");
     }
-    std::cout << std::endl;
+    logger::println(logger::INFO, "");
 }
 
 template <typename T>
@@ -59,44 +58,38 @@ void printArray(T *array, const size_t nCols, const size_t nRows,
 template <typename T>
 void printLowerArray(T *array, const size_t nPrintedRows,
                      const std::string &message, size_t interval = 10) {
-    std::cout << std::setiosflags(std::ios::left);
-    std::cout << message << std::endl;
+    logger::println(logger::INFO, message);
     int ind = 0;
     for (size_t i = 0; i < nPrintedRows; i++) {
+        logger::print(logger::INFO, "");
         for (size_t j = 0; j <= i; j++) {
-            std::cout << std::setw(interval)
-                      << std::setiosflags(std::ios::fixed)
-                      << std::setprecision(3);
-            std::cout << array[ind++];
+            logger::print(logger::NONE, "%*.3f", interval, array[ind++]);
         }
-        std::cout << std::endl;
+        logger::println(logger::NONE, "");
     }
-    std::cout << std::endl;
+    logger::println(logger::INFO, "");
 }
 
 template <typename T>
 void printUpperArray(T *array, const size_t nPrintedCols,
                      const size_t nPrintedRows, const size_t nCols,
                      const std::string &message, size_t interval = 10) {
-    std::cout << std::setiosflags(std::ios::left);
-    std::cout << message << std::endl;
+    logger::println(logger::INFO, message);
     int ind = 0;
     for (size_t i = 0; i < nPrintedRows; i++) {
+        logger::print(logger::INFO, "");
         for (size_t j = 0; j < i; j++) {
-            std::cout << "          ";
+            logger::print(logger::NONE, "          ");
         }
         for (size_t j = i; j < nPrintedCols; j++) {
-            std::cout << std::setw(interval)
-                      << std::setiosflags(std::ios::fixed)
-                      << std::setprecision(3);
-            std::cout << array[ind++];
+            logger::print(logger::NONE, "%*.3f", interval, array[ind++]);
         }
         for (size_t j = nPrintedCols; j < nCols; j++) {
             ind++;
         }
-        std::cout << std::endl;
+        logger::println(logger::NONE, "");
     }
-    std::cout << std::endl;
+    logger::println(logger::INFO, "");
 }
 
 void printNumericTable(NumericTable *dataTable, const char *message = "",
@@ -139,8 +132,9 @@ void printNumericTable(NumericTable *dataTable, const char *message = "",
             }
             packedTable->releasePackedArray(block);
         } else {
-            std::cout << "Dynamic cast to PackedArrayNumericTableIface* failed."
-                      << std::endl;
+            logger::println(
+                logger::INFO,
+                "Dynamic cast to PackedArrayNumericTableIface* failed.");
         }
     }
 }
@@ -208,7 +202,7 @@ void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr) {
     g_kmtx.unlock();
 }
 
-#ifdef CPU_GPU_PRFILE
+#ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
     int nRows = ntHomogen->getNumberOfRows();
     int nColumns = ntHomogen->getNumberOfColumns();
@@ -216,16 +210,16 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
     // printNumericTable(ntHomogen, "ntHomogen:", 10, 10);
 
     NumericTablePtr ntSycl =
-        SyclHomogenNumericTable<cpu_algorithmFPType>::create(
+        SyclHomogenNumericTable<CpuAlgorithmFPType>::create(
             nColumns, nRows, NumericTable::doAllocate);
 
     // printNumericTable(ntSycl, "ntSycl:", 10, 10);
 
-    BlockDescriptor<cpu_algorithmFPType> sourceRows;
+    BlockDescriptor<CpuAlgorithmFPType> sourceRows;
     ntHomogen->getBlockOfRows(0, ntHomogen->getNumberOfRows(), readOnly,
                               sourceRows);
 
-    BlockDescriptor<cpu_algorithmFPType> targetRows;
+    BlockDescriptor<CpuAlgorithmFPType> targetRows;
     ntSycl->getBlockOfRows(0, ntSycl->getNumberOfRows(), writeOnly, targetRows);
 
     // bracets for calling destructor of hostPtr to release lock
