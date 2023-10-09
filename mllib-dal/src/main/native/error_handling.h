@@ -21,6 +21,7 @@
 !******************************************************************************/
 
 #pragma once
+#include <string>
 
 const int fileError = -1001;
 
@@ -29,4 +30,4 @@ void checkPtr(void *ptr);
 void fileOpenError(const char *filename);
 void fileReadError();
 void sparceFileReadError();
-void deviceError();
+void deviceError(const std::string &msg, const char *description);

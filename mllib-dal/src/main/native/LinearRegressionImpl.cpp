@@ -26,6 +26,7 @@
 #include "oneapi/dal/algo/linear_regression.hpp"
 #endif
 
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_regression_LinearRegressionDALImpl.h"
 #include "service.h"
@@ -150,7 +151,6 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
     InputDataArchive dataArch;
     localAlgorithm.getPartialResult()->serialize(dataArch);
     size_t perNodeArchLength = dataArch.getSizeOfArchive();
-    // std::cout << "perNodeArchLength: " << perNodeArchLength << std::endl;
 
     serializedData =
         services::SharedPtr<byte>(new byte[perNodeArchLength * nBlocks]);
@@ -219,8 +219,8 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
                                jlong pData, jlong pLabel,
                                jboolean jfitIntercept, jint executorNum,
                                jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start , rankid " << rankId
-              << std::endl;
+    logger::println(logger::INFO,
+                    "oneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 
@@ -261,9 +261,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
 
-    std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
+    logger::println(logger::INFO,
+                    "oneDAL (native): use DPC++ kernels; device %s",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     ccl::communicator &cclComm = getComm();
     size_t rankId = cclComm.rank();
@@ -278,9 +278,11 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
         int nGpu = env->GetArrayLength(gpuIdxArray);
-        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
-                  << " GPU(s)"
-                  << " rankid " << rankId << std::endl;
+        logger::println(
+            logger::INFO,
+            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
+            rankId);
+
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
         int size = cclComm.size();
         auto queue =
@@ -302,8 +304,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        cout << "oneDAL (native): Number of CPU threads used: " << nThreadsNew
-             << endl;
+        logger::println(logger::INFO,
+                        "oneDAL (native): Number of CPU threads used %d",
+                        nThreadsNew);
         if (regParam == 0) {
             resultTable = linear_regression_compute(
                 rankId, cclComm, pData, pLabel, fitIntercept, executorNum);

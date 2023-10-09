@@ -23,7 +23,7 @@
 using namespace daal;
 using namespace daal::data_management;
 
-// Use oneDAL lib function
+// Use OneDAL lib function
 extern bool daal_check_is_intel_cpu();
 
 // Define a global native array
@@ -70,7 +70,8 @@ JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cSetDoubleBatch(
             ((SerializationIfacePtr *)numTableAddr)->get());
     jdouble *values = (jdouble *)env->GetPrimitiveArrayCritical(batch, 0);
     if (values == NULL) {
-        std::cout << "Error: unable to obtain critical array" << std::endl;
+        logger::println(logger::INFO,
+                        "Error: unable to obtain critical array.");
         exit(-1);
     }
     std::memcpy((*nt)[curRows], values, numRows * numCols * sizeof(double));
@@ -88,7 +89,7 @@ JNIEXPORT jboolean JNICALL
 Java_com_intel_oap_mllib_OneDAL_00024_cCheckPlatformCompatibility(JNIEnv *,
                                                                   jobject) {
     // Only guarantee compatibility and performance on Intel platforms, use
-    // oneDAL lib function
+    // OneDAL lib function
     return daal_check_is_intel_cpu();
 }
 
@@ -175,7 +176,8 @@ Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray(
     JNIEnv *env, jobject, jlong size) {
-    std::cout << "create new native array size : " << size << std::endl;
+    logger::println(logger::INFO, "create new native array size %d", size);
+
     NativeDoubleArrayPtr arrayPtr(new double[size],
                                   [](double *ptr) { delete[] ptr; });
     saveDoubleArrayPtrToVector(arrayPtr);

@@ -23,6 +23,7 @@
 #include "oneapi/dal/algo/kmeans.hpp"
 #endif
 
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_clustering_KMeansDALImpl.h"
 #include "service.h"
@@ -178,7 +179,7 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
                                  NumericTablePtr &centroids, jint cluster_num,
                                  jdouble tolerance, jint iteration_num,
                                  jint executor_num, jobject resultObj) {
-    std::cout << "oneDAL (native): CPU compute start" << std::endl;
+    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
     CpuAlgorithmFPType totalCost;
 
     NumericTablePtr newCentroids;
@@ -206,17 +207,20 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "KMeans (native): iteration " << it << " took "
-                  << duration / 1000 << " secs" << std::endl;
+        logger::println(logger::INFO,
+                        "KMeans (native): iteration %d took %d secs", it,
+                        duration / 1000);
     }
 
     if (rankId == ccl_root) {
         if (it == iteration_num)
-            std::cout << "KMeans (native): reached " << iteration_num
-                      << " max iterations." << std::endl;
+            logger::println(logger::INFO,
+                            "KMeans (native): reached %d max iterations.",
+                            iteration_num);
         else
-            std::cout << "KMeans (native): converged in " << it
-                      << " iterations." << std::endl;
+            logger::println(logger::INFO,
+                            "KMeans (native): converged in %d iterations.",
+                            iteration_num);
 
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -243,7 +247,7 @@ static jlong doKMeansOneAPICompute(
     jdouble tolerance, jint iterationNum,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    std::cout << "oneDAL (native): GPU compute start" << std::endl;
+    logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable =
         *reinterpret_cast<const homogen_table *>(pNumTabData);
@@ -258,16 +262,17 @@ static jlong doKMeansOneAPICompute(
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
-        std::cout << "Iteration count: " << result_train.get_iteration_count()
-                  << std::endl;
-        std::cout << "Centroids:\n"
-                  << result_train.get_model().get_centroids() << std::endl;
+        logger::println(logger::INFO, "Iteration count: %d",
+                        result_train.get_iteration_count());
+        logger::println(logger::INFO, "Centroids:");
+        printHomegenTable(result_train.get_model().get_centroids());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        std::cout << "KMeans (native): training step took " << duration / 1000
-                  << " secs." << std::endl;
+        logger::println(logger::INFO,
+                        "KMeans (native): training step took %d secs",
+                        duration / 1000);
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -302,9 +307,10 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
     jobject resultObj) {
-    std::cout << "oneDAL (native): use DPC++ kernels "
-              << "; device " << ComputeDeviceString[computeDeviceOrdinal]
-              << std::endl;
+    logger::println(logger::INFO,
+                    "OneDAL (native): use DPC++ kernels; device %s",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
+
     jlong ret = 0L;
     ccl::communicator &cclComm = getComm();
     int rankId = cclComm.rank();
@@ -314,13 +320,14 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     case ComputeDevice::cpu: {
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
-        // Set number of threads for oneDAL to use for each rank
+        // Set number of threads for OneDAL to use for each rank
         services::Environment::getInstance()->setNumberOfThreads(executorCores);
 
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
-        std::cout << "oneDAL (native): Number of CPU threads used "
-                  << nThreadsNew << std::endl;
+        logger::println(logger::INFO,
+                        "OneDAL (native): Number of CPU threads used %d",
+                        nThreadsNew);
         ret = doKMeansDaalCompute(env, obj, rankId, cclComm, pData, centroids,
                                   clusterNum, tolerance, iterationNum,
                                   executorNum, resultObj);
@@ -329,9 +336,10 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         int nGpu = env->GetArrayLength(gpuIdxArray);
-        std::cout << "oneDAL (native): use GPU kernels with " << nGpu
-                  << " GPU(s)"
-                  << " rankid " << rankId << std::endl;
+        logger::println(
+            logger::INFO,
+            "OneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
+            rankId);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
@@ -353,8 +361,8 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     }
 #endif
     default: {
-        std::cout << "no supported device!" << std::endl;
-        exit(-1);
+        deviceError("KMeans",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return ret;

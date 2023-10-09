@@ -41,6 +41,7 @@ using namespace daal::data_management;
 #include <string>
 #include <vector>
 
+#include "Logger.h"
 #include "error_handling.h"
 #include "oneapi/dal/table/detail/csr.hpp"
 #include "oneapi/dal/table/homogen.hpp"
@@ -68,5 +69,43 @@ void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
 
 #ifdef CPU_GPU_PROFILE
+#include "oneapi/dal/table/common.hpp"
+#include "oneapi/dal/table/row_accessor.hpp"
+
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
+inline void printHomegenTable(const oneapi::dal::table &table) {
+    auto arr = oneapi::dal::row_accessor<const float>(table).pull();
+    const auto x = arr.get_data();
+    if (table.get_row_count() <= 10) {
+        for (std::int64_t i = 0; i < table.get_row_count(); i++) {
+            logger::print(logger::INFO, "");
+            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
+                logger::print(logger::NONE, "%10f",
+                              x[i * table.get_column_count() + j]);
+            }
+            logger::println(logger::NONE, "");
+        }
+    } else {
+        for (std::int64_t i = 0; i < 5; i++) {
+            logger::print(logger::INFO, "");
+            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
+                logger::print(logger::NONE, "%10f",
+                              x[i * table.get_column_count() + j]);
+            }
+            logger::println(logger::NONE, "");
+        }
+        logger::println(logger::INFO, "...%ld lines skipped...",
+                        (table.get_row_count() - 10));
+        for (std::int64_t i = table.get_row_count() - 5;
+             i < table.get_row_count(); i++) {
+            logger::print(logger::INFO, "");
+            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
+                logger::print(logger::NONE, "%10f",
+                              x[i * table.get_column_count() + j]);
+            }
+            logger::println(logger::NONE, "");
+        }
+    }
+    return;
+}
 #endif
