@@ -78,7 +78,7 @@ inline void printHomegenTable(const oneapi::dal::table &table) {
     const auto x = arr.get_data();
     if (table.get_row_count() <= 10) {
         for (std::int64_t i = 0; i < table.get_row_count(); i++) {
-            logger::print(logger::NONE, "");
+            logger::print(logger::INFO, "");
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
                 logger::print(logger::NONE, "%10f",
                               x[i * table.get_column_count() + j]);
@@ -87,18 +87,18 @@ inline void printHomegenTable(const oneapi::dal::table &table) {
         }
     } else {
         for (std::int64_t i = 0; i < 5; i++) {
-            logger::print(logger::NONE, "");
+            logger::print(logger::INFO, "");
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
                 logger::print(logger::NONE, "%10f",
                               x[i * table.get_column_count() + j]);
             }
             logger::println(logger::NONE, "");
         }
-        logger::println(logger::NONE, "...%ld lines skipped...",
+        logger::println(logger::INFO, "...%ld lines skipped...",
                         (table.get_row_count() - 10));
         for (std::int64_t i = table.get_row_count() - 5;
              i < table.get_row_count(); i++) {
-            logger::print(logger::NONE, "");
+            logger::print(logger::INFO, "");
             for (std::int64_t j = 0; j < table.get_column_count(); j++) {
                 logger::print(logger::NONE, "%10f",
                               x[i * table.get_column_count() + j]);

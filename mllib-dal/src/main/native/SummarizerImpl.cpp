@@ -229,7 +229,6 @@ static void doSummarizerOneAPICompute(
         logger::println(logger::INFO,
                         "Summarizer (native): computing step took %d secs",
                         duration / 1000);
-
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
