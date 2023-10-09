@@ -28,8 +28,8 @@
 
 #include <oneapi/ccl.hpp>
 
-#include "Logger.h"
 #include "CCLInitSingleton.hpp"
+#include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
 
