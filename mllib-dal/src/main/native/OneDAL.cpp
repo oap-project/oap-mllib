@@ -228,6 +228,7 @@ Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToFloatNative(
     jsize sourceLength = env->GetArrayLength(sourceArray);
     jdouble *source = static_cast<jdouble *>(
         env->GetPrimitiveArrayCritical(sourceArray, NULL));
-    std::transform(source, source + sourceLength, nativeArray + index, [](double d) { return static_cast<float>(d); });
+    std::transform(source, source + sourceLength, nativeArray + index,
+                   [](double d) { return static_cast<float>(d); });
     env->ReleasePrimitiveArrayCritical(sourceArray, source, 0);
 }
