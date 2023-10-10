@@ -111,7 +111,7 @@ class oneDALSuite extends FunctionsSuite with Logging {
     val result = OneDAL.coalesceVectorsToHomogenTables(rddVectors, 1, TestCommon.getComputeDevice)
 
     val tableAddr = result.collect()
-    val table = new HomogenTable(tableAddr(0))
+    val table = new HomogenTable(tableAddr(0).split("_")(0).toLong)
     val rData: Array[Double] = table.getDoubleData()
     assertArrayEquals(rData, expectData)
   }

@@ -77,15 +77,16 @@ class RandomForestRegressorDALImpl(val uid: String,
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(String, String)]) =>
-      val (featureTabAddr, lableTabAddr) = tables.next()
         val (feature, label) = tables.next()
-        val (featureTabAddr : Long, featureRows, featureColumns) = if (useDevice == "GPU") {
+        val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
+        if (useDevice == "GPU") {
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
         } else {
           (feature.toString.toLong, 0, 0)
         }
-        val (labelTabAddr : Long, labelRows, labelColumns) = if (useDevice == "GPU") {
+        val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
+        if (useDevice == "GPU") {
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
         } else {

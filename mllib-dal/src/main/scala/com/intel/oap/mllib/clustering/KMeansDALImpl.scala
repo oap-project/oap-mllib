@@ -68,7 +68,7 @@ class KMeansDALImpl(var nClusters: Int,
         null
       }
 
-      val (tableArr : Long, rows, columns) = if (useDevice == "GPU") {
+      val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
         val parts = iter.next().toString.split("_")
         (parts(0).toLong, parts(1).toLong, parts(2).toLong)
       } else {

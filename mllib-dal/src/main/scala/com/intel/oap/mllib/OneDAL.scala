@@ -343,7 +343,7 @@ object OneDAL {
   def coalesceLabelPointsToNumericTables(labeledPoints: Dataset[_],
                                       labelCol: String,
                                       featuresCol: String,
-                                      executorNum: Int): RDD[(String, String)] = {
+                                      executorNum: Int): RDD[(Long, Long)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -507,7 +507,7 @@ object OneDAL {
                                               labelCol: String,
                                               featuresCol: String,
                                               executorNum: Int,
-                                              device: Common.ComputeDevice): RDD[(Long, Long)] = {
+                                              device: Common.ComputeDevice): RDD[(String, String)] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -552,8 +552,8 @@ object OneDAL {
     val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Row]) =>
       val list = it.toList
       val subRowCount: Int = list.size / numberCores
-      val labeledPointsList: ListBuffer[Future[(Array[Float], Long)]] =
-        new ListBuffer[Future[(Array[Float], Long)]]()
+      val labeledPointsList: ListBuffer[Future[(Long, Long)]] =
+        new ListBuffer[Future[(Long, Long)]]()
       val numRows = list.size
       val numCols = list(0).getAs[Vector](1).toArray.size
 
@@ -570,7 +570,7 @@ object OneDAL {
           slice.toArray.zipWithIndex.map { case (row, index) =>
             val length = row.getAs[Vector](1).toArray.length
             OneDAL.cCopyDoubleArrayToFloatNative(featuresAddress, row.getAs[Vector](1).toArray, subRowCount.toLong * numCols * i + length * index)
-            OneDAL.cCopyDoubleArrayToFloatNative(labelsAddress, row.getAs[Double](0), subRowCount * i +  index)
+            OneDAL.cCopyDoubleArrayToFloatNative(labelsAddress, Array(row.getAs[Double](0)), subRowCount * i +  index)
           }
           (labelsAddress, featuresAddress)
         }
@@ -579,7 +579,7 @@ object OneDAL {
       val result = Future.sequence(labeledPointsList)
       Await.result(result, Duration.Inf)
 
-      Iterator(featuresAddress + "_" + numRows.toLong + "_" + numCols.toLong, labelsAddress + "_" + numRows.toLong + "_" + 1)
+      Iterator((featuresAddress + "_" + numRows.toLong + "_" + numCols.toLong, labelsAddress + "_" + numRows.toLong + "_" + 1))
     }.setName("coalescedTables").cache()
 
     coalescedTables.count()
@@ -685,7 +685,7 @@ object OneDAL {
   }
 
   def coalesceVectorsToHomogenTables(data: RDD[Vector], executorNum: Int,
-                                device: Common.ComputeDevice): RDD[Long] = {
+                                device: Common.ComputeDevice): RDD[String] = {
     logger.info(s"Processing partitions with $executorNum executors")
     val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
 
@@ -745,7 +745,7 @@ object OneDAL {
       val result = Future.sequence(futureList)
       Await.result(result, Duration.Inf)
 
-      Iterator(targetArrayAddress+"_"+numRows.toLong+"_"+numCols.toLong)
+      Iterator(targetArrayAddress + "_" + numRows.toLong + "_" + numCols.toLong)
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD
