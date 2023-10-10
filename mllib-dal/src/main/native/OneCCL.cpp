@@ -66,9 +66,10 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
     logger::println(logger::INFO, "OneCCL (native): init took %f secs",
-                       duration / 1000);
+                    duration / 1000);
 
     rank_id = getComm().rank();
     comm_size = getComm().size();
