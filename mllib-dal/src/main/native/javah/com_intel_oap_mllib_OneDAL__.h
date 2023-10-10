@@ -79,6 +79,22 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray
 JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToNative
   (JNIEnv *, jobject, jlong, jdoubleArray, jlong);
 
+/*
+ * Class:     com_intel_oap_mllib_OneDAL__
+ * Method:    cNewFloatArray
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewFloatArray
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     com_intel_oap_mllib_OneDAL__
+ * Method:    cCopyFloatArrayToNative
+ * Signature: (J[FJ)V
+ */
+JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToFloatNative
+  (JNIEnv *, jobject, jlong, jdoubleArray, jlong);
+
 #ifdef __cplusplus
 }
 #endif

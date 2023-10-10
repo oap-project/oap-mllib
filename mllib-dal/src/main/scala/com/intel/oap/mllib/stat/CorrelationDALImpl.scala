@@ -37,7 +37,7 @@ class CorrelationDALImpl(
     corTimer.record("Preprocessing")
 
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceVectorsToHomogenTables(data, executorNum,
+      OneDAL.coalesceVectorsToFloatHomogenTables(data, executorNum,
         computeDevice)
     } else {
       OneDAL.coalesceVectorsToNumericTables(data, executorNum)

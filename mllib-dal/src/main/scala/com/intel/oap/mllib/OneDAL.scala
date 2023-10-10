@@ -292,6 +292,25 @@ object OneDAL {
     table
   }
 
+  def makeFloatHomogenTable(arrayVectors: Array[OldVector],
+                            device: Common.ComputeDevice): HomogenTable = {
+    val numCols = arrayVectors.head.size
+    val numRows: Int = arrayVectors.size
+    val arrayFloat = new Array[Float](numRows * numCols)
+    var index = 0
+    for( vector: OldVector <- arrayVectors) {
+      for (i <- 0 until vector.toArray.length ) {
+        arrayFloat(index) = vector(i).toFloat
+        if (index < (numRows * numCols)) {
+          index = index + 1
+        }
+      }
+    }
+    val table = new HomogenTable(numRows.toLong, numCols.toLong, arrayFloat,
+      device)
+    table
+  }
+
   private[mllib] def doubleArrayToHomogenTable(
       points: Array[Double],
       device: Common.ComputeDevice): HomogenTable = {
@@ -484,6 +503,94 @@ object OneDAL {
   }
 
 
+  def coalesceLabelPointsToFloatHomogenTables(labeledPoints: Dataset[_],
+                                              labelCol: String,
+                                              featuresCol: String,
+                                              executorNum: Int,
+                                              device: Common.ComputeDevice): RDD[(Long, Long)] = {
+    require(executorNum > 0)
+
+    logger.info(s"Processing partitions with $executorNum executors")
+    val numberCores: Int  = labeledPoints.sparkSession.sparkContext.getConf.getInt("spark.executor.cores", 1)
+
+    val spark = SparkSession.active
+    import spark.implicits._
+    val labeledPointsRDD = labeledPoints.rdd
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (labeledPointsRDD.getNumPartitions < executorNum) {
+      logger.info(s"Repartition to executorNum if not enough partitions")
+      val rePartitions = labeledPoints.repartition(executorNum).cache()
+      rePartitions.count()
+      rePartitions
+    } else {
+      labeledPoints
+    }
+
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(dataForConversion.select(featuresCol).rdd.map{ row =>
+      val vector = row.getAs[Vector](0)
+      vector
+    })
+
+    // Filter out empty partitions, if there is no such rdd, coalesce will report an error
+    // "No partitions or no locations for partitions found".
+    // TODO: ML-312: Improve ExecutorInProcessCoalescePartitioner
+    val nonEmptyPartitions = dataForConversion.select(labelCol, featuresCol).toDF().rdd.mapPartitionsWithIndex {
+      (index: Int, it: Iterator[Row]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
+    }.filter {
+      _._1 > 0
+    }.flatMap {
+      entry => entry._3
+    }
+
+    val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      .setName("coalescedRdd")
+
+    // convert RDD to HomogenTable
+    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Row]) =>
+      val list = it.toList
+      val subRowCount: Int = list.size / numberCores
+      val labeledPointsList: ListBuffer[Future[(Array[Float], Long)]] =
+        new ListBuffer[Future[(Array[Float], Long)]]()
+      val numRows = list.size
+      val numCols = list(0).getAs[Vector](1).toArray.size
+
+      val labelsArray = new Array[Float](numRows)
+      val featuresAddress= OneDAL.cNewFloatArray(numRows.toLong * numCols)
+      for ( i <- 0 until  numberCores) {
+        val f = Future {
+          val iter = list.iterator
+          val slice = if (i == numberCores - 1) {
+            iter.slice(subRowCount * i, numRows)
+          } else {
+            iter.slice(subRowCount * i, subRowCount * i + subRowCount)
+          }
+          slice.toArray.zipWithIndex.map { case (row, index) =>
+            val length = row.getAs[Vector](1).toArray.length
+            OneDAL.cCopyDoubleArrayToFloatNative(featuresAddress, row.getAs[Vector](1).toArray, subRowCount.toLong * numCols * i + length * index)
+            labelsArray(subRowCount * i +  index) = row.getAs[Float](0)
+          }
+          (labelsArray, featuresAddress)
+        }
+        labeledPointsList += f
+
+        val result = Future.sequence(labeledPointsList)
+        Await.result(result, Duration.Inf)
+      }
+      val labelsTable = new HomogenTable(numRows.toLong, 1, labelsArray,
+        device)
+      val featuresTable = new HomogenTable(numRows.toLong, numCols.toLong, featuresAddress, Common.DataType.FLOAT32,
+        device)
+
+      Iterator((featuresTable.getcObejct(), labelsTable.getcObejct()))
+    }.setName("coalescedTables").cache()
+
+    coalescedTables.count()
+    coalescedTables
+  }
+
   private[mllib] def doubleArrayToNumericTable(points: Array[Double]): NumericTable = {
     // Build DALMatrix, this will load libJavaAPI, libtbb, libtbbmalloc
     val context = new DaalContext()
@@ -656,6 +763,81 @@ object OneDAL {
     coalescedTables
   }
 
+  def coalesceVectorsToFloatHomogenTables(data: RDD[Vector], executorNum: Int,
+                                          device: Common.ComputeDevice): RDD[Long] = {
+    logger.info(s"coalesceVectorsToFloatHomogenTables")
+    logger.info(s"Processing partitions with $executorNum executors")
+    val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
+
+    // Repartition to executorNum if not enough partitions
+    val dataForConversion = if (data.getNumPartitions < executorNum) {
+      logger.info(s"Repartition to executorNum if not enough partitions")
+      val reData = data.repartition(executorNum).setName("RepartitionedRDD")
+      reData.cache().count()
+      reData
+    } else {
+      data
+    }
+
+    // Get dimensions for each partition
+    val partitionDims = Utils.getPartitionDims(dataForConversion)
+
+    // Filter out empty partitions, if there is no such rdd, coalesce will report an error
+    // "No partitions or no locations for partitions found".
+    // TODO: ML-312: Improve ExecutorInProcessCoalescePartitioner
+    val nonEmptyPartitions = dataForConversion.mapPartitionsWithIndex {
+      (index: Int, it: Iterator[Vector]) => Iterator(Tuple3(partitionDims(index)._1, index, it))
+    }.filter {
+      _._1 > 0
+    }.flatMap {
+      entry => entry._3
+    }
+
+    val coalescedRdd = nonEmptyPartitions.coalesce(executorNum,
+      partitionCoalescer = Some(new ExecutorInProcessCoalescePartitioner()))
+      .setName("coalescedRdd")
+
+    // convert RDD to HomogenTable
+    val coalescedTables = coalescedRdd.mapPartitionsWithIndex { (index: Int, it: Iterator[Vector]) =>
+      val list = it.toList
+      val subRowCount: Int = list.size / numberCores
+      val futureList: ListBuffer[Future[Long]] = new ListBuffer[Future[Long]]()
+      val numRows = list.size
+      val numCols = list(0).toArray.size
+      val size = numRows.toLong * numCols.toLong
+      val targetArrayAddress = OneDAL.cNewFloatArray(size)
+      for ( i <- 0 until  numberCores) {
+        val f = Future {
+          val iter = list.iterator
+          val slice = if (i == numberCores - 1) {
+            iter.slice(subRowCount * i, numRows)
+          } else {
+            iter.slice(subRowCount * i, subRowCount * i + subRowCount)
+          }
+          slice.toArray.zipWithIndex.map { case (vector, index) =>
+            val length = vector.toArray.length
+            OneDAL.cCopyDoubleArrayToFloatNative(targetArrayAddress, vector.toArray, subRowCount.toLong * numCols * i + length * index)
+          }
+          targetArrayAddress
+        }
+        futureList += f
+
+        val result = Future.sequence(futureList)
+        Await.result(result, Duration.Inf)
+      }
+      val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArrayAddress,
+        Common.DataType.FLOAT32, device)
+
+      Iterator(table.getcObejct())
+    }.setName("coalescedTables").cache()
+    coalescedTables.count()
+    // Unpersist instances RDD
+    if (data.getStorageLevel != StorageLevel.NONE) {
+      data.unpersist()
+    }
+    coalescedTables
+  }
+
   def makeNumericTable(arrayVectors: Array[Vector]): NumericTable = {
 
     val numCols = arrayVectors.head.size
@@ -758,4 +940,10 @@ object OneDAL {
   @native def cCopyDoubleArrayToNative(arrayAddr: Long,
                                  data: Array[Double],
                                  index: Long): Unit
+
+  @native def cNewFloatArray(size: Long): Long
+
+  @native def cCopyDoubleArrayToFloatNative(arrayAddr: Long,
+                                      data: Array[Double],
+                                      index: Long): Unit
 }

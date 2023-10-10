@@ -56,7 +56,7 @@ class RandomForestRegressorDALImpl(val uid: String,
 
     val labeledPointsTables = if (useDevice == "GPU") {
       if (OneDAL.isDenseDataset(labeledPoints, featuresCol)) {
-        OneDAL.coalesceLabelPointsToHomogenTables(labeledPoints,
+        OneDAL.coalesceLabelPointsToFloatHomogenTables(labeledPoints,
           labelCol, featuresCol, executorNum, computeDevice)
       } else {
         throw new Exception("Oneapi didn't implement sparse dataset")

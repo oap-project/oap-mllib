@@ -51,7 +51,7 @@ class PCADALImpl(val k: Int,
     pcaTimer.record("Preprocessing")
 
     val coalescedTables = if (useDevice == "GPU") {
-      OneDAL.coalesceVectorsToHomogenTables(normalizedData, executorNum,
+      OneDAL.coalesceVectorsToFloatHomogenTables(normalizedData, executorNum,
         computeDevice)
     } else {
       OneDAL.coalesceVectorsToNumericTables(normalizedData, executorNum)
