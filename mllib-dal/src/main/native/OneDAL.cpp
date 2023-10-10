@@ -36,9 +36,9 @@ template <typename T> std::vector<std::shared_ptr<T>> g_NativeArrayPtrVector;
 
 template <typename T>
 static void saveArrayPtrToVector(const std::shared_ptr<T> &ptr) {
-       g_amtx.lock();
-       g_NativeArrayPtrVector<T>.push_back(ptr);
-       g_amtx.unlock();
+    g_amtx.lock();
+    g_NativeArrayPtrVector<T>.push_back(ptr);
+    g_amtx.unlock();
 }
 
 JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable(
