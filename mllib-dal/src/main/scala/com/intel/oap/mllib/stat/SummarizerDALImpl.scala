@@ -47,14 +47,19 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val kvsIPPort = getOneCCLIPPort(data)
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       OneCCL.init(executorNum, rank, kvsIPPort)
       Iterator.empty
     }.count()
     sumTimer.record("OneCCL Init")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      val tableArr = table.next()
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
+      val (tableArr : Long, rows, columns) = if (useDevice == "GPU") {
+        val parts = iter.next().toString.split("_")
+        (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+      } else {
+        (iter.next(), 0, 0)
+      }
 
       val computeStartTime = System.nanoTime()
 
@@ -67,6 +72,8 @@ class SummarizerDALImpl(val executorNum: Int,
       }
       cSummarizerTrainDAL(
         tableArr,
+        rows,
+        columns,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
@@ -145,6 +152,8 @@ class SummarizerDALImpl(val executorNum: Int,
   }
 
   @native private[mllib] def cSummarizerTrainDAL(data: Long,
+                                          numRows: Long,
+                                          numCols: Long,
                                           executorNum: Int,
                                           executorCores: Int,
                                           computeDeviceOrdinal: Int,

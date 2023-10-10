@@ -52,13 +52,13 @@ class KMeansDALImpl(var nClusters: Int,
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       OneCCL.init(executorNum, rank, kvsIPPort)
       Iterator.empty
     }.count()
     kmeansTimer.record("OneCCL Init")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       var cCentroids = 0L
       val result = new KMeansResult()
       val gpuIndices = if (useDevice == "GPU") {
@@ -68,24 +68,32 @@ class KMeansDALImpl(var nClusters: Int,
         null
       }
 
-      val tableArr = table.next()
+      val (tableArr : Long, rows, columns) = if (useDevice == "GPU") {
+        val parts = iter.next().toString.split("_")
+        (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+      } else {
+        (iter.next(), 0, 0)
+      }
+
       val initCentroids = if (useDevice == "GPU") {
         OneDAL.makeFloatHomogenTable(centers, computeDevice).getcObejct()
       } else {
         OneDAL.makeNumericTable(centers).getCNumericTable
       }
       cCentroids = cKMeansOneapiComputeWithInitCenters(
-        tableArr,
-        initCentroids,
-        nClusters,
-        tolerance,
-        maxIterations,
-        executorNum,
-        executorCores,
-        computeDevice.ordinal(),
-        gpuIndices,
-        result
-      )
+          tableArr,
+          rows,
+          columns,
+          initCentroids,
+          nClusters,
+          tolerance,
+          maxIterations,
+          executorNum,
+          executorCores,
+          computeDevice.ordinal(),
+          gpuIndices,
+          result
+        )
 
       val ret = if (rank == 0) {
           assert(cCentroids != 0)
@@ -129,6 +137,8 @@ class KMeansDALImpl(var nClusters: Int,
   }
 
   @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long,
+                                                       numRows: Long,
+                                                       numCols: Long,
                                                        centers: Long,
                                                        clusterNum: Int,
                                                        tolerance: Double,

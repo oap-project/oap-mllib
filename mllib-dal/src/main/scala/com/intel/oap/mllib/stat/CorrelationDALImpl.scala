@@ -46,14 +46,19 @@ class CorrelationDALImpl(
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       OneCCL.init(executorNum, rank, kvsIPPort)
       Iterator.empty
     }.count()
     corTimer.record("OneCCL Init")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      val tableArr = table.next()
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
+      val (tableArr : Long, rows, columns) = if (useDevice == "GPU") {
+        val parts = iter.next().toString.split("_")
+        (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+      } else {
+        (iter.next(), 0, 0)
+      }
 
       val computeStartTime = System.nanoTime()
 
@@ -65,7 +70,9 @@ class CorrelationDALImpl(
         null
       }
       cCorrelationTrainDAL(
-        tableArr,
+        parts(0).toLong,
+        parts(1).toLong,
+        parts(2).toLong,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
@@ -113,6 +120,8 @@ class CorrelationDALImpl(
 
 
   @native private[mllib] def cCorrelationTrainDAL(data: Long,
+                                           numRows: Long,
+                                           numCols: Long,
                                            executorNum: Int,
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,

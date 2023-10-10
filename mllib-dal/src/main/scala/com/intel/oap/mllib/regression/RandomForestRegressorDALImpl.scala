@@ -76,8 +76,21 @@ class RandomForestRegressorDALImpl(val uid: String,
     rfrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
-      (rank: Int, tables: Iterator[(Long, Long)]) =>
+      (rank: Int, tables: Iterator[(String, String)]) =>
       val (featureTabAddr, lableTabAddr) = tables.next()
+        val (feature, label) = tables.next()
+        val (featureTabAddr : Long, featureRows, featureColumns) = if (useDevice == "GPU") {
+          val parts = feature.toString.split("_")
+          (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+        } else {
+          (feature.toString.toLong, 0, 0)
+        }
+        val (labelTabAddr : Long, labelRows, labelColumns) = if (useDevice == "GPU") {
+          val parts = feature.toString.split("_")
+          (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+        } else {
+          (label.toString.toLong, 0, 0)
+        }
 
       val gpuIndices = if (useDevice == "GPU") {
         if (isTest) {
@@ -94,7 +107,10 @@ class RandomForestRegressorDALImpl(val uid: String,
       val result = new RandomForestResult
       val hashmap = cRFRegressorTrainDAL(
         featureTabAddr,
-        lableTabAddr,
+        featureRows,
+        featureColumns,
+        labelTabAddr,
+        labelColumns,
         executorNum,
         computeDevice.ordinal(),
         treeCount,
@@ -141,7 +157,10 @@ class RandomForestRegressorDALImpl(val uid: String,
   }
 
   @native private[mllib] def cRFRegressorTrainDAL(featureTabAddr: Long,
-                                             lableTabAddr: Long,
+                                             numRows: Long,
+                                             numCols: Long,
+                                             label: Long,
+                                             labelNumCols: Long,
                                              executorNum: Int,
                                              computeDeviceOrdinal: Int,
                                              treeCount: Int,
