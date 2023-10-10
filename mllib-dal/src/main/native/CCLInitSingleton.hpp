@@ -38,7 +38,6 @@ private:
     }
 
     CCLInitSingleton(int size, int rank, ccl::string ccl_ip_port) {
-        logger::println(logger::INFO, "OneCCL singleton init");
         auto t1 = std::chrono::high_resolution_clock::now();
 
         ccl::init();
