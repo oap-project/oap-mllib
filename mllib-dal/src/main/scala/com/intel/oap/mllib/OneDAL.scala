@@ -575,10 +575,10 @@ object OneDAL {
           (labelsArray, featuresAddress)
         }
         labeledPointsList += f
-
-        val result = Future.sequence(labeledPointsList)
-        Await.result(result, Duration.Inf)
       }
+      val result = Future.sequence(labeledPointsList)
+      Await.result(result, Duration.Inf)
+
       val labelsTable = new HomogenTable(numRows.toLong, 1, labelsArray,
         device)
       val featuresTable = new HomogenTable(numRows.toLong, numCols.toLong, featuresAddress, Common.DataType.FLOAT32,
@@ -746,10 +746,10 @@ object OneDAL {
           targetArrayAddress
         }
         futureList += f
-
+      }
       val result = Future.sequence(futureList)
       Await.result(result, Duration.Inf)
-      }
+
       val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArrayAddress,
         Common.DataType.FLOAT64, device)
 
@@ -821,10 +821,10 @@ object OneDAL {
           targetArrayAddress
         }
         futureList += f
-
-        val result = Future.sequence(futureList)
-        Await.result(result, Duration.Inf)
       }
+      val result = Future.sequence(futureList)
+      Await.result(result, Duration.Inf)
+
       val table = new HomogenTable(numRows.toLong, numCols.toLong, targetArrayAddress,
         Common.DataType.FLOAT32, device)
 
