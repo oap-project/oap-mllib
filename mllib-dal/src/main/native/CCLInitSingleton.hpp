@@ -38,8 +38,7 @@ private:
     }
 
     CCLInitSingleton(int size, int rank, ccl::string ccl_ip_port) {
-        std::cerr << "OneCCL singleton init" << std::endl;
-
+        logger::println(logger::INFO, "OneCCL singleton init");
         auto t1 = std::chrono::high_resolution_clock::now();
 
         ccl::init();
@@ -52,7 +51,8 @@ private:
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-        std::cerr << "OneCCL singleton init took " << duration / 1000 << " secs"
-                  << std::endl;
+
+        logger::println(logger::INFO, "OneCCL singleton init took %f secs",
+                        duration / 1000);
     }
 };
