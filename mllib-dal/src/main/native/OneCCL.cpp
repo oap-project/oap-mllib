@@ -28,6 +28,7 @@
 
 #include <oneapi/ccl.hpp>
 
+#include "CCLInitSingleton.hpp"
 #include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
@@ -48,7 +49,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
     jobject param) {
 
-    logger::printerrln(logger::INFO, "OneCCL (native): init");
+    logger::println(logger::INFO, "OneCCL (native): init");
 
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -57,20 +58,18 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
 
-    auto kvs_attr = ccl::create_kvs_attr();
-    kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
+    auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
 
-    ccl::shared_ptr_class<ccl::kvs> kvs;
-    kvs = ccl::create_main_kvs(kvs_attr);
-
-    g_kvs.push_back(kvs);
-    g_comms.push_back(ccl::create_communicator(size, rank, kvs));
+    g_kvs.push_back(singletonCCLInit.kvs);
+    g_comms.push_back(
+        ccl::create_communicator(size, rank, singletonCCLInit.kvs));
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    logger::printerrln(logger::INFO, "OneCCL (native): init took %d secs",
-                       duration);
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO, "OneCCL (native): init took %f secs",
+                    duration / 1000);
 
     rank_id = getComm().rank();
     comm_size = getComm().size();
