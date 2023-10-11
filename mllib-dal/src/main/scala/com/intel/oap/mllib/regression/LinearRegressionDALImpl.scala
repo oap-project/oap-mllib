@@ -107,8 +107,23 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     lrTimer.record("Data Convertion")
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
-      case (rank: Int, tables: Iterator[(Long, Long)]) =>
-        val (featureTabAddr, lableTabAddr) = tables.next()
+      case (rank: Int, tables: Iterator[(String, String)]) =>
+        val (feature, label) = tables.next()
+        val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
+          if (useDevice == "GPU") {
+            val parts = feature.toString.split("_")
+            (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+          } else {
+            (feature.toString.toLong, 0, 0)
+          }
+        val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
+          if (useDevice == "GPU") {
+            val parts = feature.toString.split("_")
+            (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+          } else {
+            (label.toString.toLong, 0, 0)
+          }
+
         OneCCL.init(executorNum, rank, kvsIPPort)
         val result = new LiRResult()
 
@@ -127,7 +142,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
         val cbeta = cLinearRegressionTrainDAL(
           featureTabAddr,
-          lableTabAddr,
+          featureRows,
+          featureColumns,
+          labelTabAddr,
+          labelColumns,
           fitIntercept,
           regParam,
           elasticNetParam,
@@ -169,7 +187,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
   // Single entry to call Linear Regression DAL backend with parameters
   @native private def cLinearRegressionTrainDAL(data: Long,
+                                  numRows: Long,
+                                  numCols: Long,
                                   label: Long,
+                                  labelNumCols: Long,
                                   fitIntercept: Boolean,
                                   regParam: Double,
                                   elasticNetParam: Double,

@@ -58,7 +58,7 @@ class KMeansDALImpl(var nClusters: Int,
     }.count()
     kmeansTimer.record("OneCCL Init")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       var cCentroids = 0L
       val result = new KMeansResult()
       val gpuIndices = if (useDevice == "GPU") {
@@ -68,14 +68,23 @@ class KMeansDALImpl(var nClusters: Int,
         null
       }
 
-      val tableArr = table.next()
+      val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
+        val parts = iter.next().toString.split("_")
+        (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+      } else {
+        (iter.next(), 0, 0)
+      }
+
       val initCentroids = if (useDevice == "GPU") {
         OneDAL.makeHomogenTable(centers, computeDevice).getcObejct()
       } else {
         OneDAL.makeNumericTable(centers).getCNumericTable
       }
+
       cCentroids = cKMeansOneapiComputeWithInitCenters(
         tableArr,
+        rows,
+        columns,
         initCentroids,
         nClusters,
         tolerance,
@@ -129,13 +138,15 @@ class KMeansDALImpl(var nClusters: Int,
   }
 
   @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long,
-                                                       centers: Long,
-                                                       clusterNum: Int,
-                                                       tolerance: Double,
-                                                       iterationNum: Int,
-                                                       executorNum: Int,
-                                                       executorCores: Int,
-                                                       computeDeviceOrdinal: Int,
-                                                       gpuIndices: Array[Int],
-                                                       result: KMeansResult): Long
+                                                         numRows: Long,
+                                                         numCols: Long,
+                                                         centers: Long,
+                                                         clusterNum: Int,
+                                                         tolerance: Double,
+                                                         iterationNum: Int,
+                                                         executorNum: Int,
+                                                         executorCores: Int,
+                                                         computeDeviceOrdinal: Int,
+                                                         gpuIndices: Array[Int],
+                                                         result: KMeansResult): Long
 }
