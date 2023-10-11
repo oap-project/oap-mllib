@@ -107,7 +107,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     lrTimer.record("Data Convertion")
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
-      case (rank: Int, tables: Iterator[(String, String)]) =>
+      case (rank: Int, tables: Iterator[(Any, Any)]) =>
         val (feature, label) = tables.next()
         val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
           if (useDevice == "GPU") {
