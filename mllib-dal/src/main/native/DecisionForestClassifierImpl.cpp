@@ -219,30 +219,30 @@ static jobject doRFClassifierOneAPICompute(
     jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    GpuAlgorithmFPType *htableFeatureArray =
-        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabFeature);
-    GpuAlgorithmFPType *htableLabelArray =
-        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabLabel);
+    double *htableFeatureArray =
+        reinterpret_cast<double *>(pNumTabFeature);
+    double *htableLabelArray =
+        reinterpret_cast<double *>(pNumTabLabel);
 
-    auto featureData = sycl::malloc_shared<GpuAlgorithmFPType>(
+    auto featureData = sycl::malloc_shared<double>(
         featureRows * featureCols, queue);
     queue
         .memcpy(featureData, htableFeatureArray,
-                sizeof(GpuAlgorithmFPType) * featureRows * featureCols)
+                sizeof(double) * featureRows * featureCols)
         .wait();
     homogen_table hFeaturetable{
         queue, featureData, featureRows, featureCols,
-        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+        detail::make_default_delete<const double>(queue)};
 
     auto labelData =
-        sycl::malloc_shared<GpuAlgorithmFPType>(featureRows * labelCols, queue);
+        sycl::malloc_shared<double>(featureRows * labelCols, queue);
     queue
         .memcpy(labelData, htableLabelArray,
-                sizeof(GpuAlgorithmFPType) * featureRows * labelCols)
+                sizeof(double) * featureRows * labelCols)
         .wait();
     homogen_table hLabeltable{
         queue, labelData, featureRows, labelCols,
-        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+        detail::make_default_delete<const double>(queue)};
 
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,

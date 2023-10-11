@@ -229,19 +229,19 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
     ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, size, rankId, kvs);
-    GpuAlgorithmFPType *htableFeatureArray =
-        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabFeature);
-    GpuAlgorithmFPType *htableLabelArray =
-        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabLabel);
-    auto featureData = sycl::malloc_shared<GpuAlgorithmFPType>(
+    double *htableFeatureArray =
+        reinterpret_cast<double *>(pNumTabFeature);
+    double *htableLabelArray =
+        reinterpret_cast<double *>(pNumTabLabel);
+    auto featureData = sycl::malloc_shared<double>(
         featureRows * featureCols, queue);
     queue
         .memcpy(featureData, htableFeatureArray,
-                sizeof(GpuAlgorithmFPType) * featureRows * featureCols)
+                sizeof(double) * featureRows * featureCols)
         .wait();
     homogen_table xtrain{
         queue, featureData, featureRows, featureCols,
-        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+        detail::make_default_delete<const double>(queue)};
 
     auto labelData =
         sycl::malloc_shared<GpuAlgorithmFPType>(featureRows * labelCols, queue);
