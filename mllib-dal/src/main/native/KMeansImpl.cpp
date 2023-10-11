@@ -243,14 +243,24 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
 
 #ifdef CPU_GPU_PROFILE
 static jlong doKMeansOneAPICompute(
-    JNIEnv *env, jlong pNumTabData, jlong pNumTabCenters, jint clusterNum,
-    jdouble tolerance, jint iterationNum,
+    JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numClos,
+    jlong pNumTabCenters, jint clusterNum, jdouble tolerance, jint iterationNum,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    homogen_table htable =
-        *reinterpret_cast<const homogen_table *>(pNumTabData);
+    GpuAlgorithmFPType *htableArray =
+        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabData);
+    auto data =
+        sycl::malloc_shared<GpuAlgorithmFPType>(numRows * numClos, queue);
+    queue
+        .memcpy(data, htableArray,
+                sizeof(GpuAlgorithmFPType) * numRows * numClos)
+        .wait();
+    homogen_table htable{
+        queue, data, numRows, numClos,
+        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
     const auto kmeans_desc = kmeans_gpu::descriptor<GpuAlgorithmFPType>()
@@ -303,10 +313,10 @@ static jlong doKMeansOneAPICompute(
  */
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong pNumTabCenters,
-    jint clusterNum, jdouble tolerance, jint iterationNum, jint executorNum,
-    jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
-    jobject resultObj) {
+    JNIEnv *env, jobject obj, jlong pNumTabData, jlong numRows, jlong numClos,
+    jlong pNumTabCenters, jint clusterNum, jdouble tolerance, jint iterationNum,
+    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
+    jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -352,9 +362,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         auto comm =
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
-        ret =
-            doKMeansOneAPICompute(env, pNumTabData, pNumTabCenters, clusterNum,
-                                  tolerance, iterationNum, comm, resultObj);
+        ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numClos,
+                                    pNumTabCenters, clusterNum, tolerance,
+                                    iterationNum, comm, resultObj, queue);
 
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
         break;

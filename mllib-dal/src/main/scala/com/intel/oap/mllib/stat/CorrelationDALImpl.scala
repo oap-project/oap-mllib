@@ -52,8 +52,13 @@ class CorrelationDALImpl(
     }.count()
     corTimer.record("OneCCL Init")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      val tableArr = table.next()
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
+      val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
+        val parts = iter.next().toString.split("_")
+        (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+      } else {
+        (iter.next(), 0, 0)
+      }
 
       val computeStartTime = System.nanoTime()
 
@@ -66,6 +71,8 @@ class CorrelationDALImpl(
       }
       cCorrelationTrainDAL(
         tableArr,
+        rows,
+        columns,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
@@ -113,6 +120,8 @@ class CorrelationDALImpl(
 
 
   @native private[mllib] def cCorrelationTrainDAL(data: Long,
+                                           numRows: Long,
+                                           numCols: Long,
                                            executorNum: Int,
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,

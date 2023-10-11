@@ -207,18 +207,38 @@ jobject collect_model(JNIEnv *env, const df::model<Task> &m,
 }
 
 static jobject doRFRegressorOneAPICompute(
-    JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
+    JNIEnv *env, jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jint executorNum,
     jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
     jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
     jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    homogen_table hFeaturetable =
-        *reinterpret_cast<const homogen_table *>(pNumTabFeature);
-    homogen_table hLabeltable =
-        *reinterpret_cast<const homogen_table *>(pNumTabLabel);
+    GpuAlgorithmFPType *htableFeatureArray =
+        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabFeature);
+    GpuAlgorithmFPType *htableLabelArray =
+        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabLabel);
+    auto featureData = sycl::malloc_shared<GpuAlgorithmFPType>(
+        featureRows * featureCols, queue);
+    queue
+        .memcpy(featureData, htableFeatureArray,
+                sizeof(GpuAlgorithmFPType) * featureRows * featureCols)
+        .wait();
+    homogen_table hFeaturetable{
+        queue, featureData, featureRows, featureCols,
+        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+
+    auto labelData =
+        sycl::malloc_shared<GpuAlgorithmFPType>(featureRows * labelCols, queue);
+    queue
+        .memcpy(labelData, htableLabelArray,
+                sizeof(GpuAlgorithmFPType) * featureRows * labelCols)
+        .wait();
+    homogen_table hLabeltable{
+        queue, labelData, featureRows, labelCols,
+        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
     logger::println(logger::INFO,
                     "doRFRegressorOneAPICompute get_column_count = %d",
                     hFeaturetable.get_column_count());
@@ -290,11 +310,11 @@ static jobject doRFRegressorOneAPICompute(
 
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
-    jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
-    jobject resultObj) {
+    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong featureRows,
+    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
+    jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
+    jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
+    jboolean bootstrap, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -322,10 +342,10 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         jobject hashmapObj = doRFRegressorOneAPICompute(
-            env, pNumTabFeature, pNumTabLabel, executorNum,
-            computeDeviceOrdinal, treeCount, numFeaturesPerNode,
-            minObservationsLeafNode, maxTreeDepth, seed, maxbins, bootstrap,
-            comm, resultObj);
+            env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
+            labelCols, executorNum, computeDeviceOrdinal, treeCount,
+            numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
+            maxbins, bootstrap, comm, resultObj, queue);
         return hashmapObj;
     }
     default: {

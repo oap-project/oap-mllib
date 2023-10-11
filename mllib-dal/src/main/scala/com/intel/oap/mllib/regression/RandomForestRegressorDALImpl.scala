@@ -76,9 +76,22 @@ class RandomForestRegressorDALImpl(val uid: String,
     rfrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex {
-      (rank: Int, tables: Iterator[(Long, Long)]) =>
-      val (featureTabAddr, lableTabAddr) = tables.next()
-
+      (rank: Int, tables: Iterator[(String, String)]) =>
+      val (feature, label) = tables.next()
+      val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
+        if (useDevice == "GPU") {
+          val parts = feature.toString.split("_")
+          (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+        } else {
+          (feature.toString.toLong, 0, 0)
+        }
+      val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
+        if (useDevice == "GPU") {
+          val parts = feature.toString.split("_")
+          (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+        } else {
+          (label.toString.toLong, 0, 0)
+        }
       val gpuIndices = if (useDevice == "GPU") {
         if (isTest) {
           Array(0)
@@ -94,7 +107,10 @@ class RandomForestRegressorDALImpl(val uid: String,
       val result = new RandomForestResult
       val hashmap = cRFRegressorTrainDAL(
         featureTabAddr,
-        lableTabAddr,
+        featureRows,
+        featureColumns,
+        labelTabAddr,
+        labelColumns,
         executorNum,
         computeDevice.ordinal(),
         treeCount,
@@ -141,7 +157,10 @@ class RandomForestRegressorDALImpl(val uid: String,
   }
 
   @native private[mllib] def cRFRegressorTrainDAL(featureTabAddr: Long,
+                                             numRows: Long,
+                                             numCols: Long,
                                              lableTabAddr: Long,
+                                             labelNumCols: Long,
                                              executorNum: Int,
                                              computeDeviceOrdinal: Int,
                                              treeCount: Int,
