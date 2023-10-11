@@ -89,14 +89,14 @@ class RandomForestClassifierDALImpl(val uid: String,
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
         } else {
-          (feature.toString.toLong, 0, 0)
+          (feature.toString.toLong, 0L, 0L)
         }
       val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
         if (useDevice == "GPU") {
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
         } else {
-          (label.toString.toLong, 0, 0)
+          (label.toString.toLong, 0L, 0L)
         }
       val gpuIndices = if (useDevice == "GPU") {
         if (isTest) {

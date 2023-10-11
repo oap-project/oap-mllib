@@ -57,7 +57,7 @@ class CorrelationDALImpl(
         val parts = iter.next().toString.split("_")
         (parts(0).toLong, parts(1).toLong, parts(2).toLong)
       } else {
-        (iter.next().toString.toLong, 0, 0)
+        (iter.next().toString.toLong, 0L, 0L)
       }
 
       val computeStartTime = System.nanoTime()
