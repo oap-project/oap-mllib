@@ -207,17 +207,17 @@ static void doSummarizerOneAPICompute(
     jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    GpuAlgorithmFPType *htableArray =
-        reinterpret_cast<GpuAlgorithmFPType *>(pNumTabData);
+    double *htableArray =
+        reinterpret_cast<double *>(pNumTabData);
     auto data =
-        sycl::malloc_shared<GpuAlgorithmFPType>(numRows * numClos, queue);
+        sycl::malloc_shared<double>(numRows * numClos, queue);
     queue
         .memcpy(data, htableArray,
-                sizeof(GpuAlgorithmFPType) * numRows * numClos)
+                sizeof(double) * numRows * numClos)
         .wait();
     homogen_table htable{
         queue, data, numRows, numClos,
-        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+        detail::make_default_delete<const double>(queue)};
     const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
