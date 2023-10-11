@@ -229,19 +229,16 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
     ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
     auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
         queue, size, rankId, kvs);
-    double *htableFeatureArray =
-        reinterpret_cast<double *>(pNumTabFeature);
-    double *htableLabelArray =
-        reinterpret_cast<double *>(pNumTabLabel);
-    auto featureData = sycl::malloc_shared<double>(
-        featureRows * featureCols, queue);
+    double *htableFeatureArray = reinterpret_cast<double *>(pNumTabFeature);
+    double *htableLabelArray = reinterpret_cast<double *>(pNumTabLabel);
+    auto featureData =
+        sycl::malloc_shared<double>(featureRows * featureCols, queue);
     queue
         .memcpy(featureData, htableFeatureArray,
                 sizeof(double) * featureRows * featureCols)
         .wait();
-    homogen_table xtrain{
-        queue, featureData, featureRows, featureCols,
-        detail::make_default_delete<const double>(queue)};
+    homogen_table xtrain{queue, featureData, featureRows, featureCols,
+                         detail::make_default_delete<const double>(queue)};
 
     auto labelData =
         sycl::malloc_shared<double>(featureRows * labelCols, queue);
@@ -249,9 +246,8 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
         .memcpy(labelData, htableLabelArray,
                 sizeof(double) * featureRows * labelCols)
         .wait();
-    homogen_table ytrain{
-        queue, labelData, featureRows, labelCols,
-        detail::make_default_delete<const double>(queue)};
+    homogen_table ytrain{queue, labelData, featureRows, labelCols,
+                         detail::make_default_delete<const double>(queue)};
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =

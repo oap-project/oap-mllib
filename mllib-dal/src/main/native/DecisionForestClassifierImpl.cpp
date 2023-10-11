@@ -219,13 +219,11 @@ static jobject doRFClassifierOneAPICompute(
     jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    double *htableFeatureArray =
-        reinterpret_cast<double *>(pNumTabFeature);
-    double *htableLabelArray =
-        reinterpret_cast<double *>(pNumTabLabel);
+    double *htableFeatureArray = reinterpret_cast<double *>(pNumTabFeature);
+    double *htableLabelArray = reinterpret_cast<double *>(pNumTabLabel);
 
-    auto featureData = sycl::malloc_shared<double>(
-        featureRows * featureCols, queue);
+    auto featureData =
+        sycl::malloc_shared<double>(featureRows * featureCols, queue);
     queue
         .memcpy(featureData, htableFeatureArray,
                 sizeof(double) * featureRows * featureCols)
@@ -240,9 +238,8 @@ static jobject doRFClassifierOneAPICompute(
         .memcpy(labelData, htableLabelArray,
                 sizeof(double) * featureRows * labelCols)
         .wait();
-    homogen_table hLabeltable{
-        queue, labelData, featureRows, labelCols,
-        detail::make_default_delete<const double>(queue)};
+    homogen_table hLabeltable{queue, labelData, featureRows, labelCols,
+                              detail::make_default_delete<const double>(queue)};
 
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
