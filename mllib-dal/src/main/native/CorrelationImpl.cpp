@@ -154,17 +154,11 @@ static void doCorrelationOneAPICompute(
     jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    double *htableArray =
-        reinterpret_cast<double *>(pNumTabData);
-    auto data =
-        sycl::malloc_shared<double>(numRows * numClos, queue);
-    queue
-        .memcpy(data, htableArray,
-                sizeof(double) * numRows * numClos)
-        .wait();
-    homogen_table htable{
-        queue, data, numRows, numClos,
-        detail::make_default_delete<const double>(queue)};
+    double *htableArray = reinterpret_cast<double *>(pNumTabData);
+    auto data = sycl::malloc_shared<double>(numRows * numClos, queue);
+    queue.memcpy(data, htableArray, sizeof(double) * numRows * numClos).wait();
+    homogen_table htable{queue, data, numRows, numClos,
+                         detail::make_default_delete<const double>(queue)};
 
     const auto cor_desc =
         covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
