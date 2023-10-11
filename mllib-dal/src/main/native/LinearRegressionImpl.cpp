@@ -244,14 +244,14 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
         detail::make_default_delete<const double>(queue)};
 
     auto labelData =
-        sycl::malloc_shared<GpuAlgorithmFPType>(featureRows * labelCols, queue);
+        sycl::malloc_shared<double>(featureRows * labelCols, queue);
     queue
         .memcpy(labelData, htableLabelArray,
-                sizeof(GpuAlgorithmFPType) * featureRows * labelCols)
+                sizeof(double) * featureRows * labelCols)
         .wait();
     homogen_table ytrain{
         queue, labelData, featureRows, labelCols,
-        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+        detail::make_default_delete<const double>(queue)};
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
