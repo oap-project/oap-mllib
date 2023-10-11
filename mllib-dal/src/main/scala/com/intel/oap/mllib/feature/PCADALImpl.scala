@@ -70,7 +70,7 @@ class PCADALImpl(val k: Int,
         val parts = iter.next().toString.split("_")
         (parts(0).toLong, parts(1).toLong, parts(2).toLong)
       } else {
-        (iter.next(), 0, 0)
+        (iter.next().toString.toLong, 0, 0)
       }
       val result = new PCAResult()
       val gpuIndices = if (useDevice == "GPU") {
