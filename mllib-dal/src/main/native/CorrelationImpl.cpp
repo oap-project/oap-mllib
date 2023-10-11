@@ -164,7 +164,7 @@ static void doCorrelationOneAPICompute(
         .wait();
     homogen_table htable{
         queue, data, numRows, numClos,
-        detail::make_default_delete<const GpuAlgorithmFPType>(queue)};
+        detail::make_default_delete<const double>(queue)};
 
     const auto cor_desc =
         covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
