@@ -75,15 +75,14 @@ class RandomForestRegressorDALImpl(val uid: String,
     }.count()
     rfrTimer.record("OneCCL Init")
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
-      (rank: Int, tables: Iterator[(String, String)]) =>
+    val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
       val (feature, label) = tables.next()
       val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) = {
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
         }
       val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) = {
-          val parts = feature.toString.split("_")
+          val parts = label.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
         }
       val gpuIndices = if (useDevice == "GPU") {
