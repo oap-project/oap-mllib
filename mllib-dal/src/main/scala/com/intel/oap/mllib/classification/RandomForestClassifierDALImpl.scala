@@ -84,19 +84,13 @@ class RandomForestClassifierDALImpl(val uid: String,
     val results = labeledPointsTables.mapPartitionsWithIndex {
       (rank: Int, tables: Iterator[(String, String)]) =>
       val (feature, label) = tables.next()
-      val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
-        if (useDevice == "GPU") {
+      val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) = {
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
-        } else {
-          (feature.toString.toLong, 0L, 0L)
         }
-      val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
-        if (useDevice == "GPU") {
+      val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) = {
           val parts = feature.toString.split("_")
           (parts(0).toLong, parts(1).toLong, parts(2).toLong)
-        } else {
-          (label.toString.toLong, 0L, 0L)
         }
       val gpuIndices = if (useDevice == "GPU") {
         if (isTest) {
