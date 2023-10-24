@@ -246,15 +246,13 @@ static jlong doKMeansOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numClos,
     jlong pNumTabCenters, jint clusterNum, jdouble tolerance, jint iterationNum,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj, sycl::queue &queue) {
+    jobject resultObj) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    double *htableArray = reinterpret_cast<double *>(pNumTabData);
-    auto data = sycl::malloc_shared<double>(numRows * numClos, queue);
-    queue.memcpy(data, htableArray, sizeof(double) * numRows * numClos).wait();
-    homogen_table htable{queue, data, numRows, numClos,
-                         detail::make_default_delete<const double>(queue)};
-
+    homogen_table htable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabData, numRows, numClos,
+                                       comm.get_queue())
+            .get());
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
     const auto kmeans_desc = kmeans_gpu::descriptor<GpuAlgorithmFPType>()
@@ -358,7 +356,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
                 queue, size, rankId, kvs);
         ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numClos,
                                     pNumTabCenters, clusterNum, tolerance,
-                                    iterationNum, comm, resultObj, queue);
+                                    iterationNum, comm, resultObj);
 
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
         break;

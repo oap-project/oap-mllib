@@ -54,8 +54,7 @@ class CorrelationDALImpl(
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
-        val parts = iter.next().toString.split("_")
-        (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+        iter.next()
       } else {
         (iter.next().toString.toLong, 0L, 0L)
       }

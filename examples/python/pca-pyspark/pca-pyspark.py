@@ -19,29 +19,29 @@ import sys
 
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.feature import PCA
+from pyspark.ml.functions import array_to_vector
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, split
 
 if __name__ == "__main__":
-    spark = SparkSession\
-        .builder\
-        .appName("PCAExample")\
-        .getOrCreate()
+    spark = SparkSession.builder.master("local") \
+        .appName("PCAExample").getOrCreate()
 
     if (len(sys.argv) != 2) :
         print("bin/spark-submit pca-pyspark.py <data_set.csv>")
         sys.exit(1)    
 
-    input = spark.read.load(sys.argv[1], format="csv", inferSchema="true", header="false")
+    input = spark.read.parquet(sys.argv[1]).toDF("features")
+    # input = spark.read.load(sys.argv[1], format="csv", inferSchema="true", header="false")
 
-    assembler = VectorAssembler(
-        inputCols=input.columns,
-        outputCol="features")
-
-    dataset = assembler.transform(input)   
-    dataset.show() 
+    input = input.select(split(col("features"), ",").alias("features"))
+    input = input.withColumn("features", input.features.cast("array<double>"))
+    input = input.withColumn("features", array_to_vector("features"))
+    input.show()
+    input.printSchema()
 
     pca = PCA(k=3, inputCol="features", outputCol="pcaFeatures")
-    model = pca.fit(dataset)
+    model = pca.fit(input)
 
     print("Principal Components: ", model.pc, sep='\n')
     print("Explained Variance: ", model.explainedVariance, sep='\n')
