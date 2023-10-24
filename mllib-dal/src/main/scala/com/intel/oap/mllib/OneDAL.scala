@@ -579,7 +579,7 @@ object OneDAL {
   }
 
   def coalesceVectorsToHomogenTables(data: RDD[Vector], executorNum: Int,
-                                device: Common.ComputeDevice): RDD[String] = {
+                                device: Common.ComputeDevice): RDD[Tuple3[Long, Long, Long]] = {
     logger.info(s"Processing partitions with $executorNum executors")
     val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
 
@@ -640,7 +640,7 @@ object OneDAL {
       val result = Future.sequence(futureList)
       Await.result(result, Duration.Inf)
 
-      Iterator(targetArrayAddress + "_" + numRows.toLong + "_" + numCols.toLong)
+      Iterator((targetArrayAddress, numRows.toLong, numCols.toLong))
     }.setName("coalescedTables").cache()
     coalescedTables.count()
     // Unpersist instances RDD

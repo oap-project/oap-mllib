@@ -216,29 +216,14 @@ static jobject doRFRegressorOneAPICompute(
     jobject resultObj, sycl::queue &queue) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    double *htableFeatureArray = reinterpret_cast<double *>(pNumTabFeature);
-    double *htableLabelArray = reinterpret_cast<double *>(pNumTabLabel);
-    auto featureData =
-        sycl::malloc_shared<double>(featureRows * featureCols, queue);
-    queue
-        .memcpy(featureData, htableFeatureArray,
-                sizeof(double) * featureRows * featureCols)
-        .wait();
-    homogen_table hFeaturetable{
-        queue, featureData, featureRows, featureCols,
-        detail::make_default_delete<const double>(queue)};
-
-    auto labelData =
-        sycl::malloc_shared<double>(featureRows * labelCols, queue);
-    queue
-        .memcpy(labelData, htableLabelArray,
-                sizeof(double) * featureRows * labelCols)
-        .wait();
-    homogen_table hLabeltable{queue, labelData, featureRows, labelCols,
-                              detail::make_default_delete<const double>(queue)};
-    logger::println(logger::INFO,
-                    "doRFRegressorOneAPICompute get_column_count = %d",
-                    hFeaturetable.get_column_count());
+    homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
+                                       comm.get_queue())
+            .get());
+    homogen_table hLabeltable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
+                                       comm.get_queue())
+            .get());
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
                        df::task::regression>{}
