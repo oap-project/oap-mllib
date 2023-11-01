@@ -23,5 +23,3 @@
 #include "GPU.h"
 #include "Communicator.hpp"
 #include "oneapi/dal/table/homogen.hpp"
-
-HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData, size_t numRows, size_t numClos, sycl::queue queue);
