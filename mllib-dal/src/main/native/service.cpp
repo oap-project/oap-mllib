@@ -247,9 +247,8 @@ HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData,
     double *htableArray = reinterpret_cast<double *>(pNumTabData);
     auto data = sycl::malloc_shared<double>(numRows * numClos, queue);
     queue.memcpy(data, htableArray, sizeof(double) * numRows * numClos).wait();
-    HomogenTablePtr tablePtr = std::make_shared<homogen_table>(
+    return std::make_shared<homogen_table>(
         queue, data, numRows, numClos,
-        detail::make_default_delete<const double>(queue));
-    return tablePtr;
+        detail::make_default_delete<const double>(queue));    
 }
 #endif
