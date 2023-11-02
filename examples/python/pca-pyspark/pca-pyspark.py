@@ -37,8 +37,8 @@ if __name__ == "__main__":
         inputCols=input.columns,
         outputCol="features")
 
-    dataset = assembler.transform(input)
-    dataset.show()
+    dataset = assembler.transform(input)   
+    dataset.show() 
 
     pca = PCA(k=3, inputCol="features", outputCol="pcaFeatures")
     model = pca.fit(dataset)
