@@ -110,15 +110,13 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         val (feature, label) = tables.next()
         val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
           if (useDevice == "GPU") {
-            val parts = feature.toString.split("_")
-            (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+            feature
           } else {
             (feature.toString.toLong, 0L, 0L)
           }
         val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
           if (useDevice == "GPU") {
-            val parts = feature.toString.split("_")
-            (parts(0).toLong, parts(1).toLong, parts(2).toLong)
+            label
           } else {
             (label.toString.toLong, 0L, 0L)
           }

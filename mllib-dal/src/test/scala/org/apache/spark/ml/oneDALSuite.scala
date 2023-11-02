@@ -84,8 +84,8 @@ class oneDALSuite extends FunctionsSuite with Logging {
     val mergedata = OneDAL.coalesceLabelPointsToHomogenTables(df,
       "label", "features", 1, TestCommon.getComputeDevice)
     val results = mergedata.collect()
-    val featureTable = new HomogenTable(results(0)._1.split("_")(0).toLong)
-    val labelTable = new HomogenTable(results(0)._2.split("_")(0).toLong)
+    val featureTable = new HomogenTable(results(0)._1._1)
+    val labelTable = new HomogenTable(results(0)._2._1)
 
     val fData: Array[Double] = featureTable.getDoubleData()
     val lData: Array[Double] = labelTable.getDoubleData()
