@@ -399,7 +399,7 @@ object OneDAL {
                                     labelCol: String,
                                     featuresCol: String,
                                     executorNum: Int,
-                                    device: Common.ComputeDevice): RDD[(String, String)] = {
+                                    device: Common.ComputeDevice): RDD[(Tuple3[Long, Long, Long], Tuple3[Long, Long, Long])] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -471,7 +471,7 @@ object OneDAL {
       val result = Future.sequence(labeledPointsList)
       Await.result(result, Duration.Inf)
 
-      Iterator((featuresAddress + "_" + numRows.toLong + "_" + numCols.toLong, labelsAddress + "_" + numRows.toLong + "_" + 1))
+      Iterator(((featuresAddress, numRows.toLong, numCols.toLong), (labelsAddress, numRows.toLong, 1.toLong)))
 
     }.setName("coalescedTables").cache()
 

@@ -83,14 +83,6 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
       val (feature, label) = tables.next()
-      val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) = {
-          val parts = feature.toString.split("_")
-          (parts(0).toLong, parts(1).toLong, parts(2).toLong)
-        }
-      val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) = {
-          val parts = label.toString.split("_")
-          (parts(0).toLong, parts(1).toLong, parts(2).toLong)
-        }
       val gpuIndices = if (useDevice == "GPU") {
         if (isTest) {
            Array(0)
@@ -104,11 +96,11 @@ class RandomForestClassifierDALImpl(val uid: String,
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
-        featureTabAddr,
-        featureRows,
-        featureColumns,
-        labelTabAddr,
-        labelColumns,
+        feature._1,
+        feature._2,
+        feature._3,
+        label._1,
+        label._3,
         executorNum,
         computeDevice.ordinal(),
         classCount,
