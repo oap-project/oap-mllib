@@ -249,6 +249,6 @@ HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData,
     queue.memcpy(data, htableArray, sizeof(double) * numRows * numClos).wait();
     return std::make_shared<homogen_table>(
         queue, data, numRows, numClos,
-        detail::make_default_delete<const double>(queue));    
+        detail::make_default_delete<const double>(queue));
 }
 #endif
