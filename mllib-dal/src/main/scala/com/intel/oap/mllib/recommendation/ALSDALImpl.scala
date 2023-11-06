@@ -106,7 +106,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
           result
         )
         Iterator(result)
-      }.cache()
+      }.cache().barrier().mapPartitions(iter => iter)
 
     val usersFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
@@ -127,7 +127,7 @@ class ALSDALImpl[@specialized(Int, Long) ID: ClassTag]( data: RDD[Rating[ID]],
           }.toIterator
         }
         ret
-      }.setName("userFactors").cache()
+      }.setName("userFactors").cache().barrier().mapPartitions(iter => iter)
 
     val itemsFactorsRDD = results
       .mapPartitionsWithIndex { (index: Int, partiton: Iterator[ALSResult]) =>
