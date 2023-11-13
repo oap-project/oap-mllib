@@ -395,6 +395,10 @@ object OneDAL {
     mergedTables
   }
 
+  /**
+   * Return a new RDD containing two Tuple3, Each Tuple3 represents(featuresArrayAddress, featuresNumRows, featuresNumCols),
+   * (labelsArrayAddress, labelsNumRows, labelsNumCols) in this RDD.
+   */
   def coalesceLabelPointsToHomogenTables(labeledPoints: Dataset[_],
                                     labelCol: String,
                                     featuresCol: String,
@@ -578,6 +582,9 @@ object OneDAL {
     matrix
   }
 
+  /**
+   * Return a new RDD containing targetArrayAddress, numRows, numCols in this RDD.
+   */
   def coalesceVectorsToHomogenTables(data: RDD[Vector], executorNum: Int,
                                 device: Common.ComputeDevice): RDD[Tuple3[Long, Long, Long]] = {
     logger.info(s"Processing partitions with $executorNum executors")
