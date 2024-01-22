@@ -12,7 +12,7 @@ SCRIPT_DIR=$( cd $(dirname ${BASH_SOURCE[0]}) && pwd )
 OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
 
-if [[ -z $DAALROOT ]]; then
+if [[ -z $DAALROOT && -z $DALROOT ]]; then
  echo DAALROOT not defined!
  exit 1
 fi
