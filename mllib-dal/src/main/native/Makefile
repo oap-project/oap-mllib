@@ -24,7 +24,6 @@ endif
 RM := rm -rf
 
 PLATFORM_PROFILE ?= CPU_ONLY_PROFILE
-ONEDAL_VERSION=2023.2.0
 
 $(info )
 $(info === Profile is $(PLATFORM_PROFILE) ===)
@@ -120,7 +119,7 @@ OBJS += \
   ./DecisionForestClassifierImpl.o \
   ./DecisionForestRegressorImpl.o
 
-DEFINES=-D$(PLATFORM_PROFILE) -D$(ONEDAL_VERSION)
+DEFINES=-D$(PLATFORM_PROFILE)
 
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CPP_SRCS += ./GPU.cpp
