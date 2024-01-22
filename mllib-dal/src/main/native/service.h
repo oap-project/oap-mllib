@@ -43,7 +43,7 @@ using namespace daal::data_management;
 
 #include "Logger.h"
 #include "error_handling.h"
-#ifdef ONEDAL_VERSION
+#ifdef ONEDAL_VERSION == "2023.2.0"
 #include "oneapi/dal/table/detail/csr.hpp"
 #else
 #include "oneapi/dal/table/csr.hpp"
