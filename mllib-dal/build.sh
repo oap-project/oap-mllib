@@ -11,10 +11,17 @@ if [[ -z $(which mvn) ]]; then
  exit 1
 fi
 
-if [[ -z $DAALROOT ]]; then
+if [[ -z $DAALROOT && -z $DALROOT ]]; then
  echo DAALROOT not defined!
  exit 1
 fi
+
+if [[ -e $DAALROOT ]]; then
+  export ONEDAL_VERSION=$(echo "$DAALROOT" | awk -F '/' '{print $(NF)}')
+elif [[ -e $DALROOT ]]; then
+  export ONEDAL_VERSION=$(echo "$DALROOT" | awk -F '/' '{print $(NF)}')
+fi
+echo $ONEDAL_VERSION
 
 if [[ -z $TBBROOT ]]; then
  echo TBBROOT not defined!
@@ -74,6 +81,7 @@ OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
 # Set default PLATFORM_PROFILE from RELEASE envs
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
+echo $PLATFORM_PROFILE
 
 
 echo
@@ -89,7 +97,11 @@ then
   echo GCC Version: $(gcc -dumpversion)
 fi
 echo JAVA_HOME=$JAVA_HOME
-echo DAALROOT=$DAALROOT
+if [[ -e $DAALROOT ]]; then
+  echo DAALROOT=$DAALROOT
+elif [[ -e $DALROOT ]]; then
+  echo DAALROOT=$DALROOT
+fi
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo =============================
