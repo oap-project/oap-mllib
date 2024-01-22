@@ -17,6 +17,12 @@ if [[ -z $DAALROOT ]]; then
  exit 1
 fi
 
+if [[ -e $DAALROOT ]]; then
+  export ONEDAL_VERSION=$(echo "$DAALROOT" | awk -F '/' '{print $(NF)}')
+elif [[ -e $DALROOT ]]; then
+  export ONEDAL_VERSION=$(echo "$DALROOT" | awk -F '/' '{print $(NF)}')
+fi
+
 if [[ -z $TBBROOT ]]; then
  echo TBBROOT not defined!
  exit 1

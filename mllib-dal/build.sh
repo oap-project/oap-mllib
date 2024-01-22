@@ -21,7 +21,6 @@ if [[ -e $DAALROOT ]]; then
 elif [[ -e $DALROOT ]]; then
   export ONEDAL_VERSION=$(echo "$DALROOT" | awk -F '/' '{print $(NF)}')
 fi
-echo $ONEDAL_VERSION
 
 if [[ -z $TBBROOT ]]; then
  echo TBBROOT not defined!
@@ -81,7 +80,6 @@ OAP_MLLIB_ROOT=$(cd $SCRIPT_DIR/.. && pwd)
 source $OAP_MLLIB_ROOT/RELEASE
 # Set default PLATFORM_PROFILE from RELEASE envs
 export PLATFORM_PROFILE=${PLATFORM_OPT:-$PLATFORM_PROFILE}
-echo $PLATFORM_PROFILE
 
 
 echo
