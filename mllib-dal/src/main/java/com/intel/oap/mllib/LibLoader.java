@@ -62,6 +62,7 @@ public final class LibLoader {
     // oneDAL Java API doesn't load correct libtbb version
     // See https://github.com/oneapi-src/oneDAL/issues/1254
     // Workaround: Load packaged libtbb & libtbbmalloc & libJavaAPI.so manually
+    System.loadLibrary("onedal_thread");
     loadFromJar(subDir, "libMLlibDAL.so");
   }
 
