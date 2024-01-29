@@ -16,4 +16,4 @@
 
 export PLATFORM_PROFILE=CPU_GPU_PROFILE
 
-bash build.sh
+./build.sh
