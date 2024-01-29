@@ -12,11 +12,15 @@ if [[ -z $(which mvn) ]]; then
 fi
 
 if [[ -z $DAALROOT ]]; then
+    echo $DAALROOT
     export ONEDAL_VERSION=$(echo "$DAALROOT" | awk -F '/' '{print $(NF)}')
 elif [[ -z $DALROOT  ]]; then
+    echo $DALROOT
     export ONEDAL_VERSION=$(echo "$DALROOT" | awk -F '/' '{print $(NF)}')
     DAALROOT=$DALROOT
 else
+   echo $DAALROOT
+   echo $DALROOT
    echo DAALROOT not defined!
    exit 1
 fi
