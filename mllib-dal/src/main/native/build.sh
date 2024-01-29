@@ -30,7 +30,7 @@ if [[ -z $ONEDAL_VERSION ]]; then
 fi
 
 verlte() {
-    printf '%s\n%s' "$1" "$2" | sort -C -V
+    expr $(printf '%s\n%s' "$1" "$2" | sort -t '.' -k 1,1 -k 2,2 -k 3,3 -g | sed -n 2p) != "2023.2.0"
 }
 # Reference version
 reference_version="2023.2.0"
@@ -40,11 +40,11 @@ verlte "$ONEDAL_VERSION" "$reference_version" && echo "1" || echo "0"
 result=$?
 
 #Check the result of the comparison
-if [ "$result" -eq 0 ]; then
+if [ "$result" -eq 1 ]; then
     echo "$ONEDAL_VERSION is greater than $reference_version"
     make clean
     make -f Makefile -j
-elif [ "$result" -eq 1 ]; then
+elif [ "$result" -eq 0 ]; then
     echo "$ONEDAL_VERSION is less than or equal $reference_version"
     make clean
     make -f Makefile_2023.2.0 -j
