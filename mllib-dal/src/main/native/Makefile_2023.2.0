@@ -135,7 +135,7 @@ OBJS += \
   ./DecisionForestRegressorImpl.o
 
 # Compile cpp with a compiler version before onedal 2023.2.0
-DEFINES=-D$(PLATFORM_PROFILE) -DONEDAL_VERSION_BEFORE_2023_2_0
+DEFINES=-D$(PLATFORM_PROFILE) -DONEDAL_VERSION_LESS_THAN_OR_EQUAL_TO_2023.2.0
 
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CPP_SRCS += ./GPU.cpp

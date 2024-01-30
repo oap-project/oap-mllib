@@ -33,8 +33,8 @@ CFLAGS_COMMON := -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I $(I_MPI_ROOT)/include \
                  -I $(DALROOT)/include \
                  -I $(CCL_ROOT)/include/oneapi/ \
-                 -I $(CMPLR_ROOT)/linux/include \
-                 -I $(CMPLR_ROOT)/linux/include/sycl
+                 -I $(CMPLR_ROOT)/include \
+                 -I $(CMPLR_ROOT)/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
@@ -56,7 +56,7 @@ INCS := -I $(CCL_ROOT)/include \
 
 # Use static link if possible, TBB is only available as dynamic libs
 LIBS_COMMON := -L$(CCL_ROOT)/lib -lccl \
-        -L$(CMPLR_ROOT)/linux/compiler/lib -l:libirc.a \
+        -L$(CMPLR_ROOT)/lib -l:libirc.a \
         -L$(DALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc -lonedal_parameters_dpc \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L$(I_MPI_ROOT)
