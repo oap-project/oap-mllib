@@ -59,6 +59,9 @@ public final class LibLoader {
    * Load MLlibDAL lib
    */
   private static synchronized void loadLibMLlibDAL() throws IOException {
+    // When loading libMLlibDAL.so, it will hang on libtcm.so.
+    // Workaround: loading tbb manually to bypass it.
+    System.loadLibrary("tbb");
     loadFromJar(subDir, "libMLlibDAL.so");
   }
 
