@@ -135,7 +135,7 @@ OBJS += \
 
 # Compile cpp with a compiler version before onedal 2023.2.0
 DEFINES=-D$(PLATFORM_PROFILE)
-ifneq ($(ONEDAL_VERSION),"2023.2.0")
+ifneq ($(ONEDAL_VERSION),2023.2.0)
      DEFINES+=-DONEDAL_VERSION_LESS_THAN_2023_2_0
 endif
 
