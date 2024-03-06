@@ -26,6 +26,7 @@ on:
       - synchronize
 
 permissions: read-all
+
 jobs:
   process:
     name: Process
