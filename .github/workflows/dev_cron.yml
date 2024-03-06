@@ -16,6 +16,7 @@
 # under the License.
 
 name: Dev PR
+permissions: read-all
 
 on:
 
