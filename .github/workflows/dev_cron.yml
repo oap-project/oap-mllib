@@ -16,7 +16,6 @@
 # under the License.
 
 name: Dev PR
-permissions: read-all
 
 on:
 
@@ -25,6 +24,8 @@ on:
       - opened
       - edited
       - synchronize
+
+permissions: read-all
 
 jobs:
   process:
