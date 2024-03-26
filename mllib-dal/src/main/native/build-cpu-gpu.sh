@@ -16,5 +16,4 @@
 
 export PLATFORM_PROFILE=CPU_GPU_PROFILE
 
-make clean
-make -j
+./build.sh
