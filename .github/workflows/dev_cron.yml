@@ -24,7 +24,7 @@ on:
       - opened
       - edited
       - synchronize
-
+      
 permissions: read-all
 
 jobs:
