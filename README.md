@@ -2,6 +2,9 @@
 
 ##### \* Optimized Analytics Package for Spark* Platform is under Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/oap-project/oap-mllib/badge)](https://securityscorecards.dev/viewer/?uri=github.com/oap-project/oap-mllib)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8460/badge)](https://www.bestpractices.dev/projects/8460)
+
 # Introduction
 
 ## The Problem
