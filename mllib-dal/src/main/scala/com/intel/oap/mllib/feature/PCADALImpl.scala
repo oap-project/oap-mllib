@@ -44,6 +44,7 @@ class PCADALImpl(val k: Int,
 
   def train(data: RDD[Vector]): PCADALModel = {
     val normalizedData = normalizeData(data)
+
     val sparkContext = normalizedData.sparkContext
     val pcaTimer = new Utils.AlgoTimeMetrics("PCA", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
@@ -109,7 +110,7 @@ class PCADALImpl(val k: Int,
       }
       OneCCL.cleanup()
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
     pcaTimer.record("Training")
     pcaTimer.print()
 
