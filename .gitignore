@@ -8,3 +8,5 @@ target/
 *.versionsBackup
 shims-sources/
 env.sh
+build/
+*.egg-info/
