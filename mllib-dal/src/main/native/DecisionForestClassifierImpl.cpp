@@ -216,7 +216,7 @@ static jobject doRFClassifierOneAPICompute(
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj, sycl::queue &queue) {
+    jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
@@ -339,7 +339,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             numFeaturesPerNode, minObservationsLeafNode,
             minObservationsSplitNode, minWeightFractionLeafNode,
             minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
-            bootstrap, comm, resultObj, queue);
+            bootstrap, comm, resultObj);
         return hashmapObj;
     }
     default: {

@@ -182,13 +182,13 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
 #ifdef CPU_GPU_PROFILE
 static void doPCAOneAPICompute(
-    JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numClos,
+    JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable = *reinterpret_cast<homogen_table *>(
-        createHomogenTableWithArrayPtr(pNumTabData, numRows, numClos,
+        createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
                                        comm.get_queue())
             .get());
 
@@ -250,7 +250,7 @@ static void doPCAOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong numRows, jlong numClos,
+    JNIEnv *env, jobject obj, jlong pNumTabData, jlong numRows, jlong numCols,
     jint executorNum, jint executorCores, jint computeDeviceOrdinal,
     jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
@@ -295,7 +295,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         auto comm =
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
-        doPCAOneAPICompute(env, pNumTabData, numRows, numClos, comm, resultObj);
+        doPCAOneAPICompute(env, pNumTabData, numRows, numCols, comm, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
         break;
     }
