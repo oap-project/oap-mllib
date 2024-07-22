@@ -11,9 +11,17 @@ if [[ -z $(which mvn) ]]; then
  exit 1
 fi
 
-if [[ -z $DAALROOT ]]; then
- echo DAALROOT not defined!
- exit 1
+if [[ -n $DAALROOT ]]; then
+  if [[ -e $DAALROOT ]]; then
+      export ONEDAL_VERSION=$(echo "$DAALROOT" | awk -F '/' '{print $(NF)}')
+  fi
+elif [[ -n $DALROOT ]]; then
+  if [[ -e $DALROOT ]]; then
+      export ONEDAL_VERSION=$(echo "$DALROOT" | awk -F '/' '{print $(NF)}')
+  fi
+else
+  echo DAALROOT not defined!
+  exit 1
 fi
 
 if [[ -z $TBBROOT ]]; then
@@ -89,7 +97,11 @@ then
   echo GCC Version: $(gcc -dumpversion)
 fi
 echo JAVA_HOME=$JAVA_HOME
-echo DAALROOT=$DAALROOT
+if [[ -n $DAALROOT ]]; then
+  echo DAALROOT=$DAALROOT
+elif [[ -n $DALROOT ]]; then
+  echo DALROOT=$DALROOT
+fi
 echo TBBROOT=$TBBROOT
 echo CCL_ROOT=$CCL_ROOT
 echo =============================
