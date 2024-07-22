@@ -6,8 +6,10 @@ using namespace daal;
 using namespace daal::data_management;
 using namespace daal::services;
 
+#ifdef CPU_GPU_PROFILE
 std::mutex g_kmtx;
 std::vector<HomogenTablePtr> g_HomogenTablePtrVector;
+#endif
 
 bool isFull(NumericTableIface::StorageLayout layout) {
     int layoutInt = (int)layout;
@@ -196,13 +198,14 @@ ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal) {
     return device;
 }
 
+#ifdef CPU_GPU_PROFILE
+
 void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr) {
     g_kmtx.lock();
     g_HomogenTablePtrVector.push_back(ptr);
     g_kmtx.unlock();
 }
 
-#ifdef CPU_GPU_PROFILE
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
     int nRows = ntHomogen->getNumberOfRows();
     int nColumns = ntHomogen->getNumberOfColumns();
@@ -236,5 +239,16 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
     // printNumericTable(ntSycl, "ntSycl Result:", 10, 10);
 
     return ntSycl;
+}
+
+HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData,
+                                               size_t numRows, size_t numClos,
+                                               sycl::queue queue) {
+    double *htableArray = reinterpret_cast<double *>(pNumTabData);
+    auto data = sycl::malloc_shared<double>(numRows * numClos, queue);
+    queue.memcpy(data, htableArray, sizeof(double) * numRows * numClos).wait();
+    return std::make_shared<homogen_table>(
+        queue, data, numRows, numClos,
+        detail::make_default_delete<const double>(queue));
 }
 #endif

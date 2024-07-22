@@ -202,13 +202,16 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 
 #ifdef CPU_GPU_PROFILE
 static void doSummarizerOneAPICompute(
-    JNIEnv *env, jlong pNumTabData,
+    JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    homogen_table htable =
-        *reinterpret_cast<const homogen_table *>(pNumTabData);
+    homogen_table htable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
+                                       comm.get_queue())
+            .get());
+
     const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
@@ -265,9 +268,9 @@ static void doSummarizerOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jint executorNum,
-    jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
-    jobject resultObj) {
+    JNIEnv *env, jobject obj, jlong pNumTabData, jlong numRows, jlong numCols,
+    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
+    jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -310,7 +313,8 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
         auto comm =
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
-        doSummarizerOneAPICompute(env, pNumTabData, comm, resultObj);
+        doSummarizerOneAPICompute(env, pNumTabData, numRows, numCols, comm,
+                                  resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
         break;
     }

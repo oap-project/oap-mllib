@@ -81,10 +81,8 @@ class RandomForestClassifierDALImpl(val uid: String,
     }.count()
     rfcTimer.record("OneCCL Init")
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
-      (rank: Int, tables: Iterator[(Long, Long)]) =>
-      val (featureTabAddr, lableTabAddr) = tables.next()
-
+    val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
+      val (feature, label) = tables.next()
       val gpuIndices = if (useDevice == "GPU") {
         if (isTest) {
            Array(0)
@@ -98,8 +96,11 @@ class RandomForestClassifierDALImpl(val uid: String,
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
-        featureTabAddr,
-        lableTabAddr,
+        feature._1,
+        feature._2,
+        feature._3,
+        label._1,
+        label._3,
         executorNum,
         computeDevice.ordinal(),
         classCount,
@@ -140,7 +141,10 @@ class RandomForestClassifierDALImpl(val uid: String,
   }
 
   @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
+                                                   numRows: Long,
+                                                   numCols: Long,
                                                    lableTabAddr: Long,
+                                                   labelNumCols: Long,
                                                    executorNum: Int,
                                                    computeDeviceOrdinal: Int,
                                                    classCount: Int,
