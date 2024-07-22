@@ -207,7 +207,8 @@ jobject collect_model(JNIEnv *env, const df::model<Task> &m,
 }
 
 static jobject doRFRegressorOneAPICompute(
-    JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
+    JNIEnv *env, jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jint executorNum,
     jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
     jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
     jboolean bootstrap,
@@ -215,13 +216,14 @@ static jobject doRFRegressorOneAPICompute(
     jobject resultObj) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    homogen_table hFeaturetable =
-        *reinterpret_cast<const homogen_table *>(pNumTabFeature);
-    homogen_table hLabeltable =
-        *reinterpret_cast<const homogen_table *>(pNumTabLabel);
-    logger::println(logger::INFO,
-                    "doRFRegressorOneAPICompute get_column_count = %d",
-                    hFeaturetable.get_column_count());
+    homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
+                                       comm.get_queue())
+            .get());
+    homogen_table hLabeltable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
+                                       comm.get_queue())
+            .get());
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
                        df::task::regression>{}
@@ -290,11 +292,11 @@ static jobject doRFRegressorOneAPICompute(
 
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
-    jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
-    jobject resultObj) {
+    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong featureRows,
+    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
+    jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
+    jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
+    jboolean bootstrap, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -322,10 +324,10 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         jobject hashmapObj = doRFRegressorOneAPICompute(
-            env, pNumTabFeature, pNumTabLabel, executorNum,
-            computeDeviceOrdinal, treeCount, numFeaturesPerNode,
-            minObservationsLeafNode, maxTreeDepth, seed, maxbins, bootstrap,
-            comm, resultObj);
+            env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
+            labelCols, executorNum, computeDeviceOrdinal, treeCount,
+            numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
+            maxbins, bootstrap, comm, resultObj);
         return hashmapObj;
     }
     default: {

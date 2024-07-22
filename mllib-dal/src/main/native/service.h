@@ -28,6 +28,10 @@
 #include <daal.h>
 #endif
 
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
+
 using namespace daal::data_management;
 
 #include <algorithm>
@@ -56,7 +60,6 @@ using namespace oneapi::dal::detail;
 typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
 typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
 typedef std::vector<daal::byte> ByteBuffer;
-typedef std::shared_ptr<homogen_table> HomogenTablePtr;
 typedef std::shared_ptr<csr_table> CSRTablePtr;
 
 enum class ComputeDevice { host, cpu, gpu, uninitialized };
@@ -69,13 +72,18 @@ size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
 CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
-void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
 
 #ifdef CPU_GPU_PROFILE
 #include "oneapi/dal/table/common.hpp"
 #include "oneapi/dal/table/row_accessor.hpp"
 
+typedef std::shared_ptr<homogen_table> HomogenTablePtr;
+
+void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
+HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData,
+                                               size_t numRows, size_t numClos,
+                                               sycl::queue queue);
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
 inline void printHomegenTable(const oneapi::dal::table &table) {
     auto arr = oneapi::dal::row_accessor<const float>(table).pull();
@@ -112,4 +120,5 @@ inline void printHomegenTable(const oneapi::dal::table &table) {
     }
     return;
 }
+
 #endif

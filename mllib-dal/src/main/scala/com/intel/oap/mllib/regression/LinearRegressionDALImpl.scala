@@ -106,9 +106,21 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
     lrTimer.record("Data Convertion")
 
-    val results = labeledPointsTables.mapPartitionsWithIndex {
-      case (rank: Int, tables: Iterator[(Long, Long)]) =>
-        val (featureTabAddr, lableTabAddr) = tables.next()
+    val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
+        val (feature, label) = tables.next()
+        val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
+          if (useDevice == "GPU") {
+            feature
+          } else {
+            (feature.toString.toLong, 0L, 0L)
+          }
+        val (labelTabAddr : Long, labelRows : Long, labelColumns : Long) =
+          if (useDevice == "GPU") {
+            label
+          } else {
+            (label.toString.toLong, 0L, 0L)
+          }
+
         OneCCL.init(executorNum, rank, kvsIPPort)
         val result = new LiRResult()
 
@@ -127,7 +139,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
         val cbeta = cLinearRegressionTrainDAL(
           featureTabAddr,
-          lableTabAddr,
+          featureRows,
+          featureColumns,
+          labelTabAddr,
+          labelColumns,
           fitIntercept,
           regParam,
           elasticNetParam,
@@ -169,7 +184,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
 
   // Single entry to call Linear Regression DAL backend with parameters
   @native private def cLinearRegressionTrainDAL(data: Long,
+                                  numRows: Long,
+                                  numCols: Long,
                                   label: Long,
+                                  labelNumCols: Long,
                                   fitIntercept: Boolean,
                                   regParam: Double,
                                   elasticNetParam: Double,

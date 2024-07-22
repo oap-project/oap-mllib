@@ -53,8 +53,12 @@ class SummarizerDALImpl(val executorNum: Int,
     }.count()
     sumTimer.record("OneCCL Init")
 
-    val results = coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      val tableArr = table.next()
+    val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
+      val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
+        iter.next()
+      } else {
+        (iter.next().toString.toLong, 0L, 0L)
+      }
 
       val computeStartTime = System.nanoTime()
 
@@ -67,6 +71,8 @@ class SummarizerDALImpl(val executorNum: Int,
       }
       cSummarizerTrainDAL(
         tableArr,
+        rows,
+        columns,
         executorNum,
         executorCores,
         computeDevice.ordinal(),
@@ -145,6 +151,8 @@ class SummarizerDALImpl(val executorNum: Int,
   }
 
   @native private[mllib] def cSummarizerTrainDAL(data: Long,
+                                          numRows: Long,
+                                          numCols: Long,
                                           executorNum: Int,
                                           executorCores: Int,
                                           computeDeviceOrdinal: Int,

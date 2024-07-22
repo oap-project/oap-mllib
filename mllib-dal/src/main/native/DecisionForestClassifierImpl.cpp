@@ -208,7 +208,8 @@ jobject collect_model(JNIEnv *env, const df::model<Task> &m,
 }
 
 static jobject doRFClassifierOneAPICompute(
-    JNIEnv *env, jlong pNumTabFeature, jlong pNumTabLabel, jint executorNum,
+    JNIEnv *env, jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jint executorNum,
     jint computeDeviceOrdinal, jint classCount, jint treeCount,
     jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
@@ -218,15 +219,14 @@ static jobject doRFClassifierOneAPICompute(
     jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
-    homogen_table hFeaturetable =
-        *reinterpret_cast<const homogen_table *>(pNumTabFeature);
-    homogen_table hLabeltable =
-        *reinterpret_cast<const homogen_table *>(pNumTabLabel);
-    logger::println(logger::INFO,
-                    "doRFClassifierOneAPICompute get_column_count = %d",
-                    hFeaturetable.get_column_count());
-    logger::println(logger::INFO, "doRFClassifierOneAPICompute classCount = %d",
-                    classCount);
+    homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
+                                       comm.get_queue())
+            .get());
+    homogen_table hLabeltable = *reinterpret_cast<homogen_table *>(
+        createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
+                                       comm.get_queue())
+            .get());
 
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
@@ -300,9 +300,10 @@ static jobject doRFClassifierOneAPICompute(
  */
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong pNumTabLabel,
-    jint executorNum, jint computeDeviceOrdinal, jint classCount,
-    jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
+    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong featureRows,
+    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
+    jint computeDeviceOrdinal, jint classCount, jint treeCount,
+    jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
@@ -333,11 +334,12 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
                 queue, size, rankId, kvs);
         jobject hashmapObj = doRFClassifierOneAPICompute(
-            env, pNumTabFeature, pNumTabLabel, executorNum,
-            computeDeviceOrdinal, classCount, treeCount, numFeaturesPerNode,
-            minObservationsLeafNode, minObservationsSplitNode,
-            minWeightFractionLeafNode, minImpurityDecreaseSplitNode,
-            maxTreeDepth, seed, maxBins, bootstrap, comm, resultObj);
+            env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
+            labelCols, executorNum, computeDeviceOrdinal, classCount, treeCount,
+            numFeaturesPerNode, minObservationsLeafNode,
+            minObservationsSplitNode, minWeightFractionLeafNode,
+            minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
+            bootstrap, comm, resultObj);
         return hashmapObj;
     }
     default: {
