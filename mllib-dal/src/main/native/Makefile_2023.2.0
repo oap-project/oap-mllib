@@ -31,35 +31,49 @@ $(info )
 
 CFLAGS_COMMON := -Wall -Wno-deprecated-declarations -fPIC -std=c++17 \
                  -I $(I_MPI_ROOT)/include \
-                 -I $(DALROOT)/include \
-                 -I $(CCL_ROOT)/include/oneapi/ \
-                 -I $(CMPLR_ROOT)/include \
-                 -I $(CMPLR_ROOT)/include/sycl
+                 -I $(DAALROOT)/include \
+                 -I $(CCL_ROOT)/include/cpu/oneapi/ \
+                 -I $(CMPLR_ROOT)/linux/include \
+                 -I $(CMPLR_ROOT)/linux/include/sycl
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   CFLAGS := $(CFLAGS_COMMON)
 else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CFLAGS := $(CFLAGS_COMMON) -fsycl \
             -fsycl-device-code-split=per_kernel \
-            -fno-sycl-id-queries-fit-in-int
+            -I $(CCL_ROOT)/include/cpu_gpu_dpcpp/oneapi/
 else
   $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
   exit 1
 endif
 
-INCS := -I $(CCL_ROOT)/include \
+INCS := -I $(CCL_ROOT)/include/cpu \
         -I $(JAVA_HOME)/include \
         -I $(JAVA_HOME)/include/linux \
-        -I $(DALROOT)/include \
+        -I $(DAALROOT)/include \
         -I ./javah \
         -I ./
 
+ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
+  INCS := $(INCS)
+else ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+  INCS := $(INCS) -I $(CCL_ROOT)/include/cpu_gpu_dpcpp
+else
+  $(error Unknow building profile, should be CPU_ONLY_PROFILE or CPU_GPU_PROFILE)
+  exit 1
+endif
+
 # Use static link if possible, TBB is only available as dynamic libs
-LIBS_COMMON := -L$(CCL_ROOT)/lib -lccl \
-        -L$(CMPLR_ROOT)/lib -l:libirc.a \
-        -L$(DALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc -lonedal_parameters_dpc \
+LIBS_COMMON := -L$(CCL_ROOT)/lib/cpu -lccl \
+        -L$(CMPLR_ROOT)/linux/compiler/lib/intel64_lin -l:libirc.a \
+        -L$(DAALROOT)/lib/intel64 -lonedal_core -lonedal_thread -lonedal_dpc \
         -L$(TBBROOT)/lib/intel64/gcc4.8 -ltbb -ltbbmalloc \
         -L$(I_MPI_ROOT)
+
+ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
+      LIBS_COMMON := $(LIBS_COMMON) \
+                     -L$(CCL_ROOT)/lib/cpu_gpu_dpcpp -lccl
+endif
 
 ifeq ($(PLATFORM_PROFILE),CPU_ONLY_PROFILE)
   LIBS := $(LIBS_COMMON) $(ONEDAL_LIBS)
@@ -119,7 +133,11 @@ OBJS += \
   ./DecisionForestClassifierImpl.o \
   ./DecisionForestRegressorImpl.o
 
+# Compile cpp with a compiler version before onedal 2023.2.0
 DEFINES=-D$(PLATFORM_PROFILE)
+ifneq ($(ONEDAL_VERSION),2023.2.0)
+     DEFINES+=-DONEDAL_VERSION_LESS_THAN_2023_2_0
+endif
 
 ifeq ($(PLATFORM_PROFILE),CPU_GPU_PROFILE)
   CPP_SRCS += ./GPU.cpp

@@ -59,9 +59,9 @@ public final class LibLoader {
    * Load MLlibDAL lib
    */
   private static synchronized void loadLibMLlibDAL() throws IOException {
-    // oneDAL Java API doesn't load correct libtbb version
-    // See https://github.com/oneapi-src/oneDAL/issues/1254
-    // Workaround: Load packaged libtbb & libtbbmalloc & libJavaAPI.so manually
+    // When loading libMLlibDAL.so, it will hang on libtcm.so.
+    // Workaround: loading tbb manually to bypass it.
+    System.loadLibrary("tbb");
     loadFromJar(subDir, "libMLlibDAL.so");
   }
 
