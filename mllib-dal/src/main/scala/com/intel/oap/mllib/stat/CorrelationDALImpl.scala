@@ -99,7 +99,7 @@ class CorrelationDALImpl(
       }
       OneCCL.cleanup()
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
     corTimer.record("Training")
     corTimer.print()
 
