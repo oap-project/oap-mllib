@@ -71,7 +71,7 @@ class PCADALImpl(val k: Int,
     }.count()
 
     coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     pcaTimer.record("OneCCL Init")
