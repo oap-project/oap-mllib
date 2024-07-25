@@ -57,7 +57,7 @@ getDalComm() {
 }
 #endif
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
-    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
+    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jint computeDeviceOrdinal,
     jobject param) {
 
     logger::println(logger::INFO, "OneCCL (native): init");
@@ -72,6 +72,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     logger::println(logger::INFO, "OneCCL (native): init took %f secs",
                     duration / 1000);
     const char *str = env->GetStringUTFChars(ip_port, 0);
+    ccl::string ccl_ip_port(str);
+    const char *device = env->GetStringUTFChars(use_device, 0);
     ccl::string ccl_ip_port(str);
 
 #ifdef CPU_ONLY_PROFILE
@@ -120,8 +122,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
     jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
 
-    env->SetLongField(param, fid_comm_size, comm_size);
-    env->SetLongField(param, fid_rank_id, rank_id);
+    env->SetLongField(param, size, comm_size);
+    env->SetLongField(param, rank, rank_id);
     env->ReleaseStringUTFChars(ip_port, str);
 
     return 1;
