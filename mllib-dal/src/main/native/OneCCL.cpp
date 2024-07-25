@@ -115,8 +115,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
     jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
 
-    env->SetLongField(param, fid_comm_size, comm_size);
-    env->SetLongField(param, fid_rank_id, rank_id);
+    env->SetLongField(param, size, comm_size);
+    env->SetLongField(param, rank, rank_id);
     env->ReleaseStringUTFChars(ip_port, str);
 
     return 1;
