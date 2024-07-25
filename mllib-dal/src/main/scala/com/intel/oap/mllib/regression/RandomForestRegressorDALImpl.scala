@@ -70,7 +70,7 @@ class RandomForestRegressorDALImpl(val uid: String,
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
     labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     rfrTimer.record("OneCCL Init")

@@ -53,7 +53,7 @@ class KMeansDALImpl(var nClusters: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     kmeansTimer.record("OneCCL Init")
