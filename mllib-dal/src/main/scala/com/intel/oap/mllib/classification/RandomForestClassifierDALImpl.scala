@@ -87,7 +87,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     }.count()
 
     labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     rfcTimer.record("OneCCL Init")

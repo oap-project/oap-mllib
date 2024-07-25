@@ -47,7 +47,7 @@ class CorrelationDALImpl(
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     corTimer.record("OneCCL Init")
