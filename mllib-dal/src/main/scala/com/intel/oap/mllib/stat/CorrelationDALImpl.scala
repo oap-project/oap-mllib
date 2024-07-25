@@ -47,7 +47,7 @@ class CorrelationDALImpl(
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
     coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     corTimer.record("OneCCL Init")
@@ -69,6 +69,7 @@ class CorrelationDALImpl(
         null
       }
       cCorrelationTrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -118,7 +119,8 @@ class CorrelationDALImpl(
   }
 
 
-  @native private[mllib] def cCorrelationTrainDAL(data: Long,
+  @native private[mllib] def cCorrelationTrainDAL(rank: Int,
+                                           data: Long,
                                            numRows: Long,
                                            numCols: Long,
                                            executorNum: Int,

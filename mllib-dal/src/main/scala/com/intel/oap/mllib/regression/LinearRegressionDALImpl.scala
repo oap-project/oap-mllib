@@ -121,7 +121,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             (label.toString.toLong, 0L, 0L)
           }
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
+        OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
@@ -138,6 +138,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         }
 
         val cbeta = cLinearRegressionTrainDAL(
+          rank,
           featureTabAddr,
           featureRows,
           featureColumns,
@@ -183,7 +184,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   }
 
   // Single entry to call Linear Regression DAL backend with parameters
-  @native private def cLinearRegressionTrainDAL(data: Long,
+  @native private def cLinearRegressionTrainDAL(rank: Int,
+                                  data: Long,
                                   numRows: Long,
                                   numCols: Long,
                                   label: Long,

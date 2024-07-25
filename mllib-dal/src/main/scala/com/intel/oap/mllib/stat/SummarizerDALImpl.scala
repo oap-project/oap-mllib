@@ -48,7 +48,7 @@ class SummarizerDALImpl(val executorNum: Int,
     val kvsIPPort = getOneCCLIPPort(data)
 
     coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     sumTimer.record("OneCCL Init")
@@ -70,6 +70,7 @@ class SummarizerDALImpl(val executorNum: Int,
         null
       }
       cSummarizerTrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -150,7 +151,8 @@ class SummarizerDALImpl(val executorNum: Int,
     summary
   }
 
-  @native private[mllib] def cSummarizerTrainDAL(data: Long,
+  @native private[mllib] def cSummarizerTrainDAL(rank: Int,
+                                          data: Long,
                                           numRows: Long,
                                           numCols: Long,
                                           executorNum: Int,

@@ -76,7 +76,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
     labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
+      OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
       Iterator.empty
     }.count()
     rfcTimer.record("OneCCL Init")
@@ -96,6 +96,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
+        rank,
         feature._1,
         feature._2,
         feature._3,
@@ -140,7 +141,8 @@ class RandomForestClassifierDALImpl(val uid: String,
     results(0)
   }
 
-  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
+  @native private[mllib] def cRFClassifierTrainDAL(rank: Int,
+                                                   featureTabAddr: Long,
                                                    numRows: Long,
                                                    numCols: Long,
                                                    lableTabAddr: Long,

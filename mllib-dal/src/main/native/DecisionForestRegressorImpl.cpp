@@ -292,7 +292,7 @@ static jobject doRFRegressorOneAPICompute(
 
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong featureRows,
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature, jlong featureRows,
     jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
     jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
     jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
@@ -301,8 +301,6 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
 
-    ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
@@ -310,19 +308,16 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
         logger::println(
             logger::INFO,
             "OneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rankId);
+            rank);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
-        int size = cclComm.size();
-
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+        auto queue = getAssignedGPU(device, gpuIndices);
 
         ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
         auto comm =
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
+                queue, executorNum, rank, kvs);
         jobject hashmapObj = doRFRegressorOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, treeCount,
