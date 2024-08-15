@@ -130,7 +130,7 @@ class SummarizerDALImpl(val executorNum: Int,
       }
       OneCCL.cleanup()
       ret
-    }.collect()
+    }.barrier().mapPartitions(iter => iter).collect()
     sumTimer.record("Training")
     sumTimer.print()
 
