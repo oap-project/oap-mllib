@@ -47,7 +47,7 @@ ccl::communicator &getComm() { return g_comms[0]; }
 ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
 
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
-    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jint computeDeviceOrdinal,
+    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
     jobject param) {
 
     logger::println(logger::INFO, "OneCCL (native): init");
@@ -64,21 +64,18 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
 
     g_kvs.push_back(singletonCCLInit.kvs);
-    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-    switch (device) {
-    case ComputeDevice::host:
-    case ComputeDevice::cpu: {
-        g_comms.push_back(
-            ccl::create_communicator(size, rank, singletonCCLInit.kvs));
 
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        logger::println(logger::INFO, "OneCCL (native): init took %f secs",
-                        duration / 1000);
-        break;
-    }
+#ifdef CPU_ONLY_PROFILE
+    g_comms.push_back(
+        ccl::create_communicator(size, rank, singletonCCLInit.kvs));
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO, "OneCCL (native): init took %f secs",
+                    duration / 1000);
+#endif
 
     jclass cls = env->GetObjectClass(param);
     jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
