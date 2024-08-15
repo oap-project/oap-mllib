@@ -199,5 +199,4 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                   computeDeviceOrdinal: Int,
                                   gpuIndices: Array[Int],
                                   result: LiRResult): Long
-
   }
