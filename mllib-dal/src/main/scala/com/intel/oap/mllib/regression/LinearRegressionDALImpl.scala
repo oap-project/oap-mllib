@@ -132,7 +132,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             (label.toString.toLong, 0L, 0L)
           }
 
-        OneCCL.init(executorNum, rank, kvsIPPort, computeDevice.ordinal())
+        OneCCL.init(executorNum, rank, kvsIPPort)
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
