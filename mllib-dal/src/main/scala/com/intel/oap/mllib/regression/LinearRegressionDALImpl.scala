@@ -106,6 +106,17 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
     lrTimer.record("Data Convertion")
 
+    labeledPointsTables.mapPartitionsWithIndex { (rank, iter) =>
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+      OneCCL.setExecutorEnv("ZE_AFFINITY_MASK", gpuIndices(0).toString())
+      Iterator.empty
+    }.count()
+
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
         val (feature, label) = tables.next()
         val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
