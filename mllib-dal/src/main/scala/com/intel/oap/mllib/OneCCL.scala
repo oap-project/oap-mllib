@@ -26,6 +26,8 @@ object OneCCL extends Logging {
 
   def init(executor_num: Int, rank: Int, ip_port: String): Unit = {
 
+    setExecutorEnv()
+
     logInfo(s"Initializing with IP_PORT: ${ip_port}")
 
     // cclParam is output from native code
@@ -39,9 +41,9 @@ object OneCCL extends Logging {
       s"commSize, ${cclParam.getCommSize}, rankId: ${cclParam.getRankId}")
   }
 
-  // Sets the specified value to allow each executor to run on the specified GPU
-  def setAffinityMask(rankId: String): Unit = {
-      setEnv("ZE_AFFINITY_MASK", rankId)
+  // Run on Executor
+  def setExecutorEnv(key: String, value: String): Unit = {
+    setEnv(key, value)
   }
 
   // Run on Executor
