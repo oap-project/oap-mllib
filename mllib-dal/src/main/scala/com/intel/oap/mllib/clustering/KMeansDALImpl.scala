@@ -51,16 +51,6 @@ class KMeansDALImpl(var nClusters: Int,
     kmeansTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
-    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
-      val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setExecutorEnv("ZE_AFFINITY_MASK", gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
 
     CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     kmeansTimer.record("OneCCL Init")
@@ -114,7 +104,9 @@ class KMeansDALImpl(var nClusters: Int,
         } else {
           Iterator.empty
         }
-      OneCCL.cleanup()
+      if (useDevice == "CPU") {
+         OneCCL.cleanup()
+      }
       ret
     }.collect()
 

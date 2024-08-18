@@ -31,7 +31,7 @@ class SummarizerHomogenTableSuite extends FunctionsSuite with Logging{
 
         val sourceData = TestCommon.readCSV("src/test/resources/data/covcormoments_dense.csv")
 
-        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
+        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), CommonJob.ComputeDevice.HOST);
         val summarizerDAL = new SummarizerDALImpl(1, 1)
         val gpuIndices = Array(0)
         val result = new SummarizerResult()
