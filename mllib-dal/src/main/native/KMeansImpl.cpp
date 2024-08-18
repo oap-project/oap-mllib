@@ -345,7 +345,6 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numCols,
                                     pNumTabCenters, clusterNum, tolerance,
                                     iterationNum, comm, resultObj);
-
         break;
     }
 #endif

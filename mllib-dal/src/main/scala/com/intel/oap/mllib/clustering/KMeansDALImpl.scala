@@ -104,7 +104,9 @@ class KMeansDALImpl(var nClusters: Int,
         } else {
           Iterator.empty
         }
-      OneCCL.cleanup()
+      if (useDevice == "CPU") {
+         OneCCL.cleanup()
+      }
       ret
     }.collect()
 
