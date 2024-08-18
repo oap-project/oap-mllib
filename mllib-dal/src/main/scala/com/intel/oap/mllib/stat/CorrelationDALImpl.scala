@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -46,22 +46,9 @@ class CorrelationDALImpl(
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     corTimer.record("OneCCL Init")
-
-    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
-      val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setExecutorEnv("ZE_AFFINITY_MASK", gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {

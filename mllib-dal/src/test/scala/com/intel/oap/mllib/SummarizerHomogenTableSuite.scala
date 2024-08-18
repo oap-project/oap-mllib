@@ -31,15 +31,15 @@ class SummarizerHomogenTableSuite extends FunctionsSuite with Logging{
 
         val sourceData = TestCommon.readCSV("src/test/resources/data/covcormoments_dense.csv")
 
-        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), Common.ComputeDevice.HOST);
+        val dataTable = new HomogenTable(sourceData.length, sourceData(0).length, TestCommon.convertArray(sourceData), CommonJob.ComputeDevice.HOST);
         val summarizerDAL = new SummarizerDALImpl(1, 1)
         val gpuIndices = Array(0)
         val result = new SummarizerResult()
-        summarizerDAL.cSummarizerTrainDAL(dataTable.getcObejct(), sourceData.length, sourceData(0).length, 1, 1, Common.ComputeDevice.HOST.ordinal(), gpuIndices, result)
-        val meanTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getMeanNumericTable), Common.ComputeDevice.HOST)
-        val varianceTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getVarianceNumericTable), Common.ComputeDevice.HOST)
-        val minimumTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getMinimumNumericTable), Common.ComputeDevice.HOST)
-        val maximumTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getMaximumNumericTable), Common.ComputeDevice.HOST)
+        summarizerDAL.cSummarizerTrainDAL(dataTable.getcObejct(), sourceData.length, sourceData(0).length, 1, 1, CommonJob.ComputeDevice.HOST.ordinal(), gpuIndices, result)
+        val meanTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getMeanNumericTable), CommonJob.ComputeDevice.HOST)
+        val varianceTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getVarianceNumericTable), CommonJob.ComputeDevice.HOST)
+        val minimumTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getMinimumNumericTable), CommonJob.ComputeDevice.HOST)
+        val maximumTable = OneDAL.homogenTable1xNToVector(OneDAL.makeHomogenTable(result.getMaximumNumericTable), CommonJob.ComputeDevice.HOST)
 
         assertArrayEquals(expectMean , meanTable.toArray, 0.000001)
         assertArrayEquals(expectVariance, varianceTable.toDense.values, 0.000001)
