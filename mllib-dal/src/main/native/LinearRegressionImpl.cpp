@@ -215,7 +215,7 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 
 #ifdef CPU_GPU_PROFILE
 static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
-                               ccl::communicator &cclComm, sycl::queue &queue,
+                               sycl::queue &queue,
                                jlong pNumTabFeature, jlong featureRows,
                                jlong featureCols, jlong pNumTabLabel,
                                jlong labelCols, jboolean jfitIntercept,
@@ -287,15 +287,17 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
             rank);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-        int size = cclComm.size();
         auto queue = getAssignedGPU(device, gpuIndices);
 
         resultptr = doLROneAPICompute(
-            env, rank, cclComm, queue, feature, featureRows, featureCols,
+            env, rank, queue, feature, featureRows, featureCols,
             label, labelCols, fitIntercept, executorNum, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 #endif
     } else {
+        ccl::communicator &cclComm = getComm();
+        size_t rankId = cclComm.rank();
+
         NumericTablePtr pLabel = *((NumericTablePtr *)label);
         NumericTablePtr pData = *((NumericTablePtr *)feature);
 
@@ -318,22 +320,18 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
         resultptr = (jlong)coeffvectors;
+         if (rankId == ccl_root) {
+            // Get the class of the result object
+            jclass clazz = env->GetObjectClass(resultObj);
+            // Get Field references
+            jfieldID coeffNumericTableField =
+                env->GetFieldID(clazz, "coeffNumericTable", "J");
+
+            env->SetLongField(resultObj, coeffNumericTableField, resultptr);
+
+            // intercept is already in first column of coeffvectors
+            resultptr = (jlong)coeffvectors;
+        }
     }
-
-    jlong ret = 0L;
-    if (rankId == ccl_root) {
-        // Get the class of the result object
-        jclass clazz = env->GetObjectClass(resultObj);
-        // Get Field references
-        jfieldID coeffNumericTableField =
-            env->GetFieldID(clazz, "coeffNumericTable", "J");
-
-        env->SetLongField(resultObj, coeffNumericTableField, resultptr);
-
-        // intercept is already in first column of coeffvectors
-        ret = resultptr;
-    } else {
-        ret = (jlong)0;
-    }
-    return ret;
+    return resultptr;
 }
