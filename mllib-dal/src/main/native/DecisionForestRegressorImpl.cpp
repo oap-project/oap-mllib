@@ -315,6 +315,7 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
             labelCols, executorNum, computeDeviceOrdinal, treeCount,
             numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
             maxbins, bootstrap, comm, resultObj);
+        env->ReleaseStringUTFChars(ip_port, str);
         return hashmapObj;
     }
     default: {

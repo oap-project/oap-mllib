@@ -307,7 +307,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
-    jobject resultObj) {
+    jstring ip_port, jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -325,6 +325,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             minObservationsSplitNode, minWeightFractionLeafNode,
             minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
             bootstrap, comm, resultObj);
+        env->ReleaseStringUTFChars(ip_port, str);
         return hashmapObj;
     }
     default: {

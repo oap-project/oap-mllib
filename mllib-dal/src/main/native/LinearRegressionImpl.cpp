@@ -262,7 +262,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong featureCols, jlong label, jlong labelCols, jboolean fitIntercept,
     jdouble regParam, jdouble elasticNetParam, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
-    jobject resultObj) {
+    jstring ip_port, jobject resultObj) {
 
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
@@ -319,7 +319,6 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
                 env->GetFieldID(clazz, "coeffNumericTable", "J");
 
             env->SetLongField(resultObj, coeffNumericTableField, resultptr);
-
             // intercept is already in first column of coeffvectors
             resultptr = (jlong)coeffvectors;
         }

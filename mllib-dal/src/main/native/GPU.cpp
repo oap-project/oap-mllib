@@ -25,7 +25,6 @@ std::vector<sycl::device> get_gpus() {
 }
 
 static int getLocalRank(ccl::communicator &comm, int size, int rank) {
-    const int MPI_MAX_PROCESSOR_NAME = 128;
     /* Obtain local rank among nodes sharing the same host name */
     char zero = static_cast<char>(0);
     std::vector<char> name(MPI_MAX_PROCESSOR_NAME + 1, zero);
@@ -128,8 +127,6 @@ preview::spmd::communicator<preview::spmd::device_memory_access::usm> createDalC
 
         logger::println(logger::INFO, "OneCCL singleton init took %f secs",
                         duration / 1000);
-        logger::Logger::getInstance(c_breakdown_name).printLogToFile("rankID was %d, OneCCL singleton init took %f secs.", rank, duration / 1000 );
-
 
         t1 = std::chrono::high_resolution_clock::now();
 
@@ -145,7 +142,6 @@ preview::spmd::communicator<preview::spmd::device_memory_access::usm> createDalC
                 .count();
         logger::println(logger::INFO, "OneCCL (native): create kvs took %f secs",
                         duration / 1000);
-        logger::Logger::getInstance(c_breakdown_name).printLogToFile("rankID was %d, OneCCL create communicator took %f secs.", rank, duration / 1000 );
         sycl::queue queue{gpus[0]};
          t1 = std::chrono::high_resolution_clock::now();
         auto comm =
@@ -155,7 +151,5 @@ preview::spmd::communicator<preview::spmd::device_memory_access::usm> createDalC
         duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        logger::Logger::getInstance(c_breakdown_name).printLogToFile("rankID was %d, create communicator took %f secs.", rank, duration / 1000 );
         return comm;
 }
-
