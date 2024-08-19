@@ -114,6 +114,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         maxBins,
         bootstrap,
         gpuIndices,
+        kvsIPPort,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -159,6 +160,7 @@ class RandomForestClassifierDALImpl(val uid: String,
                                                    maxBins: Int,
                                                    bootstrap: Boolean,
                                                    gpuIndices: Array[Int],
+                                                   kvsIPPort: String,
                                                    result: RandomForestResult):
   java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

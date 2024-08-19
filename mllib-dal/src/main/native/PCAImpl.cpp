@@ -250,9 +250,9 @@ static void doPCAOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
-    jlong numCols, jint executorNum, jint executorCores,
-    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows, jlong numCols,
+    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
+    jintArray gpuIdxArray, jstring ip_port, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -277,22 +277,16 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
         logger::println(
             logger::INFO,
-            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rank);
+            "oneDAL (native): use GPU kernels with rankid %d", rank);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+        const char *str = env->GetStringUTFChars(ip_port, nullptr);
+        ccl::string ccl_ip_port(str);
+        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
 
-        auto queue = getAssignedGPU(device, gpuIndices);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, executorNum, rank, kvs);
         doPCAOneAPICompute(env, pNumTabData, numRows, numCols, comm, resultObj);
-        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        env->ReleaseStringUTFChars(ip_port, str);
         break;
     }
 #endif
