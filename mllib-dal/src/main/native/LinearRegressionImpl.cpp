@@ -214,7 +214,8 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 }
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, size_t rankId, sycl::queue &queue,
+static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
+                               sycl::queue &queue,
                                jlong pNumTabFeature, jlong featureRows,
                                jlong featureCols, jlong pNumTabLabel,
                                jlong labelCols, jboolean jfitIntercept,
@@ -288,9 +289,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
         auto queue = getAssignedGPU(device, gpuIndices);
 
-        resultptr = doLROneAPICompute(env, rank, queue, feature, featureRows,
-                                      featureCols, label, labelCols,
-                                      fitIntercept, executorNum, resultObj);
+        resultptr = doLROneAPICompute(
+            env, rank, queue, feature, featureRows, featureCols,
+            label, labelCols, fitIntercept, executorNum, resultObj);
         env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 #endif
     } else {
@@ -319,7 +320,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
         resultptr = (jlong)coeffvectors;
-        if (rankId == ccl_root) {
+         if (rankId == ccl_root) {
             // Get the class of the result object
             jclass clazz = env->GetObjectClass(resultObj);
             // Get Field references
