@@ -74,6 +74,7 @@ class CorrelationDALImpl(
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        kvsIPPort,
         result
       )
 
@@ -123,5 +124,6 @@ class CorrelationDALImpl(
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
                                            gpuIndices: Array[Int],
+                                           kvsIPPort: String,
                                            result: CorrelationResult): Long
 }
