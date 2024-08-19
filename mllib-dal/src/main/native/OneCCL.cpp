@@ -55,34 +55,32 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     auto t1 = std::chrono::high_resolution_clock::now();
 
     ccl::init();
+       auto t2 = std::chrono::high_resolution_clock::now();
+
 
     const char *str = env->GetStringUTFChars(ip_port, 0);
-    ccl::string ccl_ip_port(str);
-    const char *device = env->GetStringUTFChars(use_device, 0);
     ccl::string ccl_ip_port(str);
 
     auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
 
     g_kvs.push_back(singletonCCLInit.kvs);
-
-#ifdef CPU_ONLY_PROFILE
     g_comms.push_back(
         ccl::create_communicator(size, rank, singletonCCLInit.kvs));
-
-    auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
     logger::println(logger::INFO, "OneCCL (native): init took %f secs",
                     duration / 1000);
-#endif
+
+    rank_id = getComm().rank();
+    comm_size = getComm().size();
 
     jclass cls = env->GetObjectClass(param);
     jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
     jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
 
-    env->SetLongField(param, size, comm_size);
-    env->SetLongField(param, rank, rank_id);
+    env->SetLongField(param, fid_comm_size, comm_size);
+    env->SetLongField(param, fid_rank_id, rank_id);
     env->ReleaseStringUTFChars(ip_port, str);
 
     return 1;

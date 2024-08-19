@@ -292,12 +292,11 @@ static jobject doRFRegressorOneAPICompute(
 
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature,
-    jlong featureRows, jlong featureCols, jlong pNumTabLabel, jlong labelCols,
-    jint executorNum, jint computeDeviceOrdinal, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
-    jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
-    jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature, jlong featureRows,
+    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
+    jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
+    jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
+    jboolean bootstrap, jintArray gpuIdxArray, jstring ip_port, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -305,25 +304,20 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
         logger::println(
             logger::INFO,
-            "OneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rank);
+            "OneDAL (native): use GPU kernels with rankid %d", rank);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+        const char *str = env->GetStringUTFChars(ip_port, nullptr);
+        ccl::string ccl_ip_port(str);
+        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
 
-        auto queue = getAssignedGPU(device, gpuIndices);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, executorNum, rank, kvs);
         jobject hashmapObj = doRFRegressorOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, treeCount,
             numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
             maxbins, bootstrap, comm, resultObj);
+        env->ReleaseStringUTFChars(ip_port, str);
         return hashmapObj;
     }
     default: {
