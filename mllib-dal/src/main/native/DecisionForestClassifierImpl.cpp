@@ -300,10 +300,10 @@ static jobject doRFClassifierOneAPICompute(
  */
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature, jlong featureRows,
-    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
-    jint computeDeviceOrdinal, jint classCount, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode,
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature,
+    jlong featureRows, jlong featureCols, jlong pNumTabLabel, jlong labelCols,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount,
+    jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,

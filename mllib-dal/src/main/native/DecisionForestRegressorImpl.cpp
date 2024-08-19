@@ -292,11 +292,12 @@ static jobject doRFRegressorOneAPICompute(
 
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature, jlong featureRows,
-    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
-    jint computeDeviceOrdinal, jint treeCount, jint numFeaturesPerNode,
-    jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
-    jboolean bootstrap, jintArray gpuIdxArray, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature,
+    jlong featureRows, jlong featureCols, jlong pNumTabLabel, jlong labelCols,
+    jint executorNum, jint computeDeviceOrdinal, jint treeCount,
+    jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
+    jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
