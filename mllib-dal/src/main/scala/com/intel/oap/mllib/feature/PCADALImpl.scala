@@ -85,6 +85,7 @@ class PCADALImpl(val k: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        kvsIPPort,
         result
       )
 
@@ -221,5 +222,6 @@ class PCADALImpl(val k: Int,
                                    executorCores: Int,
                                    computeDeviceOrdinal: Int,
                                    gpuIndices: Array[Int],
+                                   kvsIPPort: String,
                                    result: PCAResult): Long
 }
