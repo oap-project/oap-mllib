@@ -28,7 +28,7 @@ on:
 permissions:
   issues: write
   contents: read
-  
+
 jobs:
   process:
     name: Process
