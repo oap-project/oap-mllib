@@ -19,7 +19,7 @@ package com.intel.oap.mllib.feature
 import java.nio.DoubleBuffer
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Service, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Service, Utils}
 import org.apache.spark.TaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -31,6 +31,8 @@ import org.apache.spark.rdd.RDD
 import java.util.Arrays
 import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 import org.apache.spark.storage.StorageLevel
+
+import java.time.Instant
 
 class PCADALModel private[mllib] (
   val k: Int,
@@ -47,6 +49,7 @@ class PCADALImpl(val k: Int,
     val sparkContext = normalizedData.sparkContext
     val pcaTimer = new Utils.AlgoTimeMetrics("PCA", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     pcaTimer.record("Preprocessing")
 
@@ -59,10 +62,8 @@ class PCADALImpl(val k: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     pcaTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
@@ -79,6 +80,7 @@ class PCADALImpl(val k: Int,
         null
       }
       cPCATrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -86,6 +88,7 @@ class PCADALImpl(val k: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        storePath,
         result
       )
 
@@ -214,12 +217,14 @@ class PCADALImpl(val k: Int,
 
 
   // Single entry to call Correlation PCA DAL backend with parameter K
-  @native private[mllib] def cPCATrainDAL(data: Long,
+  @native private[mllib] def cPCATrainDAL(rank: Int,
+                                   data: Long,
                                    numRows: Long,
                                    numCols: Long,
                                    executorNum: Int,
                                    executorCores: Int,
                                    computeDeviceOrdinal: Int,
                                    gpuIndices: Array[Int],
+                                   storePath: String,
                                    result: PCAResult): Long
 }

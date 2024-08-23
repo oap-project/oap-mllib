@@ -300,39 +300,27 @@ static jobject doRFClassifierOneAPICompute(
  */
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong featureRows,
-    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
-    jint computeDeviceOrdinal, jint classCount, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode,
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature,
+    jlong featureRows, jlong featureCols, jlong pNumTabLabel, jlong labelCols,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount,
+    jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
-    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
+    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray, jstring store_path,
     jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
 
-    ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rankId);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+        const char* path = env->GetStringUTFChars(store_path, nullptr);
+        ccl::string kvs_store_path(str);
+        auto comm = createDalCommunicator(executorNum, rank, kvs_store_path);
 
-        int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
         jobject hashmapObj = doRFClassifierOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, classCount, treeCount,
@@ -340,6 +328,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             minObservationsSplitNode, minWeightFractionLeafNode,
             minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
             bootstrap, comm, resultObj);
+        env->ReleaseStringUTFChars(store_path, path);
         return hashmapObj;
     }
     default: {

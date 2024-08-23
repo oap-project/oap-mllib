@@ -4,11 +4,14 @@
 
 #include "GPU.h"
 #include "Logger.h"
+#define STORE_TIMEOUT_SEC 120
+#define KVS_CREATE_SUCCESS 0
+#define KVS_CREATE_FAILURE -1
 
 typedef std::shared_ptr<sycl::queue> queuePtr;
-
 static std::mutex g_mtx;
 static std::vector<sycl::queue> g_queueVector;
+std::shared_ptr<file_store> store;
 
 static std::vector<sycl::device> get_gpus() {
     auto platforms = sycl::platform::get_platforms();
@@ -24,8 +27,56 @@ static std::vector<sycl::device> get_gpus() {
     return {};
 }
 
+int create_kvs_by_store(std::shared_ptr<file_store> store, int rank,
+                        ccl::shared_ptr_class<ccl::kvs> &kvs) {
+    logger::println(logger::INFO, "OneCCL (native): create_kvs_by_store ");
+    auto t1 = std::chrono::high_resolution_clock::now();
+    ccl::kvs::address_type main_addr;
+    auto start = std::chrono::system_clock::now();
+    if (rank == 0) {
+        kvs = ccl::create_main_kvs();
+        main_addr = kvs->get_address();
+        if (store->write((void *)main_addr.data(), main_addr.size()) < 0) {
+            logger::println(
+                logger::INFO,
+                "OneCCL (native): error occurred during write attempt");
+            kvs.reset();
+            return KVS_CREATE_FAILURE;
+        }
+        auto end = std::chrono::system_clock::now();
+        auto exec_time =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                         start)
+                .count();
+        logger::println(logger::INFO,
+                        "OneCCL (native): write to store time %f secs",
+                        exec_time / 1000);
+    } else {
+        if (store->read((void *)main_addr.data(), main_addr.size()) < 0) {
+            logger::println(
+                logger::INFO,
+                "OneCCL (native): error occurred during read attempt");
+            kvs.reset();
+            return KVS_CREATE_FAILURE;
+        }
+        auto end = std::chrono::system_clock::now();
+        auto exec_time =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                         start)
+                .count();
+        logger::println(logger::INFO,
+                        "OneCCL (native): read from store time %f secs",
+                        exec_time / 1000);
+        kvs = ccl::create_kvs(main_addr);
+    }
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    return KVS_CREATE_SUCCESS;
+}
+
 static int getLocalRank(ccl::communicator &comm, int size, int rank) {
-    const int MPI_MAX_PROCESSOR_NAME = 128;
     /* Obtain local rank among nodes sharing the same host name */
     char zero = static_cast<char>(0);
     std::vector<char> name(MPI_MAX_PROCESSOR_NAME + 1, zero);
@@ -66,8 +117,7 @@ static sycl::queue getSyclQueue(const sycl::device device) {
     }
 }
 
-sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
-                           int size, int rankId, jint *gpu_indices, int n_gpu) {
+sycl::queue getAssignedGPU(const ComputeDevice device, int *gpu_indices) {
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
@@ -78,19 +128,8 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     }
     case ComputeDevice::gpu: {
         logger::println(logger::INFO, "selector GPU");
-        auto local_rank = getLocalRank(comm, size, rankId);
         auto gpus = get_gpus();
-
-        logger::println(logger::INFO,
-                        "rank: %d size: %d local_rank: %d n_gpu: %d", rankId,
-                        size, local_rank, n_gpu);
-
-        auto gpu_selected = gpu_indices[local_rank % n_gpu];
-        logger::println(logger::INFO, "GPU selected for current rank: %d",
-                        gpu_selected);
-
-        // In case gpu_selected index is larger than number of GPU SYCL devices
-        auto rank_gpu = gpus[gpu_selected % gpus.size()];
+        auto rank_gpu = gpus[0];
         sycl::queue q{rank_gpu};
         return q;
     }
@@ -124,4 +163,47 @@ sycl::queue getQueue(const ComputeDevice device) {
         exit(-1);
     }
     }
+}
+
+preview::spmd::communicator<preview::spmd::device_memory_access::usm>
+createDalCommunicator(const jint executorNum, const jint rank,
+                      const ccl::string kvs_store_path) {
+    auto gpus = get_gpus();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    ccl::init();
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+
+    logger::println(logger::INFO, "OneCCL singleton init took %f secs",
+                    duration / 1000);
+
+    t1 = std::chrono::high_resolution_clock::now();
+    ccl::shared_ptr_class<ccl::kvs> kvs;
+
+    store = std::make_shared<file_store>(
+        kvs_store_path, rank, std::chrono::seconds(STORE_TIMEOUT_SEC));
+    if (create_kvs_by_store(store, rank, kvs) != KVS_CREATE_SUCCESS) {
+        logger::println(logger::INFO, "can not create kvs by store");
+        throw std::runtime_error("Failed to create communicator");
+    }
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO, "OneCCL (native): create kvs took %f secs",
+                    duration / 1000);
+    sycl::queue queue{gpus[0]};
+    t1 = std::chrono::high_resolution_clock::now();
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rank, kvs);
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    return comm;
 }

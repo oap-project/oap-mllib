@@ -16,7 +16,7 @@
 package com.intel.oap.mllib.classification
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.annotation.Since
 import org.apache.spark.TaskContext
@@ -29,6 +29,7 @@ import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
+import java.time.Instant
 import java.util
 import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
@@ -57,6 +58,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     val sparkContext = labeledPoints.rdd.sparkContext
     val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
@@ -75,10 +77,8 @@ class RandomForestClassifierDALImpl(val uid: String,
     rfcTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
-    labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(labeledPointsTables, useDevice)
+    CommonJob.createCCLInit(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfcTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
@@ -96,6 +96,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
+        rank,
         feature._1,
         feature._2,
         feature._3,
@@ -115,6 +116,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         maxBins,
         bootstrap,
         gpuIndices,
+        storePath,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -140,7 +142,8 @@ class RandomForestClassifierDALImpl(val uid: String,
     results(0)
   }
 
-  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
+  @native private[mllib] def cRFClassifierTrainDAL(rank: Int,
+                                                   featureTabAddr: Long,
                                                    numRows: Long,
                                                    numCols: Long,
                                                    lableTabAddr: Long,
@@ -159,6 +162,7 @@ class RandomForestClassifierDALImpl(val uid: String,
                                                    maxBins: Int,
                                                    bootstrap: Boolean,
                                                    gpuIndices: Array[Int],
+                                                   storePath: String,
                                                    result: RandomForestResult):
   java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

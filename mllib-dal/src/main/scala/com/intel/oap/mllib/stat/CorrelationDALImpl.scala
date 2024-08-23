@@ -17,12 +17,14 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrix, Vector}
 import org.apache.spark.rdd.RDD
+
+import java.time.Instant
 
 class CorrelationDALImpl(
                           val executorNum: Int,
@@ -33,6 +35,7 @@ class CorrelationDALImpl(
     val sparkContext = data.sparkContext
     val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
 
@@ -46,10 +49,8 @@ class CorrelationDALImpl(
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     corTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
@@ -69,6 +70,7 @@ class CorrelationDALImpl(
         null
       }
       cCorrelationTrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -76,6 +78,7 @@ class CorrelationDALImpl(
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        storePath,
         result
       )
 
@@ -118,12 +121,14 @@ class CorrelationDALImpl(
   }
 
 
-  @native private[mllib] def cCorrelationTrainDAL(data: Long,
+  @native private[mllib] def cCorrelationTrainDAL(rank: Int,
+                                           data: Long,
                                            numRows: Long,
                                            numCols: Long,
                                            executorNum: Int,
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
                                            gpuIndices: Array[Int],
+                                           storePath: String,
                                            result: CorrelationResult): Long
 }

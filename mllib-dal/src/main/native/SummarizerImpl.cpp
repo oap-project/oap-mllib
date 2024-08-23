@@ -268,19 +268,19 @@ static void doSummarizerOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong numRows, jlong numCols,
-    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
+    jlong numCols, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring store_path,
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
-
-    ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
+        ccl::communicator &cclComm = getComm();
+        int rankId = cclComm.rank();
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         // Set number of threads for oneDAL to use for each rank
         services::Environment::getInstance()->setNumberOfThreads(executorCores);
@@ -296,31 +296,22 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rankId);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
+        const char* path = env->GetStringUTFChars(store_path, nullptr);
+        ccl::string kvs_store_path(str);
+        auto comm = createDalCommunicator(executorNum, rank, kvs_store_path);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-
-        int size = cclComm.size();
-
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
         doSummarizerOneAPICompute(env, pNumTabData, numRows, numCols, comm,
                                   resultObj);
-        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+        env->ReleaseStringUTFChars(store_path, path);
         break;
     }
 #endif
     default: {
-        deviceError("PCA", ComputeDeviceString[computeDeviceOrdinal].c_str());
+        deviceError("Summarizer",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return 0;

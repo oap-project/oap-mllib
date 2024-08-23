@@ -57,7 +57,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
       assert(metadata.getDataType(i) == FLOAT64)
-      assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
+      assert(metadata.getFeatureType(i) == CommonJob.FeatureType.RATIO)
     }
 
     assertArrayEquals(table.getDoubleData, TestCommon.convertArray(data))
@@ -75,7 +75,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
       assert(metadata.getDataType(i) == FLOAT64)
-      assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
+      assert(metadata.getFeatureType(i) == CommonJob.FeatureType.RATIO)
     }
     assertArrayEquals(table.getDoubleData, data)
 
@@ -105,7 +105,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     val metadata = table.getMetaData
     for (i <- 0 until 10) {
       assert(metadata.getDataType(i) == FLOAT64)
-      assert(metadata.getFeatureType(i) == Common.FeatureType.RATIO)
+      assert(metadata.getFeatureType(i) == CommonJob.FeatureType.RATIO)
     }
 
     assertArrayEquals(table.getDoubleData, TestCommon.convertArray(data))
