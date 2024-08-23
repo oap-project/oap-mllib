@@ -300,26 +300,26 @@ static jobject doRFClassifierOneAPICompute(
  */
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature, jlong featureRows,
-    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
-    jint computeDeviceOrdinal, jint classCount, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode,
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature,
+    jlong featureRows, jlong featureCols, jlong pNumTabLabel, jlong labelCols,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount,
+    jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
-    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
-    jstring ip_port, jobject resultObj) {
+    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray, jstring store_path,
+    jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with rankid %d", rank);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
-        const char *str = env->GetStringUTFChars(ip_port, nullptr);
-        ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
+        const char* path = env->GetStringUTFChars(store_path, nullptr);
+        ccl::string kvs_store_path(str);
+        auto comm = createDalCommunicator(executorNum, rank, kvs_store_path);
 
         jobject hashmapObj = doRFClassifierOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
@@ -328,7 +328,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             minObservationsSplitNode, minWeightFractionLeafNode,
             minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
             bootstrap, comm, resultObj);
-        env->ReleaseStringUTFChars(ip_port, str);
+        env->ReleaseStringUTFChars(store_path, path);
         return hashmapObj;
     }
     default: {

@@ -27,6 +27,8 @@ import org.apache.spark.mllib.clustering.{KMeansModel => MLlibKMeansModel}
 import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors}
 import org.apache.spark.rdd.RDD
 
+import java.time.Instant
+
 class KMeansDALImpl(var nClusters: Int,
                     var maxIterations: Int,
                     var tolerance: Double,
@@ -40,6 +42,7 @@ class KMeansDALImpl(var nClusters: Int,
     val sparkContext = data.sparkContext
     val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     kmeansTimer.record("Preprocessing")
 
@@ -91,7 +94,7 @@ class KMeansDALImpl(var nClusters: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
-        kvsIPPort,
+        storePath,
         result
       )
 
@@ -150,6 +153,6 @@ class KMeansDALImpl(var nClusters: Int,
                                                          executorCores: Int,
                                                          computeDeviceOrdinal: Int,
                                                          gpuIndices: Array[Int],
-                                                         kvsIPPort: String,
+                                                         storePath: String,
                                                          result: KMeansResult): Long
 }

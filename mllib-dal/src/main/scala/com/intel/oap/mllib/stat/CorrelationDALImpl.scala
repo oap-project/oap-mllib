@@ -24,6 +24,8 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrix, Vector}
 import org.apache.spark.rdd.RDD
 
+import java.time.Instant
+
 class CorrelationDALImpl(
                           val executorNum: Int,
                           val executorCores: Int)
@@ -33,6 +35,7 @@ class CorrelationDALImpl(
     val sparkContext = data.sparkContext
     val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
 
@@ -75,7 +78,7 @@ class CorrelationDALImpl(
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
-        kvsIPPort,
+        storePath,
         result
       )
 
@@ -126,6 +129,6 @@ class CorrelationDALImpl(
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
                                            gpuIndices: Array[Int],
-                                           kvsIPPort: String,
+                                           storePath: String,
                                            result: CorrelationResult): Long
 }

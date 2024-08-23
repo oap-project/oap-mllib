@@ -268,9 +268,10 @@ static void doSummarizerOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows, jlong numCols,
-    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jstring ip_port, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
+    jlong numCols, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring store_path,
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -295,21 +296,22 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with rankid %d", rank);
-        const char *str = env->GetStringUTFChars(ip_port, nullptr);
-        ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
+        const char* path = env->GetStringUTFChars(store_path, nullptr);
+        ccl::string kvs_store_path(str);
+        auto comm = createDalCommunicator(executorNum, rank, kvs_store_path);
 
         doSummarizerOneAPICompute(env, pNumTabData, numRows, numCols, comm,
                                   resultObj);
-        env->ReleaseStringUTFChars(ip_port, str);
+        env->ReleaseStringUTFChars(store_path, path);
         break;
     }
 #endif
     default: {
-        deviceError("Summarizer", ComputeDeviceString[computeDeviceOrdinal].c_str());
+        deviceError("Summarizer",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return 0;

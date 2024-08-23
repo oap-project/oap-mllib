@@ -25,6 +25,7 @@ import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.Matrix
 import org.apache.spark.sql.Dataset
 
+import java.time.Instant
 import java.util
 import scala.collection.JavaConversions._
 
@@ -49,6 +50,7 @@ class RandomForestRegressorDALImpl(val uid: String,
     val sparkContext = labeledPoints.rdd.sparkContext
     val rfrTimer = new Utils.AlgoTimeMetrics("RandomForestRegressor", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
@@ -105,7 +107,7 @@ class RandomForestRegressorDALImpl(val uid: String,
         maxbins,
         bootstrap,
         gpuIndices,
-        kvsIPPort,
+        storePath,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -157,6 +159,6 @@ class RandomForestRegressorDALImpl(val uid: String,
                                              maxbins: Int,
                                              bootstrap: Boolean,
                                              gpuIndices: Array[Int],
-                                             kvsIPPort: String,
+                                             storePath: String,
                                              result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

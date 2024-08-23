@@ -29,6 +29,7 @@ import org.apache.spark.sql.Dataset
 import org.apache.spark.ml.tree
 import org.apache.spark.mllib.tree.model.ImpurityStats
 
+import java.time.Instant
 import java.util
 import java.util.{ArrayList, Map}
 import scala.collection.mutable.HashMap
@@ -57,6 +58,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     val sparkContext = labeledPoints.rdd.sparkContext
     val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
@@ -114,7 +116,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         maxBins,
         bootstrap,
         gpuIndices,
-        kvsIPPort,
+        storePath,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -160,7 +162,7 @@ class RandomForestClassifierDALImpl(val uid: String,
                                                    maxBins: Int,
                                                    bootstrap: Boolean,
                                                    gpuIndices: Array[Int],
-                                                   kvsIPPort: String,
+                                                   storePath: String,
                                                    result: RandomForestResult):
   java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

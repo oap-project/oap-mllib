@@ -214,12 +214,12 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 }
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
-                               preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-                               jlong pNumTabFeature, jlong featureRows,
-                               jlong featureCols, jlong pNumTabLabel,
-                               jlong labelCols, jboolean jfitIntercept,
-                               jint executorNum, jobject resultObj) {
+static jlong doLROneAPICompute(
+    JNIEnv *env, size_t rankId,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jboolean jfitIntercept,
+    jint executorNum, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
@@ -262,7 +262,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong featureCols, jlong label, jlong labelCols, jboolean fitIntercept,
     jdouble regParam, jdouble elasticNetParam, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
-    jstring ip_port, jobject resultObj) {
+    jstring store_path, jobject resultObj) {
 
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
@@ -277,18 +277,18 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong resultptr = 0L;
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with rankid %d", rank);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
-        const char *str = env->GetStringUTFChars(ip_port, nullptr);
-        ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
+        const char* path = env->GetStringUTFChars(store_path, nullptr);
+        ccl::string kvs_store_path(str);
+        auto comm = createDalCommunicator(executorNum, rank, kvs_store_path);
 
-        resultptr = doLROneAPICompute(
-            env, rank, comm, feature, featureRows, featureCols,
-            label, labelCols, fitIntercept, executorNum, resultObj);
-        env->ReleaseStringUTFChars(ip_port, str);
+        resultptr = doLROneAPICompute(env, rank, comm, feature, featureRows,
+                                      featureCols, label, labelCols,
+                                      fitIntercept, executorNum, resultObj);
+        env->ReleaseStringUTFChars(store_path, path);
 #endif
     } else {
         ccl::communicator &cclComm = getComm();

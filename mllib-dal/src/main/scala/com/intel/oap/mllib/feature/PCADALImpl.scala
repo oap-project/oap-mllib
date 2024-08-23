@@ -32,6 +32,8 @@ import java.util.Arrays
 import com.intel.oneapi.dal.table.{Common, HomogenTable, RowAccessor}
 import org.apache.spark.storage.StorageLevel
 
+import java.time.Instant
+
 class PCADALModel private[mllib] (
   val k: Int,
   val pc: OldDenseMatrix,
@@ -47,6 +49,7 @@ class PCADALImpl(val k: Int,
     val sparkContext = normalizedData.sparkContext
     val pcaTimer = new Utils.AlgoTimeMetrics("PCA", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     pcaTimer.record("Preprocessing")
 
@@ -85,7 +88,7 @@ class PCADALImpl(val k: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
-        kvsIPPort,
+        storePath,
         result
       )
 
@@ -222,6 +225,6 @@ class PCADALImpl(val k: Int,
                                    executorCores: Int,
                                    computeDeviceOrdinal: Int,
                                    gpuIndices: Array[Int],
-                                   kvsIPPort: String,
+                                   storePath: String,
                                    result: PCAResult): Long
 }

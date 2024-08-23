@@ -29,6 +29,8 @@ import org.apache.spark.mllib.linalg.{Vector => OldVector, Vectors => OldVectors
 import org.apache.spark.sql.Dataset
 import org.apache.spark.rdd.RDD
 
+import java.time.Instant
+
 
 /**
  * Model fitted by [[LinearRegressionDALImpl]].
@@ -73,6 +75,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     val sparkContext = labeledPoints.sparkSession.sparkContext
     val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression", sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
+    val storePath = sparkContext.getConf.get("spark.oap.mllib.kvsStorePath") + "/" + Instant.now()
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
@@ -154,7 +157,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           executorCores,
           computeDevice.ordinal(),
           gpuIndices,
-          kvsIPPort,
+          storePath,
           result
         )
 
@@ -201,7 +204,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                   executorCores: Int,
                                   computeDeviceOrdinal: Int,
                                   gpuIndices: Array[Int],
-                                  kvsIPPort: String,
+                                  storePath: String,
                                   result: LiRResult): Long
 
   }
