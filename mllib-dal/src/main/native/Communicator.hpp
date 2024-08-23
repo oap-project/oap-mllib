@@ -21,7 +21,6 @@
 
 #include "oneapi/ccl.hpp"
 #include "oneapi/dal/detail/ccl/communicator.hpp"
-#include "Singleton.hpp"
 
 namespace de = oneapi::dal::detail;
 namespace oneapi::dal::preview::spmd {
@@ -29,39 +28,22 @@ namespace oneapi::dal::preview::spmd {
 namespace backend {
 struct ccl {};
 } // namespace backend
-class ccl_info {
-    friend class de::singleton<ccl_info>;
-
-private:
-    ccl_info(int size, int rankId, ccl::shared_ptr_class<ccl::kvs> keyvs) {
-        rank = rankId;
-        rank_count = size;
-        kvs = keyvs;
-    }
-
-public:
-    ccl::shared_ptr_class<ccl::kvs> kvs;
-    int rank;
-    int rank_count;
-};
 
 template <typename Backend>
 communicator<device_memory_access::none> make_communicator(int size, int rank, const ccl::shared_ptr_class<ccl::kvs> kvs) {
-    auto& info = de::singleton<ccl_info>::get(size, rank, kvs);
     // integral cast
-    return oneapi::dal::detail::ccl_communicator<device_memory_access::none>{ info.kvs,
-                                                                      info.rank,
-                                                                      info.rank_count };
+    return oneapi::dal::detail::ccl_communicator<device_memory_access::none>{ kvs,
+                                                                      rank,
+                                                                      size };
 }
 
 template <typename Backend>
 communicator<device_memory_access::usm> make_communicator(sycl::queue& queue, int size, int rank, const ccl::shared_ptr_class<ccl::kvs> kvs) {
-    auto& info = de::singleton<ccl_info>::get(size, rank, kvs);
     return oneapi::dal::detail::ccl_communicator<device_memory_access::usm>{
         queue,
-        info.kvs,
-        oneapi::dal::detail::integral_cast<std::int64_t>(info.rank),
-        oneapi::dal::detail::integral_cast<std::int64_t>(info.rank_count)
+        kvs,
+        oneapi::dal::detail::integral_cast<std::int64_t>(rank),
+        oneapi::dal::detail::integral_cast<std::int64_t>(size)
     };
 }
 
