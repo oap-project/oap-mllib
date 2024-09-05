@@ -204,16 +204,29 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 static void doSummarizerOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table htable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
                                        comm.get_queue())
             .get());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+
+    logger::println(logger::INFO,
+                    "Summarizer (native): create homogen table took %f secs",
+                    duration / 1000);
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
 
     const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
-    auto t1 = std::chrono::high_resolution_clock::now();
+    t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {
         logger::println(logger::INFO, "Minimum");
@@ -224,14 +237,16 @@ static void doSummarizerOneAPICompute(
         printHomegenTable(result_train.get_mean());
         logger::println(logger::INFO, "Variation");
         printHomegenTable(result_train.get_variance());
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
         logger::println(logger::INFO,
                         "Summarizer (native): computing step took %d secs",
                         duration / 1000);
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -270,7 +285,7 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows, jlong numCols,
     jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jobject resultObj) {
+    jintArray gpuIdxArray, jstring breakdown_name, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -299,9 +314,15 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
                         "oneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
+
+
         auto comm = getDalComm();
         doSummarizerOneAPICompute(env, pNumTabData, numRows, numCols, comm,
-                                  resultObj);
+                                  c_breakdown_name resultObj);
+
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
         break;
     }
 #endif

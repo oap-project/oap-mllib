@@ -61,6 +61,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     jint computeDeviceOrdinal, jobject param) {
 
     logger::println(logger::INFO, "OneCCL (native): init");
+
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
     auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);

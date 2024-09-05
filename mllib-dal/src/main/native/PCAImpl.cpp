@@ -184,25 +184,33 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
 static void doPCAOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table htable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
                                        comm.get_queue())
             .get());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO,
+                    "PCA (native): create homogen table took %f secs",
+                    duration / 1000);
+
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
 
     const auto cov_desc =
         covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cov_matrix);
 
-    auto t1 = std::chrono::high_resolution_clock::now();
+    t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    logger::println(logger::INFO, "PCA (native): Covariance step took %d secs",
-                    duration / 1000);
     if (isRoot) {
         using float_t = GpuAlgorithmFPType;
         using method_t = pca_gpu::method::precomputed;
@@ -210,7 +218,6 @@ static void doPCAOneAPICompute(
         using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;
         const auto pca_desc = descriptor_t().set_deterministic(true);
 
-        t1 = std::chrono::high_resolution_clock::now();
         const auto result_train =
             preview::train(comm, pca_desc, result.get_cov_matrix());
         t2 = std::chrono::high_resolution_clock::now();
@@ -219,6 +226,9 @@ static void doPCAOneAPICompute(
                 .count();
         logger::println(logger::INFO, "PCA (native): Eigen step took %d secs",
                         duration / 1000);
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
@@ -252,7 +262,7 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
     jlong numCols, jint executorNum, jint executorCores,
-    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring breakdown_name, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -280,9 +290,13 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         logger::println(logger::INFO,
                         "oneDAL (native): use GPU kernels with rankid %d",
                         rank);
-
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
         auto comm = getDalComm();
-        doPCAOneAPICompute(env, pNumTabData, numRows, numCols, comm, resultObj);
+        doPCAOneAPICompute(env, pNumTabData, numRows, numCols, comm, c_breakdown_name, resultObj);
+
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
+
         break;
     }
 #endif

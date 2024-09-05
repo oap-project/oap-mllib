@@ -55,7 +55,8 @@ class RandomForestClassifierDALImpl(val uid: String,
 
     logInfo(s"RandomForestClassifierDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
-    val rfcTimer = new Utils.AlgoTimeMetrics("RandomForestClassifier", sparkContext)
+    val metricsName = "RFClassifier_" + executorNum
+    val rfcTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     // used run Random Forest unit test
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
@@ -74,6 +75,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     }
     rfcTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
+    val trainingBreakdownName = "RFClassifier_training_breakdown_" + executorNum
 
     CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfcTimer.record("OneCCL Init")
@@ -114,6 +116,7 @@ class RandomForestClassifierDALImpl(val uid: String,
         bootstrap,
         gpuIndices,
         kvsIPPort,
+        trainingBreakdownName,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -160,6 +163,7 @@ class RandomForestClassifierDALImpl(val uid: String,
                                                    bootstrap: Boolean,
                                                    gpuIndices: Array[Int],
                                                    kvsIPPort: String,
+                                                   breakdownName: String,
                                                    result: RandomForestResult):
   java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

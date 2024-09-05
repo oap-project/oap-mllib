@@ -45,9 +45,9 @@ class RandomForestRegressorDALImpl(val uid: String,
   def train(labeledPoints: Dataset[_],
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
-    logInfo(s"RandomForestRegressorDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
-    val rfrTimer = new Utils.AlgoTimeMetrics("RandomForestRegressor", sparkContext)
+    val metricsName = "RFRegressor_" + executorNum
+    val rfrTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     // used run Random Forest unit test
@@ -68,6 +68,7 @@ class RandomForestRegressorDALImpl(val uid: String,
     rfrTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
+    val trainingBreakdownName = "RFRegressor_training_breakdown_" + executorNum
 
     CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfrTimer.record("OneCCL Init")
@@ -105,6 +106,7 @@ class RandomForestRegressorDALImpl(val uid: String,
         bootstrap,
         gpuIndices,
         kvsIPPort,
+        trainingBreakdownName,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -156,5 +158,6 @@ class RandomForestRegressorDALImpl(val uid: String,
                                              bootstrap: Boolean,
                                              gpuIndices: Array[Int],
                                              kvsIPPort: String,
+                                             breakdownName: String,
                                              result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

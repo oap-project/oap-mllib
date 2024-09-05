@@ -32,7 +32,8 @@ class SummarizerDALImpl(val executorNum: Int,
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
     val sparkContext = data.sparkContext
-    val sumTimer = new Utils.AlgoTimeMetrics("Summarizer", sparkContext)
+    val metricsName = "Summarizer_" + executorNum
+    val sumTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     sumTimer.record("Preprocessing")
@@ -46,6 +47,7 @@ class SummarizerDALImpl(val executorNum: Int,
     sumTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(data)
+    val trainingBreakdownName = "Summarizer_training_breakdown_" + executorNum
 
     CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     sumTimer.record("OneCCL Init")
@@ -76,6 +78,7 @@ class SummarizerDALImpl(val executorNum: Int,
         computeDevice.ordinal(),
         gpuIndices,
         kvsIPPort,
+        trainingBreakdownName,
         result
       )
 
@@ -158,5 +161,6 @@ class SummarizerDALImpl(val executorNum: Int,
                                           computeDeviceOrdinal: Int,
                                           gpuIndices: Array[Int],
                                           kvsIPPort: String,
+                                          breakdownName: String,
                                           result: SummarizerResult): Long
 }

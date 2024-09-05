@@ -38,7 +38,8 @@ class KMeansDALImpl(var nClusters: Int,
 
   def train(data: RDD[Vector]): MLlibKMeansModel = {
     val sparkContext = data.sparkContext
-    val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans", sparkContext)
+    val metricsName = "Kmeans_" + executorNum
+    val kmeansTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     kmeansTimer.record("Preprocessing")
@@ -51,6 +52,7 @@ class KMeansDALImpl(var nClusters: Int,
     kmeansTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    val trainingBreakdownName = "Kmeans_training_breakdown_" + executorNum
 
     CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     kmeansTimer.record("OneCCL Init")
@@ -91,6 +93,7 @@ class KMeansDALImpl(var nClusters: Int,
         computeDevice.ordinal(),
         gpuIndices,
         kvsIPPort,
+        trainingBreakdownName,
         result
       )
 
@@ -149,5 +152,6 @@ class KMeansDALImpl(var nClusters: Int,
                                                          computeDeviceOrdinal: Int,
                                                          gpuIndices: Array[Int],
                                                          kvsIPPort: String,
+                                                         breakdownName: String,
                                                          result: KMeansResult): Long
 }

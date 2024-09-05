@@ -45,7 +45,8 @@ class PCADALImpl(val k: Int,
   def train(data: RDD[Vector]): PCADALModel = {
     val normalizedData = normalizeData(data)
     val sparkContext = normalizedData.sparkContext
-    val pcaTimer = new Utils.AlgoTimeMetrics("PCA", sparkContext)
+    val metricsName = "PCA_" + executorNum
+    val pcaTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     pcaTimer.record("Preprocessing")
@@ -57,6 +58,8 @@ class PCADALImpl(val k: Int,
       OneDAL.coalesceVectorsToNumericTables(normalizedData, executorNum)
     }
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    val trainingBreakdownName = "PCA_training_breakdown_" + executorNum
+
     pcaTimer.record("Data Convertion")
 
     CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
@@ -85,6 +88,7 @@ class PCADALImpl(val k: Int,
         computeDevice.ordinal(),
         gpuIndices,
         kvsIPPort,
+        trainingBreakdownName,
         result
       )
 
@@ -220,5 +224,6 @@ class PCADALImpl(val k: Int,
                                    computeDeviceOrdinal: Int,
                                    gpuIndices: Array[Int],
                                    kvsIPPort: String,
+                                   breakdownName: String,
                                    result: PCAResult): Long
 }

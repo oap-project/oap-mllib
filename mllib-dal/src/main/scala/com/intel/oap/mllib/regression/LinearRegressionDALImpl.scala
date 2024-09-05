@@ -71,13 +71,16 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             featuresCol: String): LinearRegressionDALModel = {
 
     val sparkContext = labeledPoints.sparkSession.sparkContext
-    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression", sparkContext)
+    val metricsName = "LinearRegression_" + executorNum
+    val lrTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+    val trainingBreakdownName = "LinearRegression_training_breakdown_" + executorNum
+
     lrTimer.record("Preprocessing")
 
     val labeledPointsTables = if (useDevice == "GPU") {
@@ -154,6 +157,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           computeDevice.ordinal(),
           gpuIndices,
           kvsIPPort,
+          trainingBreakdownName,
           result
         )
 
@@ -200,6 +204,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                   computeDeviceOrdinal: Int,
                                   gpuIndices: Array[Int],
                                   kvsIPPort: String,
+                                  breakdownName: String,
                                   result: LiRResult): Long
 
   }

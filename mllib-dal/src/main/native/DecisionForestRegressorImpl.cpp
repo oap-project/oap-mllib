@@ -213,9 +213,10 @@ static jobject doRFRegressorOneAPICompute(
     jint minObservationsLeafNode, jint maxTreeDepth, jlong seed, jint maxbins,
     jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
                                        comm.get_queue())
@@ -224,6 +225,18 @@ static jobject doRFRegressorOneAPICompute(
         createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
                                        comm.get_queue())
             .get());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(
+        logger::INFO,
+        "DF Regression (native): create feature homogen table took %f secs",
+        duration / 1000);
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
+
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
                        df::task::regression>{}
@@ -237,6 +250,7 @@ static jobject doRFRegressorOneAPICompute(
                 df::error_metric_mode::out_of_bag_error_per_observation)
             .set_variable_importance_mode(df::variable_importance_mode::mdi);
 
+    t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -250,6 +264,16 @@ static jobject doRFRegressorOneAPICompute(
         logger::println(logger::INFO, "Prediction results:");
         printHomegenTable(result_infer.get_responses());
 
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
+        logger::println(logger::INFO,
+                        "DF Regression (native): training step took %f secs.",
+                        duration / 1000);
         // convert c++ map to java hashmap
         jint statsSize = 3; // spark create VarianceCalculator needs array of
                             // sufficient statistics
@@ -297,7 +321,7 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
     jint executorNum, jint computeDeviceOrdinal, jint treeCount,
     jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
     jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
-    jobject resultObj) {
+    jstring breakdown_name, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -308,14 +332,18 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
         logger::println(logger::INFO,
                         "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
 
         auto comm = getDalComm();
         jobject hashmapObj = doRFRegressorOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, treeCount,
             numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
-            maxbins, bootstrap, comm, resultObj);
+            maxbins, bootstrap, comm, c_breakdown_name, resultObj);
+
         env->ReleaseStringUTFChars(ip_port, str);
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
         return hashmapObj;
     }
     default: {

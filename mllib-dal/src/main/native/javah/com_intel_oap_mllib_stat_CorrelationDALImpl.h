@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (JIII[ILcom/intel/oap/mllib/stat/CorrelationResult;)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL
-  (JNIEnv *, jobject, jint, jlong, jlong, jlong, jint, jint, jint, jintArray, jstring, jobject);
+  (JNIEnv *, jobject, jint, jlong, jlong, jlong, jint, jint, jint, jintArray, jstring, jstring, jobject);
 
 #ifdef __cplusplus
 }
