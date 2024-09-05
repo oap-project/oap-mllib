@@ -12,4 +12,4 @@ sycl::queue getAssignedGPU(const ComputeDevice device, jint *gpu_indices);
 
 sycl::queue getQueue(const ComputeDevice device);
 preview::spmd::communicator<preview::spmd::device_memory_access::usm>
-createDalCommunicator(jint executorNum, jint rank, ccl::string ccl_ip_port);
+createDalCommunicator(jint executorNum, jint rank, ccl::string ccl_ip_port, std::string breakdown_name);
