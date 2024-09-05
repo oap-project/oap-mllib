@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -31,7 +31,8 @@ class CorrelationDALImpl(
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
     val sparkContext = data.sparkContext
-    val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
+    val metricsName = "Correlation_" + executorNum
+    val corTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
@@ -45,11 +46,10 @@ class CorrelationDALImpl(
     corTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    val trainingBreakdownName = "Correlation_training_breakdown_" + executorNum
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     corTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
@@ -69,6 +69,7 @@ class CorrelationDALImpl(
         null
       }
       cCorrelationTrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -76,6 +77,8 @@ class CorrelationDALImpl(
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        kvsIPPort,
+        trainingBreakdownName,
         result
       )
 
@@ -118,12 +121,15 @@ class CorrelationDALImpl(
   }
 
 
-  @native private[mllib] def cCorrelationTrainDAL(data: Long,
+  @native private[mllib] def cCorrelationTrainDAL(rank: Int,
+                                           data: Long,
                                            numRows: Long,
                                            numCols: Long,
                                            executorNum: Int,
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
                                            gpuIndices: Array[Int],
+                                           kvsIPPort: String,
+                                           breakdownName: String,
                                            result: CorrelationResult): Long
 }

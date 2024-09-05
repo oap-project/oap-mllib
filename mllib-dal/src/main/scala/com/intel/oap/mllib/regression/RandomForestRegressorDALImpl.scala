@@ -17,7 +17,7 @@ package com.intel.oap.mllib.regression
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.classification.{LearningNode, RandomForestResult}
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -45,9 +45,9 @@ class RandomForestRegressorDALImpl(val uid: String,
   def train(labeledPoints: Dataset[_],
             labelCol: String,
             featuresCol: String): (util.Map[Integer, util.ArrayList[LearningNode]]) = {
-    logInfo(s"RandomForestRegressorDALImpl executorNum : " + executorNum)
     val sparkContext = labeledPoints.rdd.sparkContext
-    val rfrTimer = new Utils.AlgoTimeMetrics("RandomForestRegressor", sparkContext)
+    val metricsName = "RFRegressor_" + executorNum
+    val rfrTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     // used run Random Forest unit test
@@ -68,11 +68,10 @@ class RandomForestRegressorDALImpl(val uid: String,
     rfrTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
+    val trainingBreakdownName = "RFRegressor_training_breakdown_" + executorNum
 
-    labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(labeledPointsTables, useDevice)
+    CommonJob.createCCLInit(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
@@ -91,6 +90,7 @@ class RandomForestRegressorDALImpl(val uid: String,
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFRegressorTrainDAL(
+        rank,
         feature._1,
         feature._2,
         feature._3,
@@ -106,6 +106,8 @@ class RandomForestRegressorDALImpl(val uid: String,
         maxbins,
         bootstrap,
         gpuIndices,
+        kvsIPPort,
+        trainingBreakdownName,
         result)
 
       val computeEndTime = System.nanoTime()
@@ -141,7 +143,8 @@ class RandomForestRegressorDALImpl(val uid: String,
     results(0)._2
   }
 
-  @native private[mllib] def cRFRegressorTrainDAL(featureTabAddr: Long,
+  @native private[mllib] def cRFRegressorTrainDAL(rank: Int,
+                                             featureTabAddr: Long,
                                              numRows: Long,
                                              numCols: Long,
                                              lableTabAddr: Long,
@@ -156,5 +159,7 @@ class RandomForestRegressorDALImpl(val uid: String,
                                              maxbins: Int,
                                              bootstrap: Boolean,
                                              gpuIndices: Array[Int],
+                                             kvsIPPort: String,
+                                             breakdownName: String,
                                              result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

@@ -84,7 +84,7 @@ object TestCommon {
     arrayDouble
   }
   def getMatrixFromTable(table: HomogenTable,
-                                  device: Common.ComputeDevice): DenseMatrix = {
+                                  device: CommonJob.ComputeDevice): DenseMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
     // returned DoubleBuffer is ByteByffer, need to copy as double array
@@ -97,14 +97,14 @@ object TestCommon {
     matrix
   }
 
-  def getComputeDevice: Common.ComputeDevice = {
+  def getComputeDevice: CommonJob.ComputeDevice = {
     val device = System.getProperty("computeDevice")
-    var computeDevice: Common.ComputeDevice = Common.ComputeDevice.HOST
+    var computeDevice: CommonJob.ComputeDevice = CommonJob.ComputeDevice.HOST
     if(device != null) {
       device.toUpperCase match {
-        case "HOST" => computeDevice = Common.ComputeDevice.HOST
-        case "CPU" => computeDevice = Common.ComputeDevice.CPU
-        case "GPU" => computeDevice = Common.ComputeDevice.GPU
+        case "HOST" => computeDevice = CommonJob.ComputeDevice.HOST
+        case "CPU" => computeDevice = CommonJob.ComputeDevice.CPU
+        case "GPU" => computeDevice = CommonJob.ComputeDevice.GPU
         case _ => "Invalid Device"
       }
     }

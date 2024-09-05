@@ -25,7 +25,6 @@ static std::vector<sycl::device> get_gpus() {
 }
 
 static int getLocalRank(ccl::communicator &comm, int size, int rank) {
-    const int MPI_MAX_PROCESSOR_NAME = 128;
     /* Obtain local rank among nodes sharing the same host name */
     char zero = static_cast<char>(0);
     std::vector<char> name(MPI_MAX_PROCESSOR_NAME + 1, zero);
@@ -66,8 +65,7 @@ static sycl::queue getSyclQueue(const sycl::device device) {
     }
 }
 
-sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
-                           int size, int rankId, jint *gpu_indices, int n_gpu) {
+sycl::queue getAssignedGPU(const ComputeDevice device, int *gpu_indices) {
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
@@ -78,19 +76,8 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     }
     case ComputeDevice::gpu: {
         logger::println(logger::INFO, "selector GPU");
-        auto local_rank = getLocalRank(comm, size, rankId);
         auto gpus = get_gpus();
-
-        logger::println(logger::INFO,
-                        "rank: %d size: %d local_rank: %d n_gpu: %d", rankId,
-                        size, local_rank, n_gpu);
-
-        auto gpu_selected = gpu_indices[local_rank % n_gpu];
-        logger::println(logger::INFO, "GPU selected for current rank: %d",
-                        gpu_selected);
-
-        // In case gpu_selected index is larger than number of GPU SYCL devices
-        auto rank_gpu = gpus[gpu_selected % gpus.size()];
+        auto rank_gpu = gpus[0];
         sycl::queue q{rank_gpu};
         return q;
     }
@@ -124,4 +111,38 @@ sycl::queue getQueue(const ComputeDevice device) {
         exit(-1);
     }
     }
+}
+
+preview::spmd::communicator<preview::spmd::device_memory_access::usm>
+createDalCommunicator(const jint executorNum, const jint rank,
+                      const ccl::string ccl_ip_port, std::string breakdown_name) {
+    auto gpus = get_gpus();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    ccl::init();
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+
+    logger::Logger::getInstance(breakdown_name).printLogToFile("rankID was %d, OneCCL singleton init took %f secs.", rank, duration / 1000 );
+
+    auto kvs_attr = ccl::create_kvs_attr();
+
+    kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
+
+    ccl::shared_ptr_class<ccl::kvs> kvs = ccl::create_main_kvs(kvs_attr);
+
+    sycl::queue queue{gpus[0]};
+    t1 = std::chrono::high_resolution_clock::now();
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rank, kvs);
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::Logger::getInstance(c_breakdown_name).printLogToFile("rankID was %d, create communicator took %f secs.", rank, duration / 1000 );
+    return comm;
 }

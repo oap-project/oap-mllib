@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.regression
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.SparkException
 import org.apache.spark.TaskContext
@@ -71,13 +71,16 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             featuresCol: String): LinearRegressionDALModel = {
 
     val sparkContext = labeledPoints.sparkSession.sparkContext
-    val lrTimer = new Utils.AlgoTimeMetrics("LinearRegression", sparkContext)
+    val metricsName = "LinearRegression_" + executorNum
+    val lrTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
 
     val isTest = sparkContext.getConf.getBoolean("spark.oap.mllib.isTest", false)
 
     val kvsIPPort = getOneCCLIPPort(labeledPoints.rdd)
+    val trainingBreakdownName = "LinearRegression_training_breakdown_" + executorNum
+
     lrTimer.record("Preprocessing")
 
     val labeledPointsTables = if (useDevice == "GPU") {
@@ -106,6 +109,10 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
     lrTimer.record("Data Convertion")
 
+    CommonJob.setAffinityMask(labeledPointsTables, useDevice)
+    CommonJob.createCCLInit(labeledPointsTables, executorNum, kvsIPPort, useDevice)
+    lrTimer.record("OneCCL Init")
+
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
         val (feature, label) = tables.next()
         val (featureTabAddr : Long, featureRows : Long, featureColumns : Long) =
@@ -121,7 +128,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             (label.toString.toLong, 0L, 0L)
           }
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
@@ -138,6 +144,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
         }
 
         val cbeta = cLinearRegressionTrainDAL(
+          rank,
           featureTabAddr,
           featureRows,
           featureColumns,
@@ -150,6 +157,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           executorCores,
           computeDevice.ordinal(),
           gpuIndices,
+          kvsIPPort,
+          trainingBreakdownName,
           result
         )
 
@@ -183,7 +192,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
   }
 
   // Single entry to call Linear Regression DAL backend with parameters
-  @native private def cLinearRegressionTrainDAL(data: Long,
+  @native private def cLinearRegressionTrainDAL(rank: Int,
+                                  data: Long,
                                   numRows: Long,
                                   numCols: Long,
                                   label: Long,
@@ -195,6 +205,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
                                   executorCores: Int,
                                   computeDeviceOrdinal: Int,
                                   gpuIndices: Array[Int],
+                                  kvsIPPort: String,
+                                  breakdownName: String,
                                   result: LiRResult): Long
 
   }

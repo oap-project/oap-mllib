@@ -214,21 +214,18 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 }
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
-                               ccl::communicator &cclComm, sycl::queue &queue,
-                               jlong pNumTabFeature, jlong featureRows,
-                               jlong featureCols, jlong pNumTabLabel,
-                               jlong labelCols, jboolean jfitIntercept,
-                               jint executorNum, jobject resultObj) {
+static jlong doLROneAPICompute(
+    JNIEnv *env, size_t rankId,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jboolean jfitIntercept,
+    jint executorNum, std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 
-    int size = cclComm.size();
-    ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, size, rankId, kvs);
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table xtrain = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
                                        comm.get_queue())
@@ -237,16 +234,37 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
         createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
                                        comm.get_queue())
             .get());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(
+        logger::INFO,
+        "LinerRegression(native): create feature homogen table took %f secs",
+        duration / 1000);
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
         linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
-
+    t1 = std::chrono::high_resolution_clock::now();
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
     if (isRoot) {
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model().get_betas());
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        logger::println(logger::INFO,
+                        "LinerRegression(native): training step took %f secs",
+                        duration / 1000);
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
         saveHomogenTablePtrToVector(result_matrix);
         return (jlong)result_matrix.get();
     } else {
@@ -262,18 +280,15 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
  */
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTrainDAL(
-    JNIEnv *env, jobject obj, jlong feature, jlong featureRows,
+    JNIEnv *env, jobject obj, jint rank, jlong feature, jlong featureRows,
     jlong featureCols, jlong label, jlong labelCols, jboolean fitIntercept,
     jdouble regParam, jdouble elasticNetParam, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
-    jobject resultObj) {
+    jstring ip_port, jobject resultObj) {
 
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
-
-    ccl::communicator &cclComm = getComm();
-    size_t rankId = cclComm.rank();
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     bool useGPU = false;
@@ -284,23 +299,27 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong resultptr = 0L;
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rankId);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-        int size = cclComm.size();
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+        const char *str = env->GetStringUTFChars(ip_port, nullptr);
+        ccl::string ccl_ip_port(str);
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
+        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port,
+                                          c_breakdown_name);
 
         resultptr = doLROneAPICompute(
-            env, rankId, cclComm, queue, feature, featureRows, featureCols,
-            label, labelCols, fitIntercept, executorNum, resultObj);
-        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
+            env, rank, comm, feature, featureRows, featureCols, label,
+            labelCols, fitIntercept, executorNum, c_breakdown_name, resultObj);
+        env->ReleaseStringUTFChars(ip_port, str);
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
 #endif
     } else {
+        ccl::communicator &cclComm = getComm();
+        size_t rankId = cclComm.rank();
+
         NumericTablePtr pLabel = *((NumericTablePtr *)label);
         NumericTablePtr pData = *((NumericTablePtr *)feature);
 
@@ -323,22 +342,18 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
 
         NumericTablePtr *coeffvectors = new NumericTablePtr(resultTable);
         resultptr = (jlong)coeffvectors;
+        if (rankId == ccl_root) {
+            // Get the class of the result object
+            jclass clazz = env->GetObjectClass(resultObj);
+            // Get Field references
+            jfieldID coeffNumericTableField =
+                env->GetFieldID(clazz, "coeffNumericTable", "J");
+
+            env->SetLongField(resultObj, coeffNumericTableField, resultptr);
+
+            // intercept is already in first column of coeffvectors
+            resultptr = (jlong)coeffvectors;
+        }
     }
-
-    jlong ret = 0L;
-    if (rankId == ccl_root) {
-        // Get the class of the result object
-        jclass clazz = env->GetObjectClass(resultObj);
-        // Get Field references
-        jfieldID coeffNumericTableField =
-            env->GetFieldID(clazz, "coeffNumericTable", "J");
-
-        env->SetLongField(resultObj, coeffNumericTableField, resultptr);
-
-        // intercept is already in first column of coeffvectors
-        ret = resultptr;
-    } else {
-        ret = (jlong)0;
-    }
-    return ret;
+    return resultptr;
 }

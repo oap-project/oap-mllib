@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.clustering
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -38,7 +38,8 @@ class KMeansDALImpl(var nClusters: Int,
 
   def train(data: RDD[Vector]): MLlibKMeansModel = {
     val sparkContext = data.sparkContext
-    val kmeansTimer = new Utils.AlgoTimeMetrics("KMeans", sparkContext)
+    val metricsName = "Kmeans_" + executorNum
+    val kmeansTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     kmeansTimer.record("Preprocessing")
@@ -51,11 +52,10 @@ class KMeansDALImpl(var nClusters: Int,
     kmeansTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    val trainingBreakdownName = "Kmeans_training_breakdown_" + executorNum
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     kmeansTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
@@ -81,6 +81,7 @@ class KMeansDALImpl(var nClusters: Int,
       }
 
       cCentroids = cKMeansOneapiComputeWithInitCenters(
+        rank,
         tableArr,
         rows,
         columns,
@@ -92,6 +93,8 @@ class KMeansDALImpl(var nClusters: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        kvsIPPort,
+        trainingBreakdownName,
         result
       )
 
@@ -107,7 +110,9 @@ class KMeansDALImpl(var nClusters: Int,
         } else {
           Iterator.empty
         }
-      OneCCL.cleanup()
+      if (useDevice == "CPU") {
+         OneCCL.cleanup()
+      }
       ret
     }.collect()
 
@@ -136,7 +141,8 @@ class KMeansDALImpl(var nClusters: Int,
     parentModel
   }
 
-  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long,
+  @native private[mllib] def cKMeansOneapiComputeWithInitCenters( rank: Int,
+                                                         data: Long,
                                                          numRows: Long,
                                                          numCols: Long,
                                                          centers: Long,
@@ -147,5 +153,7 @@ class KMeansDALImpl(var nClusters: Int,
                                                          executorCores: Int,
                                                          computeDeviceOrdinal: Int,
                                                          gpuIndices: Array[Int],
+                                                         kvsIPPort: String,
+                                                         breakdownName: String,
                                                          result: KMeansResult): Long
 }

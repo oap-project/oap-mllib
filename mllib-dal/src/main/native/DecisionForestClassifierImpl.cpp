@@ -216,9 +216,11 @@ static jobject doRFClassifierOneAPICompute(
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
                                        comm.get_queue())
@@ -227,6 +229,17 @@ static jobject doRFClassifierOneAPICompute(
         createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
                                        comm.get_queue())
             .get());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(
+        logger::INFO,
+        "DF Classifier (native): create feature homogen table took %f secs",
+        duration / 1000);
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
 
     const auto df_desc =
         df::descriptor<GpuAlgorithmFPType, df::method::hist,
@@ -247,6 +260,7 @@ static jobject doRFClassifierOneAPICompute(
             .set_max_tree_depth(maxTreeDepth)
             .set_max_bins(maxBins);
 
+    t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -261,6 +275,16 @@ static jobject doRFClassifierOneAPICompute(
         printHomegenTable(result_infer.get_responses());
         logger::println(logger::INFO, "Probabilities results:\n");
         printHomegenTable(result_infer.get_probabilities());
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        logger::println(logger::INFO,
+                        "DF Classifier (native): training step took  %f secs.",
+                        duration / 1000);
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
 
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
@@ -300,46 +324,40 @@ static jobject doRFClassifierOneAPICompute(
  */
 JNIEXPORT jobject JNICALL
 Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassifierTrainDAL(
-    JNIEnv *env, jobject obj, jlong pNumTabFeature, jlong featureRows,
-    jlong featureCols, jlong pNumTabLabel, jlong labelCols, jint executorNum,
-    jint computeDeviceOrdinal, jint classCount, jint treeCount,
-    jint numFeaturesPerNode, jint minObservationsLeafNode,
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabFeature,
+    jlong featureRows, jlong featureCols, jlong pNumTabLabel, jlong labelCols,
+    jint executorNum, jint computeDeviceOrdinal, jint classCount,
+    jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
-    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
-    jobject resultObj) {
+    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray, jstring ip_port,
+    jstring breakdown_name, jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
 
-    ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rankId);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
+        const char *str = env->GetStringUTFChars(ip_port, nullptr);
+        ccl::string ccl_ip_port(str);
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
+        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port,
+                                          c_breakdown_name);
 
-        int size = cclComm.size();
-        ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
-
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
         jobject hashmapObj = doRFClassifierOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, classCount, treeCount,
             numFeaturesPerNode, minObservationsLeafNode,
             minObservationsSplitNode, minWeightFractionLeafNode,
             minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
-            bootstrap, comm, resultObj);
+            bootstrap, comm, c_breakdown_name, resultObj);
+
+        env->ReleaseStringUTFChars(ip_port, str);
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
         return hashmapObj;
     }
     default: {

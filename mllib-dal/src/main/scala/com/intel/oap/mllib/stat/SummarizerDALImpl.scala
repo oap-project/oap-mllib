@@ -16,7 +16,7 @@
 
 package com.intel.oap.mllib.stat
 
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
@@ -32,7 +32,8 @@ class SummarizerDALImpl(val executorNum: Int,
 
   def computeSummarizerMatrix(data: RDD[Vector]): Summary = {
     val sparkContext = data.sparkContext
-    val sumTimer = new Utils.AlgoTimeMetrics("Summarizer", sparkContext)
+    val metricsName = "Summarizer_" + executorNum
+    val sumTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     sumTimer.record("Preprocessing")
@@ -46,11 +47,10 @@ class SummarizerDALImpl(val executorNum: Int,
     sumTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(data)
+    val trainingBreakdownName = "Summarizer_training_breakdown_" + executorNum
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     sumTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
@@ -70,6 +70,7 @@ class SummarizerDALImpl(val executorNum: Int,
         null
       }
       cSummarizerTrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -77,6 +78,8 @@ class SummarizerDALImpl(val executorNum: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        kvsIPPort,
+        trainingBreakdownName,
         result
       )
 
@@ -150,12 +153,15 @@ class SummarizerDALImpl(val executorNum: Int,
     summary
   }
 
-  @native private[mllib] def cSummarizerTrainDAL(data: Long,
+  @native private[mllib] def cSummarizerTrainDAL(rank: Int,
+                                          data: Long,
                                           numRows: Long,
                                           numCols: Long,
                                           executorNum: Int,
                                           executorCores: Int,
                                           computeDeviceOrdinal: Int,
                                           gpuIndices: Array[Int],
+                                          kvsIPPort: String,
+                                          breakdownName: String,
                                           result: SummarizerResult): Long
 }

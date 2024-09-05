@@ -32,6 +32,7 @@
 #include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
+#include "service.h"
 
 extern const size_t ccl_root = 0;
 
@@ -54,6 +55,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     auto t1 = std::chrono::high_resolution_clock::now();
 
     ccl::init();
+    auto t2 = std::chrono::high_resolution_clock::now();
 
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
@@ -63,8 +65,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     g_kvs.push_back(singletonCCLInit.kvs);
     g_comms.push_back(
         ccl::create_communicator(size, rank, singletonCCLInit.kvs));
-
-    auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
@@ -81,19 +81,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     env->SetLongField(param, fid_comm_size, comm_size);
     env->SetLongField(param, fid_rank_id, rank_id);
     env->ReleaseStringUTFChars(ip_port, str);
-
-    return 1;
-}
-
-/*
- * Class:     com_intel_oap_mllib_OneCCL__
- * Method:    c_init
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL
-Java_com_intel_oap_mllib_OneCCL_00024_c_1initDpcpp(JNIEnv *env, jobject) {
-    logger::printerrln(logger::INFO, "OneCCL (native): init dpcpp");
-    ccl::init();
 
     return 1;
 }
