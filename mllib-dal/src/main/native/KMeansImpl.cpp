@@ -246,21 +246,34 @@ static jlong doKMeansOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     jlong pNumTabCenters, jint clusterNum, jdouble tolerance, jint iterationNum,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-    jobject resultObj) {
+    std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table htable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
                                        comm.get_queue())
             .get());
     homogen_table centroids =
         *reinterpret_cast<const homogen_table *>(pNumTabCenters);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO,
+                    "KMeans (native): create homogen table took %f secs",
+                    duration / 1000);
+
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
+
     const auto kmeans_desc = kmeans_gpu::descriptor<GpuAlgorithmFPType>()
                                  .set_cluster_count(clusterNum)
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);
     kmeans_gpu::train_input local_input{htable, centroids};
-    auto t1 = std::chrono::high_resolution_clock::now();
+    t1 = std::chrono::high_resolution_clock::now();
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
@@ -268,13 +281,16 @@ static jlong doKMeansOneAPICompute(
                         result_train.get_iteration_count());
         logger::println(logger::INFO, "Centroids:");
         printHomegenTable(result_train.get_model().get_centroids());
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
+        t2 = std::chrono::high_resolution_clock::now();
+        duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         logger::println(logger::INFO,
                         "KMeans (native): training step took %d secs",
                         duration / 1000);
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -305,10 +321,11 @@ static jlong doKMeansOneAPICompute(
  */
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows, jlong numCols,
-    jlong pNumTabCenters, jint clusterNum, jdouble tolerance, jint iterationNum,
-    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jstring ip_port, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
+    jlong numCols, jlong pNumTabCenters, jint clusterNum, jdouble tolerance,
+    jint iterationNum, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring ip_port,
+    jstring breakdown_name, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -338,18 +355,22 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        logger::println(
-            logger::INFO,
-            "OneDAL (native): use GPU kernels with rankid %d", rank);
+        logger::println(logger::INFO,
+                        "OneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
         const char *str = env->GetStringUTFChars(ip_port, nullptr);
         ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
+        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port,
+                                          c_breakdown_name);
 
-        ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numCols,
-                                    pNumTabCenters, clusterNum, tolerance,
-                                    iterationNum, comm, resultObj);
+        ret = doKMeansOneAPICompute(
+            env, pNumTabData, numRows, numCols, pNumTabCenters, clusterNum,
+            tolerance, iterationNum, comm, c_breakdown_name, resultObj);
 
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
         env->ReleaseStringUTFChars(ip_port, str);
         break;
     }

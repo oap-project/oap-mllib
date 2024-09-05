@@ -214,17 +214,18 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 }
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
-                               preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
-                               jlong pNumTabFeature, jlong featureRows,
-                               jlong featureCols, jlong pNumTabLabel,
-                               jlong labelCols, jboolean jfitIntercept,
-                               jint executorNum, jobject resultObj) {
+static jlong doLROneAPICompute(
+    JNIEnv *env, size_t rankId,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jboolean jfitIntercept,
+    jint executorNum, std::string breakdown_name, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 
+    auto t1 = std::chrono::high_resolution_clock::now();
     homogen_table xtrain = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
                                        comm.get_queue())
@@ -233,16 +234,37 @@ static jlong doLROneAPICompute(JNIEnv *env, size_t rankId,
         createHomogenTableWithArrayPtr(pNumTabLabel, featureRows, labelCols,
                                        comm.get_queue())
             .get());
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(
+        logger::INFO,
+        "LinerRegression(native): create feature homogen table took %f secs",
+        duration / 1000);
+    logger::Logger::getInstance(breakdown_name)
+        .printLogToFile("rankID was %d, create homogen table took %f secs.",
+                        comm.get_rank(), duration / 1000);
 
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
         linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
-
+    t1 = std::chrono::high_resolution_clock::now();
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
     if (isRoot) {
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model().get_betas());
+        t2 = std::chrono::high_resolution_clock::now();
+        duration = (float)std::chrono::duration_cast<std::chrono::milliseconds>(
+                       t2 - t1)
+                       .count();
+        logger::println(logger::INFO,
+                        "LinerRegression(native): training step took %f secs",
+                        duration / 1000);
+        logger::Logger::getInstance(breakdown_name)
+            .printLogToFile("rankID was %d, training step took %f secs.",
+                            comm.get_rank(), duration / 1000);
         saveHomogenTablePtrToVector(result_matrix);
         return (jlong)result_matrix.get();
     } else {
@@ -277,18 +299,22 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong resultptr = 0L;
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with rankid %d", rank);
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
         const char *str = env->GetStringUTFChars(ip_port, nullptr);
         ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
+        const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
+        std::string c_breakdown_name(cstr);
+        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port,
+                                          c_breakdown_name);
 
         resultptr = doLROneAPICompute(
-            env, rank, comm, feature, featureRows, featureCols,
-            label, labelCols, fitIntercept, executorNum, resultObj);
+            env, rank, comm, feature, featureRows, featureCols, label,
+            labelCols, fitIntercept, executorNum, c_breakdown_name, resultObj);
         env->ReleaseStringUTFChars(ip_port, str);
+        env->ReleaseStringUTFChars(breakdown_name, cstr);
 #endif
     } else {
         ccl::communicator &cclComm = getComm();
