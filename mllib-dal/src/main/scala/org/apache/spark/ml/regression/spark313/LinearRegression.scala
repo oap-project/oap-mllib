@@ -462,7 +462,8 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
       dataset.count()
     }
 
-    val paramSupported = ($(regParam) == 0) || ($(regParam) != 0 && $(elasticNetParam) == 0)
+    val paramSupported = ($(regParam) == 0 || ($(regParam) != 0 && $(elasticNetParam) == 0)
+      && (!isDefined(weightCol) || getWeightCol.isEmpty))
     val sparkContext = dataset.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
