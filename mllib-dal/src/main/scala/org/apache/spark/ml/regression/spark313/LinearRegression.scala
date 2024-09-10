@@ -455,7 +455,15 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
   private def trainWithNormal(
       dataset: Dataset[_],
       instr: Instrumentation): LinearRegressionModel = {
-    val paramSupported = ($(regParam) == 0) && (!isDefined(weightCol) || getWeightCol.isEmpty)
+    val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
+
+    if (handlePersistence) {
+      dataset.persist(StorageLevel.MEMORY_AND_DISK)
+      dataset.count()
+    }
+
+    val paramSupported = ($(regParam) == 0 || ($(regParam) != 0 && $(elasticNetParam) == 0)
+      && (!isDefined(weightCol) || getWeightCol.isEmpty))
     val sparkContext = dataset.sparkSession.sparkContext
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val isPlatformSupported = Utils.checkClusterPlatformCompatibility(
@@ -486,6 +494,9 @@ class LinearRegression @Since("1.3") (@Since("1.3.0") override val uid: String)
         model.diagInvAtWA.toArray,
         model.objectiveHistory)
 
+      if (handlePersistence) {
+        dataset.unpersist()
+      }
       return lrModel.setSummary(Some(trainingSummary))
     } else {
       // For low dimensional data, WeightedLeastSquares is more efficient since the
