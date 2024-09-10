@@ -29,18 +29,18 @@ object CommonJob {
       } else {
         null
       }
-      OneCCL.setExecutorEnv("ZE_AFFINITY_MASK", gpuIndices(0).toString())
+      OneCCL.setAffinityMask(gpuIndices(0).toString())
       Iterator.empty
     }.count()
   }
 
-    def createCCLInit(data: RDD[_], executorNum: Int, kvsIPPort: String, useDevice: String): Unit = {
-      if (useDevice == "CPU") {
-          data.mapPartitionsWithIndex { (rank, table) =>
-            OneCCL.init(executorNum, rank, kvsIPPort)
-            Iterator.empty
-          }.count()
-      }
+  def createCCLInit(data: RDD[_], executorNum: Int, kvsIPPort: String, useDevice: String): Unit = {
+    if (useDevice == "CPU") {
+        data.mapPartitionsWithIndex { (rank, table) =>
+          OneCCL.init(executorNum, rank, kvsIPPort)
+          Iterator.empty
+        }.count()
+    }
   }
 
 }
