@@ -70,6 +70,7 @@ class SummarizerDALImpl(val executorNum: Int,
         null
       }
       cSummarizerTrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -150,7 +151,8 @@ class SummarizerDALImpl(val executorNum: Int,
     summary
   }
 
-  @native private[mllib] def cSummarizerTrainDAL(data: Long,
+  @native private[mllib] def cSummarizerTrainDAL(rank: Int,
+                                          data: Long,
                                           numRows: Long,
                                           numCols: Long,
                                           executorNum: Int,

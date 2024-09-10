@@ -79,6 +79,7 @@ class PCADALImpl(val k: Int,
         null
       }
       cPCATrainDAL(
+        rank,
         tableArr,
         rows,
         columns,
@@ -214,7 +215,8 @@ class PCADALImpl(val k: Int,
 
 
   // Single entry to call Correlation PCA DAL backend with parameter K
-  @native private[mllib] def cPCATrainDAL(data: Long,
+  @native private[mllib] def cPCATrainDAL(rank: Int,
+                                   data: Long,
                                    numRows: Long,
                                    numCols: Long,
                                    executorNum: Int,
