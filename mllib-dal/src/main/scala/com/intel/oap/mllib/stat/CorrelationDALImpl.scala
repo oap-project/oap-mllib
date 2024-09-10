@@ -52,6 +52,17 @@ class CorrelationDALImpl(
     }.count()
     corTimer.record("OneCCL Init")
 
+    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+      OneCCL.setAffinityMask(gpuIndices(0).toString())
+      Iterator.empty
+    }.count()
+
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
         iter.next()

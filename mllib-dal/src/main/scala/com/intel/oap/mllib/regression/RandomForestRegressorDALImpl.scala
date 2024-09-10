@@ -69,6 +69,17 @@ class RandomForestRegressorDALImpl(val uid: String,
 
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
+    labeledPointsTables.mapPartitionsWithIndex { (rank, iter) =>
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+      OneCCL.setAffinityMask(gpuIndices(0).toString())
+      Iterator.empty
+    }.count()
+
     labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
       OneCCL.init(executorNum, rank, kvsIPPort)
       Iterator.empty

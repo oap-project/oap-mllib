@@ -51,6 +51,16 @@ class KMeansDALImpl(var nClusters: Int,
     kmeansTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
+      val gpuIndices = if (useDevice == "GPU") {
+        val resources = TaskContext.get().resources()
+        resources("gpu").addresses.map(_.toInt)
+      } else {
+        null
+      }
+      OneCCL.setAffinityMask(gpuIndices(0).toString())
+      Iterator.empty
+    }.count()
 
     coalescedTables.mapPartitionsWithIndex { (rank, table) =>
       OneCCL.init(executorNum, rank, kvsIPPort)
