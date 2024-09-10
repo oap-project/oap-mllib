@@ -16,7 +16,7 @@
 
 package com.intel.oap.mllib.stat
 
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
@@ -47,22 +47,9 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val kvsIPPort = getOneCCLIPPort(data)
 
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.setAffinityMask(coalescedTables, useDevice)
+    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
     sumTimer.record("OneCCL Init")
-
-    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
-      val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setAffinityMask(gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
       val (tableArr : Long, rows : Long, columns : Long) = if (useDevice == "GPU") {
@@ -89,6 +76,7 @@ class SummarizerDALImpl(val executorNum: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        kvsIPPort,
         result
       )
 
@@ -170,5 +158,6 @@ class SummarizerDALImpl(val executorNum: Int,
                                           executorCores: Int,
                                           computeDeviceOrdinal: Int,
                                           gpuIndices: Array[Int],
+                                          kvsIPPort: String,
                                           result: SummarizerResult): Long
 }
