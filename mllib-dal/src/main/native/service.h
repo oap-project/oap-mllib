@@ -54,13 +54,7 @@ using namespace daal::data_management;
 #endif
 #include "oneapi/dal/table/homogen.hpp"
 
-using namespace oneapi::dal;
-using namespace oneapi::dal::detail;
-
-typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
-typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
 typedef std::vector<daal::byte> ByteBuffer;
-typedef std::shared_ptr<csr_table> CSRTablePtr;
 
 enum class ComputeDevice { host, cpu, gpu, uninitialized };
 const std::string ComputeDeviceString[] = {"HOST", "CPU", "GPU"};
@@ -70,20 +64,25 @@ void printNumericTable(const NumericTablePtr &dataTable,
                        size_t nPrintedCols = 0, size_t interval = 10);
 size_t serializeDAALObject(SerializationIface *pData, ByteBuffer &buffer);
 SerializationIfacePtr deserializeDAALObject(daal::byte *buff, size_t length);
-CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
 ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
-void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
 
 #ifdef CPU_GPU_PROFILE
-#include "oneapi/dal/table/common.hpp"
 #include "oneapi/dal/table/row_accessor.hpp"
+using namespace oneapi::dal;
+using namespace oneapi::dal::detail;
 
+typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
+typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
 typedef std::shared_ptr<homogen_table> HomogenTablePtr;
+typedef std::shared_ptr<csr_table> CSRTablePtr;
 
 void saveHomogenTablePtrToVector(const HomogenTablePtr &ptr);
 HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData,
                                                size_t numRows, size_t numClos,
                                                sycl::queue queue);
+CSRNumericTable *createFloatSparseTable(const std::string &datasetFileName);
+void saveCSRTablePtrToVector(const CSRTablePtr &ptr);
+
 NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
 inline void printHomegenTable(const oneapi::dal::table &table) {
     auto arr = oneapi::dal::row_accessor<const float>(table).pull();
