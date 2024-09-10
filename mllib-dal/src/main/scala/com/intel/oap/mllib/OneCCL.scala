@@ -26,8 +26,6 @@ object OneCCL extends Logging {
 
   def init(executor_num: Int, rank: Int, ip_port: String): Unit = {
 
-    setExecutorEnv()
-
     logInfo(s"Initializing with IP_PORT: ${ip_port}")
 
     // cclParam is output from native code
@@ -41,13 +39,9 @@ object OneCCL extends Logging {
       s"commSize, ${cclParam.getCommSize}, rankId: ${cclParam.getRankId}")
   }
 
-  // Run on Executor
-  def setExecutorEnv(): Unit = {
-    setEnv("CCL_ATL_TRANSPORT", "ofi")
-    // Set CCL_ROOT to workaround CCL_ROOT env read bug, should remove when upstream fix this
-    setEnv("CCL_ROOT", "/opt/intel/oneapi/ccl/latest")
-    // Uncomment this if you whant to debug oneCCL
-    // setEnv("CCL_LOG_LEVEL", "debug")
+  // Sets the specified value to allow each executor to run on the specified GPU
+  def setAffinityMask(rankId: String): Unit = {
+      setEnv("ZE_AFFINITY_MASK", rankId)
   }
 
   // Run on Executor
