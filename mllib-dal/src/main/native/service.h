@@ -57,6 +57,7 @@ using namespace daal::data_management;
 typedef std::vector<daal::byte> ByteBuffer;
 typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
 typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
+
 enum class ComputeDevice { host, cpu, gpu, uninitialized };
 const std::string ComputeDeviceString[] = {"HOST", "CPU", "GPU"};
 
@@ -72,6 +73,8 @@ ComputeDevice getComputeDeviceByOrdinal(size_t computeDeviceOrdinal);
 using namespace oneapi::dal;
 using namespace oneapi::dal::detail;
 
+typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
+typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
 typedef std::shared_ptr<homogen_table> HomogenTablePtr;
 typedef std::shared_ptr<csr_table> CSRTablePtr;
 
