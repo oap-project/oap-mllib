@@ -96,6 +96,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       val computeStartTime = System.nanoTime()
       val result = new RandomForestResult
       val hashmap = cRFClassifierTrainDAL(
+        rank,
         feature._1,
         feature._2,
         feature._3,
@@ -140,7 +141,8 @@ class RandomForestClassifierDALImpl(val uid: String,
     results(0)
   }
 
-  @native private[mllib] def cRFClassifierTrainDAL(featureTabAddr: Long,
+  @native private[mllib] def cRFClassifierTrainDAL(rank: Int,
+                                                   featureTabAddr: Long,
                                                    numRows: Long,
                                                    numCols: Long,
                                                    lableTabAddr: Long,

@@ -66,8 +66,7 @@ static sycl::queue getSyclQueue(const sycl::device device) {
     }
 }
 
-sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
-                           int size, int rankId, jint *gpu_indices, int n_gpu) {
+sycl::queue getAssignedGPU(const ComputeDevice device, int *gpu_indices) {
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
@@ -78,19 +77,8 @@ sycl::queue getAssignedGPU(const ComputeDevice device, ccl::communicator &comm,
     }
     case ComputeDevice::gpu: {
         logger::println(logger::INFO, "selector GPU");
-        auto local_rank = getLocalRank(comm, size, rankId);
         auto gpus = get_gpus();
-
-        logger::println(logger::INFO,
-                        "rank: %d size: %d local_rank: %d n_gpu: %d", rankId,
-                        size, local_rank, n_gpu);
-
-        auto gpu_selected = gpu_indices[local_rank % n_gpu];
-        logger::println(logger::INFO, "GPU selected for current rank: %d",
-                        gpu_selected);
-
-        // In case gpu_selected index is larger than number of GPU SYCL devices
-        auto rank_gpu = gpus[gpu_selected % gpus.size()];
+        auto rank_gpu = gpus[0];
         sycl::queue q{rank_gpu};
         return q;
     }

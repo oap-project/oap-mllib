@@ -81,6 +81,7 @@ class KMeansDALImpl(var nClusters: Int,
       }
 
       cCentroids = cKMeansOneapiComputeWithInitCenters(
+        rank,
         tableArr,
         rows,
         columns,
@@ -136,7 +137,8 @@ class KMeansDALImpl(var nClusters: Int,
     parentModel
   }
 
-  @native private[mllib] def cKMeansOneapiComputeWithInitCenters(data: Long,
+  @native private[mllib] def cKMeansOneapiComputeWithInitCenters( rank: Int,
+                                                         data: Long,
                                                          numRows: Long,
                                                          numCols: Long,
                                                          centers: Long,

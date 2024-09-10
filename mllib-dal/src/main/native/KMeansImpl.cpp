@@ -305,21 +305,22 @@ static jlong doKMeansOneAPICompute(
  */
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCenters(
-    JNIEnv *env, jobject obj, jlong pNumTabData, jlong numRows, jlong numCols,
-    jlong pNumTabCenters, jint clusterNum, jdouble tolerance, jint iterationNum,
-    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
+    jlong numCols, jlong pNumTabCenters, jint clusterNum, jdouble tolerance,
+    jint iterationNum, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     jlong ret = 0L;
-    ccl::communicator &cclComm = getComm();
-    int rankId = cclComm.rank();
+
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::host:
     case ComputeDevice::cpu: {
+        ccl::communicator &cclComm = getComm();
+        int rankId = cclComm.rank();
         NumericTablePtr pData = *((NumericTablePtr *)pNumTabData);
         NumericTablePtr centroids = *((NumericTablePtr *)pNumTabCenters);
         // Set number of threads for OneDAL to use for each rank
@@ -341,19 +342,16 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         logger::println(
             logger::INFO,
             "OneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rankId);
+            rank);
 
         jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
 
-        int size = cclComm.size();
-
-        auto queue =
-            getAssignedGPU(device, cclComm, size, rankId, gpuIndices, nGpu);
+        auto queue = getAssignedGPU(device, gpuIndices);
 
         ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
         auto comm =
             preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, size, rankId, kvs);
+                queue, executorNum, rank, kvs);
         ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numCols,
                                     pNumTabCenters, clusterNum, tolerance,
                                     iterationNum, comm, resultObj);

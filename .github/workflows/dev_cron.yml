@@ -25,8 +25,10 @@ on:
       - edited
       - synchronize
       
-permissions: read-all
-
+permissions:
+  issues: write
+  contents: read
+  
 jobs:
   process:
     name: Process
