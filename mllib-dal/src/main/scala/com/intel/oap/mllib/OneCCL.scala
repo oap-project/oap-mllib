@@ -39,7 +39,7 @@ object OneCCL extends Logging {
       s"commSize, ${cclParam.getCommSize}, rankId: ${cclParam.getRankId}")
   }
 
-  // Set specified by values for each Executor
+  // Sets the specified value to allow each executor to run on the specified GPU
   def setAffinityMask(rankId: String): Unit = {
       setEnv("ZE_AFFINITY_MASK", rankId)
   }
