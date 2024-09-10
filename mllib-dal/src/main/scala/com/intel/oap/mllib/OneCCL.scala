@@ -39,9 +39,9 @@ object OneCCL extends Logging {
       s"commSize, ${cclParam.getCommSize}, rankId: ${cclParam.getRankId}")
   }
 
-  // Run on Executor
-  def setExecutorEnv(key: String, value: String): Unit = {
-    setEnv(key, value)
+  // Set specified by values for each Executor
+  def setAffinityMask(rankId: String): Unit = {
+      setEnv("ZE_AFFINITY_MASK", rankId)
   }
 
   // Run on Executor

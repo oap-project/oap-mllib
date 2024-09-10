@@ -82,7 +82,7 @@ class RandomForestClassifierDALImpl(val uid: String,
       } else {
         null
       }
-      OneCCL.setExecutorEnv("ZE_AFFINITY_MASK", gpuIndices(0).toString())
+      OneCCL.setAffinityMask(gpuIndices(0).toString())
       Iterator.empty
     }.count()
 
