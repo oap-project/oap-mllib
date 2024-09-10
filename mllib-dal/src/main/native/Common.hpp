@@ -21,5 +21,4 @@
 #endif
 
 #include "GPU.h"
-#include "Communicator.hpp"
 #include "oneapi/dal/table/homogen.hpp"
