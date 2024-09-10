@@ -113,43 +113,44 @@ sycl::queue getQueue(const ComputeDevice device) {
     }
 }
 
+preview::spmd::communicator<preview::spmd::device_memory_access::usm>
+createDalCommunicator(const jint executorNum, const jint rank,
+                      const ccl::string ccl_ip_port) {
+    auto gpus = get_gpus();
 
-preview::spmd::communicator<preview::spmd::device_memory_access::usm> createDalCommunicator(const jint executorNum, const jint rank, const ccl::string ccl_ip_port){
-        auto gpus = get_gpus();
+    auto t1 = std::chrono::high_resolution_clock::now();
 
-        auto t1 = std::chrono::high_resolution_clock::now();
+    ccl::init();
 
-        ccl::init();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
 
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    logger::println(logger::INFO, "OneCCL singleton init took %f secs",
+                    duration / 1000);
 
-        logger::println(logger::INFO, "OneCCL singleton init took %f secs",
-                        duration / 1000);
+    t1 = std::chrono::high_resolution_clock::now();
 
-        t1 = std::chrono::high_resolution_clock::now();
+    auto kvs_attr = ccl::create_kvs_attr();
 
-        auto kvs_attr = ccl::create_kvs_attr();
+    kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
 
-        kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
+    ccl::shared_ptr_class<ccl::kvs> kvs = ccl::create_main_kvs(kvs_attr);
 
-        ccl::shared_ptr_class<ccl::kvs> kvs = ccl::create_main_kvs(kvs_attr);
-
-        t2 = std::chrono::high_resolution_clock::now();
-        duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        logger::println(logger::INFO, "OneCCL (native): create kvs took %f secs",
-                        duration / 1000);
-        sycl::queue queue{gpus[0]};
-         t1 = std::chrono::high_resolution_clock::now();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, executorNum, rank, kvs);
-        t2 = std::chrono::high_resolution_clock::now();
-        duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        return comm;
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO, "OneCCL (native): create kvs took %f secs",
+                    duration / 1000);
+    sycl::queue queue{gpus[0]};
+    t1 = std::chrono::high_resolution_clock::now();
+    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
+        queue, executorNum, rank, kvs);
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    return comm;
 }

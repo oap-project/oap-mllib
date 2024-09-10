@@ -268,9 +268,10 @@ static void doSummarizerOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows, jlong numCols,
-    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jstring ip_port, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
+    jlong numCols, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring ip_port,
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -306,7 +307,8 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     }
 #endif
     default: {
-        deviceError("Summarizer", ComputeDeviceString[computeDeviceOrdinal].c_str());
+        deviceError("Summarizer",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
     }
     }
     return 0;

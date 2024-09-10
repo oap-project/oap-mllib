@@ -306,8 +306,8 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
-    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
-    jstring ip_port, jobject resultObj) {
+    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray, jstring ip_port,
+    jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -316,7 +316,6 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
         logger::println(logger::INFO,
                         "oneDAL (native): use GPU kernels with rankid %d",
                         rank);
-
         auto comm = getDalComm();
         jobject hashmapObj = doRFClassifierOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,

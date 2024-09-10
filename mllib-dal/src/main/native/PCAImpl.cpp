@@ -250,9 +250,10 @@ static void doPCAOneAPICompute(
 
 JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
-    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows, jlong numCols,
-    jint executorNum, jint executorCores, jint computeDeviceOrdinal,
-    jintArray gpuIdxArray, jstring ip_port, jobject resultObj) {
+    JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
+    jlong numCols, jint executorNum, jint executorCores,
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring ip_port,
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -280,7 +281,6 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         logger::println(logger::INFO,
                         "oneDAL (native): use GPU kernels with rankid %d",
                         rank);
-
         auto comm = getDalComm();
         doPCAOneAPICompute(env, pNumTabData, numRows, numCols, comm, resultObj);
         break;
