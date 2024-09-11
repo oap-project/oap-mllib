@@ -83,12 +83,11 @@ object TestCommon {
     }
     arrayDouble
   }
-  def getMatrixFromTable(table: HomogenTable,
-                                  device: Common.ComputeDevice): DenseMatrix = {
+  def getMatrixFromTable(table: HomogenTable): DenseMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
     // returned DoubleBuffer is ByteByffer, need to copy as double array
-    val accessor = new RowAccessor(table.getcObejct(), device)
+    val accessor = new RowAccessor(table.getcObejct())
     val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
 
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major

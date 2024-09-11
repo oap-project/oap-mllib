@@ -47,7 +47,7 @@ class CorrelationHomogenTableSuite extends FunctionsSuite with Logging {
         val result = new CorrelationResult()
         correlationDAL.cCorrelationTrainDAL(0, dataTable.getcObejct(), sourceData.length, sourceData(0).length, 1, 1, Common.ComputeDevice.HOST.ordinal(), gpuIndices, result);
         val correlationMatrix = TestCommon.getMatrixFromTable(OneDAL.makeHomogenTable(
-            result.getCorrelationNumericTable), TestCommon.getComputeDevice)
+            result.getCorrelationNumericTable))
 
         assertArrayEquals(TestCommon.convertArray(expectCorrelation), correlationMatrix.toArray, 0.000001)
     }
