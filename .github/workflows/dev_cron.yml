@@ -26,6 +26,7 @@ on:
       - synchronize
       
 permissions:
+  issues: write
   contents: read
 
 jobs:
