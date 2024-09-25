@@ -69,11 +69,11 @@ object OneDAL {
     matrix
   }
 
-  def homogenTableToMatrix(table: HomogenTable, device: Common.ComputeDevice): Matrix = {
+  def homogenTableToMatrix(table: HomogenTable): Matrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
-    val accessor = new RowAccessor(table.getcObejct(), device)
+    val accessor = new RowAccessor(table.getcObejct())
     val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
 
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
@@ -82,11 +82,11 @@ object OneDAL {
     matrix
   }
 
-  def homogenTableToOldMatrix(table: HomogenTable, device: Common.ComputeDevice): OldMatrix = {
+  def homogenTableToOldMatrix(table: HomogenTable): OldMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
-    val accessor = new RowAccessor(table.getcObejct(), device)
+    val accessor = new RowAccessor(table.getcObejct())
     val arrayDouble: Array[Double] = accessor.pullDouble(0, numRows)
 
     // Transpose as DAL numeric table is row-major and DenseMatrix is column major
@@ -115,8 +115,8 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
-  def homogenTableNx1ToVector(cTable: Long, device: Common.ComputeDevice ): Vector = {
-    val columnAcc = new ColumnAccessor(cTable, device)
+  def homogenTableNx1ToVector(cTable: Long): Vector = {
+    val columnAcc = new ColumnAccessor(cTable)
     val arrayDouble = columnAcc.pullDouble(0)
     Vectors.dense(arrayDouble)
   }
@@ -135,8 +135,8 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
-  def homogenTable1xNToVector(table: HomogenTable, device: Common.ComputeDevice): Vector = {
-    val rowAcc = new RowAccessor(table.getcObejct, device)
+  def homogenTable1xNToVector(table: HomogenTable): Vector = {
+    val rowAcc = new RowAccessor(table.getcObejct)
     val arrayDouble = rowAcc.pullDouble(0, 1)
     Vectors.dense(arrayDouble)
   }
@@ -159,10 +159,10 @@ object OneDAL {
     resArray
   }
 
-  def homogenTableToVectors(table: HomogenTable, device: Common.ComputeDevice): Array[Vector] = {
+  def homogenTableToVectors(table: HomogenTable): Array[Vector] = {
     val numRows = table.getRowCount.toInt
 
-    val rowAcc = new RowAccessor(table.getcObejct(), device)
+    val rowAcc = new RowAccessor(table.getcObejct())
 
     val resArray = new Array[Vector](numRows.toInt)
 

@@ -3,6 +3,11 @@ package com.intel.oneapi.dal.table;
 public class RowAccessor {
     private long cObject;
     private Common.ComputeDevice cDevice;
+    public RowAccessor(long cObject) {
+        this.cObject = cObject;
+        this.cDevice = Common.ComputeDevice.HOST;
+    }
+
     public RowAccessor(long cObject, Common.ComputeDevice device) {
         this.cObject = cObject;
         this.cDevice = device;

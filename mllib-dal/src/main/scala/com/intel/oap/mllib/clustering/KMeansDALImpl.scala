@@ -109,8 +109,7 @@ class KMeansDALImpl(var nClusters: Int,
       val ret = if (rank == 0) {
           assert(cCentroids != 0)
           val centerVectors = if (useDevice == "GPU") {
-            OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids),
-              computeDevice)
+            OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids))
           } else {
             OneDAL.numericTableToVectors(OneDAL.makeNumericTable(cCentroids))
           }
