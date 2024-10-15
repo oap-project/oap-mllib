@@ -261,7 +261,7 @@ object OneDAL {
   }
 
   def makeHomogenTable(arrayVectors: Array[Vector],
-                       device: Common.ComputeDevice = Common.ComputeDevice.HOST): HomogenTable = {
+                       device: Common.ComputeDevice): HomogenTable = {
     val numCols = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
@@ -281,7 +281,7 @@ object OneDAL {
   }
 
   def makeHomogenTable(arrayVectors: Array[OldVector],
-                       device: Common.ComputeDevice = Common.ComputeDevice.HOST): HomogenTable = {
+                       device: Common.ComputeDevice): HomogenTable = {
     val numCols = arrayVectors.head.size
     val numRows: Int = arrayVectors.size
     val arrayDouble = new Array[Double](numRows * numCols)
@@ -301,8 +301,8 @@ object OneDAL {
 
   private[mllib] def doubleArrayToHomogenTable(
       points: Array[Double],
-      device: Common.ComputeDevice = Common.ComputeDevice.HOST): HomogenTable = {
-    val table = new HomogenTable(points.length, 1, points, device)
+      device: Common.ComputeDevice): HomogenTable = {
+    val table = new HomogenTable(points.length,1, points, device)
     table
   }
 
@@ -310,7 +310,7 @@ object OneDAL {
       it: Iterator[Vector],
       numRows: Int,
       numCols: Int,
-      device: Common.ComputeDevice = Common.ComputeDevice.HOST): HomogenTable = {
+      device: Common.ComputeDevice): HomogenTable = {
     printf(s"vectorsToDenseHomogenTable numRows: $numRows numCols: $numCols \n")
     val arrayDouble = new Array[Double](numRows * numCols)
     var index = 0
@@ -410,8 +410,7 @@ object OneDAL {
                                     labelCol: String,
                                     featuresCol: String,
                                     executorNum: Int,
-                                    device: Common.ComputeDevice = Common.ComputeDevice.HOST)
-  : RDD[(Tuple3[Long, Long, Long], Tuple3[Long, Long, Long])] = {
+                                    device: Common.ComputeDevice): RDD[(Tuple3[Long, Long, Long], Tuple3[Long, Long, Long])] = {
     require(executorNum > 0)
 
     logger.info(s"Processing partitions with $executorNum executors")
@@ -594,10 +593,9 @@ object OneDAL {
    * Return a new RDD containing targetArrayAddress, numRows, numCols in this RDD.
    */
   def coalesceVectorsToHomogenTables(data: RDD[Vector], executorNum: Int,
-                                device: Common.ComputeDevice = Common.ComputeDevice.HOST)
-  : RDD[Tuple3[Long, Long, Long]] = {
+                                device: Common.ComputeDevice): RDD[Tuple3[Long, Long, Long]] = {
     logger.info(s"Processing partitions with $executorNum executors")
-    val numberCores: Int = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
+    val numberCores: Int  = data.sparkContext.getConf.getInt("spark.executor.cores", 1)
 
     // Repartition to executorNum if not enough partitions
     val dataForConversion = if (data.getNumPartitions < executorNum) {
