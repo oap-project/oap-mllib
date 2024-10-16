@@ -116,7 +116,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
 
     val expectData = Array(5.308206,9.869278)
     val table = new HomogenTable(5, 2, data, TestCommon.getComputeDevice)
-    val vector = OneDAL.homogenTable1xNToVector(table, TestCommon.getComputeDevice)
+    val vector = OneDAL.homogenTable1xNToVector(table)
 
     assertArrayEquals(expectData, vector.toArray)
   }
@@ -148,7 +148,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
                      85.208661d, 15.966239d)
     val expectData = Array(5.236359d, 40.724176d, 90.119887d, 53.620204d, 85.208661d)
     val table = new HomogenTable(5, 2, data, TestCommon.getComputeDevice)
-    val vector = OneDAL.homogenTableNx1ToVector(table.getcObejct(), TestCommon.getComputeDevice)
+    val vector = OneDAL.homogenTableNx1ToVector(table.getcObejct())
 
     assertArrayEquals(expectData, vector.toArray)
   }
@@ -162,7 +162,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     val expectMatrix = new DenseMatrix(5, 2, data, isTransposed = true)
     val table = new HomogenTable(5, 2, data, TestCommon.getComputeDevice)
 
-    val matrix = OneDAL.homogenTableToMatrix(table, TestCommon.getComputeDevice)
+    val matrix = OneDAL.homogenTableToMatrix(table)
 
     assertArrayEquals(expectMatrix.toArray, matrix.toArray)
   }
@@ -176,7 +176,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
     val expectMatrix = new OldDenseMatrix(5, 2, data, isTransposed = true)
     val table = new HomogenTable(5, 2, data, TestCommon.getComputeDevice)
 
-    val matrix = OneDAL.homogenTableToOldMatrix(table, TestCommon.getComputeDevice )
+    val matrix = OneDAL.homogenTableToOldMatrix(table)
 
     assertArrayEquals(expectMatrix.toArray, matrix.toArray)
   }
@@ -197,7 +197,7 @@ class ConvertHomogenTableSuite extends FunctionsSuite with Logging {
 
     val arrayData = TestCommon.convertArray(data)
     val table = new HomogenTable(10, 10, arrayData, TestCommon.getComputeDevice)
-    val array = OneDAL.homogenTableToVectors(table, TestCommon.getComputeDevice)
+    val array = OneDAL.homogenTableToVectors(table)
 
     assertArrayEquals(TestCommon.convertArray(data), TestCommon.convertArray(array))
   }

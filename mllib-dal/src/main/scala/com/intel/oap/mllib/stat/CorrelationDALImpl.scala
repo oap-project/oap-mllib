@@ -100,8 +100,7 @@ class CorrelationDALImpl(
       val ret = if (rank == 0) {
         val convResultStartTime = System.nanoTime()
         val correlationNumericTable = if (useDevice == "GPU") {
-          OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.getCorrelationNumericTable),
-            computeDevice)
+          OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.getCorrelationNumericTable))
         } else {
           OneDAL.numericTableToMatrix(OneDAL.makeNumericTable(result.getCorrelationNumericTable))
         }

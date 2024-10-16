@@ -69,7 +69,8 @@ object OneDAL {
     matrix
   }
 
-  def homogenTableToMatrix(table: HomogenTable, device: Common.ComputeDevice): Matrix = {
+  def homogenTableToMatrix(table: HomogenTable,
+                           device: Common.ComputeDevice = Common.ComputeDevice.HOST): Matrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
@@ -82,7 +83,9 @@ object OneDAL {
     matrix
   }
 
-  def homogenTableToOldMatrix(table: HomogenTable, device: Common.ComputeDevice): OldMatrix = {
+  def homogenTableToOldMatrix(table: HomogenTable,
+                              device: Common.ComputeDevice = Common.ComputeDevice.HOST)
+  : OldMatrix = {
     val numRows = table.getRowCount.toInt
     val numCols = table.getColumnCount.toInt
 
@@ -115,7 +118,8 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
-  def homogenTableNx1ToVector(cTable: Long, device: Common.ComputeDevice ): Vector = {
+  def homogenTableNx1ToVector(cTable: Long,
+                              device: Common.ComputeDevice = Common.ComputeDevice.HOST): Vector = {
     val columnAcc = new ColumnAccessor(cTable, device)
     val arrayDouble = columnAcc.pullDouble(0)
     Vectors.dense(arrayDouble)
@@ -135,7 +139,8 @@ object OneDAL {
     Vectors.dense(arrayDouble)
   }
 
-  def homogenTable1xNToVector(table: HomogenTable, device: Common.ComputeDevice): Vector = {
+  def homogenTable1xNToVector(table: HomogenTable,
+                              device: Common.ComputeDevice = Common.ComputeDevice.HOST): Vector = {
     val rowAcc = new RowAccessor(table.getcObejct, device)
     val arrayDouble = rowAcc.pullDouble(0, 1)
     Vectors.dense(arrayDouble)
@@ -159,7 +164,9 @@ object OneDAL {
     resArray
   }
 
-  def homogenTableToVectors(table: HomogenTable, device: Common.ComputeDevice): Array[Vector] = {
+  def homogenTableToVectors(table: HomogenTable,
+                            device: Common.ComputeDevice = Common.ComputeDevice.HOST)
+  : Array[Vector] = {
     val numRows = table.getRowCount.toInt
 
     val rowAcc = new RowAccessor(table.getcObejct(), device)
