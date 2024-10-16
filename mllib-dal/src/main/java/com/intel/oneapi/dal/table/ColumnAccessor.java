@@ -4,6 +4,11 @@ public class ColumnAccessor {
     private long cObject;
     private Common.ComputeDevice cDevice;
 
+    public ColumnAccessor(long cObject) {
+        this.cObject = cObject;
+        this.cDevice = Common.ComputeDevice.HOST;
+    }
+
     public ColumnAccessor(long cObject, Common.ComputeDevice device) {
         this.cObject = cObject;
         this.cDevice = device;

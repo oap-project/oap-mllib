@@ -51,8 +51,8 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val pcNumericTable = OneDAL.makeHomogenTable(result.getPcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
             result.getExplainedVarianceNumericTable)
-        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, TestCommon.getComputeDevice)
-        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, TestCommon.getComputeDevice)
+        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable)
+        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable)
 
         assertArrayEquals(expectExplainedVariance , explainedVariance.toArray, 0.000001)
         assertArrayEquals(TestCommon.convertArray(expectPC), principleComponents.toDense.values, 0.000001)
@@ -83,8 +83,8 @@ class PCAHomogenTableSuite extends FunctionsSuite with Logging {
         val pcNumericTable = OneDAL.makeHomogenTable(result.getPcNumericTable)
         val explainedVarianceNumericTable = OneDAL.makeHomogenTable(
             result.getExplainedVarianceNumericTable)
-        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable, TestCommon.getComputeDevice)
-        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable, TestCommon.getComputeDevice)
+        val principleComponents = OneDAL.homogenTableToMatrix(pcNumericTable)
+        val explainedVariance = OneDAL.homogenTable1xNToVector(explainedVarianceNumericTable)
 
         assertArrayEquals(expectExplainedVariance , explainedVariance.toArray, 0.000001)
         assertArrayEquals(TestCommon.convertArray(expectPC), principleComponents.toDense.values, 0.000001)
