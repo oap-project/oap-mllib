@@ -306,8 +306,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jint treeCount, jint numFeaturesPerNode, jint minObservationsLeafNode,
     jint minObservationsSplitNode, jdouble minWeightFractionLeafNode,
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
-    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray, jstring ip_port,
-    jobject resultObj) {
+    jint maxBins, jboolean bootstrap, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -317,10 +316,7 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
                         "oneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
-        const char *str = env->GetStringUTFChars(ip_port, nullptr);
-        ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
-
+        auto comm = getDalComm();
         jobject hashmapObj = doRFClassifierOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, classCount, treeCount,
@@ -328,7 +324,6 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
             minObservationsSplitNode, minWeightFractionLeafNode,
             minImpurityDecreaseSplitNode, maxTreeDepth, seed, maxBins,
             bootstrap, comm, resultObj);
-        env->ReleaseStringUTFChars(ip_port, str);
         return hashmapObj;
     }
     default: {

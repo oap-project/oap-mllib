@@ -35,12 +35,9 @@ object CommonJob {
   }
 
   def createCCLInit(data: RDD[_], executorNum: Int, kvsIPPort: String, useDevice: String): Unit = {
-    if (useDevice == "CPU") {
         data.mapPartitionsWithIndex { (rank, table) =>
           OneCCL.init(executorNum, rank, kvsIPPort)
           Iterator.empty
         }.count()
     }
-  }
-
 }

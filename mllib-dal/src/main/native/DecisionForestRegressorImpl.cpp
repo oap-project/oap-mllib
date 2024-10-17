@@ -297,7 +297,7 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
     jint executorNum, jint computeDeviceOrdinal, jint treeCount,
     jint numFeaturesPerNode, jint minObservationsLeafNode, jint maxTreeDepth,
     jlong seed, jint maxbins, jboolean bootstrap, jintArray gpuIdxArray,
-    jstring ip_port, jobject resultObj) {
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -309,16 +309,12 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
                         "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
-        const char *str = env->GetStringUTFChars(ip_port, nullptr);
-        ccl::string ccl_ip_port(str);
-        auto comm = createDalCommunicator(executorNum, rank, ccl_ip_port);
-
+        auto comm = getDalComm();
         jobject hashmapObj = doRFRegressorOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, treeCount,
             numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
             maxbins, bootstrap, comm, resultObj);
-        env->ReleaseStringUTFChars(ip_port, str);
         return hashmapObj;
     }
     default: {

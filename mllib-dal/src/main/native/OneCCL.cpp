@@ -33,6 +33,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
 #include "service.h"
+#include "GPU.h"
 
 extern const size_t ccl_root = 0;
 
@@ -44,32 +45,40 @@ static std::vector<ccl::communicator> g_comms;
 static std::vector<ccl::shared_ptr_class<ccl::kvs>> g_kvs;
 
 ccl::communicator &getComm() { return g_comms[0]; }
-ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
+#ifdef CPU_GPU_PROFILE
+static std::vector<oneapi::dal::preview::spmd::communicator<oneapi::dal::preview::spmd::device_memory_access::usm>> g_dal_comms;
+oneapi::dal::preview::spmd::communicator<oneapi::dal::preview::spmd::device_memory_access::usm> &getDalComm() { return g_dal_comms[0]; }
 
+ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
+#endif
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
     jobject param) {
 
     logger::println(logger::INFO, "OneCCL (native): init");
 
+#ifdef CPU_GPU_PROFILE
+     auto gpus = get_gpus();
+#endif
+
     auto t1 = std::chrono::high_resolution_clock::now();
 
     ccl::init();
     auto t2 = std::chrono::high_resolution_clock::now();
-
-    const char *str = env->GetStringUTFChars(ip_port, 0);
-    ccl::string ccl_ip_port(str);
-
-    auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
-
-    g_kvs.push_back(singletonCCLInit.kvs);
-    g_comms.push_back(
-        ccl::create_communicator(size, rank, singletonCCLInit.kvs));
     auto duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
     logger::println(logger::INFO, "OneCCL (native): init took %f secs",
                     duration / 1000);
+    const char *str = env->GetStringUTFChars(ip_port, 0);
+    ccl::string ccl_ip_port(str);
+
+#ifdef CPU_ONLY_PROFILE
+    auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
+
+    g_kvs.push_back(singletonCCLInit.kvs);
+    g_comms.push_back(
+        ccl::create_communicator(size, rank, singletonCCLInit.kvs));
 
     rank_id = getComm().rank();
     comm_size = getComm().size();
@@ -80,6 +89,33 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 
     env->SetLongField(param, fid_comm_size, comm_size);
     env->SetLongField(param, fid_rank_id, rank_id);
+#endif
+
+#ifdef CPU_GPU_PROFILE
+    auto kvs_attr = ccl::create_kvs_attr();
+
+    kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
+
+    ccl::shared_ptr_class<ccl::kvs> kvs = ccl::create_main_kvs(kvs_attr);
+
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO, "OneCCL (native): create kvs took %f secs",
+                    duration / 1000);
+    sycl::queue queue{gpus[0]};
+    t1 = std::chrono::high_resolution_clock::now();
+    auto comm = oneapi::dal::preview::spmd::make_communicator<oneapi::dal::preview::spmd::backend::ccl>(
+        queue, size, rank, kvs);
+    t2 = std::chrono::high_resolution_clock::now();
+    duration =
+        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            .count();
+    logger::println(logger::INFO, "OneCCL (native): create communicator took %f secs",
+                    duration / 1000);
+    g_dal_comms.push_back(comm);
+#endif
     env->ReleaseStringUTFChars(ip_port, str);
 
     return 1;
@@ -90,6 +126,9 @@ Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
     logger::printerrln(logger::INFO, "OneCCL (native): cleanup");
     g_kvs.pop_back();
     g_comms.pop_back();
+#ifdef CPU_GPU_PROFILE
+    g_dal_comms.pop_back();
+#endif
 }
 
 JNIEXPORT jboolean JNICALL
