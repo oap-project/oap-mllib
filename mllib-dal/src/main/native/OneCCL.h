@@ -50,6 +50,8 @@ ccl::shared_ptr_class<ccl::kvs> &getKvs();
 #define ONEDAL_DATA_PARALLEL
 #endif
 #include "Communicator.hpp"
-oneapi::dal::preview::spmd::communicator<oneapi::dal::preview::spmd::device_memory_access::usm> &getDalComm();
+oneapi::dal::preview::spmd::communicator<
+    oneapi::dal::preview::spmd::device_memory_access::usm> &
+getDalComm();
 #endif
 extern const size_t ccl_root;

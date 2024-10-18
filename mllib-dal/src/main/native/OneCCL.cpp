@@ -29,11 +29,11 @@
 #include <oneapi/ccl.hpp>
 
 #include "CCLInitSingleton.hpp"
+#include "GPU.h"
 #include "Logger.h"
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
 #include "service.h"
-#include "GPU.h"
 
 extern const size_t ccl_root = 0;
 
@@ -46,8 +46,14 @@ static std::vector<ccl::shared_ptr_class<ccl::kvs>> g_kvs;
 
 ccl::communicator &getComm() { return g_comms[0]; }
 #ifdef CPU_GPU_PROFILE
-static std::vector<oneapi::dal::preview::spmd::communicator<oneapi::dal::preview::spmd::device_memory_access::usm>> g_dal_comms;
-oneapi::dal::preview::spmd::communicator<oneapi::dal::preview::spmd::device_memory_access::usm> &getDalComm() { return g_dal_comms[0]; }
+static std::vector<oneapi::dal::preview::spmd::communicator<
+    oneapi::dal::preview::spmd::device_memory_access::usm>>
+    g_dal_comms;
+oneapi::dal::preview::spmd::communicator<
+    oneapi::dal::preview::spmd::device_memory_access::usm> &
+getDalComm() {
+    return g_dal_comms[0];
+}
 
 ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
 #endif
@@ -58,7 +64,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     logger::println(logger::INFO, "OneCCL (native): init");
 
 #ifdef CPU_GPU_PROFILE
-     auto gpus = get_gpus();
+    auto gpus = get_gpus();
 #endif
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -106,13 +112,14 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
                     duration / 1000);
     sycl::queue queue{gpus[0]};
     t1 = std::chrono::high_resolution_clock::now();
-    auto comm = oneapi::dal::preview::spmd::make_communicator<oneapi::dal::preview::spmd::backend::ccl>(
-        queue, size, rank, kvs);
+    auto comm = oneapi::dal::preview::spmd::make_communicator<
+        oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank, kvs);
     t2 = std::chrono::high_resolution_clock::now();
     duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
-    logger::println(logger::INFO, "OneCCL (native): create communicator took %f secs",
+    logger::println(logger::INFO,
+                    "OneCCL (native): create communicator took %f secs",
                     duration / 1000);
     g_dal_comms.push_back(comm);
 #endif
