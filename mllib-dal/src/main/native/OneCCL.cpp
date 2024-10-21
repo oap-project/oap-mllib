@@ -63,10 +63,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 
     logger::println(logger::INFO, "OneCCL (native): init");
 
-#ifdef CPU_GPU_PROFILE
-    auto gpus = get_gpus();
-#endif
-
     auto t1 = std::chrono::high_resolution_clock::now();
 
     ccl::init();
@@ -92,6 +88,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 #endif
 
 #ifdef CPU_GPU_PROFILE
+    t1 = std::chrono::high_resolution_clock::now();
     auto kvs_attr = ccl::create_kvs_attr();
 
     kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
@@ -104,6 +101,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
             .count();
     logger::println(logger::INFO, "OneCCL (native): create kvs took %f secs",
                     duration / 1000);
+    auto gpus = get_gpus();
     sycl::queue queue{gpus[0]};
     t1 = std::chrono::high_resolution_clock::now();
     auto comm = oneapi::dal::preview::spmd::make_communicator<
