@@ -89,12 +89,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     rank_id = getComm().rank();
     comm_size = getComm().size();
 
-    jclass cls = env->GetObjectClass(param);
-    jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
-    jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
-
-    env->SetLongField(param, fid_comm_size, comm_size);
-    env->SetLongField(param, fid_rank_id, rank_id);
 #endif
 
 #ifdef CPU_GPU_PROFILE
@@ -122,7 +116,15 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
                     "OneCCL (native): create communicator took %f secs",
                     duration / 1000);
     g_dal_comms.push_back(comm);
+    rank_id = getDalComm().get_rank();
+    comm_size = getDalComm().get_rank_count();
 #endif
+    jclass cls = env->GetObjectClass(param);
+    jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
+    jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
+
+    env->SetLongField(param, fid_comm_size, comm_size);
+    env->SetLongField(param, fid_rank_id, rank_id);
     env->ReleaseStringUTFChars(ip_port, str);
 
     return 1;
