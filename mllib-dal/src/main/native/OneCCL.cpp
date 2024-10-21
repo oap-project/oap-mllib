@@ -44,6 +44,7 @@ static size_t rank_id = 0;
 static std::vector<ccl::communicator> g_comms;
 static std::vector<ccl::shared_ptr_class<ccl::kvs>> g_kvs;
 
+ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
 ccl::communicator &getComm() { return g_comms[0]; }
 #ifdef CPU_GPU_PROFILE
 static std::vector<oneapi::dal::preview::spmd::communicator<
@@ -54,8 +55,6 @@ oneapi::dal::preview::spmd::communicator<
 getDalComm() {
     return g_dal_comms[0];
 }
-
-ccl::shared_ptr_class<ccl::kvs> &getKvs() { return g_kvs[0]; }
 #endif
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
