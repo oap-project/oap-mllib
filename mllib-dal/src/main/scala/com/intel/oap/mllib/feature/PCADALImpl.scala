@@ -59,8 +59,7 @@ class PCADALImpl(val k: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
 
-    CommonJob.setAffinityMask(coalescedTables, useDevice)
-    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     pcaTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>

@@ -46,8 +46,7 @@ class CorrelationDALImpl(
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    CommonJob.setAffinityMask(coalescedTables, useDevice)
-    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     corTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>

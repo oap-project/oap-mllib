@@ -106,8 +106,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
     lrTimer.record("Data Convertion")
 
-    CommonJob.setAffinityMask(labeledPointsTables, useDevice)
-    CommonJob.createCCLInit(labeledPointsTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     lrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>

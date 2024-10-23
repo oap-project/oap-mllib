@@ -47,8 +47,7 @@ class SummarizerDALImpl(val executorNum: Int,
 
     val kvsIPPort = getOneCCLIPPort(data)
 
-    CommonJob.setAffinityMask(coalescedTables, useDevice)
-    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     sumTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>

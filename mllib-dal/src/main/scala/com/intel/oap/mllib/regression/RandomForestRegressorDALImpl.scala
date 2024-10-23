@@ -69,8 +69,7 @@ class RandomForestRegressorDALImpl(val uid: String,
 
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
-    CommonJob.setAffinityMask(labeledPointsTables, useDevice)
-    CommonJob.createCCLInit(labeledPointsTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>

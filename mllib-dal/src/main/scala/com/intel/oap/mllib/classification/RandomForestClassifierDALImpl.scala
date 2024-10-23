@@ -75,8 +75,7 @@ class RandomForestClassifierDALImpl(val uid: String,
     rfcTimer.record("Data Convertion")
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
-    CommonJob.setAffinityMask(labeledPointsTables, useDevice)
-    CommonJob.createCCLInit(labeledPointsTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfcTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>

@@ -52,8 +52,7 @@ class KMeansDALImpl(var nClusters: Int,
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
 
-    CommonJob.setAffinityMask(coalescedTables, useDevice)
-    CommonJob.createCCLInit(coalescedTables, executorNum, kvsIPPort, useDevice)
+    CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     kmeansTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>

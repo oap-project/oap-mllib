@@ -20,23 +20,19 @@ import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 
 object CommonJob {
-
-  def setAffinityMask(data: RDD[_], useDevice: String): Unit = {
-      data.mapPartitionsWithIndex { (rank, iter) =>
-        val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setAffinityMask(gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
-  }
-
-  def createCCLInit(data: RDD[_], executorNum: Int, kvsIPPort: String, useDevice: String): Unit = {
+  def initCCLAndSetAffinityMask(data: RDD[_],
+                                      executorNum: Int,
+                                      kvsIPPort: String,
+                                      useDevice: String): Unit = {
         data.mapPartitionsWithIndex { (rank, table) =>
           OneCCL.init(executorNum, rank, kvsIPPort)
+          val gpuIndices = if (useDevice == "GPU") {
+              val resources = TaskContext.get().resources()
+              resources("gpu").addresses.map(_.toInt)
+          } else {
+              null
+          }
+          OneCCL.setAffinityMask(gpuIndices(0).toString())
           Iterator.empty
         }.count()
     }
