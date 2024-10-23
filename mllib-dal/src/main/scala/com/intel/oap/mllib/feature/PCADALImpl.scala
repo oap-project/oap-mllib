@@ -19,7 +19,7 @@ package com.intel.oap.mllib.feature
 import java.nio.DoubleBuffer
 import com.intel.daal.data_management.data.{HomogenNumericTable, NumericTable}
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Service, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Service, Utils}
 import org.apache.spark.TaskContext
 import org.apache.spark.annotation.Since
 import org.apache.spark.internal.Logging
@@ -59,21 +59,7 @@ class PCADALImpl(val k: Int,
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
     pcaTimer.record("Data Convertion")
 
-    coalescedTables.mapPartitionsWithIndex { (rank, iter) =>
-      val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setAffinityMask(gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
-
-    coalescedTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     pcaTimer.record("OneCCL Init")
 
     val results = coalescedTables.mapPartitionsWithIndex { (rank, iter) =>

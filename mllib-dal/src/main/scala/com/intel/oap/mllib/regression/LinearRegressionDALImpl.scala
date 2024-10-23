@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.regression
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.SparkException
 import org.apache.spark.TaskContext
@@ -106,16 +106,8 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
     }
     lrTimer.record("Data Convertion")
 
-    labeledPointsTables.mapPartitionsWithIndex { (rank, iter) =>
-      val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setAffinityMask(gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
+    CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
+    lrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>
         val (feature, label) = tables.next()
@@ -132,7 +124,6 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
             (label.toString.toLong, 0L, 0L)
           }
 
-        OneCCL.init(executorNum, rank, kvsIPPort)
         val result = new LiRResult()
 
         val gpuIndices = if (useDevice == "GPU") {
