@@ -17,7 +17,7 @@ package com.intel.oap.mllib.regression
 
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.classification.{LearningNode, RandomForestResult}
-import com.intel.oap.mllib.{OneCCL, OneDAL, Utils}
+import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
@@ -69,21 +69,7 @@ class RandomForestRegressorDALImpl(val uid: String,
 
     val kvsIPPort = getOneCCLIPPort(labeledPointsTables)
 
-    labeledPointsTables.mapPartitionsWithIndex { (rank, iter) =>
-      val gpuIndices = if (useDevice == "GPU") {
-        val resources = TaskContext.get().resources()
-        resources("gpu").addresses.map(_.toInt)
-      } else {
-        null
-      }
-      OneCCL.setAffinityMask(gpuIndices(0).toString())
-      Iterator.empty
-    }.count()
-
-    labeledPointsTables.mapPartitionsWithIndex { (rank, table) =>
-      OneCCL.init(executorNum, rank, kvsIPPort)
-      Iterator.empty
-    }.count()
+    CommonJob.initCCLAndSetAffinityMask(labeledPointsTables, executorNum, kvsIPPort, useDevice)
     rfrTimer.record("OneCCL Init")
 
     val results = labeledPointsTables.mapPartitionsWithIndex { (rank, tables) =>

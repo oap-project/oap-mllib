@@ -305,20 +305,11 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        logger::println(
-            logger::INFO,
-            "OneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rank);
+        logger::println(logger::INFO,
+                        "OneDAL (native): use GPU kernels with rankid %d",
+                        rank);
 
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-
-        auto queue = getAssignedGPU(device, gpuIndices);
-
-        ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-        auto comm =
-            preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-                queue, executorNum, rank, kvs);
+        auto comm = getDalComm();
         jobject hashmapObj = doRFRegressorOneAPICompute(
             env, pNumTabFeature, featureRows, featureCols, pNumTabLabel,
             labelCols, executorNum, computeDeviceOrdinal, treeCount,

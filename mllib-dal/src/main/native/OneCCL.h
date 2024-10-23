@@ -17,8 +17,8 @@
 #pragma once
 
 #include <oneapi/ccl.hpp>
-
 #include <vector>
+
 using namespace std;
 
 namespace ccl {
@@ -44,4 +44,14 @@ event CCL_API gather(const BufferType *sendbuf, int sendcount,
 
 ccl::communicator &getComm();
 ccl::shared_ptr_class<ccl::kvs> &getKvs();
+
+#ifdef CPU_GPU_PROFILE
+#ifndef ONEDAL_DATA_PARALLEL
+#define ONEDAL_DATA_PARALLEL
+#endif
+#include "Communicator.hpp"
+oneapi::dal::preview::spmd::communicator<
+    oneapi::dal::preview::spmd::device_memory_access::usm> &
+getDalComm();
+#endif
 extern const size_t ccl_root;

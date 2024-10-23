@@ -10,7 +10,7 @@ typedef std::shared_ptr<sycl::queue> queuePtr;
 static std::mutex g_mtx;
 static std::vector<sycl::queue> g_queueVector;
 
-static std::vector<sycl::device> get_gpus() {
+std::vector<sycl::device> get_gpus() {
     auto platforms = sycl::platform::get_platforms();
     for (auto p : platforms) {
         auto devices = p.get_devices(sycl::info::device_type::gpu);

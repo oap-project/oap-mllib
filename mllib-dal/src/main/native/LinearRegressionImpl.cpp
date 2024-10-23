@@ -214,19 +214,17 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
 }
 
 #ifdef CPU_GPU_PROFILE
-static jlong doLROneAPICompute(JNIEnv *env, size_t rankId, sycl::queue &queue,
-                               jlong pNumTabFeature, jlong featureRows,
-                               jlong featureCols, jlong pNumTabLabel,
-                               jlong labelCols, jboolean jfitIntercept,
-                               jint executorNum, jobject resultObj) {
+static jlong doLROneAPICompute(
+    JNIEnv *env, size_t rankId,
+    preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
+    jlong pNumTabFeature, jlong featureRows, jlong featureCols,
+    jlong pNumTabLabel, jlong labelCols, jboolean jfitIntercept,
+    jint executorNum, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 
-    ccl::shared_ptr_class<ccl::kvs> &kvs = getKvs();
-    auto comm = preview::spmd::make_communicator<preview::spmd::backend::ccl>(
-        queue, executorNum, rankId, kvs);
     homogen_table xtrain = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
                                        comm.get_queue())
@@ -279,19 +277,13 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong resultptr = 0L;
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
-        int nGpu = env->GetArrayLength(gpuIdxArray);
-        logger::println(
-            logger::INFO,
-            "oneDAL (native): use GPU kernels with %d GPU(s) rankid %d", nGpu,
-            rank);
-
-        jint *gpuIndices = env->GetIntArrayElements(gpuIdxArray, 0);
-        auto queue = getAssignedGPU(device, gpuIndices);
-
-        resultptr = doLROneAPICompute(env, rank, queue, feature, featureRows,
+        logger::println(logger::INFO,
+                        "oneDAL (native): use GPU kernels with rankid %d",
+                        rank);
+        auto comm = getDalComm();
+        resultptr = doLROneAPICompute(env, rank, comm, feature, featureRows,
                                       featureCols, label, labelCols,
                                       fitIntercept, executorNum, resultObj);
-        env->ReleaseIntArrayElements(gpuIdxArray, gpuIndices, 0);
 #endif
     } else {
         ccl::communicator &cclComm = getComm();
