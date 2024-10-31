@@ -13,11 +13,11 @@ fi
 
 if [[ -n $DAALROOT ]]; then
   if [[ -e $DAALROOT ]]; then
-      export ONEDAL_VERSION=$(echo "$DAALROOT" | awk -F '/' '{print $(NF)}')
+      export ONEDAL_VERSION=$(readlink -f "$DAALROOT" | awk -F '/' '{print $(NF)}')
   fi
 elif [[ -n $DALROOT ]]; then
   if [[ -e $DALROOT ]]; then
-      export ONEDAL_VERSION=$(echo "$DALROOT" | awk -F '/' '{print $(NF)}')
+      export ONEDAL_VERSION=$(readlink -f "$DALROOT" | awk -F '/' '{print $(NF)}')
   fi
 else
   echo DAALROOT not defined!
