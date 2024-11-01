@@ -307,12 +307,8 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     }
 #endif
     default: {
-<<<<<<< HEAD
         deviceError("Summarizer",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
-=======
-        deviceError("Summarizer", ComputeDeviceString[computeDeviceOrdinal].c_str());
->>>>>>> remove oneccl communicator
     }
     }
     return 0;
