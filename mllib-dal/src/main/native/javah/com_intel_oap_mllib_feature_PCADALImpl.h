@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (JIII[ILcom/intel/oap/mllib/feature/PCAResult;)J
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL
-  (JNIEnv *, jobject, jint, jlong, jlong, jlong, jint, jint, jint, jintArray, jstring, jobject);
+  (JNIEnv *, jobject, jint, jlong, jlong, jlong, jint, jint, jint, jintArray, jobject);
 
 #ifdef __cplusplus
 }

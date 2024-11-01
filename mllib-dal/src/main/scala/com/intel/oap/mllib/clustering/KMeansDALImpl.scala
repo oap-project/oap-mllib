@@ -90,7 +90,6 @@ class KMeansDALImpl(var nClusters: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
-        kvsIPPort,
         result
       )
 
@@ -105,9 +104,7 @@ class KMeansDALImpl(var nClusters: Int,
         } else {
           Iterator.empty
         }
-      if (useDevice == "CPU") {
-         OneCCL.cleanup()
-      }
+      OneCCL.cleanup()
       ret
     }.collect()
 
@@ -148,6 +145,5 @@ class KMeansDALImpl(var nClusters: Int,
                                                          executorCores: Int,
                                                          computeDeviceOrdinal: Int,
                                                          gpuIndices: Array[Int],
-                                                         kvsIPPort: String,
                                                          result: KMeansResult): Long
 }

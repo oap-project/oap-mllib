@@ -199,8 +199,7 @@ JNIEXPORT jlong JNICALL
 Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
     jlong numCols, jint executorNum, jint executorCores,
-    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring ip_port,
-    jobject resultObj) {
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -229,6 +228,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
         logger::println(logger::INFO,
                         "oneDAL (native): use GPU kernels with rankid %d",
                         rank);
+
         auto comm = getDalComm();
         doCorrelationOneAPICompute(env, pNumTabData, numRows, numCols, comm,
                                    resultObj);

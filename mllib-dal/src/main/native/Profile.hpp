@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Logger.h"
 #include <chrono>
 #include <iostream>
 #include <string>
+#include "Logger.h"
 
 class Profiler {
   public:

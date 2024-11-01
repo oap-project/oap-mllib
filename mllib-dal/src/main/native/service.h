@@ -57,7 +57,6 @@ using namespace daal::data_management;
 typedef std::vector<daal::byte> ByteBuffer;
 typedef float GpuAlgorithmFPType;  /* Algorithm floating-point type */
 typedef double CpuAlgorithmFPType; /* Algorithm floating-point type */
-
 enum class ComputeDevice { host, cpu, gpu, uninitialized };
 const std::string ComputeDeviceString[] = {"HOST", "CPU", "GPU"};
 
