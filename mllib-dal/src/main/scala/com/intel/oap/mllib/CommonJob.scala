@@ -30,9 +30,11 @@ object CommonJob {
               val resources = TaskContext.get().resources()
               resources("gpu").addresses.map(_.toInt)
           } else {
-              null
+              Array.empty[Int]
           }
-          OneCCL.setAffinityMask(gpuIndices(0).toString())
+          if (gpuIndices.nonEmpty) {
+            OneCCL.setAffinityMask(gpuIndices(0).toString())
+          }
           Iterator.empty
         }.count()
     }

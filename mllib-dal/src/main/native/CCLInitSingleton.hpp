@@ -41,13 +41,20 @@ private:
         auto t1 = std::chrono::high_resolution_clock::now();
 
         ccl::init();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        logger::println(logger::INFO, "OneCCL (native): init took %f secs",
+                        duration / 1000);
 
+        t1 = std::chrono::high_resolution_clock::now();
         auto kvs_attr = ccl::create_kvs_attr();
         kvs_attr.set<ccl::kvs_attr_id::ip_port>(ccl_ip_port);
 
         kvs = ccl::create_main_kvs(kvs_attr);
 
-        auto t2 = std::chrono::high_resolution_clock::now();
+        t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
