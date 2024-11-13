@@ -73,7 +73,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     auto duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
             .count();
-    logger::println(logger::INFO, "OneCCL (native): create communicator took %f secs",
+    logger::println(logger::INFO,
+                    "OneCCL (native): create communicator took %f secs",
                     duration / 1000);
     rank_id = getComm().rank();
     comm_size = getComm().size();
@@ -85,7 +86,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     sycl::queue queue{gpus[0]};
     auto t1 = std::chrono::high_resolution_clock::now();
     auto comm = oneapi::dal::preview::spmd::make_communicator<
-        oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank, singletonCCLInit.kvs);
+        oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
+                                                  singletonCCLInit.kvs);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration =
         (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
