@@ -16,6 +16,7 @@
 
 package com.intel.oap.mllib
 
+import com.intel.oneapi.dal.table.Common
 import org.apache.spark.internal.Logging
 
 object OneCCL extends Logging {
@@ -24,7 +25,8 @@ object OneCCL extends Logging {
 
   var cclParam = new CCLParam()
 
-  def init(executor_num: Int, rank: Int, ip_port: String, computeDevice: Int): Unit = {
+  def init(executor_num: Int, rank: Int, ip_port: String,
+           computeDevice: Int = Common.ComputeDevice.CPU.ordinal()): Unit = {
 
     logInfo(s"Initializing with IP_PORT: ${ip_port}")
 
