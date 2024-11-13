@@ -123,9 +123,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 JNIEXPORT void JNICALL
 Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
     logger::printerrln(logger::INFO, "OneCCL (native): cleanup");
-#ifdef CPU_ONLY_PROFILE
     g_comms.pop_back();
-#endif
 #ifdef CPU_GPU_PROFILE
     g_dal_comms.pop_back();
 #endif
