@@ -57,8 +57,8 @@ getDalComm() {
 }
 #endif
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
-    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jint computeDeviceOrdinal,
-    jobject param) {
+    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
+    jint computeDeviceOrdinal, jobject param) {
 
     logger::println(logger::INFO, "OneCCL (native): init");
     const char *str = env->GetStringUTFChars(ip_port, 0);
@@ -74,7 +74,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
             ccl::create_communicator(size, rank, singletonCCLInit.kvs));
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
+                                                                         t1)
                 .count();
         logger::println(logger::INFO,
                         "OneCCL (native): create communicator took %f secs",
@@ -82,7 +83,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
         rank_id = getComm().rank();
         comm_size = getComm().size();
         break;
-        }
+    }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         auto gpus = get_gpus();
@@ -93,7 +94,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
                                                       singletonCCLInit.kvs);
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
+                                                                         t1)
                 .count();
         logger::println(logger::INFO,
                         "OneCCL (native): create communicator took %f secs",
@@ -123,9 +125,13 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 JNIEXPORT void JNICALL
 Java_com_intel_oap_mllib_OneCCL_00024_c_1cleanup(JNIEnv *env, jobject obj) {
     logger::printerrln(logger::INFO, "OneCCL (native): cleanup");
-    g_comms.pop_back();
+    if (!g_comms.empty()) {
+        g_comms.pop_back();
+    }
 #ifdef CPU_GPU_PROFILE
-    g_dal_comms.pop_back();
+    if (!g_dal_comms.empty()) {
+        g_dal_comms.pop_back();
+    }
 #endif
 }
 
