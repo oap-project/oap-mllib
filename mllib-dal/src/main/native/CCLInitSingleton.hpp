@@ -55,7 +55,7 @@ private:
         kvs = ccl::create_main_kvs(kvs_attr);
 
         t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
+        duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
         logger::println(logger::INFO, "OneCCL singleton init took %f secs",
