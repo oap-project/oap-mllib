@@ -16,6 +16,7 @@
 
 package com.intel.oap.mllib
 
+import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 
@@ -25,7 +26,8 @@ object CommonJob {
                                       kvsIPPort: String,
                                       useDevice: String): Unit = {
         data.mapPartitionsWithIndex { (rank, table) =>
-          OneCCL.init(executorNum, rank, kvsIPPort)
+          OneCCL.init(executorNum, rank, kvsIPPort,
+            Common.ComputeDevice.getDeviceByName(useDevice).ordinal())
           val gpuIndices = if (useDevice == "GPU") {
               val resources = TaskContext.get().resources()
               resources("gpu").addresses.map(_.toInt)

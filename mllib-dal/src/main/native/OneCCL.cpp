@@ -57,7 +57,7 @@ getDalComm() {
 }
 #endif
 JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
-    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
+    JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port, jint computeDeviceOrdinal,
     jobject param) {
 
     logger::println(logger::INFO, "OneCCL (native): init");
@@ -65,40 +65,50 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     ccl::string ccl_ip_port(str);
     auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
 
-#ifdef CPU_ONLY_PROFILE
-    auto t1 = std::chrono::high_resolution_clock::now();
-    g_comms.push_back(
-        ccl::create_communicator(size, rank, singletonCCLInit.kvs));
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-            .count();
-    logger::println(logger::INFO,
-                    "OneCCL (native): create communicator took %f secs",
-                    duration / 1000);
-    rank_id = getComm().rank();
-    comm_size = getComm().size();
-
-#endif
-
+    ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
+    switch (device) {
+    case ComputeDevice::host:
+    case ComputeDevice::cpu: {
+        auto t1 = std::chrono::high_resolution_clock::now();
+        g_comms.push_back(
+            ccl::create_communicator(size, rank, singletonCCLInit.kvs));
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        logger::println(logger::INFO,
+                        "OneCCL (native): create communicator took %f secs",
+                        duration / 1000);
+        rank_id = getComm().rank();
+        comm_size = getComm().size();
+        break;
+        }
 #ifdef CPU_GPU_PROFILE
-    auto gpus = get_gpus();
-    sycl::queue queue{gpus[0]};
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto comm = oneapi::dal::preview::spmd::make_communicator<
-        oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
-                                                  singletonCCLInit.kvs);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-            .count();
-    logger::println(logger::INFO,
-                    "OneCCL (native): create communicator took %f secs",
-                    duration / 1000);
-    g_dal_comms.push_back(comm);
-    rank_id = getDalComm().get_rank();
-    comm_size = getDalComm().get_rank_count();
+    case ComputeDevice::gpu: {
+        auto gpus = get_gpus();
+        sycl::queue queue{gpus[0]};
+        auto t1 = std::chrono::high_resolution_clock::now();
+        auto comm = oneapi::dal::preview::spmd::make_communicator<
+            oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
+                                                      singletonCCLInit.kvs);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        logger::println(logger::INFO,
+                        "OneCCL (native): create communicator took %f secs",
+                        duration / 1000);
+        g_dal_comms.push_back(comm);
+        rank_id = getDalComm().get_rank();
+        comm_size = getDalComm().get_rank_count();
+        break;
+    }
 #endif
+    default: {
+        deviceError("communicator",
+                    ComputeDeviceString[computeDeviceOrdinal].c_str());
+    }
+    }
     jclass cls = env->GetObjectClass(param);
     jfieldID fid_comm_size = env->GetFieldID(cls, "commSize", "J");
     jfieldID fid_rank_id = env->GetFieldID(cls, "rankId", "J");
