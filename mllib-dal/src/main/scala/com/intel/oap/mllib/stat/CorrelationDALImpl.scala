@@ -31,7 +31,8 @@ class CorrelationDALImpl(
 
   def computeCorrelationMatrix(data: RDD[Vector]): Matrix = {
     val sparkContext = data.sparkContext
-    val corTimer = new Utils.AlgoTimeMetrics("Correlation", sparkContext)
+    val metricsName = "Correlation_" + executorNum
+    val corTimer = new Utils.AlgoTimeMetrics(metricsName, sparkContext)
     val useDevice = sparkContext.getConf.get("spark.oap.mllib.device", Utils.DefaultComputeDevice)
     val computeDevice = Common.ComputeDevice.getDeviceByName(useDevice)
     corTimer.record("Preprocessing")
@@ -45,6 +46,7 @@ class CorrelationDALImpl(
     corTimer.record("Data Convertion")
 
     val kvsIPPort = getOneCCLIPPort(coalescedTables)
+    val trainingBreakdownName = "Correlation_training_breakdown_" + executorNum
 
     CommonJob.initCCLAndSetAffinityMask(coalescedTables, executorNum, kvsIPPort, useDevice)
     corTimer.record("OneCCL Init")
@@ -74,6 +76,7 @@ class CorrelationDALImpl(
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
+        trainingBreakdownName,
         result
       )
 
@@ -123,5 +126,6 @@ class CorrelationDALImpl(
                                            executorCores: Int,
                                            computeDeviceOrdinal: Int,
                                            gpuIndices: Array[Int],
+                                           breakdownName: String,
                                            result: CorrelationResult): Long
 }
