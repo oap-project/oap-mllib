@@ -24,33 +24,6 @@ std::vector<sycl::device> get_gpus() {
     return {};
 }
 
-static int getLocalRank(ccl::communicator &comm, int size, int rank) {
-    const int MPI_MAX_PROCESSOR_NAME = 128;
-    /* Obtain local rank among nodes sharing the same host name */
-    char zero = static_cast<char>(0);
-    std::vector<char> name(MPI_MAX_PROCESSOR_NAME + 1, zero);
-    // int resultlen = 0;
-    // MPI_Get_processor_name(name.data(), &resultlen);
-    gethostname(name.data(), MPI_MAX_PROCESSOR_NAME);
-    std::string str(name.begin(), name.end());
-    std::vector<char> allNames((MPI_MAX_PROCESSOR_NAME + 1) * size, zero);
-    std::vector<size_t> aReceiveCount(size, MPI_MAX_PROCESSOR_NAME + 1);
-    ccl::allgatherv((int8_t *)name.data(), name.size(),
-                    (int8_t *)allNames.data(), aReceiveCount, comm)
-        .wait();
-    int localRank = 0;
-    for (int i = 0; i < rank; i++) {
-        auto nameBegin = allNames.begin() + i * (MPI_MAX_PROCESSOR_NAME + 1);
-        std::string nbrName(nameBegin,
-                            nameBegin + (MPI_MAX_PROCESSOR_NAME + 1));
-        if (nbrName == str)
-            localRank++;
-    }
-    return localRank;
-
-    //    return 0;
-}
-
 static sycl::queue getSyclQueue(const sycl::device device) {
     g_mtx.lock();
     if (!g_queueVector.empty()) {

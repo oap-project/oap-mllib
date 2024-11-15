@@ -284,7 +284,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jlong featureCols, jlong label, jlong labelCols, jboolean fitIntercept,
     jdouble regParam, jdouble elasticNetParam, jint executorNum,
     jint executorCores, jint computeDeviceOrdinal, jintArray gpuIdxArray,
-    jstring breakdown_name, , jobject resultObj) {
+    jstring breakdown_name, jobject resultObj) {
 
     logger::println(logger::INFO,
                     "oneDAL (native): use DPC++ kernels; device %s",
@@ -305,9 +305,9 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
         std::string c_breakdown_name(cstr);
         auto comm = getDalComm();
-        resultptr = doLROneAPICompute(env, rank, comm, feature, featureRows,
-                                      featureCols, label, labelCols,
-                                      fitIntercept, executorNum, c_breakdown_name, resultObj);
+        resultptr = doLROneAPICompute(
+            env, rank, comm, feature, featureRows, featureCols, label,
+            labelCols, fitIntercept, executorNum, c_breakdown_name, resultObj);
         env->ReleaseStringUTFChars(breakdown_name, cstr);
 #endif
     } else {

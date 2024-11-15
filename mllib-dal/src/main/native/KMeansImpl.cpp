@@ -324,7 +324,8 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
     JNIEnv *env, jobject obj, jint rank, jlong pNumTabData, jlong numRows,
     jlong numCols, jlong pNumTabCenters, jint clusterNum, jdouble tolerance,
     jint iterationNum, jint executorNum, jint executorCores,
-    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring breakdown_name, jobject resultObj) {
+    jint computeDeviceOrdinal, jintArray gpuIdxArray, jstring breakdown_name,
+    jobject resultObj) {
     logger::println(logger::INFO,
                     "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
@@ -360,9 +361,9 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         const char *cstr = env->GetStringUTFChars(breakdown_name, nullptr);
         std::string c_breakdown_name(cstr);
         auto comm = getDalComm();
-        ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numCols,
-                                    pNumTabCenters, clusterNum, tolerance,
-                                    iterationNum, comm, c_breakdown_name, resultObj);
+        ret = doKMeansOneAPICompute(
+            env, pNumTabData, numRows, numCols, pNumTabCenters, clusterNum,
+            tolerance, iterationNum, comm, c_breakdown_name, resultObj);
         env->ReleaseStringUTFChars(breakdown_name, cstr);
 
         break;
