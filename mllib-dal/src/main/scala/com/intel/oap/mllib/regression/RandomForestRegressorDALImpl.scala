@@ -105,7 +105,6 @@ class RandomForestRegressorDALImpl(val uid: String,
         maxbins,
         bootstrap,
         gpuIndices,
-        kvsIPPort,
         trainingBreakdownName,
         result)
 
@@ -157,7 +156,6 @@ class RandomForestRegressorDALImpl(val uid: String,
                                              maxbins: Int,
                                              bootstrap: Boolean,
                                              gpuIndices: Array[Int],
-                                             kvsIPPort: String,
                                              breakdownName: String,
                                              result: RandomForestResult): java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]
 }

@@ -115,7 +115,6 @@ class RandomForestClassifierDALImpl(val uid: String,
         maxBins,
         bootstrap,
         gpuIndices,
-        kvsIPPort,
         trainingBreakdownName,
         result)
 
@@ -162,7 +161,6 @@ class RandomForestClassifierDALImpl(val uid: String,
                                                    maxBins: Int,
                                                    bootstrap: Boolean,
                                                    gpuIndices: Array[Int],
-                                                   kvsIPPort: String,
                                                    breakdownName: String,
                                                    result: RandomForestResult):
   java.util.HashMap[java.lang.Integer, java.util.ArrayList[LearningNode]]

@@ -342,7 +342,6 @@ Java_com_intel_oap_mllib_regression_RandomForestRegressorDALImpl_cRFRegressorTra
             numFeaturesPerNode, minObservationsLeafNode, maxTreeDepth, seed,
             maxbins, bootstrap, comm, c_breakdown_name, resultObj);
 
-        env->ReleaseStringUTFChars(ip_port, str);
         env->ReleaseStringUTFChars(breakdown_name, cstr);
         return hashmapObj;
     }

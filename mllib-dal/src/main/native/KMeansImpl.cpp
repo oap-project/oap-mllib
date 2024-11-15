@@ -362,7 +362,7 @@ Java_com_intel_oap_mllib_clustering_KMeansDALImpl_cKMeansOneapiComputeWithInitCe
         auto comm = getDalComm();
         ret = doKMeansOneAPICompute(env, pNumTabData, numRows, numCols,
                                     pNumTabCenters, clusterNum, tolerance,
-                                    iterationNum, comm, resultObj);
+                                    iterationNum, comm, c_breakdown_name, resultObj);
         env->ReleaseStringUTFChars(breakdown_name, cstr);
 
         break;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Communicator.hpp"
 #include "service.h"
 #include <CL/cl.h>
 #include <CL/sycl.hpp>

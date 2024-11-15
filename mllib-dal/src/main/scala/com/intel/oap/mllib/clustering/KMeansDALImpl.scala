@@ -92,7 +92,6 @@ class KMeansDALImpl(var nClusters: Int,
         executorCores,
         computeDevice.ordinal(),
         gpuIndices,
-        kvsIPPort,
         trainingBreakdownName,
         result
       )
@@ -151,7 +150,6 @@ class KMeansDALImpl(var nClusters: Int,
                                                          executorCores: Int,
                                                          computeDeviceOrdinal: Int,
                                                          gpuIndices: Array[Int],
-                                                         kvsIPPort: String,
                                                          breakdownName: String,
                                                          result: KMeansResult): Long
 }
