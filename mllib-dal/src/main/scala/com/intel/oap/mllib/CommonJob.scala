@@ -32,7 +32,6 @@ object CommonJob {
           } else {
               Array.empty[Int]
           }
-          println("gpuIndices: ", gpuIndices.toList.toString())
           if (gpuIndices.nonEmpty) {
             OneCCL.setAffinityMask(gpuIndices(0).toString())
           }

@@ -163,8 +163,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_setEnv(
 
     char *k = (char *)env->GetStringUTFChars(key, NULL);
     char *v = (char *)env->GetStringUTFChars(value, NULL);
-    logger::printerrln(logger::INFO, "OneCCL (native): key", k);
-    logger::printerrln(logger::INFO, "OneCCL (native): value", v);
 
     int err = setenv(k, v, overwrite);
 
