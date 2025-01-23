@@ -87,7 +87,19 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         auto gpus = get_gpus();
-        sycl::queue queue{gpus[0]};
+        auto gpus_count = gpus.size();
+        logger::println(logger::INFO,
+                        "OneCCL (native): gpus_count %d",
+                        gpus_count);
+        sycl::device selected_device;
+        if (gpus_count == 1) {
+            selected_device = gpus[0];
+        } else if (gpus_count == 12) {
+            selected_device = gpus[rank % gpus_count];
+        } else {
+            deviceError("Invalid GPU count", std::to_string(gpus_count).c_str());
+        }
+        sycl::queue queue{selected_device};
         auto t1 = std::chrono::high_resolution_clock::now();
         auto comm = oneapi::dal::preview::spmd::make_communicator<
             oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
@@ -151,6 +163,8 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_setEnv(
 
     char *k = (char *)env->GetStringUTFChars(key, NULL);
     char *v = (char *)env->GetStringUTFChars(value, NULL);
+    logger::printerrln(logger::INFO, "OneCCL (native): key", k);
+    logger::printerrln(logger::INFO, "OneCCL (native): value", v);
 
     int err = setenv(k, v, overwrite);
 
