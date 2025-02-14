@@ -198,11 +198,6 @@ static void doPCAOneAPICompute(
 
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    logger::println(logger::INFO, "PCA (native): Covariance step took %d secs",
-                    duration / 1000);
     if (isRoot) {
         using float_t = GpuAlgorithmFPType;
         using method_t = pca_gpu::method::precomputed;
@@ -213,11 +208,11 @@ static void doPCAOneAPICompute(
         t1 = std::chrono::high_resolution_clock::now();
         const auto result_train =
             preview::train(comm, pca_desc, result.get_cov_matrix());
-        t2 = std::chrono::high_resolution_clock::now();
-        duration =
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        logger::println(logger::INFO, "PCA (native): Eigen step took %d secs",
+        logger::println(logger::INFO, "PCA (native): training step took %f secs",
                         duration / 1000);
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object

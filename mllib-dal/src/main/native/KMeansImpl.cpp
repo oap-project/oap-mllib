@@ -270,10 +270,10 @@ static jlong doKMeansOneAPICompute(
         printHomegenTable(result_train.get_model().get_centroids());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         logger::println(logger::INFO,
-                        "KMeans (native): training step took %d secs",
+                        "KMeans (native): training step took %f secs",
                         duration / 1000);
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);

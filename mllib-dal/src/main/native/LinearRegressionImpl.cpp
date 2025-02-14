@@ -237,12 +237,20 @@ static jlong doLROneAPICompute(
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
         linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
-
+    auto t1 = std::chrono::high_resolution_clock::now();
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);
     if (isRoot) {
         HomogenTablePtr result_matrix = std::make_shared<homogen_table>(
             result_train.get_model().get_betas());
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        logger::println(
+            logger::INFO,
+            "Linear regression (native): training step took %f secs.",
+            duration / 1000);
         saveHomogenTablePtrToVector(result_matrix);
         return (jlong)result_matrix.get();
     } else {

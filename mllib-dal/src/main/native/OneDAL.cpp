@@ -186,6 +186,20 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray(
 
 /*
  * Class:     com_intel_oap_mllib_OneDAL__
+ * Method:    cNewFloatArray
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewFloatArray(
+    JNIEnv *env, jobject, jlong size) {
+    std::cout << "create float new native array size : " << size << std::endl;
+    NativeFloatArrayPtr arrayPtr(new float[size],
+                                 [](float *ptr) { delete[] ptr; });
+    saveArrayPtrToVector<float>(arrayPtr);
+    return (jlong)arrayPtr.get();
+}
+
+/*
+ * Class:     com_intel_oap_mllib_OneDAL__
  * Method:    cCopyDoubleArrayToNative
  * Signature: (J[DJ)V
  */
@@ -198,5 +212,22 @@ Java_com_intel_oap_mllib_OneDAL_00024_cCopyDoubleArrayToNative(
     jdouble *source = static_cast<jdouble *>(
         env->GetPrimitiveArrayCritical(sourceArray, NULL));
     std::copy(source, source + sourceLength, nativeArray + index);
+    env->ReleasePrimitiveArrayCritical(sourceArray, source, 0);
+}
+
+/*
+ * Class:     com_intel_oap_mllib_OneDAL__
+ * Method:    cCopyFloatArrayToNative
+ * Signature: (J[DJ)V
+ */
+JNIEXPORT void JNICALL
+Java_com_intel_oap_mllib_OneDAL_00024_cCopyFloatArrayToNative(
+    JNIEnv *env, jobject, jlong nativeArrayPtr, jdoubleArray sourceArray,
+    jlong index) {
+    float *nativeArray = reinterpret_cast<float *>(nativeArrayPtr);
+    jsize sourceLength = env->GetArrayLength(sourceArray);
+    jdouble *source = static_cast<jdouble *>(
+        env->GetPrimitiveArrayCritical(sourceArray, NULL));
+    std::transform(source, source + sourceLength, nativeArray + index, [](double d) { return static_cast<float>(d); });
     env->ReleasePrimitiveArrayCritical(sourceArray, source, 0);
 }

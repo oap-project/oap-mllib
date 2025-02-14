@@ -247,6 +247,7 @@ static jobject doRFClassifierOneAPICompute(
             .set_max_tree_depth(maxTreeDepth)
             .set_max_bins(maxBins);
 
+    auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
@@ -261,7 +262,14 @@ static jobject doRFClassifierOneAPICompute(
         printHomegenTable(result_infer.get_responses());
         logger::println(logger::INFO, "Probabilities results:\n");
         printHomegenTable(result_infer.get_probabilities());
-
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration =
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+                .count();
+        logger::println(
+            logger::INFO,
+            "RF Classifier (native): training step took %f secs.",
+            duration / 1000);
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
 
