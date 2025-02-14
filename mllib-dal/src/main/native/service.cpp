@@ -244,7 +244,7 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
 HomogenTablePtr createHomogenTableWithArrayPtr(size_t pNumTabData,
                                                size_t numRows, size_t numClos,
                                                sycl::queue queue) {
-    double *htableArray = reinterpret_cast<float *>(pNumTabData);
+    float *htableArray = reinterpret_cast<float *>(pNumTabData);
     auto data = sycl::malloc_shared<float>(numRows * numClos, queue);
     queue.memcpy(data, htableArray, sizeof(float) * numRows * numClos).wait();
     return std::make_shared<homogen_table>(
