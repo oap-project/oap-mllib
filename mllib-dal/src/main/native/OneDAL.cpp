@@ -27,16 +27,19 @@ using namespace daal::data_management;
 extern bool daal_check_is_intel_cpu();
 
 // Define a global native array
-typedef std::shared_ptr<double[]> NativeDoubleArrayPtr;
+typedef std::shared_ptr<double> NativeDoubleArrayPtr;
+typedef std::shared_ptr<float> NativeFloatArrayPtr;
 
 std::mutex g_amtx;
-std::vector<NativeDoubleArrayPtr> g_NativeDoubleArrayPtrVector;
+template <typename T> std::vector<std::shared_ptr<T>> g_NativeArrayPtrVector;
 
-void saveDoubleArrayPtrToVector(const NativeDoubleArrayPtr &ptr) {
-    g_amtx.lock();
-    g_NativeDoubleArrayPtrVector.push_back(ptr);
-    g_amtx.unlock();
+template <typename T>
+void saveArrayPtrToVector(const std::shared_ptr<T> &ptr) {
+       g_amtx.lock();
+       g_NativeArrayPtrVector<T>.push_back(ptr);
+       g_amtx.unlock();
 }
+
 
 JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable(
     JNIEnv *, jobject, jlong rowMergedNumericTableAddr,
@@ -180,7 +183,7 @@ JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray(
 
     NativeDoubleArrayPtr arrayPtr(new double[size],
                                   [](double *ptr) { delete[] ptr; });
-    saveDoubleArrayPtrToVector(arrayPtr);
+    saveArrayPtrToVector(arrayPtr);
     return (jlong)arrayPtr.get();
 }
 
@@ -231,3 +234,6 @@ Java_com_intel_oap_mllib_OneDAL_00024_cCopyFloatArrayToNative(
     std::transform(source, source + sourceLength, nativeArray + index, [](double d) { return static_cast<float>(d); });
     env->ReleasePrimitiveArrayCritical(sourceArray, source, 0);
 }
+
+template void saveArrayPtrToVector<float>(const std::shared_ptr<float>&);
+template void saveArrayPtrToVector<double>(const std::shared_ptr<double>&);
