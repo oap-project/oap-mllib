@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Logger.h"
 #include <chrono>
 #include <iostream>
 #include <string>
+#include "Logger.h"
 
 class Profiler {
   public:
@@ -11,8 +11,7 @@ class Profiler {
 
     void startProfile(std::string s = "") {
         action = s;
-        logger::println(logger::INFO, "%s (native): start %s", subject.c_str(),
-                        action.c_str());
+	logger::println(logger::INFO, "%s (native): start %s", subject.c_str(), action.c_str());
         startTime = std::chrono::high_resolution_clock::now();
     }
 
@@ -21,14 +20,11 @@ class Profiler {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                             end_time - startTime)
                             .count();
-        logger::println(logger::INFO, "%s (native): start %s took %f secs",
-                        subject.c_str(), action.c_str(),
-                        (float)duration / 1000);
+	logger::println(logger::INFO, "%s (native): start %s took %f secs", subject.c_str(), action.c_str(), (float)duration / 1000);
     }
 
     void println(std::string msg) {
-        logger::println(logger::INFO, "%s (native): %s", subject.c_str(),
-                        msg.c_str());
+	logger::println(logger::INFO, "%s (native): %s", subject.c_str(), msg.c_str());
     }
 
   private:
