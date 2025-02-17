@@ -32,9 +32,6 @@ object CommonJob {
           } else {
               Array.empty[Int]
           }
-          if (gpuIndices.nonEmpty) {
-            OneCCL.setAffinityMask(gpuIndices(0).toString())
-          }
           OneCCL.init(executorNum, rank, kvsIPPort,
             Common.ComputeDevice.getDeviceByName(useDevice).ordinal())
           Iterator.empty

@@ -264,12 +264,12 @@ static jobject doRFClassifierOneAPICompute(
         printHomegenTable(result_infer.get_probabilities());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
+                                                                         t1)
                 .count();
-        logger::println(
-            logger::INFO,
-            "RF Classifier (native): training step took %f secs.",
-            duration / 1000);
+        logger::println(logger::INFO,
+                        "RF Classifier (native): training step took %f secs.",
+                        duration / 1000);
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
 

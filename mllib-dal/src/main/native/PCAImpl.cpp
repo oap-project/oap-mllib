@@ -212,7 +212,8 @@ static void doPCAOneAPICompute(
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
-        logger::println(logger::INFO, "PCA (native): training step took %f secs",
+        logger::println(logger::INFO,
+                        "PCA (native): training step took %f secs",
                         duration / 1000);
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object

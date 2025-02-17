@@ -33,13 +33,11 @@ typedef std::shared_ptr<float> NativeFloatArrayPtr;
 std::mutex g_amtx;
 template <typename T> std::vector<std::shared_ptr<T>> g_NativeArrayPtrVector;
 
-template <typename T>
-void saveArrayPtrToVector(const std::shared_ptr<T> &ptr) {
-       g_amtx.lock();
-       g_NativeArrayPtrVector<T>.push_back(ptr);
-       g_amtx.unlock();
+template <typename T> void saveArrayPtrToVector(const std::shared_ptr<T> &ptr) {
+    g_amtx.lock();
+    g_NativeArrayPtrVector<T>.push_back(ptr);
+    g_amtx.unlock();
 }
-
 
 JNIEXPORT void JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cAddNumericTable(
     JNIEnv *, jobject, jlong rowMergedNumericTableAddr,
@@ -231,9 +229,10 @@ Java_com_intel_oap_mllib_OneDAL_00024_cCopyFloatArrayToNative(
     jsize sourceLength = env->GetArrayLength(sourceArray);
     jdouble *source = static_cast<jdouble *>(
         env->GetPrimitiveArrayCritical(sourceArray, NULL));
-    std::transform(source, source + sourceLength, nativeArray + index, [](double d) { return static_cast<float>(d); });
+    std::transform(source, source + sourceLength, nativeArray + index,
+                   [](double d) { return static_cast<float>(d); });
     env->ReleasePrimitiveArrayCritical(sourceArray, source, 0);
 }
 
-template void saveArrayPtrToVector<float>(const std::shared_ptr<float>&);
-template void saveArrayPtrToVector<double>(const std::shared_ptr<double>&);
+template void saveArrayPtrToVector<float>(const std::shared_ptr<float> &);
+template void saveArrayPtrToVector<double>(const std::shared_ptr<double> &);
