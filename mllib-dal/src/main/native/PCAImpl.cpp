@@ -210,7 +210,7 @@ static void doPCAOneAPICompute(
             preview::train(comm, pca_desc, result.get_cov_matrix());
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
+            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
                 .count();
         logger::println(logger::INFO,
                         "PCA (native): training step took %f secs",
