@@ -19,7 +19,7 @@ package com.intel.oap.mllib.stat
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.TaskContext
+import org.apache.spark.{SparkEnv, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{Matrix, Vector}
 import org.apache.spark.rdd.RDD
@@ -83,7 +83,12 @@ class CorrelationDALImpl(
 
       logInfo(s"CorrelationDAL compute took ${durationCompute} secs")
 
-      val ret = if (rank == 0) {
+      val isRoot = if (useDevice == "GPU") {
+        SparkEnv.get.executorId.toInt == 0
+      } else {
+        rank == 0
+      }
+      val ret = if (isRoot) {
         val convResultStartTime = System.nanoTime()
         val correlationNumericTable = if (useDevice == "GPU") {
           OneDAL.homogenTableToMatrix(OneDAL.makeHomogenTable(result.getCorrelationNumericTable))
