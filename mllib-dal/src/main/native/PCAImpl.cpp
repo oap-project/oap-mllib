@@ -205,7 +205,6 @@ static void doPCAOneAPICompute(
         using descriptor_t = pca_gpu::descriptor<float_t, method_t, task_t>;
         const auto pca_desc = descriptor_t().set_deterministic(true);
 
-        t1 = std::chrono::high_resolution_clock::now();
         const auto result_train =
             preview::train(comm, pca_desc, result.get_cov_matrix());
         logger::println(logger::INFO, "Eigenvectors:");
