@@ -208,6 +208,11 @@ static void doPCAOneAPICompute(
         t1 = std::chrono::high_resolution_clock::now();
         const auto result_train =
             preview::train(comm, pca_desc, result.get_cov_matrix());
+        logger::println(logger::INFO, "Eigenvectors:");
+        printHomegenTable(result_train.get_eigenvectors());
+        logger::println(logger::INFO, "Eigenvalues:");
+        printHomegenTable(result_train.get_eigenvalues());
+
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration =
             (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
@@ -223,10 +228,6 @@ static void doPCAOneAPICompute(
             env->GetFieldID(clazz, "pcNumericTable", "J");
         jfieldID explainedVarianceNumericTableField =
             env->GetFieldID(clazz, "explainedVarianceNumericTable", "J");
-        logger::println(logger::INFO, "Eigenvectors:");
-        printHomegenTable(result_train.get_eigenvectors());
-        logger::println(logger::INFO, "Eigenvalues:");
-        printHomegenTable(result_train.get_eigenvalues());
 
         HomogenTablePtr eigenvectors =
             std::make_shared<homogen_table>(result_train.get_eigenvectors());

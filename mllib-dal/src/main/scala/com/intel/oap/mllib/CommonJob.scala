@@ -19,6 +19,7 @@ package com.intel.oap.mllib
 import com.intel.oneapi.dal.table.Common
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkEnv
 
 object CommonJob {
   def initCCLAndSetAffinityMask(data: RDD[_],
@@ -26,13 +27,8 @@ object CommonJob {
                                       kvsIPPort: String,
                                       useDevice: String): Unit = {
         data.mapPartitionsWithIndex { (rank, table) =>
-          val gpuIndices = if (useDevice == "GPU") {
-              val resources = TaskContext.get().resources()
-              resources("gpu").addresses.map(_.toInt)
-          } else {
-              Array.empty[Int]
-          }
-          OneCCL.init(executorNum, rank, kvsIPPort,
+          val executorId = SparkEnv.get.executorId.toInt
+          OneCCL.init(executorNum, executorId, kvsIPPort,
             Common.ComputeDevice.getDeviceByName(useDevice).ordinal())
           Iterator.empty
         }.count()
