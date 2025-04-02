@@ -19,7 +19,8 @@ package com.intel.oap.mllib.regression
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.{SparkEnv, SparkException, TaskContext}
+import org.apache.spark.SparkException
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.{DenseVector, Vector}
 import org.apache.spark.ml.util._
@@ -155,12 +156,7 @@ class LinearRegressionDALImpl( val fitIntercept: Boolean,
           result
         )
 
-      val isRoot = if (useDevice == "GPU") {
-        SparkEnv.get.executorId.toInt == 0
-      } else {
-        rank == 0
-      }
-      val ret = if (isRoot) {
+        val ret = if (rank == 0) {
           val coefficientArray = if (useDevice == "GPU") {
               OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cbeta))
             } else {

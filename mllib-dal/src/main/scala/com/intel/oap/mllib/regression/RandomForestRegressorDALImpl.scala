@@ -19,7 +19,7 @@ import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.classification.{LearningNode, RandomForestResult}
 import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.{SparkEnv, TaskContext}
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.linalg.Matrix
@@ -112,12 +112,7 @@ class RandomForestRegressorDALImpl(val uid: String,
 
       logInfo(s"RandomForestRegressorDALImpl compute took ${durationCompute} secs")
 
-      val isRoot = if (useDevice == "GPU") {
-        SparkEnv.get.executorId.toInt == 0
-      } else {
-        rank == 0
-      }
-      val ret = if (isRoot) {
+      val ret = if (rank == 0) {
         val convResultStartTime = System.nanoTime()
         val predictionNumericTable = OneDAL.homogenTableToMatrix(
           OneDAL.makeHomogenTable(result.getPredictionNumericTable))

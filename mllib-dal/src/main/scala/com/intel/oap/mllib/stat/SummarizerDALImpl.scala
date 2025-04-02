@@ -17,7 +17,7 @@
 package com.intel.oap.mllib.stat
 
 import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
-import org.apache.spark.{SparkEnv, TaskContext}
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.mllib.linalg.{Vectors => OldVectors}
@@ -84,12 +84,7 @@ class SummarizerDALImpl(val executorNum: Int,
 
       logInfo(s"SummarizerDAL compute took ${durationCompute} secs")
 
-      val isRoot = if (useDevice == "GPU") {
-        SparkEnv.get.executorId.toInt == 0
-      } else {
-        rank == 0
-      }
-      val ret = if (isRoot) {
+      val ret = if (rank == 0) {
 
         val convResultStartTime = System.nanoTime()
         val meanVector = if (useDevice == "GPU") {

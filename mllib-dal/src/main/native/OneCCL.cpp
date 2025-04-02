@@ -34,6 +34,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
 #include "service.h"
+#include <cstdlib>
 
 extern const size_t ccl_root = 0;
 
@@ -88,12 +89,15 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         auto gpus = get_gpus();
-        auto gpus_count = gpus.size();
-        logger::println(logger::INFO, "OneCCL (native): gpus_count %d",
-                        gpus_count);
-        sycl::device selected_device;
-        selected_device = gpus[rank % gpus_count];
-        sycl::queue queue{selected_device};
+        const char *zeAffinityMask = std::getenv("ZE_AFFINITY_MASK");
+        if (zeAffinityMask == nullptr) {
+            logger::println(logger::ERROR,
+                            "OneCCL (native): ZE_AFFINITY_MASK is not set.",
+                            duration / 1000);
+            return 0;
+        }
+        int gpuId = std::stoi(zeAffinityMask);
+        sycl::queue queue{gpuId};
         auto t1 = std::chrono::high_resolution_clock::now();
         auto comm = oneapi::dal::preview::spmd::make_communicator<
             oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,

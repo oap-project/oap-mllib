@@ -19,7 +19,7 @@ package com.intel.oap.mllib.clustering
 import com.intel.oap.mllib.Utils.getOneCCLIPPort
 import com.intel.oap.mllib.{CommonJob, OneCCL, OneDAL, Utils}
 import com.intel.oneapi.dal.table.Common
-import org.apache.spark.{SparkEnv, TaskContext}
+import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.util._
@@ -92,12 +92,8 @@ class KMeansDALImpl(var nClusters: Int,
         gpuIndices,
         result
       )
-      val isRoot = if (useDevice == "GPU") {
-        SparkEnv.get.executorId.toInt == 0
-      } else {
-        rank == 0
-      }
-      val ret = if (isRoot) {
+
+      val ret = if (rank == 0) {
           assert(cCentroids != 0)
           val centerVectors = if (useDevice == "GPU") {
             OneDAL.homogenTableToVectors(OneDAL.makeHomogenTable(cCentroids))
