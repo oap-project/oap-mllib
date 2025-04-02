@@ -92,8 +92,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
         const char *zeAffinityMask = std::getenv("ZE_AFFINITY_MASK");
         if (zeAffinityMask == nullptr) {
             logger::println(logger::ERROR,
-                            "OneCCL (native): ZE_AFFINITY_MASK is not set.",
-                            duration / 1000);
+                            "OneCCL (native): ZE_AFFINITY_MASK is not set.");
             return 0;
         }
         int gpuId = std::stoi(zeAffinityMask);
