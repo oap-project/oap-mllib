@@ -96,7 +96,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
             return 0;
         }
         int gpuId = std::stoi(zeAffinityMask);
-        sycl::queue queue{gpus(gpuId)};
+        sycl::queue queue{gpus[gpuId]};
         auto t1 = std::chrono::high_resolution_clock::now();
         auto comm = oneapi::dal::preview::spmd::make_communicator<
             oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
