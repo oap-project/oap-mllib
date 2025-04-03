@@ -79,7 +79,7 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         .wait();
     t2 = std::chrono::high_resolution_clock::now();
 
-    float duration = std::chrono::duration<float>(t2 - t1).count();
+    duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
                     "Correleation (native): ccl_allgatherv took %f secs",
                     duration);
