@@ -204,12 +204,10 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         centroids = newCentroids;
 
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "KMeans (native): iteration %d took %d secs", it,
-                        duration / 1000);
+                        duration);
     }
 
     if (rankId == ccl_root) {
@@ -269,13 +267,10 @@ static jlong doKMeansOneAPICompute(
         logger::println(logger::INFO, "Centroids:");
         printHomegenTable(result_train.get_model().get_centroids());
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "KMeans (native): training step took %f secs",
-                        duration / 1000);
+                        duration);
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references

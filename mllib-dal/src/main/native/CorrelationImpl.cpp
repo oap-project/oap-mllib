@@ -53,11 +53,9 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     localAlgorithm.compute();
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    float duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "Correleation (native): local step took %d secs",
-                    duration / 1000);
+                    "Correleation (native): local step took %f secs", duration);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -81,11 +79,10 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         .wait();
     t2 = std::chrono::high_resolution_clock::now();
 
-    duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    float duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "Correleation (native): ccl_allgatherv took %d secs",
-                    duration / 1000);
+                    "Correleation (native): ccl_allgatherv took %f secs",
+                    duration);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -120,12 +117,10 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         /* Retrieve the algorithm results */
         covariance_cpu::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "Correleation (native): master step took %d secs",
-                        duration / 1000);
+                        "Correleation (native): master step took %f secs",
+                        duration);
 
         /* Print the results */
         printNumericTable(result->get(covariance_cpu::correlation),
@@ -171,13 +166,10 @@ static void doCorrelationOneAPICompute(
         logger::println(logger::INFO, "Correlation:");
         printHomegenTable(result_train.get_cor_matrix());
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "Correlation (native): training step took %f secs.",
-                        duration / 1000);
+                        duration);
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 

@@ -159,9 +159,8 @@ Java_com_intel_oap_mllib_classification_NaiveBayesDALImpl_cNaiveBayesDALCompute(
     logger::println(logger::INFO, "OneDAL (native): training model finished");
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    logger::println(logger::INFO, "training took %d secs", duration / 1000);
+    float duration = std::chrono::duration<float>(t2 - t1).count();
+    logger::println(logger::INFO, "training took %f secs", duration);
 
     if (rankId == ccl_root) {
         multinomial_naive_bayes::ModelPtr model =

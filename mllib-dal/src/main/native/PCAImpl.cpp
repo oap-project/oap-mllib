@@ -56,11 +56,10 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     localAlgorithm.compute();
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    float duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "PCA (native): Covariance local step took %d secs",
-                    duration / 1000);
+                    "PCA (native): Covariance local step took %f secs",
+                    duration);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -83,10 +82,9 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         .wait();
     t2 = std::chrono::high_resolution_clock::now();
 
-    duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "PCA (native): Covariance gather to master took %d secs",
+                    "PCA (native): Covariance gather to master took %f secs",
                     duration / 1000);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -123,12 +121,10 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         covariance_cpu::ResultPtr covariance_result =
             masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "PCA (native): Covariance master step took %d secs",
-                        duration / 1000);
+                        "PCA (native): Covariance master step took %f secs",
+                        duration);
 
         t1 = std::chrono::high_resolution_clock::now();
 
@@ -145,10 +141,8 @@ static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         algorithm.compute();
 
         t2 = std::chrono::high_resolution_clock::now();
-        duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        logger::println(logger::INFO, "PCA (native): master step took %d secs",
+        duration = std::chrono::duration<float>(t2 - t1).count();
+        logger::println(logger::INFO, "PCA (native): master step took %f secs",
                         duration / 1000);
 
         /* Print the results */
@@ -213,13 +207,9 @@ static void doPCAOneAPICompute(
         printHomegenTable(result_train.get_eigenvalues());
 
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "PCA (native): training step took %f secs",
-                        duration / 1000);
+                        "PCA (native): training step took %f secs", duration);
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
