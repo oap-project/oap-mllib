@@ -20,10 +20,10 @@
 package org.apache.spark.ml.classification.spark333
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
+import com.intel.oap.mllib.classification.{RandomForestClassifierDALImpl, RandomForestClassifierShim, LearningNode => LearningNodeDAL}
+
 import java.util.{Map => JavaMap}
 import scala.jdk.CollectionConverters._
-
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification.{BinaryRandomForestClassificationTrainingSummaryImpl, DecisionTreeClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl}
 import org.apache.spark.ml.feature.Instance
@@ -41,6 +41,7 @@ import org.apache.spark.mllib.tree.model.{ImpurityStats, RandomForestModel => Ol
 import org.apache.spark.sql.{DataFrame, Dataset}
 import org.apache.spark.sql.functions.{col, udf}
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.storage.StorageLevel
 
 // scalastyle:off line.size.limit
 
@@ -166,6 +167,12 @@ class RandomForestClassifier @Since("1.4.0") (
                        instr: Instrumentation): RandomForestClassificationModel = {
     instr.logPipelineStage(this)
     instr.logDataset(dataset)
+    val handlePersistence = (dataset.storageLevel == StorageLevel.NONE)
+
+    if (handlePersistence) {
+      dataset.persist(StorageLevel.MEMORY_AND_DISK)
+      dataset.count()
+    }
     val spark = dataset.sparkSession
     val categoricalFeatures: Map[Int, Int] =
       MetadataUtils.getCategoricalFeatures(dataset.schema($(featuresCol)))
@@ -220,7 +227,11 @@ class RandomForestClassifier @Since("1.4.0") (
     val trees = buildTrees(treesMap, numFeatures, numClasses, metadata).map(_.asInstanceOf[DecisionTreeClassificationModel])
     instr.logNumClasses(numClasses)
     instr.logNumFeatures(numFeatures)
-    createModel(dataset, trees, numFeatures, numClasses)
+    val model = createModel(dataset, trees, numFeatures, numClasses)
+    if (handlePersistence) {
+      dataset.unpersist()
+    }
+    model
   }
 
   private def buildTrees(treesMap : JavaMap[Integer,
