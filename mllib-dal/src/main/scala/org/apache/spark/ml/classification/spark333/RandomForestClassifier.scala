@@ -20,10 +20,10 @@
 package org.apache.spark.ml.classification.spark333
 
 import com.intel.oap.mllib.Utils
-import com.intel.oap.mllib.classification.{RandomForestClassifierDALImpl, RandomForestClassifierShim, LearningNode => LearningNodeDAL}
-
+import com.intel.oap.mllib.classification.{LearningNode => LearningNodeDAL, RandomForestClassifierDALImpl, RandomForestClassifierShim}
 import java.util.{Map => JavaMap}
 import scala.jdk.CollectionConverters._
+
 import org.apache.spark.annotation.Since
 import org.apache.spark.ml.classification.{BinaryRandomForestClassificationTrainingSummaryImpl, DecisionTreeClassificationModel, ProbabilisticClassifier, RandomForestClassificationModel, RandomForestClassificationTrainingSummaryImpl}
 import org.apache.spark.ml.feature.Instance

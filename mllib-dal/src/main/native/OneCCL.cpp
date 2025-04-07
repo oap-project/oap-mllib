@@ -85,15 +85,26 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        auto gpus = get_gpus();
+        auto gpus_count = get_gpus();
         const char *zeAffinityMask = std::getenv("ZE_AFFINITY_MASK");
         if (zeAffinityMask == nullptr) {
             logger::println(logger::ERROR,
                             "OneCCL (native): ZE_AFFINITY_MASK is not set.");
             return 0;
         }
-        int gpuId = std::stoi(zeAffinityMask);
-        sycl::queue queue{gpus[gpuId]};
+        logger::println(logger::INFO, "OneCCL (native): gpus_count %d",
+                        gpus_count);
+        sycl::device selected_device;
+        if (gpus_count == 1) {
+            selected_device = gpus[0];
+        } else if (gpus_count == 12) {
+            int gpuId = std::stoi(zeAffinityMask);
+            selected_device = gpus[gpuId];
+        } else {
+            deviceError("Invalid GPU count",
+                        std::to_string(gpus_count).c_str());
+        }
+        sycl::queue queue{selected_device};
         auto t1 = std::chrono::high_resolution_clock::now();
         auto comm = oneapi::dal::preview::spmd::make_communicator<
             oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
