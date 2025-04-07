@@ -224,7 +224,7 @@ static void doSummarizerOneAPICompute(
         auto t2 = std::chrono::high_resolution_clock::now();
         float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "Summarizer (native): training took %f secs", duration);
+                        "Summarizer (native): training step took %f secs", duration);
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
