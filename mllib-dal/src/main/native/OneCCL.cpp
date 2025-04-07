@@ -85,7 +85,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        auto gpus_count = get_gpus();
+        auto gpus = get_gpus();
         const char *zeAffinityMask = std::getenv("ZE_AFFINITY_MASK");
         if (zeAffinityMask == nullptr) {
             logger::println(logger::ERROR,
@@ -93,7 +93,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
             return 0;
         }
         logger::println(logger::INFO, "OneCCL (native): gpus_count %d",
-                        gpus_count);
+                        gpus.size());
         sycl::device selected_device;
         if (gpus_count == 1) {
             selected_device = gpus[0];
