@@ -63,6 +63,7 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
 
     logger::println(logger::INFO, "OneCCL (native): init rank %d size %d", rank,
                     size);
+    auto gpus = get_gpus();
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
     auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
@@ -85,7 +86,6 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        auto gpus = get_gpus();
         auto gpus_count = gpus.size();
 
         logger::println(logger::INFO, "OneCCL (native): gpus_count %d",
