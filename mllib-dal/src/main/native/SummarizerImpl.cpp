@@ -210,6 +210,7 @@ static void doSummarizerOneAPICompute(
             .get());
 
     const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {

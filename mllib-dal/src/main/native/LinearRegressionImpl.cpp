@@ -237,6 +237,7 @@ static jlong doLROneAPICompute(
     linear_regression_gpu::train_input local_input{xtrain, ytrain};
     const auto linear_regression_desc =
         linear_regression_gpu::descriptor<GpuAlgorithmFPType>(fitIntercept);
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     linear_regression_gpu::train_result result_train =
         preview::train(comm, linear_regression_desc, xtrain, ytrain);

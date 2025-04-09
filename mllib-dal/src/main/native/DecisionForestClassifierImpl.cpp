@@ -246,7 +246,7 @@ static jobject doRFClassifierOneAPICompute(
             .set_voting_mode(df::voting_mode::weighted)
             .set_max_tree_depth(maxTreeDepth)
             .set_max_bins(maxBins);
-
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);

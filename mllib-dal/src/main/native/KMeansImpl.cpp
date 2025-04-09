@@ -258,6 +258,7 @@ static jlong doKMeansOneAPICompute(
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);
     kmeans_gpu::train_input local_input{htable, centroids};
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);

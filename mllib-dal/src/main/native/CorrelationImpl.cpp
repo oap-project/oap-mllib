@@ -158,6 +158,7 @@ static void doCorrelationOneAPICompute(
         covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cor_matrix |
             covariance_gpu::result_options::means);
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {

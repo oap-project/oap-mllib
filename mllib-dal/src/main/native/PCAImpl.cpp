@@ -189,7 +189,7 @@ static void doPCAOneAPICompute(
     const auto cov_desc =
         covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cov_matrix);
-
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result = preview::compute(comm, cov_desc, htable);
     if (isRoot) {
