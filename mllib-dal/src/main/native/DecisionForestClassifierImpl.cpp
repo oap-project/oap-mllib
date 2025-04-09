@@ -217,7 +217,7 @@ static jobject doRFClassifierOneAPICompute(
     jint maxBins, jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
@@ -261,7 +261,7 @@ static jobject doRFClassifierOneAPICompute(
         auto t2 = std::chrono::high_resolution_clock::now();
         float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "RF Classifier (native): training step took %f secs.",
+                        "RFClassifier (native): training step took %f secs.",
                         duration);
         logger::println(logger::INFO, "Variable importance results:");
         printHomegenTable(result_train.get_var_importance());
@@ -311,13 +311,13 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
+    logger::println(logger::INFO, "OneDAL (native): use DPC++ kernels");
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
         logger::println(logger::INFO,
-                        "oneDAL (native): use GPU kernels with rankid %d",
+                        "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
         auto comm = getDalComm();

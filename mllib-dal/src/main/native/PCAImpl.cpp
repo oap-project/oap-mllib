@@ -41,7 +41,7 @@ namespace covariance_cpu = daal::algorithms::covariance;
 static void doPCADAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                              ccl::communicator &comm, NumericTablePtr &pData,
                              size_t nBlocks, jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): CPU compute start");
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -179,7 +179,7 @@ static void doPCAOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
@@ -240,7 +240,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
     jlong numCols, jint executorNum, jint executorCores,
     jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
-                    "oneDAL (native): use DPC++ kernels; device %s",
+                    "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
@@ -255,7 +255,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
         logger::println(logger::INFO,
-                        "oneDAL (native): Number of CPU threads used %d",
+                        "OneDAL (native): Number of CPU threads used %d",
                         nThreadsNew);
         doPCADAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                          resultObj);
@@ -264,7 +264,7 @@ Java_com_intel_oap_mllib_feature_PCADALImpl_cPCATrainDAL(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         logger::println(logger::INFO,
-                        "oneDAL (native): use GPU kernels with rankid %d",
+                        "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
         auto comm = getDalComm();

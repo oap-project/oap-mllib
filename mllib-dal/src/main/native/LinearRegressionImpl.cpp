@@ -117,7 +117,7 @@ static NumericTablePtr linear_regression_compute(
                 ->getBeta();
 
         printNumericTable(resultTable,
-                          "Linear Regression first 20 columns of "
+                          "LinearRegression first 20 columns of "
                           "coefficients (w0, w1..wn):",
                           1, 20);
     }
@@ -206,7 +206,7 @@ ridge_regression_compute(size_t rankId, ccl::communicator &comm,
                           ->getBeta();
 
         printNumericTable(resultTable,
-                          "Ridge Regression first 20 columns of "
+                          "RidgeRegression first 20 columns of "
                           "coefficients (w0, w1..wn):",
                           1, 20);
     }
@@ -221,7 +221,7 @@ static jlong doLROneAPICompute(
     jlong pNumTabLabel, jlong labelCols, jboolean jfitIntercept,
     jint executorNum, jobject resultObj) {
     logger::println(logger::INFO,
-                    "oneDAL (native): GPU compute start , rankid %d", rankId);
+                    "OneDAL (native): GPU compute start , rankid %d", rankId);
     const bool isRoot = (rankId == ccl_root);
     bool fitIntercept = bool(jfitIntercept);
 
@@ -248,8 +248,7 @@ static jlong doLROneAPICompute(
         float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(
             logger::INFO,
-            "Linear regression (native): training step took %f secs.",
-            duration);
+            "LinearRegression (native): training step took %f secs.", duration);
         saveHomogenTablePtrToVector(result_matrix);
         return (jlong)result_matrix.get();
     } else {
@@ -272,7 +271,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     jobject resultObj) {
 
     logger::println(logger::INFO,
-                    "oneDAL (native): use DPC++ kernels; device %s",
+                    "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -285,7 +284,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
     if (useGPU) {
 #ifdef CPU_GPU_PROFILE
         logger::println(logger::INFO,
-                        "oneDAL (native): use GPU kernels with rankid %d",
+                        "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
         auto comm = getDalComm();
         resultptr = doLROneAPICompute(env, rank, comm, feature, featureRows,
@@ -305,7 +304,7 @@ Java_com_intel_oap_mllib_regression_LinearRegressionDALImpl_cLinearRegressionTra
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
         logger::println(logger::INFO,
-                        "oneDAL (native): Number of CPU threads used %d",
+                        "OneDAL (native): Number of CPU threads used %d",
                         nThreadsNew);
         if (regParam == 0) {
             resultTable = linear_regression_compute(

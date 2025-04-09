@@ -179,7 +179,7 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
                                  NumericTablePtr &centroids, jint cluster_num,
                                  jdouble tolerance, jint iteration_num,
                                  jint executor_num, jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): CPU compute start");
     CpuAlgorithmFPType totalCost;
 
     NumericTablePtr newCentroids;

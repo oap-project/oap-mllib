@@ -176,8 +176,6 @@ Java_com_intel_oap_mllib_OneDAL_00024_cNewCSRNumericTableDouble(
  */
 JNIEXPORT jlong JNICALL Java_com_intel_oap_mllib_OneDAL_00024_cNewDoubleArray(
     JNIEnv *env, jobject, jlong size) {
-    logger::println(logger::INFO, "create new native array size %d", size);
-
     NativeDoubleArrayPtr arrayPtr(new double[size],
                                   [](double *ptr) { delete[] ptr; });
     saveDoubleArrayPtrToVector(arrayPtr);
