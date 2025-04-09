@@ -99,7 +99,8 @@ inline void printHomegenTable(const oneapi::dal::table &table) {
         logger::println(logger::NONE, "");
     };
 
-    logger::println(logger::INFO, "Only the first 10 rows and first 20 columns are printed
+    logger::println(logger::INFO, "Only the first 10 rows and first 20 columns "
+                                  "are printed for the table.");
     for (std::int64_t i = 0; i < row_count; i++) {
         printRow(i);
     }
