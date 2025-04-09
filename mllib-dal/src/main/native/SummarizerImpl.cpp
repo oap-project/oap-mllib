@@ -84,7 +84,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
                     "low_order_moments (native): ccl_gather took %f secs",
-                    duration / 1000);
+                    duration);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
