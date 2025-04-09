@@ -254,6 +254,15 @@ static jobject doRFClassifierOneAPICompute(
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
     if (isRoot) {
+        HomogenTablePtr prediction =
+            std::make_shared<homogen_table>(result_infer.get_responses());
+        HomogenTablePtr probabilities =
+            std::make_shared<homogen_table>(result_infer.get_probabilities());
+        auto t2 = std::chrono::high_resolution_clock::now();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
+        logger::println(logger::INFO,
+                        "RF Classifier (native): training step took %f secs.",
+                        duration);
         logger::println(logger::INFO, "Variable importance results:");
         printHomegenTable(result_train.get_var_importance());
         logger::println(logger::INFO, "OOB error:");
@@ -262,11 +271,6 @@ static jobject doRFClassifierOneAPICompute(
         printHomegenTable(result_infer.get_responses());
         logger::println(logger::INFO, "Probabilities results:\n");
         printHomegenTable(result_infer.get_probabilities());
-        auto t2 = std::chrono::high_resolution_clock::now();
-        float duration = std::chrono::duration<float>(t2 - t1).count();
-        logger::println(logger::INFO,
-                        "RF Classifier (native): training step took %f secs.",
-                        duration);
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
 
@@ -278,14 +282,8 @@ static jobject doRFClassifierOneAPICompute(
             env->GetFieldID(clazz, "predictionNumericTable", "J");
         jfieldID probabilitiesNumericTableField =
             env->GetFieldID(clazz, "probabilitiesNumericTable", "J");
-        HomogenTablePtr prediction =
-            std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
-
-        HomogenTablePtr probabilities =
-            std::make_shared<homogen_table>(result_infer.get_probabilities());
         saveHomogenTablePtrToVector(probabilities);
-
         // Set prediction for result
         env->SetLongField(resultObj, predictionNumericTableField,
                           (jlong)prediction.get());

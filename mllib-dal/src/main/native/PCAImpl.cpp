@@ -201,15 +201,14 @@ static void doPCAOneAPICompute(
 
         const auto result_train =
             preview::train(comm, pca_desc, result.get_cov_matrix());
-        logger::println(logger::INFO, "Eigenvectors:");
-        printHomegenTable(result_train.get_eigenvectors());
-        logger::println(logger::INFO, "Eigenvalues:");
-        printHomegenTable(result_train.get_eigenvalues());
-
         auto t2 = std::chrono::high_resolution_clock::now();
         float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "PCA (native): training step took %f secs", duration);
+        logger::println(logger::INFO, "Eigenvectors:");
+        printHomegenTable(result_train.get_eigenvectors());
+        logger::println(logger::INFO, "Eigenvalues:");
+        printHomegenTable(result_train.get_eigenvalues());
         // Return all eigenvalues & eigenvectors
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);

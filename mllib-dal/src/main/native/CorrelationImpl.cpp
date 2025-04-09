@@ -162,26 +162,24 @@ static void doCorrelationOneAPICompute(
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
-        logger::println(logger::INFO, "Mean:");
-        printHomegenTable(result_train.get_means());
-        logger::println(logger::INFO, "Correlation:");
-        printHomegenTable(result_train.get_cor_matrix());
+        HomogenTablePtr correlation =
+            std::make_shared<homogen_table>(result_train.get_cor_matrix());
         auto t2 = std::chrono::high_resolution_clock::now();
         float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "Correlation (native): training step took %f secs.",
                         duration);
+        logger::println(logger::INFO, "Mean:");
+        printHomegenTable(result_train.get_means());
+        logger::println(logger::INFO, "Correlation:");
+        printHomegenTable(result_train.get_cor_matrix());
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
         // Get Field references
         jfieldID correlationNumericTableField =
             env->GetFieldID(clazz, "correlationNumericTable", "J");
-
-        HomogenTablePtr correlation =
-            std::make_shared<homogen_table>(result_train.get_cor_matrix());
         saveHomogenTablePtrToVector(correlation);
-
         env->SetLongField(resultObj, correlationNumericTableField,
                           (jlong)correlation.get());
     }

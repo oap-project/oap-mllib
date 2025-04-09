@@ -263,15 +263,17 @@ static jlong doKMeansOneAPICompute(
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
-        logger::println(logger::INFO, "Iteration count: %d",
-                        result_train.get_iteration_count());
-        logger::println(logger::INFO, "Centroids:");
-        printHomegenTable(result_train.get_model().get_centroids());
+        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
+            result_train.get_model().get_centroids());
         auto t2 = std::chrono::high_resolution_clock::now();
         float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "KMeans (native): training step took %f secs",
                         duration);
+        logger::println(logger::INFO, "Iteration count: %d",
+                        result_train.get_iteration_count());
+        logger::println(logger::INFO, "Centroids:");
+        printHomegenTable(result_train.get_model().get_centroids());
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -284,9 +286,6 @@ static jlong doKMeansOneAPICompute(
         // Set cost for result
         env->SetDoubleField(resultObj, totalCostField,
                             result_train.get_objective_function_value());
-
-        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
-            result_train.get_model().get_centroids());
         saveHomogenTablePtrToVector(centroidsPtr);
         return (jlong)centroidsPtr.get();
     } else {

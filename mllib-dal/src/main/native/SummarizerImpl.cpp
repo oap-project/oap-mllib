@@ -214,6 +214,19 @@ static void doSummarizerOneAPICompute(
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {
+        HomogenTablePtr meanTable =
+            std::make_shared<homogen_table>(result_train.get_mean());
+        HomogenTablePtr varianceTable =
+            std::make_shared<homogen_table>(result_train.get_variance());
+        HomogenTablePtr maxTable =
+            std::make_shared<homogen_table>(result_train.get_max());
+        HomogenTablePtr minTable =
+            std::make_shared<homogen_table>(result_train.get_min());
+        auto t2 = std::chrono::high_resolution_clock::now();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
+        logger::println(logger::INFO,
+                        "Summarizer (native): training step took %f secs",
+                        duration);
         logger::println(logger::INFO, "Minimum");
         printHomegenTable(result_train.get_min());
         logger::println(logger::INFO, "Maximum");
@@ -222,11 +235,6 @@ static void doSummarizerOneAPICompute(
         printHomegenTable(result_train.get_mean());
         logger::println(logger::INFO, "Variation");
         printHomegenTable(result_train.get_variance());
-        auto t2 = std::chrono::high_resolution_clock::now();
-        float duration = std::chrono::duration<float>(t2 - t1).count();
-        logger::println(logger::INFO,
-                        "Summarizer (native): training step took %f secs",
-                        duration);
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -239,19 +247,11 @@ static void doSummarizerOneAPICompute(
             env->GetFieldID(clazz, "minimumNumericTable", "J");
         jfieldID maximumTableField =
             env->GetFieldID(clazz, "maximumNumericTable", "J");
-
-        HomogenTablePtr meanTable =
-            std::make_shared<homogen_table>(result_train.get_mean());
         saveHomogenTablePtrToVector(meanTable);
-        HomogenTablePtr varianceTable =
-            std::make_shared<homogen_table>(result_train.get_variance());
         saveHomogenTablePtrToVector(varianceTable);
-        HomogenTablePtr maxTable =
-            std::make_shared<homogen_table>(result_train.get_max());
         saveHomogenTablePtrToVector(maxTable);
-        HomogenTablePtr minTable =
-            std::make_shared<homogen_table>(result_train.get_min());
         saveHomogenTablePtrToVector(minTable);
+
         env->SetLongField(resultObj, meanTableField, (jlong)meanTable.get());
         env->SetLongField(resultObj, varianceTableField,
                           (jlong)varianceTable.get());
