@@ -38,7 +38,7 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
                                     ccl::communicator &comm,
                                     const NumericTablePtr &pData,
                                     size_t nBlocks, jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): CPU compute start");
     using daal::byte;
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -54,11 +54,9 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
     localAlgorithm.compute();
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    float duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "low_order_moments (native): local step took %d secs",
-                    duration / 1000);
+                    "Summarizer (native): local step took %f secs", duration);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -82,11 +80,9 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         .wait();
     t2 = std::chrono::high_resolution_clock::now();
 
-    duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "low_order_moments (native): ccl_gather took %d secs",
-                    duration / 1000);
+                    "Summarizer (native): ccl_gather took %f secs", duration);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -121,52 +117,51 @@ static void doSummarizerDAALCompute(JNIEnv *env, jobject obj, size_t rankId,
         /* Retrieve the algorithm results */
         low_order_moments::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
+
         logger::println(logger::INFO,
-                        "low_order_moments (native): master step took %d secs",
-                        duration / 1000);
+                        "Summarizer (native): master step took %f secs",
+                        duration);
 
         /* Print the results */
         printNumericTable(result->get(low_order_moments::mean),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "Mean :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::variance),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "Variance :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::minimum),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "Minimum :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::maximum),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "Maximum :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::sum),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "Sum :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::sumSquares),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "SumSquares :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::sumSquaresCentered),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "SumSquaresCentered :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::secondOrderRawMoment),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "SecondOrderRawMoment :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::standardDeviation),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "StandardDeviation :",
                           1, 20);
         printNumericTable(result->get(low_order_moments::variation),
-                          "low_order_moments first 20 columns of "
+                          "Summarizer first 20 columns of "
                           "Variation :",
                           1, 20);
 
@@ -205,7 +200,7 @@ static void doSummarizerOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
@@ -213,25 +208,31 @@ static void doSummarizerOneAPICompute(
             .get());
 
     const auto bs_desc = basic_statistics::descriptor<GpuAlgorithmFPType>{};
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, bs_desc, htable);
     if (isRoot) {
-        logger::println(logger::INFO, "Minimum");
-        printHomegenTable(result_train.get_min());
-        logger::println(logger::INFO, "Maximum");
-        printHomegenTable(result_train.get_max());
-        logger::println(logger::INFO, "Mean");
-        printHomegenTable(result_train.get_mean());
-        logger::println(logger::INFO, "Variation");
-        printHomegenTable(result_train.get_variance());
+        HomogenTablePtr meanTable =
+            std::make_shared<homogen_table>(result_train.get_mean());
+        HomogenTablePtr varianceTable =
+            std::make_shared<homogen_table>(result_train.get_variance());
+        HomogenTablePtr maxTable =
+            std::make_shared<homogen_table>(result_train.get_max());
+        HomogenTablePtr minTable =
+            std::make_shared<homogen_table>(result_train.get_min());
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "Summarizer (native): computing step took %d secs",
-                        duration / 1000);
+                        "Summarizer (native): training step took %f secs",
+                        duration);
+        logger::println(logger::INFO, "Minimum:");
+        printHomegenTable(result_train.get_min());
+        logger::println(logger::INFO, "Maximum:");
+        printHomegenTable(result_train.get_max());
+        logger::println(logger::INFO, "Mean:");
+        printHomegenTable(result_train.get_mean());
+        logger::println(logger::INFO, "Variation:");
+        printHomegenTable(result_train.get_variance());
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
@@ -244,19 +245,11 @@ static void doSummarizerOneAPICompute(
             env->GetFieldID(clazz, "minimumNumericTable", "J");
         jfieldID maximumTableField =
             env->GetFieldID(clazz, "maximumNumericTable", "J");
-
-        HomogenTablePtr meanTable =
-            std::make_shared<homogen_table>(result_train.get_mean());
         saveHomogenTablePtrToVector(meanTable);
-        HomogenTablePtr varianceTable =
-            std::make_shared<homogen_table>(result_train.get_variance());
         saveHomogenTablePtrToVector(varianceTable);
-        HomogenTablePtr maxTable =
-            std::make_shared<homogen_table>(result_train.get_max());
         saveHomogenTablePtrToVector(maxTable);
-        HomogenTablePtr minTable =
-            std::make_shared<homogen_table>(result_train.get_min());
         saveHomogenTablePtrToVector(minTable);
+
         env->SetLongField(resultObj, meanTableField, (jlong)meanTable.get());
         env->SetLongField(resultObj, varianceTableField,
                           (jlong)varianceTable.get());
@@ -272,7 +265,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
     jlong numCols, jint executorNum, jint executorCores,
     jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
-                    "oneDAL (native): use DPC++ kernels; device %s",
+                    "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
@@ -287,7 +280,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
         logger::println(logger::INFO,
-                        "oneDAL (native): Number of CPU threads used %d",
+                        "OneDAL (native): Number of CPU threads used %d",
                         nThreadsNew);
         doSummarizerDAALCompute(env, obj, rankId, cclComm, pData, executorNum,
                                 resultObj);
@@ -296,7 +289,7 @@ Java_com_intel_oap_mllib_stat_SummarizerDALImpl_cSummarizerTrainDAL(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         logger::println(logger::INFO,
-                        "oneDAL (native): use GPU kernels with rankid %d",
+                        "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
         auto comm = getDalComm();

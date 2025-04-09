@@ -26,8 +26,6 @@ object CommonJob {
                                       kvsIPPort: String,
                                       useDevice: String): Unit = {
         data.mapPartitionsWithIndex { (rank, table) =>
-          OneCCL.init(executorNum, rank, kvsIPPort,
-            Common.ComputeDevice.getDeviceByName(useDevice).ordinal())
           val gpuIndices = if (useDevice == "GPU") {
               val resources = TaskContext.get().resources()
               resources("gpu").addresses.map(_.toInt)
@@ -37,6 +35,8 @@ object CommonJob {
           if (gpuIndices.nonEmpty) {
             OneCCL.setAffinityMask(gpuIndices(0).toString())
           }
+          OneCCL.init(executorNum, rank, kvsIPPort,
+            Common.ComputeDevice.getDeviceByName(useDevice).ordinal())
           Iterator.empty
         }.count()
     }

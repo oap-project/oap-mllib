@@ -86,37 +86,24 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen);
 inline void printHomegenTable(const oneapi::dal::table &table) {
     auto arr = oneapi::dal::row_accessor<const float>(table).pull();
     const auto x = arr.get_data();
-    if (table.get_row_count() <= 10) {
-        for (std::int64_t i = 0; i < table.get_row_count(); i++) {
-            logger::print(logger::INFO, "");
-            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
-                logger::print(logger::NONE, "%10f",
-                              x[i * table.get_column_count() + j]);
-            }
-            logger::println(logger::NONE, "");
+    const auto row_count = std::min<std::int64_t>(table.get_row_count(), 10);
+    const auto column_count =
+        std::min<std::int64_t>(table.get_column_count(), 20);
+
+    auto printRow = [&](std::int64_t row) {
+        logger::print(logger::INFO, "");
+        for (std::int64_t col = 0; col < column_count; col++) {
+            logger::print(logger::NONE, "%10f",
+                          x[row * table.get_column_count() + col]);
         }
-    } else {
-        for (std::int64_t i = 0; i < 5; i++) {
-            logger::print(logger::INFO, "");
-            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
-                logger::print(logger::NONE, "%10f",
-                              x[i * table.get_column_count() + j]);
-            }
-            logger::println(logger::NONE, "");
-        }
-        logger::println(logger::INFO, "...%ld lines skipped...",
-                        (table.get_row_count() - 10));
-        for (std::int64_t i = table.get_row_count() - 5;
-             i < table.get_row_count(); i++) {
-            logger::print(logger::INFO, "");
-            for (std::int64_t j = 0; j < table.get_column_count(); j++) {
-                logger::print(logger::NONE, "%10f",
-                              x[i * table.get_column_count() + j]);
-            }
-            logger::println(logger::NONE, "");
-        }
+        logger::println(logger::NONE, "");
+    };
+
+    logger::println(logger::INFO, "Only the first 10 rows and first 20 columns "
+                                  "are printed for the table.");
+    for (std::int64_t i = 0; i < row_count; i++) {
+        printRow(i);
     }
-    return;
 }
 
 #endif
