@@ -179,7 +179,7 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
                                  NumericTablePtr &centroids, jint cluster_num,
                                  jdouble tolerance, jint iteration_num,
                                  jint executor_num, jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): CPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): CPU compute start");
     CpuAlgorithmFPType totalCost;
 
     NumericTablePtr newCentroids;
@@ -204,12 +204,10 @@ static jlong doKMeansDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         centroids = newCentroids;
 
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "KMeans (native): iteration %d took %d secs", it,
-                        duration / 1000);
+                        duration);
     }
 
     if (rankId == ccl_root) {
@@ -260,21 +258,22 @@ static jlong doKMeansOneAPICompute(
                                  .set_max_iteration_count(iterationNum)
                                  .set_accuracy_threshold(tolerance);
     kmeans_gpu::train_input local_input{htable, centroids};
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     kmeans_gpu::train_result result_train =
         preview::train(comm, kmeans_desc, local_input);
     if (isRoot) {
+        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
+            result_train.get_model().get_centroids());
+        auto t2 = std::chrono::high_resolution_clock::now();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
+        logger::println(logger::INFO,
+                        "KMeans (native): training step took %f secs",
+                        duration);
         logger::println(logger::INFO, "Iteration count: %d",
                         result_train.get_iteration_count());
         logger::println(logger::INFO, "Centroids:");
         printHomegenTable(result_train.get_model().get_centroids());
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        logger::println(logger::INFO,
-                        "KMeans (native): training step took %d secs",
-                        duration / 1000);
         // Get the class of the input object
         jclass clazz = env->GetObjectClass(resultObj);
         // Get Field references
@@ -287,9 +286,6 @@ static jlong doKMeansOneAPICompute(
         // Set cost for result
         env->SetDoubleField(resultObj, totalCostField,
                             result_train.get_objective_function_value());
-
-        HomogenTablePtr centroidsPtr = std::make_shared<homogen_table>(
-            result_train.get_model().get_centroids());
         saveHomogenTablePtrToVector(centroidsPtr);
         return (jlong)centroidsPtr.get();
     } else {

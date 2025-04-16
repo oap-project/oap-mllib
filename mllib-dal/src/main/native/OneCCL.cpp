@@ -34,6 +34,7 @@
 #include "OneCCL.h"
 #include "com_intel_oap_mllib_OneCCL__.h"
 #include "service.h"
+#include <cstdlib>
 
 extern const size_t ccl_root = 0;
 
@@ -60,7 +61,9 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
     JNIEnv *env, jobject obj, jint size, jint rank, jstring ip_port,
     jint computeDeviceOrdinal, jobject param) {
 
-    logger::println(logger::INFO, "OneCCL (native): init");
+    logger::println(logger::INFO, "OneCCL (native): init rank %d size %d", rank,
+                    size);
+    auto gpus = get_gpus();
     const char *str = env->GetStringUTFChars(ip_port, 0);
     ccl::string ccl_ip_port(str);
     auto &singletonCCLInit = CCLInitSingleton::get(size, rank, ccl_ip_port);
@@ -73,33 +76,47 @@ JNIEXPORT jint JNICALL Java_com_intel_oap_mllib_OneCCL_00024_c_1init(
         g_comms.push_back(
             ccl::create_communicator(size, rank, singletonCCLInit.kvs));
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "OneCCL (native): create communicator took %f secs",
-                        duration / 1000);
+                        duration);
         rank_id = getComm().rank();
         comm_size = getComm().size();
         break;
     }
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
-        auto gpus = get_gpus();
-        sycl::queue queue{gpus[0]};
+        auto gpus_count = gpus.size();
+
+        logger::println(logger::INFO, "OneCCL (native): gpus_count is %d",
+                        gpus_count);
+        sycl::device selected_device;
+        if (gpus_count == 1) {
+            selected_device = gpus[0];
+        } else if (gpus_count > 1) {
+            const char *zeAffinityMask = std::getenv("ZE_AFFINITY_MASK");
+            if (zeAffinityMask == nullptr) {
+                logger::println(
+                    logger::ERROR,
+                    "OneCCL (native): ZE_AFFINITY_MASK is not set.");
+                return 0;
+            }
+            int gpuId = std::stoi(zeAffinityMask);
+            selected_device = gpus[gpuId];
+        } else {
+            deviceError("Invalid GPU count",
+                        std::to_string(gpus_count).c_str());
+        }
+        sycl::queue queue{selected_device};
         auto t1 = std::chrono::high_resolution_clock::now();
         auto comm = oneapi::dal::preview::spmd::make_communicator<
             oneapi::dal::preview::spmd::backend::ccl>(queue, size, rank,
                                                       singletonCCLInit.kvs);
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            (float)std::chrono::duration_cast<std::chrono::milliseconds>(t2 -
-                                                                         t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
                         "OneCCL (native): create communicator took %f secs",
-                        duration / 1000);
+                        duration);
         g_dal_comms.push_back(comm);
         rank_id = getDalComm().get_rank();
         comm_size = getDalComm().get_rank_count();

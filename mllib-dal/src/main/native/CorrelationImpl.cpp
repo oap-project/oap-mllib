@@ -53,11 +53,9 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
     localAlgorithm.compute();
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    float duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "Correleation (native): local step took %d secs",
-                    duration / 1000);
+                    "Correlation (native): local step took %f secs", duration);
 
     t1 = std::chrono::high_resolution_clock::now();
 
@@ -81,11 +79,10 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         .wait();
     t2 = std::chrono::high_resolution_clock::now();
 
-    duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    duration = std::chrono::duration<float>(t2 - t1).count();
     logger::println(logger::INFO,
-                    "Correleation (native): ccl_allgatherv took %d secs",
-                    duration / 1000);
+                    "Correlation (native): ccl_allgatherv step took %f secs",
+                    duration);
     if (isRoot) {
         auto t1 = std::chrono::high_resolution_clock::now();
         /* Create an algorithm to compute covariance on the master node */
@@ -120,12 +117,10 @@ static void doCorrelationDaalCompute(JNIEnv *env, jobject obj, size_t rankId,
         /* Retrieve the algorithm results */
         covariance_cpu::ResultPtr result = masterAlgorithm.getResult();
         auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
         logger::println(logger::INFO,
-                        "Correleation (native): master step took %d secs",
-                        duration / 1000);
+                        "Correlation (native): master step took %f secs",
+                        duration);
 
         /* Print the results */
         printNumericTable(result->get(covariance_cpu::correlation),
@@ -152,7 +147,7 @@ static void doCorrelationOneAPICompute(
     JNIEnv *env, jlong pNumTabData, jlong numRows, jlong numCols,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table htable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabData, numRows, numCols,
@@ -163,32 +158,28 @@ static void doCorrelationOneAPICompute(
         covariance_gpu::descriptor<GpuAlgorithmFPType>{}.set_result_options(
             covariance_gpu::result_options::cor_matrix |
             covariance_gpu::result_options::means);
+    comm.barrier();
     auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train = preview::compute(comm, cor_desc, htable);
     if (isRoot) {
+        HomogenTablePtr correlation =
+            std::make_shared<homogen_table>(result_train.get_cor_matrix());
+        auto t2 = std::chrono::high_resolution_clock::now();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
+        logger::println(logger::INFO,
+                        "Correlation (native): training step took %f secs.",
+                        duration);
         logger::println(logger::INFO, "Mean:");
         printHomegenTable(result_train.get_means());
         logger::println(logger::INFO, "Correlation:");
         printHomegenTable(result_train.get_cor_matrix());
-        auto t2 = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1)
-                .count();
-        logger::println(
-            logger::INFO,
-            "Correlation batch(native): computing step took %d secs.",
-            duration / 1000);
         // Return all covariance & mean
         jclass clazz = env->GetObjectClass(resultObj);
 
         // Get Field references
         jfieldID correlationNumericTableField =
             env->GetFieldID(clazz, "correlationNumericTable", "J");
-
-        HomogenTablePtr correlation =
-            std::make_shared<homogen_table>(result_train.get_cor_matrix());
         saveHomogenTablePtrToVector(correlation);
-
         env->SetLongField(resultObj, correlationNumericTableField,
                           (jlong)correlation.get());
     }
@@ -201,7 +192,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
     jlong numCols, jint executorNum, jint executorCores,
     jint computeDeviceOrdinal, jintArray gpuIdxArray, jobject resultObj) {
     logger::println(logger::INFO,
-                    "oneDAL (native): use DPC++ kernels; device %s",
+                    "OneDAL (native): use DPC++ kernels; device %s",
                     ComputeDeviceString[computeDeviceOrdinal].c_str());
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
@@ -217,7 +208,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
         int nThreadsNew =
             services::Environment::getInstance()->getNumberOfThreads();
         logger::println(logger::INFO,
-                        "oneDAL (native): Number of CPU threads used %d",
+                        "OneDAL (native): Number of CPU threads used %d",
                         nThreadsNew);
         doCorrelationDaalCompute(env, obj, rankId, cclComm, pData, executorNum,
                                  resultObj);
@@ -226,7 +217,7 @@ Java_com_intel_oap_mllib_stat_CorrelationDALImpl_cCorrelationTrainDAL(
 #ifdef CPU_GPU_PROFILE
     case ComputeDevice::gpu: {
         logger::println(logger::INFO,
-                        "oneDAL (native): use GPU kernels with rankid %d",
+                        "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
         auto comm = getDalComm();
