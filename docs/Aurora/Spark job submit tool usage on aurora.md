@@ -166,6 +166,7 @@ submit-spark.sh provides a few arguments. You can get detailed info about the ar
 ```shell
 $ /lus/flare/projects/Aurora_deployment/spark/spark-job/bin/submit-spark.sh -h
 Spark Job Submit Tool v1.0.3 for Aurora
+
 Usage:
     submit-spark.sh [options] JOBFILE [arguments ...]
  
