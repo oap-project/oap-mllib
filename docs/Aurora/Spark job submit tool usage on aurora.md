@@ -238,6 +238,10 @@ From here you can change Spark and OAP MLlib configurations. For more Spark conf
 | spark.driver.extraClassPath | Extra classpath entries to prepend to the classpath of the driver. OAP MLlib Jar path is added here. |
 | spark.eventLog.enabled | Whether to log Spark events. |
 | spark.eventLog.dir | Base directory in which Spark events are logged. |
+| spark.shuffle.manager | Set the shuffle manager |
+| spark.shuffle.daos.pool.uuid | UUID of the DAOS pool to use for shuffle data. |
+| spark.shuffle.daos.container.uuid | UUID of the DAOS container to use for shuffle data. |
+
 
 ## Example Configuration
 Here is an example that prioritizes making the dense K-Means example most efficient.
@@ -274,4 +278,11 @@ spark.worker.resource.gpu.amount        12       # each node has 1 worker and ea
 spark.executor.resource.gpu.amount      1        # each executor has 1 GPU
 spark.executor.instances                36       # 36 (12 x 3) executors in total
 spark.task.resource.gpu.amount          0.125    # Each task uses 1/8 of a GPU. This value should be determined based on your **target task concurrency**. For example, if each node has 12 GPUs and you want 96 concurrent GPU tasks per node, then spark.task.resource.gpu.amount = 12 / 96 = 0.125. In this case, 8 tasks share each GPU, allowing better parallelism for lightweight stages like preprocessing.
+```
+
+By default, DAOS shuffle is enabled in env_local.sh. If you want to disable DAOS shuffle, you can remove the following lines. 
+```shell
+spark.shuffle.manager                   org.apache.spark.shuffle.daos.DaosShuffleManager
+spark.shuffle.daos.pool.uuid            Intel
+spark.shuffle.daos.container.uuid       spark_shuffle
 ```
