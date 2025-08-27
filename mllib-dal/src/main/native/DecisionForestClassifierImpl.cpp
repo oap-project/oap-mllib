@@ -217,7 +217,7 @@ static jobject doRFClassifierOneAPICompute(
     jint maxBins, jboolean bootstrap,
     preview::spmd::communicator<preview::spmd::device_memory_access::usm> comm,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): GPU compute start");
+    logger::println(logger::INFO, "OneDAL (native): GPU compute start");
     const bool isRoot = (comm.get_rank() == ccl_root);
     homogen_table hFeaturetable = *reinterpret_cast<homogen_table *>(
         createHomogenTableWithArrayPtr(pNumTabFeature, featureRows, featureCols,
@@ -246,13 +246,23 @@ static jobject doRFClassifierOneAPICompute(
             .set_voting_mode(df::voting_mode::weighted)
             .set_max_tree_depth(maxTreeDepth)
             .set_max_bins(maxBins);
-
+    comm.barrier();
+    auto t1 = std::chrono::high_resolution_clock::now();
     const auto result_train =
         preview::train(comm, df_desc, hFeaturetable, hLabeltable);
     const auto result_infer =
         preview::infer(comm, df_desc, result_train.get_model(), hFeaturetable);
     jobject trees = nullptr;
     if (isRoot) {
+        HomogenTablePtr prediction =
+            std::make_shared<homogen_table>(result_infer.get_responses());
+        HomogenTablePtr probabilities =
+            std::make_shared<homogen_table>(result_infer.get_probabilities());
+        auto t2 = std::chrono::high_resolution_clock::now();
+        float duration = std::chrono::duration<float>(t2 - t1).count();
+        logger::println(logger::INFO,
+                        "RFClassifier (native): training step took %f secs.",
+                        duration);
         logger::println(logger::INFO, "Variable importance results:");
         printHomegenTable(result_train.get_var_importance());
         logger::println(logger::INFO, "OOB error:");
@@ -261,7 +271,6 @@ static jobject doRFClassifierOneAPICompute(
         printHomegenTable(result_infer.get_responses());
         logger::println(logger::INFO, "Probabilities results:\n");
         printHomegenTable(result_infer.get_probabilities());
-
         // convert to java hashmap
         trees = collect_model(env, result_train.get_model(), classCount);
 
@@ -273,14 +282,8 @@ static jobject doRFClassifierOneAPICompute(
             env->GetFieldID(clazz, "predictionNumericTable", "J");
         jfieldID probabilitiesNumericTableField =
             env->GetFieldID(clazz, "probabilitiesNumericTable", "J");
-        HomogenTablePtr prediction =
-            std::make_shared<homogen_table>(result_infer.get_responses());
         saveHomogenTablePtrToVector(prediction);
-
-        HomogenTablePtr probabilities =
-            std::make_shared<homogen_table>(result_infer.get_probabilities());
         saveHomogenTablePtrToVector(probabilities);
-
         // Set prediction for result
         env->SetLongField(resultObj, predictionNumericTableField,
                           (jlong)prediction.get());
@@ -308,13 +311,13 @@ Java_com_intel_oap_mllib_classification_RandomForestClassifierDALImpl_cRFClassif
     jdouble minImpurityDecreaseSplitNode, jint maxTreeDepth, jlong seed,
     jint maxBins, jboolean bootstrap, jintArray gpuIdxArray,
     jobject resultObj) {
-    logger::println(logger::INFO, "oneDAL (native): use DPC++ kernels");
+    logger::println(logger::INFO, "OneDAL (native): use DPC++ kernels");
 
     ComputeDevice device = getComputeDeviceByOrdinal(computeDeviceOrdinal);
     switch (device) {
     case ComputeDevice::gpu: {
         logger::println(logger::INFO,
-                        "oneDAL (native): use GPU kernels with rankid %d",
+                        "OneDAL (native): use GPU kernels with rankid %d",
                         rank);
 
         auto comm = getDalComm();
