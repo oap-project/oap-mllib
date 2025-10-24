@@ -21,12 +21,7 @@
 !******************************************************************************/
 
 #pragma once
-
-#ifdef CPU_GPU_PROFILE
-#include <daal_sycl.h>
-#else
 #include <daal.h>
-#endif
 
 #ifndef ONEDAL_DATA_PARALLEL
 #define ONEDAL_DATA_PARALLEL
