@@ -13,9 +13,9 @@ repo_gpgcheck=1
 gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
 EOF
   sudo mv /tmp/oneAPI.repo /etc/yum.repos.d
-  sudo yum install -y intel-oneapi-ccl-2021.8.0 \
-                      intel-oneapi-mpi-2021.8.0 \
-                      intel-oneapi-compiler-dpcpp-cpp-runtime-2023.0.0 intel-oneapi-dpcpp-cpp-2023.0.0
+  sudo yum install -y intel-oneapi-ccl-2021.16 \
+                      intel-oneapi-mpi-2021.16 \
+                      intel-oneapi-compiler-dpcpp-cpp-runtime-2025.3 intel-oneapi-dpcpp-cpp-2025.3
 else
   echo "oneAPI components already installed!"
 fi  
