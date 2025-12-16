@@ -212,9 +212,8 @@ NumericTablePtr homegenToSyclHomogen(NumericTablePtr ntHomogen) {
 
     // printNumericTable(ntHomogen, "ntHomogen:", 10, 10);
 
-    NumericTablePtr ntSycl =
-        HomogenNumericTable<CpuAlgorithmFPType>::create(
-            nColumns, nRows, NumericTable::doAllocate);
+    NumericTablePtr ntSycl = HomogenNumericTable<CpuAlgorithmFPType>::create(
+        nColumns, nRows, NumericTable::doAllocate);
 
     // printNumericTable(ntSycl, "ntSycl:", 10, 10);
 
