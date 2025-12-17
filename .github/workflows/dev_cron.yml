@@ -27,7 +27,8 @@ on:
       
 permissions:
   issues: write
-  contents: write
+  pull-requests: write
+  contents: read
 
 jobs:
   process:
@@ -35,7 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
-
       - name: Comment Issues link
         if: |
           github.event_name == 'pull_request_target' &&

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CLANG_FORMAT=$(which clang-format-10)
+CLANG_FORMAT=$(which clang-format)
 CLANG_FORMAT_VERSION=$($CLANG_FORMAT --version)
 
 if [ -z $CLANG_FORMAT ]; then
