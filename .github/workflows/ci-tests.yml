@@ -8,7 +8,7 @@ permissions:  # added using https://github.com/step-security/secure-repo
 jobs:
   local-test-oneAPI_table:
     name: Local Test for Units (OneAPI Table)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - name: Set up JDK 1.8
@@ -23,7 +23,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2025.2
           restore-keys: |
             ${{ runner.os }}-
       - name: Local Test
@@ -31,7 +31,7 @@ jobs:
           ${{github.workspace}}/dev/ci/ci-local-dpc-test.sh
   local-test-CPU:
     name: Local Test for Units (CPU)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - name: Set up JDK 1.8
@@ -46,7 +46,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2025.2
           restore-keys: |
             ${{ runner.os }}-
       - name: Local Test
@@ -55,7 +55,7 @@ jobs:
   yarn-test:
     if: ${{ false }}  # disable for now
     name: Yarn Test for Examples (CPU)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - name: Set up JDK 1.8
@@ -70,7 +70,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2025.2
           restore-keys: |
             ${{ runner.os }}-
       - name: Cluster Test
@@ -78,7 +78,7 @@ jobs:
           ${{github.workspace}}/dev/ci/ci-yarn-test-cpu.sh
   standalone-scala-test:
     name: Standalone CPU_GPU_PROFILE Test for scala Examples (CPU)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - name: Set up JDK 1.8
@@ -93,7 +93,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2025.2
           restore-keys: |
             ${{ runner.os }}-
       - name: Cluster Test
@@ -101,7 +101,7 @@ jobs:
           ${{github.workspace}}/dev/ci/ci-standalone-scala-test-cpu.sh
   standalone-python-test:
     name: Standalone CPU_GPU_PROFILE Test for python Examples (CPU)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - name: Set up JDK 1.8
@@ -116,7 +116,7 @@ jobs:
             ~/.m2/repository
             /opt/intel/oneapi
             ~/opt
-          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2023.0.0
+          key: ${{ runner.os }}_spark-3.3.3_hadoop-3.2.0_oneapi-2025.2
           restore-keys: |
             ${{ runner.os }}-
       - name: Cluster Test
