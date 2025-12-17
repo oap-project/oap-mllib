@@ -15,6 +15,3 @@ if [ ! -d /opt/intel/oneapi ]; then
 else
   echo "oneAPI components already installed!"
 fi
-
-
-
